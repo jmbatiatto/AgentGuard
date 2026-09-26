@@ -1,307 +1,171 @@
-<mxfile host="app.diagrams.net" modified="2026-09-25T22:38:00.000Z" agent="AgentGuard-Architect" version="24.0.0" type="device">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.17 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.17">
   <diagram id="er-conceptual-chen" name="MER Conceptual Chen + Biblioteca Atributos">
-    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="2000" background="#f8fafc" math="0" shadow="0">
+    <mxGraphModel dx="1886" dy="870" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="2000" background="#f8fafc" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-
-        <!-- ================= TOP HEADER BANNER ================= -->
-        <mxCell id="top_banner" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="top_banner" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="40" y="30" width="2320" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="banner_title" value="&lt;font color=&#39;#ffffff&#39; face=&#39;Helvetica&#39;&gt;&lt;b style=&#39;font-size:26px;&#39;&gt;📐 AgentGuard — Modelo Entidad-Relación Conceptual (Notación Chen Formal)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:14px;color:#94a3b8;&#39;&gt;Diagrama Conceptual Puro (Entidades, Rombos de Relación y Cardinalidades) con Biblioteca / Diccionario de Atributos Desacoplada&lt;/span&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="banner_title" value="&lt;font color=&#39;#ffffff&#39; face=&#39;Helvetica&#39;&gt;&lt;b style=&#39;font-size:26px;&#39;&gt;📐 AgentGuard — Modelo Entidad-Relación Conceptual (Notación Chen Formal)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:14px;color:#94a3b8;&#39;&gt;Diagrama Conceptual Puro (Entidades, Rombos de Relación y Cardinalidades) con Biblioteca / Diccionario de Atributos Desacoplada&lt;/span&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="70" y="42" width="1650" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="banner_tag" value="&lt;b&gt;NOTACIÓN CHEN / FORMAL&lt;/b&gt;&lt;br&gt;Entidades + Relaciones puras" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#a855f7;fontColor=#c084fc;fontSize=11;align=center;" vertex="1" parent="1">
+        <mxCell id="banner_tag" value="&lt;b&gt;NOTACIÓN CHEN / FORMAL&lt;/b&gt;&lt;br&gt;Entidades + Relaciones puras" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#a855f7;fontColor=#c084fc;fontSize=11;align=center;" parent="1" vertex="1">
           <mxGeometry x="2100" y="45" width="220" height="60" as="geometry" />
         </mxCell>
-
-        <!-- ================= SECTION 1: DIAGRAMA CONCEPTUAL CHEN ================= -->
-        <mxCell id="sec1_header" value="&lt;b style=&#39;font-size:16px;color:#1e293b;&#39;&gt;PARTE I: DIAGRAMA ENTIDAD-RELACIÓN CONCEPTUAL (SIN SOBRECARGA DE ATRIBUTOS)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="sec1_header" value="&lt;b style=&#39;font-size:16px;color:#1e293b;&#39;&gt;PARTE I: DIAGRAMA ENTIDAD-RELACIÓN CONCEPTUAL (SIN SOBRECARGA DE ATRIBUTOS)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" parent="1" vertex="1">
           <mxGeometry x="50" y="135" width="800" height="30" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: ORGANIZACION -->
-        <mxCell id="chen_ent_org" value="&lt;b style=&#39;font-size:15px;&#39;&gt;ORGANIZACIÓN&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#4338ca;&#39;&gt;(Tenant Empresarial)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0e7ff;strokeColor=#4338ca;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_org" value="&lt;b style=&#39;font-size:15px;&#39;&gt;ORGANIZACIÓN&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#4338ca;&#39;&gt;(Tenant Empresarial)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0e7ff;strokeColor=#4338ca;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="1000" y="180" width="190" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: PERTENECE_A (User -> Org) -->
-        <mxCell id="chen_rel_pert" value="PERTENECE_A" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#3b82f6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_pert" value="PERTENECE_A" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#3b82f6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="640" y="180" width="140" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: USUARIO -->
-        <mxCell id="chen_ent_user" value="&lt;b style=&#39;font-size:15px;&#39;&gt;USUARIO&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#1d4ed8;&#39;&gt;(Humano / Operador)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#1d4ed8;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_user" value="&lt;b style=&#39;font-size:15px;&#39;&gt;USUARIO&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#1d4ed8;&#39;&gt;(Humano / Operador)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#1d4ed8;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="320" y="180" width="180" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: REGISTRA / ADMINISTRA (Org/User -> Agente) -->
-        <mxCell id="chen_rel_admin_agent" value="ADMINISTRA&lt;br&gt;(OWNER)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#10b981;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_admin_agent" value="ADMINISTRA&lt;br&gt;(OWNER)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#10b981;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="340" y="320" width="140" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: AGENTE -->
-        <mxCell id="chen_ent_agent" value="&lt;b style=&#39;font-size:15px;&#39;&gt;AGENTE&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#047857;&#39;&gt;(Entidad Autónoma IA)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d1fae5;strokeColor=#047857;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_agent" value="&lt;b style=&#39;font-size:15px;&#39;&gt;AGENTE&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#047857;&#39;&gt;(Entidad Autónoma IA)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d1fae5;strokeColor=#047857;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="320" y="470" width="180" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION M:N AGENTE - HERRAMIENTA -->
-        <mxCell id="chen_rel_agent_tool" value="AUTORIZADO_EN&lt;br&gt;&lt;span style=&#39;font-size:9px;color:#ea580c;&#39;&gt;[attr: enabled, config]&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffedd5;strokeColor=#ea580c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_agent_tool" value="AUTORIZADO_EN&lt;br&gt;&lt;span style=&#39;font-size:9px;color:#ea580c;&#39;&gt;[attr: enabled, config]&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffedd5;strokeColor=#ea580c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="640" y="465" width="160" height="80" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: HERRAMIENTA -->
-        <mxCell id="chen_ent_tool" value="&lt;b style=&#39;font-size:15px;&#39;&gt;HERRAMIENTA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#0369a1;&#39;&gt;(Tool MCP / REST)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0369a1;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_tool" value="&lt;b style=&#39;font-size:15px;&#39;&gt;HERRAMIENTA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#0369a1;&#39;&gt;(Tool MCP / REST)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0369a1;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="960" y="470" width="190" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: EXPONE (Herramienta -> Accion) -->
-        <mxCell id="chen_rel_tool_action" value="EXPONE" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#f59e0b;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_tool_action" value="EXPONE" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#f59e0b;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="1270" y="470" width="130" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: ACCION_HERRAMIENTA -->
-        <mxCell id="chen_ent_toolaction" value="&lt;b style=&#39;font-size:15px;&#39;&gt;ACCIÓN_TOOL&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#b45309;&#39;&gt;(Operación Atómica / Risk)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_toolaction" value="&lt;b style=&#39;font-size:15px;&#39;&gt;ACCIÓN_TOOL&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#b45309;&#39;&gt;(Operación Atómica / Risk)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="1510" y="470" width="190" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: DEFINE (Org -> Política) -->
-        <mxCell id="chen_rel_org_pol" value="DEFINE" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#ef4444;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_org_pol" value="DEFINE" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#ef4444;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="1350" y="180" width="130" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: POLÍTICA -->
-        <mxCell id="chen_ent_policy" value="&lt;b style=&#39;font-size:15px;&#39;&gt;POLÍTICA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#b91c1c;&#39;&gt;(Conjunto / Prioridad)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_policy" value="&lt;b style=&#39;font-size:15px;&#39;&gt;POLÍTICA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#b91c1c;&#39;&gt;(Conjunto / Prioridad)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="1600" y="180" width="180" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: COMPONE (Política -> Regla) -->
-        <mxCell id="chen_rel_compone" value="COMPONE" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#8b5cf6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_compone" value="COMPONE" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#8b5cf6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="1625" y="310" width="130" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: REGLA_POLÍTICA -->
-        <mxCell id="chen_ent_rule" value="&lt;b style=&#39;font-size:15px;&#39;&gt;REGLA_POLÍTICA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#6d28d9;&#39;&gt;(Efecto / Condiciones)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#6d28d9;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_rule" value="&lt;b style=&#39;font-size:15px;&#39;&gt;REGLA_POLÍTICA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#6d28d9;&#39;&gt;(Efecto / Condiciones)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#6d28d9;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="1860" y="310" width="190" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: EJECUCIÓN -->
-        <mxCell id="chen_ent_exec" value="&lt;b style=&#39;font-size:15px;&#39;&gt;EJECUCIÓN&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#0f766e;&#39;&gt;(Solicitud en Runtime)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor:#0f766e;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_exec" value="&lt;b style=&#39;font-size:15px;&#39;&gt;EJECUCIÓN&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#0f766e;&#39;&gt;(Solicitud en Runtime)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor:#0f766e;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="960" y="650" width="190" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: DISPARA (Agente -> Ejecución) -->
-        <mxCell id="chen_rel_dispara" value="SOLICITA" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_dispara" value="SOLICITA" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="640" y="650" width="140" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: INTERCEPTA (Ejecución -> Acción) -->
-        <mxCell id="chen_rel_intercepta" value="INVOCA" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_intercepta" value="INVOCA" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="1350" y="650" width="130" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: REQUIERE_APROBACION (Ejecución -> Aprobación) -->
-        <mxCell id="chen_rel_req_appr" value="REQUIERE&lt;br&gt;INTERVENCIÓN" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_req_appr" value="REQUIERE&lt;br&gt;INTERVENCIÓN" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="640" y="780" width="140" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: APROBACIÓN -->
-        <mxCell id="chen_ent_appr" value="&lt;b style=&#39;font-size:15px;&#39;&gt;APROBACIÓN&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#be123c;&#39;&gt;(Human-in-the-Loop)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_appr" value="&lt;b style=&#39;font-size:15px;&#39;&gt;APROBACIÓN&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#be123c;&#39;&gt;(Human-in-the-Loop)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="320" y="780" width="180" height="70" as="geometry" />
         </mxCell>
-
-        <!-- RELATION: PROVOCA_ALERTA (Ejecución -> Alerta) -->
-        <mxCell id="chen_rel_alerta" value="DISPARA" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="chen_rel_alerta" value="DISPARA" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="1350" y="780" width="130" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: ALERTA -->
-        <mxCell id="chen_ent_alert" value="&lt;b style=&#39;font-size:15px;&#39;&gt;ALERTA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#b91c1c;&#39;&gt;(Violación de Seguridad)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_alert" value="&lt;b style=&#39;font-size:15px;&#39;&gt;ALERTA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#b91c1c;&#39;&gt;(Violación de Seguridad)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="1600" y="780" width="180" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ENTITY: EVENTO_AUDITORIA -->
-        <mxCell id="chen_ent_audit" value="&lt;b style=&#39;font-size:15px;&#39;&gt;EVENTO_AUDITORÍA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#047857;&#39;&gt;(Trazabilidad Inmutable)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d1fae5;strokeColor=#047857;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="1">
+        <mxCell id="chen_ent_audit" value="&lt;b style=&#39;font-size:15px;&#39;&gt;EVENTO_AUDITORÍA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#047857;&#39;&gt;(Trazabilidad Inmutable)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d1fae5;strokeColor=#047857;strokeWidth=2;fontColor=#1e293b;shadow=1;" parent="1" vertex="1">
           <mxGeometry x="1950" y="180" width="200" height="70" as="geometry" />
         </mxCell>
-
-        <!-- ================= CONNECTORS WITH CARDINALITIES ================= -->
-        <!-- User - Pertenece - Org -->
-        <mxCell id="c_u_p" value="(1,1)" style="endArrow=none;html=1;strokeColor=#3b82f6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_user" target="chen_rel_pert">
+        <mxCell id="c_u_p" value="(1,1)" style="endArrow=none;html=1;strokeColor=#3b82f6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_user" target="chen_rel_pert" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_p_o" value="(1,n)" style="endArrow=none;html=1;strokeColor=#3b82f6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_pert" target="chen_ent_org">
+        <mxCell id="c_p_o" value="(1,n)" style="endArrow=none;html=1;strokeColor=#3b82f6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_pert" target="chen_ent_org" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- User - Owner - Agent -->
-        <mxCell id="c_u_o" value="(0,n)" style="endArrow=none;html=1;strokeColor=#10b981;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_user" target="chen_rel_admin_agent">
+        <mxCell id="c_u_o" value="(0,n)" style="endArrow=none;html=1;strokeColor=#10b981;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_user" target="chen_rel_admin_agent" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_o_a" value="(1,1)" style="endArrow=none;html=1;strokeColor=#10b981;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_admin_agent" target="chen_ent_agent">
+        <mxCell id="c_o_a" value="(1,1)" style="endArrow=none;html=1;strokeColor=#10b981;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_admin_agent" target="chen_ent_agent" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Agent - Autorizado - Tool -->
-        <mxCell id="c_a_at" value="(0,n)" style="endArrow=none;html=1;strokeColor=#ea580c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_agent" target="chen_rel_agent_tool">
+        <mxCell id="c_a_at" value="(0,n)" style="endArrow=none;html=1;strokeColor=#ea580c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_agent" target="chen_rel_agent_tool" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_at_t" value="(0,n)" style="endArrow=none;html=1;strokeColor=#ea580c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_agent_tool" target="chen_ent_tool">
+        <mxCell id="c_at_t" value="(0,n)" style="endArrow=none;html=1;strokeColor=#ea580c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_agent_tool" target="chen_ent_tool" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Tool - Expone - Action -->
-        <mxCell id="c_t_exp" value="(1,1)" style="endArrow=none;html=1;strokeColor=#f59e0b;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_tool" target="chen_rel_tool_action">
+        <mxCell id="c_t_exp" value="(1,1)" style="endArrow=none;html=1;strokeColor=#f59e0b;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_tool" target="chen_rel_tool_action" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_exp_act" value="(1,n)" style="endArrow=none;html=1;strokeColor=#f59e0b;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_tool_action" target="chen_ent_toolaction">
+        <mxCell id="c_exp_act" value="(1,n)" style="endArrow=none;html=1;strokeColor=#f59e0b;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_tool_action" target="chen_ent_toolaction" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Org - Define - Policy -->
-        <mxCell id="c_o_pol" value="(1,n)" style="endArrow=none;html=1;strokeColor=#ef4444;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_org" target="chen_rel_org_pol">
+        <mxCell id="c_o_pol" value="(1,n)" style="endArrow=none;html=1;strokeColor=#ef4444;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_org" target="chen_rel_org_pol" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_pol_p" value="(1,1)" style="endArrow=none;html=1;strokeColor=#ef4444;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_org_pol" target="chen_ent_policy">
+        <mxCell id="c_pol_p" value="(1,1)" style="endArrow=none;html=1;strokeColor=#ef4444;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_org_pol" target="chen_ent_policy" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Policy - Compone - Rule -->
-        <mxCell id="c_pol_comp" value="(1,n)" style="endArrow=none;html=1;strokeColor=#8b5cf6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_policy" target="chen_rel_compone">
+        <mxCell id="c_pol_comp" value="(1,n)" style="endArrow=none;html=1;strokeColor=#8b5cf6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_policy" target="chen_rel_compone" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_comp_r" value="(1,1)" style="endArrow=none;html=1;strokeColor=#8b5cf6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_compone" target="chen_ent_rule">
+        <mxCell id="c_comp_r" value="(1,1)" style="endArrow=none;html=1;strokeColor=#8b5cf6;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_compone" target="chen_ent_rule" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Agent - Solicita - Exec -->
-        <mxCell id="c_ag_sol" value="(1,n)" style="endArrow=none;html=1;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_agent" target="chen_rel_dispara">
+        <mxCell id="c_ag_sol" value="(1,n)" style="endArrow=none;html=1;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_agent" target="chen_rel_dispara" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_sol_ex" value="(1,1)" style="endArrow=none;html=1;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_dispara" target="chen_ent_exec">
+        <mxCell id="c_sol_ex" value="(1,1)" style="endArrow=none;html=1;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_dispara" target="chen_ent_exec" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Exec - Invoca - ToolAction -->
-        <mxCell id="c_ex_inv" value="(1,1)" style="endArrow=none;html=1;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_exec" target="chen_rel_intercepta">
+        <mxCell id="c_ex_inv" value="(1,1)" style="endArrow=none;html=1;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_exec" target="chen_rel_intercepta" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_inv_ta" value="(0,n)" style="endArrow=none;html=1;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_intercepta" target="chen_ent_toolaction">
+        <mxCell id="c_inv_ta" value="(0,n)" style="endArrow=none;html=1;strokeColor=#0f766e;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_intercepta" target="chen_ent_toolaction" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Exec - Requiere - Approval -->
-        <mxCell id="c_ex_app" value="(0,1)" style="endArrow=none;html=1;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_exec" target="chen_rel_req_appr">
+        <mxCell id="c_ex_app" value="(0,1)" style="endArrow=none;html=1;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_exec" target="chen_rel_req_appr" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_app_ent" value="(1,1)" style="endArrow=none;html=1;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_req_appr" target="chen_ent_appr">
+        <mxCell id="c_app_ent" value="(1,1)" style="endArrow=none;html=1;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_req_appr" target="chen_ent_appr" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Exec - Dispara - Alert -->
-        <mxCell id="c_ex_alt" value="(0,n)" style="endArrow=none;html=1;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_ent_exec" target="chen_rel_alerta">
+        <mxCell id="c_ex_alt" value="(0,n)" style="endArrow=none;html=1;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_ent_exec" target="chen_rel_alerta" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c_alt_ent" value="(1,1)" style="endArrow=none;html=1;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="chen_rel_alerta" target="chen_ent_alert">
+        <mxCell id="c_alt_ent" value="(1,1)" style="endArrow=none;html=1;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;fontSize=11;fontStyle=1;" parent="1" source="chen_rel_alerta" target="chen_ent_alert" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-
-        <!-- ================= SECTION 2: BIBLIOTECA DE ATRIBUTOS (DICCIONARIO DE DATOS) ================= -->
-        <mxCell id="sec2_divider" value="" style="line;strokeWidth=3;direction=south;html=1;strokeColor=#cbd5e1;" vertex="1" parent="1">
+        <mxCell id="sec2_divider" value="" style="line;strokeWidth=3;direction=south;html=1;strokeColor=#cbd5e1;" parent="1" vertex="1">
           <mxGeometry x="40" y="900" width="2320" height="20" as="geometry" />
         </mxCell>
-
-        <mxCell id="sec2_header" value="&lt;b style=&#39;font-size:18px;color:#0f172a;&#39;&gt;PARTE II: BIBLIOTECA / DICCIONARIO DE ATRIBUTOS FORMAL (SEPARADA DEL GRAFO)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#64748b;&#39;&gt;Definición rigurosa de claves primarias, claves foráneas, tipos de dominio, nulabilidad y propósito funcional por entidad&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="1">
+        <mxCell id="sec2_header" value="&lt;b style=&#39;font-size:18px;color:#0f172a;&#39;&gt;PARTE II: BIBLIOTECA / DICCIONARIO DE ATRIBUTOS FORMAL (SEPARADA DEL GRAFO)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#64748b;&#39;&gt;Definición rigurosa de claves primarias, claves foráneas, tipos de dominio, nulabilidad y propósito funcional por entidad&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" parent="1" vertex="1">
           <mxGeometry x="50" y="930" width="1200" height="40" as="geometry" />
         </mxCell>
-
-        <!-- TABLE 1: IDENTIDAD Y ACCESO -->
-        <mxCell id="dict_box_1" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt;
-&lt;tr style=&#39;background-color:#0f172a;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;🏢 1. Entidad: ORGANIZACIÓN (Tenant)&lt;/th&gt;&lt;/tr&gt;
-&lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador único universal del tenant empresarial.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;name&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;VARCHAR(255)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Razón social o nombre de la empresa registrada.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;created_at&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;TIMESTAMPTZ&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Marca temporal de creación de la cuenta de tenant.&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" vertex="1" parent="1">
+        <mxCell id="dict_box_1" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt; &lt;tr style=&#39;background-color:#0f172a;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;🏢 1. Entidad: ORGANIZACIÓN (Tenant)&lt;/th&gt;&lt;/tr&gt; &lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador único universal del tenant empresarial.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;name&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;VARCHAR(255)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Razón social o nombre de la empresa registrada.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;created_at&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;TIMESTAMPTZ&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Marca temporal de creación de la cuenta de tenant.&lt;/td&gt;&lt;/tr&gt; &lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" parent="1" vertex="1">
           <mxGeometry x="50" y="990" width="720" height="130" as="geometry" />
         </mxCell>
-
-        <!-- TABLE 2: USUARIO -->
-        <mxCell id="dict_box_2" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt;
-&lt;tr style=&#39;background-color:#1e3a8a;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;👤 2. Entidad: USUARIO (User)&lt;/th&gt;&lt;/tr&gt;
-&lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador del usuario del sistema.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;organization_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Tenant al cual pertenece el usuario.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;email&lt;/b&gt;&lt;/td&gt;&lt;td&gt;C. Cand.&lt;/td&gt;&lt;td&gt;VARCHAR(255)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Correo electrónico único para autenticación.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;role&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Valores: ADMIN, OPERATOR, APPROVER.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;created_at&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;TIMESTAMPTZ&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Fecha y hora de alta del usuario.&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" vertex="1" parent="1">
-          <mxGeometry x="50" y="1140" width="720" height="155" as="geometry" />
+        <mxCell id="dict_box_2" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt; &lt;tr style=&#39;background-color:#1e3a8a;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;👤 2. Entidad: USUARIO (User)&lt;/th&gt;&lt;/tr&gt; &lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador del usuario del sistema.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;organization_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Tenant al cual pertenece el usuario.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;email&lt;/b&gt;&lt;/td&gt;&lt;td&gt;C. Cand.&lt;/td&gt;&lt;td&gt;VARCHAR(255)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Correo electrónico único para autenticación.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;role&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Valores: ADMIN, OPERATOR, APPROVER.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;created_at&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;TIMESTAMPTZ&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Fecha y hora de alta del usuario.&lt;/td&gt;&lt;/tr&gt; &lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" parent="1" vertex="1">
+          <mxGeometry x="60" y="1140" width="710" height="170" as="geometry" />
         </mxCell>
-
-        <!-- TABLE 3: AGENTE -->
-        <mxCell id="dict_box_3" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt;
-&lt;tr style=&#39;background-color:#065f46;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;🤖 3. Entidad: AGENTE (AI Agent)&lt;/th&gt;&lt;/tr&gt;
-&lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador de identidad del agente autónomo.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;organization_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Organización propietaria del agente.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;owner_user_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Usuario humano responsable/sponsor del agente.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;name&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;VARCHAR(255)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Nombre de fantasía (ej. SalesAssistant-Prod).&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;purpose&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;TEXT&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Declaración de propósito/alcance para behavioral guard.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;status&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;ACTIVE, SUSPENDED, REVOKED.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;created_at&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;TIMESTAMPTZ&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Fecha y hora de registro de la identidad.&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" vertex="1" parent="1">
-          <mxGeometry x="50" y="1315" width="720" height="195" as="geometry" />
+        <mxCell id="dict_box_3" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt; &lt;tr style=&#39;background-color:#065f46;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;🤖 3. Entidad: AGENTE (AI Agent)&lt;/th&gt;&lt;/tr&gt; &lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador de identidad del agente autónomo.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;organization_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Organización propietaria del agente.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;owner_user_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Usuario humano responsable/sponsor del agente.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;name&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;VARCHAR(255)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Nombre de fantasía (ej. SalesAssistant-Prod).&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;purpose&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;TEXT&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Declaración de propósito/alcance para behavioral guard.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;status&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;ACTIVE, SUSPENDED, REVOKED.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;created_at&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;TIMESTAMPTZ&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Fecha y hora de registro de la identidad.&lt;/td&gt;&lt;/tr&gt; &lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" parent="1" vertex="1">
+          <mxGeometry x="50" y="1315" width="720" height="235" as="geometry" />
         </mxCell>
-
-        <!-- TABLE 4: HERRAMIENTAS Y ACCIONES -->
-        <mxCell id="dict_box_4" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt;
-&lt;tr style=&#39;background-color:#075985;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;🛠️ 4. Entidades: HERRAMIENTA y ACCIÓN_TOOL&lt;/th&gt;&lt;/tr&gt;
-&lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;Tool.id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador de la herramienta o servidor MCP.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;Tool.protocol&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Protocolo de invocación: MCP o REST.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;Tool.endpoint_url&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;VARCHAR(512)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;URL protegida de destino.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;ToolAction.id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador único de la acción concreta.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;ToolAction.tool_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Herramienta padre que la expone.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;ToolAction.action_name&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;VARCHAR(255)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Nombre del método (ej. create_quote, refund).&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;ToolAction.risk_level&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Nivel de criticidad: LOW, MEDIUM, HIGH, CRITICAL.&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" vertex="1" parent="1">
-          <mxGeometry x="810" y="990" width="740" height="195" as="geometry" />
+        <mxCell id="dict_box_4" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt; &lt;tr style=&#39;background-color:#075985;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;🛠️ 4. Entidades: HERRAMIENTA y ACCIÓN_TOOL&lt;/th&gt;&lt;/tr&gt; &lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;Tool.id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador de la herramienta o servidor MCP.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;Tool.protocol&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Protocolo de invocación: MCP o REST.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;Tool.endpoint_url&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;VARCHAR(512)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;URL protegida de destino.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;ToolAction.id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Identificador único de la acción concreta.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;ToolAction.tool_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Herramienta padre que la expone.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;ToolAction.action_name&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;VARCHAR(255)&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Nombre del método (ej. create_quote, refund).&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;ToolAction.risk_level&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Nivel de criticidad: LOW, MEDIUM, HIGH, CRITICAL.&lt;/td&gt;&lt;/tr&gt; &lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" parent="1" vertex="1">
+          <mxGeometry x="810" y="990" width="740" height="220" as="geometry" />
         </mxCell>
-
-        <!-- TABLE 5: POLÍTICAS Y REGLAS -->
-        <mxCell id="dict_box_5" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt;
-&lt;tr style=&#39;background-color:#991b1b;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;📋 5. Entidades: POLÍTICA y REGLA_POLÍTICA&lt;/th&gt;&lt;/tr&gt;
-&lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;Policy.priority&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;INTEGER&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Orden de resolución en caso de solapamiento.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;PolicyRule.effect&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Resultado: ALLOW, DENY, REQUIRE_APPROVAL.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;PolicyRule.tool_action_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Acción objeto de la regla de seguridad.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;PolicyRule.target_agent_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;Sí&lt;/td&gt;&lt;td&gt;Si es nulo, aplica globalmente a todo agente.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;PolicyRule.conditions&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Compuesto&lt;/td&gt;&lt;td&gt;JSONB&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Predicados lógicos (umbrales, horarios, IP, roles).&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" vertex="1" parent="1">
-          <mxGeometry x="810" y="1205" width="740" height="155" as="geometry" />
+        <mxCell id="dict_box_5" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt; &lt;tr style=&#39;background-color:#991b1b;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;📋 5. Entidades: POLÍTICA y REGLA_POLÍTICA&lt;/th&gt;&lt;/tr&gt; &lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;Policy.priority&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;INTEGER&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Orden de resolución en caso de solapamiento.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;PolicyRule.effect&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Resultado: ALLOW, DENY, REQUIRE_APPROVAL.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;PolicyRule.tool_action_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Acción objeto de la regla de seguridad.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;PolicyRule.target_agent_id&lt;/b&gt;&lt;/td&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;UUID v4&lt;/td&gt;&lt;td&gt;Sí&lt;/td&gt;&lt;td&gt;Si es nulo, aplica globalmente a todo agente.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;PolicyRule.conditions&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Compuesto&lt;/td&gt;&lt;td&gt;JSONB&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Predicados lógicos (umbrales, horarios, IP, roles).&lt;/td&gt;&lt;/tr&gt; &lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" parent="1" vertex="1">
+          <mxGeometry x="810" y="1240" width="740" height="175" as="geometry" />
         </mxCell>
-
-        <!-- TABLE 6: EJECUCIÓN, APROBACIÓN Y ALERTAS -->
-        <mxCell id="dict_box_6" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt;
-&lt;tr style=&#39;background-color:#115e59;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;⚡ 6. Entidades de Runtime: EJECUCIÓN, APROBACIÓN, ALERTA y AUDITORÍA&lt;/th&gt;&lt;/tr&gt;
-&lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;Execution.decision&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Decisión del PDP: ALLOW, DENY, REQUIRE_APPROVAL.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;Execution.request_context&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Compuesto&lt;/td&gt;&lt;td&gt;JSONB&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Parámetros de invocación sanitizados (sin secretos).&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;Approval.status&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;PENDING, APPROVED, REJECTED, EXPIRED.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;Alert.severity&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;LOW, MEDIUM, HIGH, CRITICAL.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;&lt;b&gt;AuditEvent.metadata&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Compuesto&lt;/td&gt;&lt;td&gt;JSONB&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Datos forenses inmutables del evento del sistema.&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" vertex="1" parent="1">
-          <mxGeometry x="1580" y="990" width="780" height="155" as="geometry" />
+        <mxCell id="dict_box_6" value="&lt;table border=&#39;1&#39; cellpadding=&#39;4&#39; cellspacing=&#39;0&#39; style=&#39;border-collapse:collapse;width:100%;font-size:11px;&#39;&gt; &lt;tr style=&#39;background-color:#115e59;color:#ffffff;&#39;&gt;&lt;th colspan=&#39;5&#39; align=&#39;left&#39;&gt;⚡ 6. Entidades de Runtime: EJECUCIÓN, APROBACIÓN, ALERTA y AUDITORÍA&lt;/th&gt;&lt;/tr&gt; &lt;tr style=&#39;background-color:#f1f5f9;&#39;&gt;&lt;th&gt;Atributo&lt;/th&gt;&lt;th&gt;Rol&lt;/th&gt;&lt;th&gt;Tipo de Dominio&lt;/th&gt;&lt;th&gt;Nulo&lt;/th&gt;&lt;th&gt;Descripción Funcional&lt;/th&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;Execution.decision&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Decisión del PDP: ALLOW, DENY, REQUIRE_APPROVAL.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;Execution.request_context&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Compuesto&lt;/td&gt;&lt;td&gt;JSONB&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Parámetros de invocación sanitizados (sin secretos).&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;Approval.status&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;PENDING, APPROVED, REJECTED, EXPIRED.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;Alert.severity&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Simple&lt;/td&gt;&lt;td&gt;ENUM&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;LOW, MEDIUM, HIGH, CRITICAL.&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&lt;b&gt;AuditEvent.metadata&lt;/b&gt;&lt;/td&gt;&lt;td&gt;Compuesto&lt;/td&gt;&lt;td&gt;JSONB&lt;/td&gt;&lt;td&gt;No&lt;/td&gt;&lt;td&gt;Datos forenses inmutables del evento del sistema.&lt;/td&gt;&lt;/tr&gt; &lt;/table&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#ffffff;rounded=1;shadow=1;overflow=hidden;" parent="1" vertex="1">
+          <mxGeometry x="1580" y="990" width="780" height="180" as="geometry" />
         </mxCell>
-
-        <!-- LEGEND / EXPLICACIÓN ACADÉMICA -->
-        <mxCell id="dict_legend" value="&lt;div style=&#39;font-size:12px;color:#1e293b;&#39;&gt;&lt;b&gt;🎓 Fundamento Metodológico para Cátedras de Ingeniería de Software / Base de Datos:&lt;/b&gt;&lt;br&gt;&lt;p style=&#39;margin-top:6px;line-height:1.5;&#39;&gt;El Modelo Conceptual de Chen prioriza la &lt;b&gt;claridad semántica&lt;/b&gt; de las relaciones y la asignación de cardinalidades mínimas y máximas sin ensuciar el grafo con listas interminables de columnas. La &lt;b&gt;Biblioteca de Atributos&lt;/b&gt; desacoplada actúa como el Diccionario de Datos canónico exigido por metodologías estructuradas (Yourdon / Pressman), permitiendo auditar la tipificación de dominios, la nulabilidad y los roles de claves sin perder la visión panorámica de la arquitectura.&lt;/p&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;strokeWidth=1;align=left;verticalAlign=top;shadow=1;" vertex="1" parent="1">
-          <mxGeometry x="1580" y="1170" width="780" height="190" as="geometry" />
+        <mxCell id="dict_legend" value="&lt;div style=&#39;font-size:12px;color:#1e293b;&#39;&gt;&lt;b&gt;🎓 Fundamento Metodológico para Cátedras de Ingeniería de Software / Base de Datos:&lt;/b&gt;&lt;br&gt;&lt;p style=&#39;margin-top:6px;line-height:1.5;&#39;&gt;El Modelo Conceptual de Chen prioriza la &lt;b&gt;claridad semántica&lt;/b&gt; de las relaciones y la asignación de cardinalidades mínimas y máximas sin ensuciar el grafo con listas interminables de columnas. La &lt;b&gt;Biblioteca de Atributos&lt;/b&gt; desacoplada actúa como el Diccionario de Datos canónico exigido por metodologías estructuradas (Yourdon / Pressman), permitiendo auditar la tipificación de dominios, la nulabilidad y los roles de claves sin perder la visión panorámica de la arquitectura.&lt;/p&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;strokeWidth=1;align=left;verticalAlign=top;shadow=1;" parent="1" vertex="1">
+          <mxGeometry x="1580" y="1232.5" width="780" height="190" as="geometry" />
         </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>
