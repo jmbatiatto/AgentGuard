@@ -1,0 +1,185 @@
+<mxfile host="app.diagrams.net" modified="2026-09-25T22:55:00.000Z" agent="AgentGuard-Architect" version="24.0.0" type="device">
+  <diagram id="casos-de-uso-uml" name="Diagrama de Casos de Uso UML">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1800" background="#f8fafc" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ================= TOP HEADER BANNER ================= -->
+        <mxCell id="uc_banner" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="2320" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_title" value="&lt;font color=&#39;#ffffff&#39; face=&#39;Helvetica&#39;&gt;&lt;b style=&#39;font-size:26px;&#39;&gt;🎯 AgentGuard — Diagrama de Casos de Uso del Sistema (UML Estándar)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:14px;color:#94a3b8;&#39;&gt;Mapeo Integral de Actores Humanos y No Humanos, Límites del Sistema, Relaciones de Inclusión (&amp;lt;&amp;lt;include&amp;gt;&amp;gt;) y Extensión (&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;)&lt;/span&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="70" y="42" width="1650" height="66" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_tag" value="&lt;b&gt;REQUISITOS FUNCIONALES&lt;/b&gt;&lt;br&gt;Alineado con RF-01 a RF-12" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#8b5cf6;fontColor=#c4b5fd;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2100" y="45" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ================= ACTORS (HUMANOS Y SISTEMAS) ================= -->
+        <!-- Actor 1: Administrador -->
+        <mxCell id="act_admin" value="👤 Administrador&lt;br&gt;de Organización" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e0e7ff;strokeColor=#4338ca;strokeWidth=2;fontColor=#1e293b;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="240" width="50" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Actor 2: Desarrollador / Ing IA -->
+        <mxCell id="act_dev" value="👨‍💻 Desarrollador /&lt;br&gt;Ingeniero de IA" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontColor=#1e293b;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="550" width="50" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Actor 3: Operador / Aprobador -->
+        <mxCell id="act_operator" value="🕵️ Operador /&lt;br&gt;Aprobador Humano" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffe4e6;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="860" width="50" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Actor 4: Agente de IA (Actor Autónomo) -->
+        <mxCell id="act_agent" value="🤖 Agente de IA&lt;br&gt;(Actor Externo / Autónomo)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#d1fae5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1250" width="50" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Actor 5: Servidor MCP Destino (Actor Secundario Receptor) -->
+        <mxCell id="act_mcp_server" value="🛠️ Servidor MCP /&lt;br&gt;Tool Externa&lt;br&gt;(Sistema Receptor)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f1f5f9;strokeColor=#475569;strokeWidth=2;fontColor=#1e293b;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="2250" y="1250" width="50" height="90" as="geometry" />
+        </mxCell>
+
+
+        <!-- ================= SYSTEM BOUNDARY ================= -->
+        <mxCell id="sys_boundary" value="LÍMITE DEL SISTEMA: PLATAFORMA AGENTGUARD" style="shape=rect;html=1;verticalAlign=top;fontStyle=1;align=center;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;dashed=1;fontColor=#334155;rounded=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="150" width="1920" height="1550" as="geometry" />
+        </mxCell>
+
+
+        <!-- ================= USE CASES ================= -->
+        <!-- UC01: Gestionar Organización y Usuarios -->
+        <mxCell id="uc_01" value="&lt;b&gt;UC01: Gestionar Organización y Usuarios&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Alta de Tenant, invitación y asignación de roles)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4338ca;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="200" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- UC02: Registrar y Gestionar Agentes -->
+        <mxCell id="uc_02" value="&lt;b&gt;UC02: Registrar y Configurar Agentes de IA&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Asignación de owner, propósito y tokens de acceso)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="320" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- UC03: Registrar Herramientas y Acciones -->
+        <mxCell id="uc_03" value="&lt;b&gt;UC03: Conectar y Descubrir Herramientas (MCP/REST)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Importar schemas de acciones y clasificar risk_level)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="440" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- UC04: Definir y Priorizar Políticas -->
+        <mxCell id="uc_04" value="&lt;b&gt;UC04: Configurar Políticas de Autorización&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Reglas condicionales: ALLOW, DENY, REQUIRE_APPROVAL)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dc2626;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="560" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- UC09: Simulación en Playground -->
+        <mxCell id="uc_09" value="&lt;b&gt;UC09: Simular Escenarios en Playground&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Probar autorización y ataques sin tocar herramientas reales)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d97706;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="680" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- UC06: Aprobar o Rechazar Operaciones -->
+        <mxCell id="uc_06" value="&lt;b&gt;UC06: Resolver Solicitudes de Aprobación Humana&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Bandeja Inbox: Aprobar/Rechazar con motivo justificado)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="860" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- UC07: Consultar Trazas de Ejecución -->
+        <mxCell id="uc_07" value="&lt;b&gt;UC07: Consultar Trazas de Ejecución (Logs / Traces)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Filtro por agente, usuario, acción, resultado y fechas)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#047857;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="980" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- UC08: Gestionar Alertas de Seguridad -->
+        <mxCell id="uc_08" value="&lt;b&gt;UC08: Investigar y Mitigar Alertas de Seguridad&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Incidentes de Prompt Injection y abusos de privilegios)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b91c1c;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="1100" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- UC05: Interceptar Solicitud en Runtime (CORE ENGINE) -->
+        <mxCell id="uc_05" value="&lt;b style=&#39;font-size:13px;&#39;&gt;UC05: Solicitar Ejecución de Acción en Runtime&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Invocación interceptada por AgentGuard Gateway)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=3;fontColor=#0369a1;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="1255" width="340" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC05_A: Include Autenticar y Extraer Contexto -->
+        <mxCell id="uc_05_a" value="&lt;b&gt;Autenticar y Sanitizar Contexto&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:9px;&#39;&gt;(Validar Token, extraer tupla y masking)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;strokeWidth=2;fontColor=#334155;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="840" y="1200" width="260" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- UC05_B: Include Evaluar Reglas en PDP -->
+        <mxCell id="uc_05_b" value="&lt;b&gt;Evaluar Reglas en PDP&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:9px;&#39;&gt;(Resolución de precedencia y condiciones)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;strokeWidth=2;fontColor=#6d28d9;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="840" y="1320" width="260" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- UC05_C: Extend Bloquear y Alertar -->
+        <mxCell id="uc_05_c" value="&lt;b&gt;Bloquear Petición y Disparar Alerta&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:9px;&#39;&gt;(Acción prohibida o Prompt Injection detectada)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontColor=#991b1b;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="1200" width="280" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- UC05_D: Extend Pausar para Aprobación Humana -->
+        <mxCell id="uc_05_d" value="&lt;b&gt;Pausar Solicitud para Aprobación Humana&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:9px;&#39;&gt;(Generar ticket #APR y emitir WebSocket)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff1f2;strokeColor=#be123c;strokeWidth=2;fontColor=#9f1239;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="1320" width="280" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- UC10: Enrutar a Servidor MCP Destino -->
+        <mxCell id="uc_10" value="&lt;b&gt;UC10: Despachar Llamada a Tool MCP Protegida&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Solo si la decisión es ALLOW o Humano Aprobó)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontColor=#166534;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1740" y="1255" width="340" height="80" as="geometry" />
+        </mxCell>
+
+
+        <!-- ================= ACTOR ASSOCIATIONS ================= -->
+        <!-- Admin associations -->
+        <mxCell id="asc_adm_1" style="endArrow=none;html=1;strokeColor=#4338ca;strokeWidth=2;" edge="1" parent="1" source="act_admin" target="uc_01"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="asc_adm_2" style="endArrow=none;html=1;strokeColor=#4338ca;strokeWidth=2;" edge="1" parent="1" source="act_admin" target="uc_02"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="asc_adm_3" style="endArrow=none;html=1;strokeColor=#4338ca;strokeWidth=2;" edge="1" parent="1" source="act_admin" target="uc_04"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="asc_adm_7" style="endArrow=none;html=1;strokeColor=#4338ca;strokeWidth=2;" edge="1" parent="1" source="act_admin" target="uc_07"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Developer associations -->
+        <mxCell id="asc_dev_2" style="endArrow=none;html=1;strokeColor=#d97706;strokeWidth=2;" edge="1" parent="1" source="act_dev" target="uc_02"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="asc_dev_3" style="endArrow=none;html=1;strokeColor=#d97706;strokeWidth=2;" edge="1" parent="1" source="act_dev" target="uc_03"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="asc_dev_4" style="endArrow=none;html=1;strokeColor=#d97706;strokeWidth=2;" edge="1" parent="1" source="act_dev" target="uc_04"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="asc_dev_9" style="endArrow=none;html=1;strokeColor=#d97706;strokeWidth=2;" edge="1" parent="1" source="act_dev" target="uc_09"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Operator associations -->
+        <mxCell id="asc_op_6" style="endArrow=none;html=1;strokeColor=#be123c;strokeWidth=2;" edge="1" parent="1" source="act_operator" target="uc_06"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="asc_op_7" style="endArrow=none;html=1;strokeColor=#be123c;strokeWidth=2;" edge="1" parent="1" source="act_operator" target="uc_07"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="asc_op_8" style="endArrow=none;html=1;strokeColor=#be123c;strokeWidth=2;" edge="1" parent="1" source="act_operator" target="uc_08"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Agent association -->
+        <mxCell id="asc_ag_5" style="endArrow=none;html=1;strokeColor=#059669;strokeWidth=3;" edge="1" parent="1" source="act_agent" target="uc_05"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Tool Receptor association -->
+        <mxCell id="asc_tool_10" style="endArrow=none;html=1;strokeColor=#16a34a;strokeWidth=3;" edge="1" parent="1" source="uc_10" target="act_mcp_server"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+
+        <!-- ================= INCLUDES & EXTENDS ================= -->
+        <!-- UC05 <<include>> UC05_A -->
+        <mxCell id="inc_05_a" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="html=1;verticalAlign=bottom;labelBackgroundColor=none;endArrow=open;endSize=8;dashed=1;rounded=1;strokeColor=#0284c7;strokeWidth=2;fontColor=#0284c7;fontSize=10;fontStyle=1;" edge="1" parent="1" source="uc_05" target="uc_05_a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- UC05 <<include>> UC05_B -->
+        <mxCell id="inc_05_b" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="html=1;verticalAlign=bottom;labelBackgroundColor=none;endArrow=open;endSize=8;dashed=1;rounded=1;strokeColor=#7c3aed;strokeWidth=2;fontColor=#7c3aed;fontSize=10;fontStyle=1;" edge="1" parent="1" source="uc_05" target="uc_05_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- UC05_C <<extend>> UC05 (Bloqueo/Alerta) -->
+        <mxCell id="ext_05_c" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;br&gt;[Decisión == DENY]" style="html=1;verticalAlign=bottom;labelBackgroundColor=none;endArrow=open;endSize=8;dashed=1;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=10;fontStyle=1;" edge="1" parent="1" source="uc_05_c" target="uc_05_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- UC05_D <<extend>> UC05 (Pausa Aprobación) -->
+        <mxCell id="ext_05_d" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;br&gt;[REQUIRE_APPROVAL]" style="html=1;verticalAlign=bottom;labelBackgroundColor=none;endArrow=open;endSize=8;dashed=1;rounded=1;strokeColor=#be123c;strokeWidth=2;fontColor=#be123c;fontSize=10;fontStyle=1;" edge="1" parent="1" source="uc_05_d" target="uc_05_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- UC05_B -> UC10 (Despachar si ALLOW) -->
+        <mxCell id="rel_pdp_dispatch" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;br&gt;[Decisión == ALLOW]" style="html=1;verticalAlign=bottom;labelBackgroundColor=none;endArrow=open;endSize=8;dashed=1;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=10;fontStyle=1;" edge="1" parent="1" source="uc_10" target="uc_05_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- UC06 -> UC10 (Humano aprueba -> Despacha) -->
+        <mxCell id="rel_appr_dispatch" value="Reanuda si aprueba" style="html=1;verticalAlign=bottom;endArrow=open;endSize=8;dashed=1;rounded=1;strokeColor=#be123c;strokeWidth=2;fontColor=#be123c;fontSize=10;" edge="1" parent="1" source="uc_06" target="uc_10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1910" y="897" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

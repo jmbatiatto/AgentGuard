@@ -1,0 +1,19 @@
+# OS Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Logs & temp
+*.log
+*.tmp
+*.bak
+.vscode/.ropeproject
+.idea/
+
+# Node / Dependencies (future-proof)
+node_modules/
+dist/
+.env
+.env.local

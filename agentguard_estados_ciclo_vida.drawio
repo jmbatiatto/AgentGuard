@@ -1,0 +1,192 @@
+<mxfile host="app.diagrams.net" modified="2026-09-25T22:50:00.000Z" agent="AgentGuard-Architect" version="24.0.0" type="device">
+  <diagram id="estados-ciclo-vida" name="Máquinas de Estados y Ciclo de Vida">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1600" background="#f8fafc" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ================= TOP HEADER BANNER ================= -->
+        <mxCell id="sm_banner" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="2320" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="sm_title" value="&lt;font color=&#39;#ffffff&#39; face=&#39;Helvetica&#39;&gt;&lt;b style=&#39;font-size:26px;&#39;&gt;🔄 AgentGuard — Máquina de Estados del Ciclo de Vida en Runtime&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:14px;color:#94a3b8;&#39;&gt;Transiciones Formales de Estado para Ejecuciones (Execution), Aprobaciones Humanas (Approval) e Incidentes (Alert)&lt;/span&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="70" y="42" width="1650" height="66" as="geometry" />
+        </mxCell>
+        <mxCell id="sm_tag" value="&lt;b&gt;UML STATE MACHINE&lt;/b&gt;&lt;br&gt;Manejo Asíncrono &amp;amp; Fail-Closed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#3b82f6;fontColor=#60a5fa;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2100" y="45" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ================= MACHINE 1: EXECUTION LIFECYCLE ================= -->
+        <mxCell id="box_m1" value="MÁQUINA 1: CICLO DE VIDA DE UNA SOLICITUD DE EJECUCIÓN (Execution)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fillColor=#f8fafc;strokeColor=#0284c7;strokeWidth=2;fontColor=#0369a1;rounded=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="160" width="1440" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="box_m1_c" value="" style="whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;" vertex="1" parent="box_m1">
+          <mxGeometry y="30" width="1440" height="820" as="geometry" />
+        </mxCell>
+
+        <!-- Initial Node -->
+        <mxCell id="st_init" value="" style="ellipse;fillColor=#0284c7;strokeColor=none;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="50" y="100" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- State 1: RECEIVED -->
+        <mxCell id="st_recv" value="&lt;b&gt;RECEIVED&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;entry / Interceptar tool call&lt;br&gt;entry / Autenticar credenciales&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=2;fontColor=#1e293b;fontSize=12;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="150" y="80" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- State 2: EVALUATING -->
+        <mxCell id="st_eval" value="&lt;b&gt;EVALUATING&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;entry / Cargar políticas de caché&lt;br&gt;do / Evaluar tupla en PDP&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;strokeWidth=2;fontColor=#1e293b;fontSize=12;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="410" y="80" width="190" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- State 3: BLOCKED (Terminal DENY) -->
+        <mxCell id="st_blocked" value="&lt;b&gt;BLOCKED (DENIED)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;entry / Abortar llamada a Tool&lt;br&gt;entry / Log trace de rechazo&lt;br&gt;exit / Retornar 403 Forbidden&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontColor=#991b1b;fontSize=12;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="410" y="270" width="190" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Final Node Deny -->
+        <mxCell id="st_final_deny" value="" style="ellipse;shape=doubleEllipse;fillColor=#dc2626;strokeColor=#ffffff;strokeWidth=2;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="490" y="400" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- State 4: SUSPENDED_WAITING_APPROVAL -->
+        <mxCell id="st_waiting" value="&lt;b&gt;PENDING_APPROVAL&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;entry / Crear registro de Approval&lt;br&gt;entry / WebSocket Push a Operador&lt;br&gt;do / Iniciar timer de expiración (TTL)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff1f2;strokeColor=#be123c;strokeWidth=2;fontColor=#881337;fontSize=12;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="720" y="80" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- State 5: DISPATCHING -->
+        <mxCell id="st_dispatch" value="&lt;b&gt;DISPATCHING&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;entry / Despachar al servidor MCP&lt;br&gt;do / Esperar respuesta de Tool&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontColor=#92400e;fontSize=12;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="1050" y="80" width="190" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- State 6: COMPLETED (Success) -->
+        <mxCell id="st_completed" value="&lt;b&gt;COMPLETED&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;entry / Guardar Trace (Status 200)&lt;br&gt;exit / Retornar resultado a Agente&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontColor=#166534;fontSize=12;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="1050" y="270" width="190" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Final Node Success -->
+        <mxCell id="st_final_success" value="" style="ellipse;shape=doubleEllipse;fillColor=#16a34a;strokeColor=#ffffff;strokeWidth=2;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="1130" y="390" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- State 7: REJECTED_BY_HUMAN -->
+        <mxCell id="st_rejected_human" value="&lt;b&gt;REJECTED_BY_APPROVER&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;entry / Registrar motivo de rechazo&lt;br&gt;exit / Retornar 403 Approval Denied&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#991b1b;strokeWidth=2;fontColor=#7f1d1d;fontSize=12;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="720" y="270" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- State 8: EXPIRED_TIMEOUT -->
+        <mxCell id="st_expired" value="&lt;b&gt;ABORTED_BY_TIMEOUT&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;entry / Cancelar por Fail-Closed&lt;br&gt;exit / Retornar 408 Request Timeout&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;strokeWidth=2;fontColor=#334155;fontSize=12;" vertex="1" parent="box_m1_c">
+          <mxGeometry x="720" y="420" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Execution Transitions -->
+        <mxCell id="tr_init_recv" value="Tool Call Inbound" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#0284c7;strokeWidth=2;fontSize=10;" edge="1" parent="box_m1_c" source="st_init" target="st_recv">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_recv_eval" value="Auth válida" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#0284c7;strokeWidth=2;fontSize=10;" edge="1" parent="box_m1_c" source="st_recv" target="st_eval">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_eval_blocked" value="[Decisión == DENY]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontStyle=1;fontSize=10;" edge="1" parent="box_m1_c" source="st_eval" target="st_blocked">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_blocked_final" value="" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#dc2626;strokeWidth=2;" edge="1" parent="box_m1_c" source="st_blocked" target="st_final_deny">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_eval_disp" value="[Decisión == ALLOW]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontStyle=1;fontSize=10;" edge="1" parent="box_m1_c" source="st_eval" target="st_dispatch">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="505" y="40" /><mxPoint x="1145" y="40" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tr_eval_appr" value="[Decisión == REQUIRE_APPROVAL]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#be123c;strokeWidth=2;fontColor=#be123c;fontStyle=1;fontSize=10;" edge="1" parent="box_m1_c" source="st_eval" target="st_waiting">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_disp_comp" value="Tool responde 200 OK" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontSize=10;" edge="1" parent="box_m1_c" source="st_dispatch" target="st_completed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_comp_final" value="" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#16a34a;strokeWidth=2;" edge="1" parent="box_m1_c" source="st_completed" target="st_final_success">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_wait_disp" value="[Humano Acepta]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontStyle=1;fontSize=10;" edge="1" parent="box_m1_c" source="st_waiting" target="st_dispatch">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_wait_rej" value="[Humano Rechaza]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#991b1b;strokeWidth=2;fontColor=#991b1b;fontStyle=1;fontSize=10;" edge="1" parent="box_m1_c" source="st_waiting" target="st_rejected_human">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_wait_exp" value="[TTL &gt; 15 min]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#64748b;strokeWidth=2;fontColor=#64748b;fontStyle=1;fontSize=10;" edge="1" parent="box_m1_c" source="st_waiting" target="st_expired">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="830" y="380" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+
+        <!-- ================= MACHINE 2: APPROVAL ENTITY LIFECYCLE ================= -->
+        <mxCell id="box_m2" value="MÁQUINA 2: CICLO DE VIDA DE APROBACIÓN (Approval)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fillColor=#fff1f2;strokeColor=#be123c;strokeWidth=2;fontColor=#9f1239;rounded=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="160" width="820" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="box_m2_c" value="" style="whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;" vertex="1" parent="box_m2">
+          <mxGeometry y="30" width="820" height="370" as="geometry" />
+        </mxCell>
+
+        <!-- Approval States -->
+        <mxCell id="app_st_pending" value="&lt;b&gt;PENDING&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;Visible en bandeja inbox&lt;br&gt;Notificación activa&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe4e6;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontSize=11;" vertex="1" parent="box_m2_c">
+          <mxGeometry x="50" y="120" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="app_st_approved" value="&lt;b&gt;APPROVED (Terminal)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;Auditado con resolutor&lt;br&gt;Motivo registrado&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontColor=#166534;fontSize=11;" vertex="1" parent="box_m2_c">
+          <mxGeometry x="340" y="40" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="app_st_rejected" value="&lt;b&gt;REJECTED (Terminal)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;Rechazo manual expreso&lt;br&gt;Motivo obligatorio&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontColor=#991b1b;fontSize=11;" vertex="1" parent="box_m2_c">
+          <mxGeometry x="340" y="130" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="app_st_expired" value="&lt;b&gt;EXPIRED (Terminal)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;Expirado por timeout&lt;br&gt;Cancelación preventiva&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;strokeWidth=2;fontColor=#334155;fontSize=11;" vertex="1" parent="box_m2_c">
+          <mxGeometry x="340" y="220" width="180" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Approval Transitions -->
+        <mxCell id="tr_ap_ok" value="click [Aprobar]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontSize=10;" edge="1" parent="box_m2_c" source="app_st_pending" target="app_st_approved">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_ap_rej" value="click [Rechazar]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontSize=10;" edge="1" parent="box_m2_c" source="app_st_pending" target="app_st_rejected">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_ap_exp" value="Timeout TTL" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#64748b;strokeWidth=2;fontSize=10;" edge="1" parent="box_m2_c" source="app_st_pending" target="app_st_expired">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+
+        <!-- ================= MACHINE 3: ALERT LIFECYCLE ================= -->
+        <mxCell id="box_m3" value="MÁQUINA 3: CICLO DE VIDA DE INCIDENTE DE SEGURIDAD (Alert)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fillColor=#fef2f2;strokeColor=#dc2626;strokeWidth=2;fontColor=#991b1b;rounded=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="600" width="820" height="410" as="geometry" />
+        </mxCell>
+        <mxCell id="box_m3_c" value="" style="whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;" vertex="1" parent="box_m3">
+          <mxGeometry y="30" width="820" height="380" as="geometry" />
+        </mxCell>
+
+        <!-- Alert States -->
+        <mxCell id="alt_st_open" value="&lt;b&gt;OPEN&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;Evento disparado por PDP&lt;br&gt;Alerta roja en Dashboard&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontColor=#991b1b;fontSize=11;" vertex="1" parent="box_m3_c">
+          <mxGeometry x="50" y="100" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="alt_st_inv" value="&lt;b&gt;INVESTIGATING&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;Asignada a operador&lt;br&gt;Revisión de payload&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontColor=#92400e;fontSize=11;" vertex="1" parent="box_m3_c">
+          <mxGeometry x="300" y="100" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="alt_st_res" value="&lt;b&gt;RESOLVED&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;Mitigación aplicada&lt;br&gt;Agente contenido/revocado&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontColor=#166534;fontSize=11;" vertex="1" parent="box_m3_c">
+          <mxGeometry x="560" y="40" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="alt_st_dis" value="&lt;b&gt;DISMISSED&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;Falso positivo descartado&lt;br&gt;Regla ajustada&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;strokeWidth=2;fontColor=#334155;fontSize=11;" vertex="1" parent="box_m3_c">
+          <mxGeometry x="560" y="160" width="180" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Alert Transitions -->
+        <mxCell id="tr_alt_open_inv" value="Operador toma caso" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#d97706;strokeWidth=2;fontSize=10;" edge="1" parent="box_m3_c" source="alt_st_open" target="alt_st_inv">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_alt_inv_res" value="Cerrar con mitigación" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontSize=10;" edge="1" parent="box_m3_c" source="alt_st_inv" target="alt_st_res">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr_alt_inv_dis" value="Descartar" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#64748b;strokeWidth=2;fontSize=10;" edge="1" parent="box_m3_c" source="alt_st_inv" target="alt_st_dis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

