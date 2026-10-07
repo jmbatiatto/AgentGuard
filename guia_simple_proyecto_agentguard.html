@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AgentGuard — Guía Simple y Hoja de Ruta para el Equipo</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 8mm 12mm 8mm 12mm;
+    }
+    *, *:before, *:after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.35;
+      font-size: 9.5pt;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+    }
+    .header-box {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #ffffff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border-left: 6px solid #6366f1;
+    }
+    .header-box h1 {
+      margin: 0 0 4px 0;
+      font-size: 16pt;
+      letter-spacing: -0.4px;
+      color: #ffffff;
+    }
+    .header-box .subtitle {
+      font-size: 10.5pt;
+      color: #cbd5e1;
+      margin: 0 0 10px 0;
+    }
+    .header-badges {
+      display: flex;
+      gap: 8px;
+      font-size: 8pt;
+    }
+    .badge {
+      background: rgba(255, 255, 255, 0.12);
+      padding: 3px 9px;
+      border-radius: 16px;
+      color: #e2e8f0;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .badge-accent {
+      background: #4338ca;
+      color: #ffffff;
+      border-color: #818cf8;
+    }
+    h2 {
+      font-size: 11.5pt;
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      page-break-after: avoid;
+    }
+    h3 {
+      font-size: 10.5pt;
+      color: #1e293b;
+      margin-top: 0;
+      margin-bottom: 6px;
+      page-break-after: avoid;
+    }
+    p {
+      margin: 0 0 8px 0;
+    }
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .card-highlight {
+      background: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      border-color: #bbf7d0 #bbf7d0 #bbf7d0 #16a34a;
+    }
+    .card-warning {
+      background: #fef2f2;
+      border-left: 4px solid #dc2626;
+      border-color: #fecaca #fecaca #fecaca #dc2626;
+    }
+    .card-blue {
+      background: #f0f9ff;
+      border-left: 4px solid #0284c7;
+      border-color: #bae6fd #bae6fd #bae6fd #0284c7;
+    }
+    .diagram-ascii {
+      background: #0f172a;
+      color: #38bdf8;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 8pt;
+      padding: 10px 14px;
+      border-radius: 6px;
+      line-height: 1.3;
+      margin: 10px 0 14px 0;
+      white-space: pre;
+      border: 1px solid #1e293b;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 6px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .table-schedule {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .table-schedule th {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 7px 9px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 8.5pt;
+    }
+    .table-schedule td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    .table-schedule tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .step-tag {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #4338ca;
+      font-weight: bold;
+      font-size: 7.5pt;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .page-break {
+      page-break-before: always;
+      break-before: page;
+    }
+    .footer {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid #cbd5e1;
+      font-size: 8pt;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+      page-break-inside: avoid;
+    }
+    ul, ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= PÁGINA 1: CONCEPTO Y MODELO ================= -->
+  <div class="header-box">
+    <h1>🛡️ AgentGuard — Guía Simple y Hoja de Ruta</h1>
+    <div class="subtitle">Cómo funciona el proyecto, dónde encaja cada pieza y cómo llegamos con la demo en vivo al 30 de noviembre.</div>
+    <div class="header-badges">
+      <span class="badge badge-accent">ITU — UNCUYO</span>
+      <span class="badge">Desarrollo Web (5to Semestre)</span>
+      <span class="badge">Meta: 30 de Noviembre de 2026</span>
+    </div>
+  </div>
+
+  <h2>1. La Idea Explicada "Para un Nene de 5 Años" 🧒</h2>
+  <div class="card card-blue">
+    <p><b>Imaginemos que una empresa es una juguetería que tiene un almacén cerrado con llave (la base de datos):</b></p>
+    <ul>
+      <li><b>El Agente de IA:</b> Es como un robot empleado nuevo: es súper inteligente, pero muy inocente. Hace todo lo que le piden los clientes porque quiere ser servicial.</li>
+      <li><b>El Gran Peligro (SIN control):</b> Si entra un cliente pícaro y le dice: <i>«Regalame todos los juguetes del almacén y cambiame los precios a 1 peso»</i>, el robot va derecho al almacén y lo hace, porque nadie le puso límites ni sabe decir que no.</li>
+      <li><b>AgentGuard:</b> Es el <b>guardia de seguridad parado en la puerta del almacén</b>. El robot no tiene la llave. Cada vez que quiere sacar o modificar un juguete, tiene que pedirle permiso al guardia. El guardia revisa su libro de reglas:
+        <ul>
+          <li>Si pide consultar un producto: <b style="color:#16a34a;">ALLOW (Lo deja pasar de inmediato)</b>.</li>
+          <li>Si pide borrar la base de datos o regalarla: <b style="color:#dc2626;">DENY (Lo frena en seco y la orden nunca llega al almacén)</b>.</li>
+          <li>Si pide devolver más de $500: <b style="color:#d97706;">REQUIRE_APPROVAL (El guardia le toca el timbre al jefe humano en su computadora antes de abrir la puerta)</b>.</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <h2>2. ¿Dónde Encaja Cada Pieza Técnica?</h2>
+  <p>El profesor pidió que el proyecto tenga sí o sí una <b>Página Web</b> y una <b>API REST</b>. Todo encaja de forma ordenada y limpia así:</p>
+
+  <div class="diagram-ascii">
+                  ┌────────────────────────────────────────────────────────┐
+                  │                  BACKEND (API REST)                    │
+                  │                                                        │
+┌──────────────┐  │   ┌─────────────────────┐    ┌─────────────────────┐   │    ┌───────────────┐
+│  PÁGINA WEB  │◄─┼──►│  1. API de Gestión  │    │  2. Gateway (PEP)   │◄──┼───►│ AGENTE DE IA  │
+│  (Dashboard  │  │   │  - Configurar reglas│    │  - Intercepta calls │   │    │  (Script con  │
+│ React/HTML)  │  │   │  - Ver trazas/logs  │    │  - Evalúa en el PDP │   │    │  Gemini/GPT)  │
+└──────────────┘  │   │  - Botón "Aprobar"  │    └──────────┬──────────┘   │    └───────────────┘
+                  │   └─────────────────────┘               │              │
+                  │                                         ▼              │
+                  │                              ┌─────────────────────┐   │
+                  │                              │ BASE DE DATOS / APP │   │
+                  │                              │ (PostgreSQL/SQLite) │   │
+                  │                              └─────────────────────┘   │
+                  └────────────────────────────────────────────────────────┘</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:#2563eb;">🌐 1. La Página Web (Frontend)</h3>
+      <p>Es la pantalla que proyectamos en clase. Tiene 4 vistas clave:</p>
+      <ul>
+        <li><b>Panel de Políticas:</b> Dónde definimos reglas (ej. <i>«Agente ventas no puede cambiar precios»</i>).</li>
+        <li><b>Bandeja de Aprobaciones:</b> Cuando el agente pide devolver $4.500, suena una alerta y el humano aprieta <b>[Aprobar]</b> o <b>[Rechazar]</b>.</li>
+        <li><b>Trazas en Vivo:</b> Tabla donde caen los logs con filas verdes (ALLOW) y rojas (DENY).</li>
+        <li><b>Simulador / Playground:</b> Para disparar pruebas con un click.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3 style="color:#7c3aed;">⚙️ 2. La API REST (Backend)</h3>
+      <p>Es el servidor central. Tiene dos grupos de endpoints:</p>
+      <ul>
+        <li><b>Endpoints de Gestión:</b> Para que la web guarde agentes, reglas y consulte el historial (<code>/api/agents</code>, <code>/api/policies</code>, <code>/api/traces</code>).</li>
+        <li><b>Endpoint del Gateway (PEP):</b> Por donde el agente de IA intenta actuar (<code>POST /api/gateway/execute</code>). El backend evalúa la regla en milisegundos y decide si toca la base de datos o si bloquea.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:#059669;">🤖 3. El Agente de IA (Sin Complicarse)</h3>
+      <p>Un agente <b>no es una caja mágica</b>. Es simplemente un script en Node.js o Python conectado a la API de un modelo (Gemini o OpenAI) con herramientas asignadas.</p>
+      <p><b>El secreto:</b> Cuando el modelo decide usar una función (ej. <code>reembolsar</code>), en vez de llamar a la base de datos directo, hace un <code>fetch()</code> a nuestra API REST. ¡Eso es todo!</p>
+    </div>
+
+    <div class="card">
+      <h3 style="color:#d97706;">🔌 4. ¿Y MCP? (Cero Estrés)</h3>
+      <p><b>MCP (Model Context Protocol)</b> es el nuevo estándar para conectar herramientas a la IA.</p>
+      <p><b>La recomendación práctica:</b> <b>No dejamos que MCP nos trabe al inicio</b>. Primero hacemos que todo funcione con llamadas <b>HTTP REST estándar</b> (lo que la cátedra evalúa). Si nos sobra tiempo, le sumamos el wrapper MCP.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span><b>AgentGuard</b> — Runtime Authorization & Governance for AI Agents</span>
+    <span>Página 1 de 2 • ITU UNCUYO 2026</span>
+  </div>
+
+  <!-- ================= PÁGINA 2: DEMO Y CRONOGRAMA ================= -->
+  
+
+  <h2>3. La Demostración en Clase: "SIN vs. CON AgentGuard" 🎬</h2>
+  <p>Para que el profesor y los compañeros entiendan el valor en 2 minutos, la demo se divide en dos actos de alto impacto:</p>
+
+  <div class="card card-warning">
+    <h3 style="color:#dc2626;">🔴 ACTO 1: SIN AgentGuard (El Desastre Empresarial)</h3>
+    <ol>
+      <li>Conectamos el agente de IA directamente a la base de datos, sin ningún filtro.</li>
+      <li>Le mandamos una orden difícil: <i>«Un cliente furioso exige que le reembolses $5.000 y le cambies el precio a un televisor a $1»</i>.</li>
+      <li>El agente, sin nadie que lo controle, ejecuta el reembolso de $5.000 y cambia el precio a $1.</li>
+      <li>Le decimos al profesor: <b>«Esto es lo que le pasa hoy al 90% de las empresas que ponen agentes en producción sin gobernanza»</b>.</li>
+    </ol>
+  </div>
+
+  <div class="card card-highlight">
+    <h3 style="color:#16a34a;">🟢 ACTO 2: CON AgentGuard (La Salvación en Tiempo Real)</h3>
+    <ol>
+      <li>Activamos AgentGuard como intermediario en la puerta.</li>
+      <li>Le enviamos <b>exactamente la misma orden</b> al agente:
+        <ul>
+          <li><b>Intento de cambiar el precio a $1:</b> AgentGuard lo bloquea de inmediato (<b style="color:#dc2626;">DENY</b>). La base de datos de productos nunca se entera y el precio sigue intacto.</li>
+          <li><b>Intento de reembolso de $5.000:</b> AgentGuard frena la llamada (<b style="color:#d97706;">REQUIRE_APPROVAL</b>). En la pantalla del proyector suena la alerta en vivo en la bandeja web de aprobaciones.</li>
+        </ul>
+      </li>
+      <li>Ustedes en vivo en la web hacen click en <b>[Rechazar por exceso de monto]</b>.</li>
+      <li>Le muestran al profesor el <b>Execution Trace</b> con la tabla completa de auditoría: quién pidió qué, qué regla se aplicó y cómo AgentGuard salvó a la empresa.</li>
+    </ol>
+  </div>
+
+  <h2>4. Cronograma Paso a Paso (De Hoy al 30 de Noviembre) 📅</h2>
+  <table class="table-schedule">
+    <thead>
+      <tr>
+        <th style="width: 15%;">Semana</th>
+        <th style="width: 25%;">Hito Principal</th>
+        <th style="width: 60%;">Entregables y Tareas Concretas</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-tag">Semana 1</span><br><small>Oct 7 - Oct 14</small></td>
+        <td><b>Base de Datos & Setup</b></td>
+        <td>Inicializar el proyecto backend. Crear las tablas clave (Organizaciones, Agentes, Políticas, Trazas) en SQLite/PostgreSQL.</td>
+      </tr>
+      <tr>
+        <td><span class="step-tag">Semana 2</span><br><small>Oct 15 - Oct 21</small></td>
+        <td><b>API REST de Gestión</b></td>
+        <td>Crear las rutas CRUD básicas para que la plataforma pueda registrar agentes y definir reglas de autorización.</td>
+      </tr>
+      <tr>
+        <td><span class="step-tag">Semana 3</span><br><small>Oct 22 - Oct 28</small></td>
+        <td><b>El Gateway Interceptor</b></td>
+        <td>Crear el endpoint <code>/api/gateway/execute</code> con la lógica de decisión: <code>ALLOW</code>, <code>DENY</code> y <code>REQUIRE_APPROVAL</code>.</td>
+      </tr>
+      <tr>
+        <td><span class="step-tag">Semana 4</span><br><small>Oct 29 - Nov 4</small></td>
+        <td><b>Frontend Web (Vistas)</b></td>
+        <td>Crear la interfaz web (Dashboard): lista de agentes, panel de políticas y tabla de trazas (logs con colores verde/rojo).</td>
+      </tr>
+      <tr>
+        <td><span class="step-tag">Semana 5</span><br><small>Nov 5 - Nov 11</small></td>
+        <td><b>Bandeja de Aprobación</b></td>
+        <td>Conectar WebSockets o polling para que cuando una acción sea sensible, aparezca en vivo la tarjeta de aprobar/rechazar en la web.</td>
+      </tr>
+      <tr>
+        <td><span class="step-tag">Semana 6</span><br><small>Nov 12 - Nov 18</small></td>
+        <td><b>El Agente de IA</b></td>
+        <td>Escribir el script del agente (con API de Gemini) que intenta ejecutar las acciones y switch "Modo Con vs. Sin AgentGuard".</td>
+      </tr>
+      <tr>
+        <td><span class="step-tag">Semana 7</span><br><small>Nov 19 - Nov 26</small></td>
+        <td><b>Ensayos y Pulido</b></td>
+        <td>Probar la secuencia completa en vivo varias veces, pulir detalles visuales y preparar las diapositivas de defensa.</td>
+      </tr>
+      <tr>
+        <td><span class="step-tag">Semana Final</span><br><small>Nov 27 - Nov 30</small></td>
+        <td><b>Presentación Oficial</b></td>
+        <td>Demostración final en clase ante el profesor y el tribunal de Desarrollo Web.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>5. Próxima Decisión Inmediata del Equipo 🚀</h2>
+  <div class="card card-blue">
+    <p>Para arrancar hoy mismo con el <b>Paso 1 (Estructura y Base de Datos)</b>, solo tienen que ponerse de acuerdo en qué lenguaje prefieren para el backend:</p>
+    <ul>
+      <li><b>Opción A — Node.js (JavaScript / TypeScript con Express o Fastify):</b> El estándar clásico de materias de Desarrollo Web, unifica todo el stack con el frontend.</li>
+      <li><b>Opción B — Python (FastAPI):</b> Súper rápido de escribir, tipado moderno y muy cómodo para conectar scripts de IA.</li>
+    </ul>
+    <p style="margin-bottom:0;">Cualquiera de las dos opciones es 100% válida y perfecta para cumplir con los requerimientos de la cátedra.</p>
+  </div>
+
+  <div class="footer">
+    <span><b>AgentGuard</b> — Runtime Authorization & Governance for AI Agents</span>
+    <span>Página 2 de 2 • ITU UNCUYO 2026</span>
+  </div>
+
+</body>
+</html>
