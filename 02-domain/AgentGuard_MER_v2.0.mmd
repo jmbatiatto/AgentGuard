@@ -1,0 +1,152 @@
+erDiagram
+    %% AgentGuard: Runtime Authorization & Governance for AI Agents
+    %% Modelo Entidad-Relación (MER) - Versión Mejorada v2.0
+
+    ORGANIZATION ||--o{ USER : "has (1:N)"
+    ORGANIZATION ||--o{ AGENT : "owns (1:N)"
+    ORGANIZATION ||--o{ TOOL : "registers (1:N)"
+    ORGANIZATION ||--o{ POLICY : "defines (1:N)"
+    ORGANIZATION ||--o{ EXECUTION : "records (1:N)"
+    ORGANIZATION ||--o{ ALERT : "raises (1:N)"
+    ORGANIZATION ||--o{ AUDIT_EVENT : "logs (1:N)"
+
+    USER ||--o{ AGENT : "manages (owner_user_id)"
+    USER ||--o{ EXECUTION : "delegates (delegator_user_id)"
+    USER ||--o{ APPROVAL : "resolves (assigned_approver_id)"
+    USER ||--o{ ALERT : "investigates (resolved_by_user_id)"
+
+    AGENT ||--o{ AGENT_TOOL : "grants (1:N)"
+    TOOL ||--o{ AGENT_TOOL : "assigned_to (1:N)"
+    TOOL ||--o{ TOOL_ACTION : "exposes (1:N)"
+
+    POLICY ||--o{ POLICY_RULE : "contains (1:N)"
+    TOOL_ACTION ||--o{ POLICY_RULE : "governed_by (1:N)"
+    AGENT ||--o{ POLICY_RULE : "targeted_by (0..1:N)"
+
+    AGENT ||--o{ EXECUTION : "requests (1:N)"
+    TOOL ||--o{ EXECUTION : "invoked_in (1:N)"
+    TOOL_ACTION ||--o{ EXECUTION : "executed_in (1:N)"
+    POLICY_RULE ||--o{ EXECUTION : "evaluated_in (0..1:N)"
+
+    EXECUTION ||--o| APPROVAL : "requires_if_pending (1:0..1)"
+    EXECUTION ||--o{ ALERT : "triggers_if_anomaly (1:N)"
+    EXECUTION ||--o{ AUDIT_EVENT : "traces (1:N)"
+
+    ORGANIZATION {
+        UUID id PK
+        string name
+        timestamp created_at
+    }
+
+    USER {
+        UUID id PK
+        UUID organization_id FK
+        string email
+        string role "ADMIN | OPERATOR | APPROVER"
+        timestamp created_at
+    }
+
+    AGENT {
+        UUID id PK
+        UUID organization_id FK
+        UUID owner_user_id FK
+        string name
+        string purpose
+        string status "ACTIVE | SUSPENDED | REVOKED"
+        timestamp created_at
+    }
+
+    TOOL {
+        UUID id PK
+        UUID organization_id FK
+        string name
+        string protocol "MCP | REST"
+        string endpoint_url
+        string description
+        timestamp created_at
+    }
+
+    TOOL_ACTION {
+        UUID id PK
+        UUID tool_id FK
+        string action_name
+        string risk_level "LOW | MEDIUM | HIGH | CRITICAL"
+        string description
+        timestamp created_at
+    }
+
+    AGENT_TOOL {
+        UUID id PK
+        UUID agent_id FK
+        UUID tool_id FK
+        boolean enabled
+        jsonb config
+        timestamp created_at
+    }
+
+    POLICY {
+        UUID id PK
+        UUID organization_id FK
+        string name
+        string description
+        int priority
+        boolean is_active
+        timestamp created_at
+    }
+
+    POLICY_RULE {
+        UUID id PK
+        UUID policy_id FK
+        int priority
+        string effect "ALLOW | DENY | REQUIRE_APPROVAL"
+        UUID tool_action_id FK
+        UUID target_agent_id FK
+        jsonb conditions
+        timestamp created_at
+    }
+
+    EXECUTION {
+        UUID id PK
+        UUID organization_id FK
+        UUID agent_id FK
+        UUID delegator_user_id FK
+        UUID tool_id FK
+        UUID tool_action_id FK
+        string resource
+        jsonb request_context
+        string decision "ALLOW | DENY | REQUIRE_APPROVAL"
+        string status "PENDING_APPROVAL | REJECTED | EXECUTED"
+        UUID evaluated_policy_rule_id FK
+        timestamp timestamp
+    }
+
+    APPROVAL {
+        UUID id PK
+        UUID execution_id FK
+        UUID assigned_approver_id FK
+        string status "PENDING | APPROVED | REJECTED | EXPIRED"
+        string resolution_reason
+        timestamp resolved_at
+    }
+
+    ALERT {
+        UUID id PK
+        UUID organization_id FK
+        UUID execution_id FK
+        string alert_type
+        string severity "LOW | MEDIUM | HIGH | CRITICAL"
+        string status "OPEN | INVESTIGATING | RESOLVED | DISMISSED"
+        UUID resolved_by_user_id FK
+        timestamp resolved_at
+        timestamp created_at
+    }
+
+    AUDIT_EVENT {
+        UUID id PK
+        UUID organization_id FK
+        string actor_type "USER | AGENT | SYSTEM"
+        UUID actor_id
+        string event_type
+        jsonb metadata
+        timestamp timestamp
+    }

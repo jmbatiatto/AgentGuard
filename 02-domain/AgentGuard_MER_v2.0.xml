@@ -1,0 +1,271 @@
+<?xml version="1.0" ?>
+<mxfile host="app.diagrams.net" modified="2026-09-14T11:20:00.000Z" agent="AgentGuard-Generator" version="24.7.5" type="device">
+  <diagram id="agentguard-mer-v2" name="AgentGuard MER v2.0">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1200" background="#F8FAFC" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="hdr_title" value="&lt;div style=&quot;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;&quot;&gt;&lt;div style=&quot;display: flex; align-items: center; gap: 8px;&quot;&gt;&lt;span style=&quot;font-size: 26px; font-weight: 800; color: #0F172A; letter-spacing: -0.5px;&quot;&gt;🛡️ AgentGuard&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 13px; font-weight: 600; color: #2563EB; margin-top: 2px;&quot;&gt;Runtime Authorization &amp; Governance for AI Agents&lt;/div&gt;&lt;div style=&quot;font-size: 11px; color: #64748B; margin-top: 1px;&quot;&gt;Modelo Entidad-Relación (MER) - Versión Mejorada v2.0&lt;/div&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="480" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="multi_tenant_box" value="&lt;div style=&quot;display: flex; align-items: flex-start; gap: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;&quot;&gt;&lt;div style=&quot;font-size: 20px;&quot;&gt;🏢&lt;/div&gt;&lt;div&gt;&lt;div style=&quot;font-weight: 700; font-size: 12px; color: #1E3A8A;&quot;&gt;Arquitectura Multi-Tenant&lt;/div&gt;&lt;div style=&quot;font-size: 10.5px; color: #3B82F6; line-height: 1.35; margin-top: 2px;&quot;&gt;Cada organización (tenant) tiene sus propios usuarios, agentes, herramientas, políticas, ejecuciones y auditoría, aislados entre sí.&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#BFDBFE;strokeWidth=1;align=left;verticalAlign=middle;padding=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="20" width="440" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_org" value="&lt;div style=&quot;background-color: #5E35B1; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;🏢 &amp;nbsp;Organization&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;name&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#5E35B1;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="75" width="230" height="95" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_user" value="&lt;div style=&quot;background-color: #0288D1; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;👤 &amp;nbsp;User&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;organization_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;email&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;role&lt;/b&gt; (Enum: ADMIN, OPERATOR, APPROVER)&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#0288D1;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="245" height="135" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_agent" value="&lt;div style=&quot;background-color: #2E7D32; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;🤖 &amp;nbsp;Agent&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;organization_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;owner_user_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;name&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;purpose&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Text)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;status&lt;/b&gt; (Enum: ACTIVE, SUSPENDED, REVOKED)&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="160" width="255" height="165" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_tool" value="&lt;div style=&quot;background-color: #00838F; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;🔧 &amp;nbsp;Tool&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;organization_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;name&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;protocol&lt;/b&gt; (Enum: MCP, REST)&lt;br/&gt;&amp;bull; &lt;b&gt;endpoint_url&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;description&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Text)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00838F;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="160" width="240" height="165" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_tool_action" value="&lt;div style=&quot;background-color: #D97706; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;⚙️ &amp;nbsp;ToolAction&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;tool_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;action_name&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;risk_level&lt;/b&gt; (Enum: LOW, MEDIUM, HIGH, CRITICAL)&lt;br/&gt;&amp;bull; &lt;b&gt;description&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Text)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="160" width="260" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_policy" value="&lt;div style=&quot;background-color: #D32F2F; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;🛡️ &amp;nbsp;Policy&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;organization_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;name&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;description&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Text)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;priority&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Integer)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;is_active&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Boolean)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#D32F2F;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="175" width="235" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_agent_tool" value="&lt;div style=&quot;background-color: #EA580C; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;🔗 &amp;nbsp;AgentTool&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;agent_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;tool_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;enabled&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Boolean)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;config&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(JSONB, Nullable)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFEDD5;strokeColor=#EA580C;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="395" width="230" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_policy_rule" value="&lt;div style=&quot;background-color: #512DA8; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;📋 &amp;nbsp;PolicyRule&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;policy_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;priority&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Integer)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;effect&lt;/b&gt; (Enum: ALLOW, DENY, REQUIRE_APPROVAL)&lt;br/&gt;&amp;bull; &lt;b&gt;tool_action_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;target_agent_id&lt;/b&gt; (FK, Nullable)&lt;br/&gt;&amp;bull; &lt;b&gt;conditions&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(JSONB)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#512DA8;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="395" width="260" height="175" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_execution" value="&lt;div style=&quot;background-color: #0F766E; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;▶️ &amp;nbsp;Execution&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;organization_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;agent_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;delegator_user_id&lt;/b&gt; (FK, Nullable)&lt;br/&gt;&amp;bull; &lt;b&gt;tool_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;tool_action_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;resource&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;request_context&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(JSONB)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;decision&lt;/b&gt; (Enum: ALLOW, DENY, REQUIRE_APPROVAL)&lt;br/&gt;&amp;bull; &lt;b&gt;status&lt;/b&gt; (Enum: PENDING_APPROVAL, REJECTED, EXECUTED)&lt;br/&gt;&amp;bull; &lt;b&gt;evaluated_policy_rule_id&lt;/b&gt; (FK, Nullable)&lt;br/&gt;&amp;bull; &lt;b&gt;timestamp&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#CCFBF1;strokeColor=#0F766E;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="370" width="275" height="235" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_approval" value="&lt;div style=&quot;background-color: #BE185D; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;✅ &amp;nbsp;Approval&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;execution_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;assigned_approver_id&lt;/b&gt; (FK, Nullable)&lt;br/&gt;&amp;bull; &lt;b&gt;status&lt;/b&gt; (Enum: PENDING, APPROVED, REJECTED, EXPIRED)&lt;br/&gt;&amp;bull; &lt;b&gt;resolution_reason&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Text)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;resolved_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp, Nullable)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FCE7F3;strokeColor=#BE185D;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="335" width="265" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_alert" value="&lt;div style=&quot;background-color: #7E22CE; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;⚠️ &amp;nbsp;Alert&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;organization_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;execution_id&lt;/b&gt; (FK, Nullable)&lt;br/&gt;&amp;bull; &lt;b&gt;alert_type&lt;/b&gt; (Enum)&lt;br/&gt;&amp;bull; &lt;b&gt;severity&lt;/b&gt; (Enum: LOW, MEDIUM, HIGH, CRITICAL)&lt;br/&gt;&amp;bull; &lt;b&gt;status&lt;/b&gt; (Enum: OPEN, INVESTIGATING, RESOLVED, DISMISSED)&lt;br/&gt;&amp;bull; &lt;b&gt;resolved_by_user_id&lt;/b&gt; (FK, Nullable)&lt;br/&gt;&amp;bull; &lt;b&gt;resolved_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp, Nullable)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;created_at&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7E22CE;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="505" width="265" height="175" as="geometry"/>
+        </mxCell>
+        <mxCell id="ent_audit_event" value="&lt;div style=&quot;background-color: #334155; color: #FFFFFF; padding: 6px 10px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; display: flex; align-items: center;&quot;&gt;📜 &amp;nbsp;AuditEvent&lt;/div&gt;&lt;div style=&quot;padding: 8px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; text-align: left; color: #1E293B; line-height: 1.4;&quot;&gt;&amp;bull; &lt;b&gt;id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(PK, UUID)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;organization_id&lt;/b&gt; &lt;span style=&quot;color:#64748B;&quot;&gt;(FK)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;actor_type&lt;/b&gt; (Enum: USER, AGENT, SYSTEM)&lt;br/&gt;&amp;bull; &lt;b&gt;actor_id&lt;/b&gt; (UUID)&lt;br/&gt;&amp;bull; &lt;b&gt;event_type&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(String)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;metadata&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(JSONB)&lt;/span&gt;&lt;br/&gt;&amp;bull; &lt;b&gt;timestamp&lt;/b&gt; &lt;span style=&quot;color:#94A3B8;&quot;&gt;(Timestamp)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#334155;strokeWidth=1.5;verticalAlign=top;align=left;spacing=0;overflow=hidden;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="705" width="265" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_user" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_org" target="ent_user" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_user_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_org_user">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_user_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_org_user">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_agent" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_org" target="ent_agent" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_agent_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_org_agent">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_agent_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_org_agent">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_policy" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_org" target="ent_policy" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_policy_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_org_policy">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_policy_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_org_policy">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_tool" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_org" target="ent_tool" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_tool_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_org_tool">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_org_tool_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_org_tool">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_agent_agenttool" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_agent" target="ent_agent_tool" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_agent_agenttool_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_agent_agenttool">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_agent_agenttool_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_agent_agenttool">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_toolaction" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_tool" target="ent_tool_action" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_toolaction_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_tool_toolaction">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_toolaction_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_tool_toolaction">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_agenttool" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_tool" target="ent_agent_tool" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_agenttool_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_tool_agenttool">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_agenttool_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_tool_agenttool">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_policy_policyrule" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_policy" target="ent_policy_rule" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_policy_policyrule_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_policy_policyrule">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_policy_policyrule_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_policy_policyrule">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_toolaction_policyrule" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_tool_action" target="ent_policy_rule" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_toolaction_policyrule_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_toolaction_policyrule">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_toolaction_policyrule_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_toolaction_policyrule">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_policyrule_execution" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_policy_rule" target="ent_execution" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_policyrule_execution_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_policyrule_execution">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_policyrule_execution_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_policyrule_execution">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_approval" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_execution" target="ent_approval" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_approval_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_execution_approval">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_approval_tgt" value="0..1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_execution_approval">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_alert" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_execution" target="ent_alert" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_alert_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_execution_alert">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_alert_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_execution_alert">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_audit" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_execution" target="ent_audit_event" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_audit_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_execution_audit">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_execution_audit_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_execution_audit">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_execution" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#1E293B;endArrow=none;" edge="1" source="ent_tool" target="ent_execution" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_execution_src" value="1" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_tool_execution">
+          <mxGeometry x="-0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tool_execution_tgt" value="N" style="text;html=1;resizable=0;points=[];align=center;verticalAlign=middle;labelBackgroundColor=none;fontSize=11;fontStyle=1;fontColor=#475569;" vertex="1" connectable="0" parent="edge_tool_execution">
+          <mxGeometry x="0.8" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="title_entities_summary" value="&lt;div style=&quot;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 700; color: #0F172A; background-color: #0F172A; color: white; padding: 6px 14px; border-radius: 4px; display: inline-block;&quot;&gt;Entidades y atributos&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="660" width="240" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_org" value="&lt;div style=&quot;font-weight: bold; color: #5E35B1; font-size: 11px; margin-bottom: 4px;&quot;&gt;🏢 Organization (Empresa / Tenant)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; name (String)&lt;br/&gt;&amp;bull; created_at (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#5E35B1;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_user" value="&lt;div style=&quot;font-weight: bold; color: #0288D1; font-size: 11px; margin-bottom: 4px;&quot;&gt;👤 User (Usuario Humano)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; organization_id (FK)&lt;br/&gt;&amp;bull; email (String)&lt;br/&gt;&amp;bull; role (Enum: ADMIN, OPERATOR, APPROVER)&lt;br/&gt;&amp;bull; created_at (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#0288D1;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="710" width="230" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_agent" value="&lt;div style=&quot;font-weight: bold; color: #2E7D32; font-size: 11px; margin-bottom: 4px;&quot;&gt;🤖 Agent (Agente de IA)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; organization_id (FK)&lt;br/&gt;&amp;bull; owner_user_id (FK)&lt;br/&gt;&amp;bull; name (String)&lt;br/&gt;&amp;bull; purpose (Text)&lt;br/&gt;&amp;bull; status (Enum: ACTIVE, SUSPENDED, REVOKED)&lt;br/&gt;&amp;bull; created_at (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="530" y="710" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_agent_tool" value="&lt;div style=&quot;font-weight: bold; color: #EA580C; font-size: 11px; margin-bottom: 4px;&quot;&gt;🔗 AgentTool (Acceso a Herramientas)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; agent_id (FK)&lt;br/&gt;&amp;bull; tool_id (FK)&lt;br/&gt;&amp;bull; enabled (Boolean)&lt;br/&gt;&amp;bull; config (JSONB, Nullable)&lt;br/&gt;&amp;bull; created_at (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFEDD5;strokeColor=#EA580C;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="770" y="710" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_tool" value="&lt;div style=&quot;font-weight: bold; color: #00838F; font-size: 11px; margin-bottom: 4px;&quot;&gt;🔧 Tool (Herramienta Externa)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; organization_id (FK)&lt;br/&gt;&amp;bull; name (String)&lt;br/&gt;&amp;bull; protocol (Enum: MCP, REST)&lt;br/&gt;&amp;bull; endpoint_url (String)&lt;br/&gt;&amp;bull; description (Text)&lt;br/&gt;&amp;bull; created_at (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00838F;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="835" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_tool_action" value="&lt;div style=&quot;font-weight: bold; color: #D97706; font-size: 11px; margin-bottom: 4px;&quot;&gt;⚙️ ToolAction (Acción de Herramienta)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; tool_id (FK)&lt;br/&gt;&amp;bull; action_name (String)&lt;br/&gt;&amp;bull; risk_level (Enum)&lt;br/&gt;&amp;bull; description (Text)&lt;br/&gt;&amp;bull; created_at (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="835" width="230" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_policy" value="&lt;div style=&quot;font-weight: bold; color: #D32F2F; font-size: 11px; margin-bottom: 4px;&quot;&gt;🛡️ Policy (Política)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; organization_id (FK)&lt;br/&gt;&amp;bull; name (String)&lt;br/&gt;&amp;bull; description (Text)&lt;br/&gt;&amp;bull; priority (Integer)&lt;br/&gt;&amp;bull; is_active (Boolean)&lt;br/&gt;&amp;bull; created_at (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#D32F2F;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="530" y="835" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_policy_rule" value="&lt;div style=&quot;font-weight: bold; color: #512DA8; font-size: 11px; margin-bottom: 4px;&quot;&gt;📋 PolicyRule (Regla de Autorización)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; policy_id (FK)&lt;br/&gt;&amp;bull; priority (Integer)&lt;br/&gt;&amp;bull; effect (Enum)&lt;br/&gt;&amp;bull; tool_action_id (FK)&lt;br/&gt;&amp;bull; target_agent_id (FK, Nullable)&lt;br/&gt;&amp;bull; conditions (JSONB)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#512DA8;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="770" y="835" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_exec" value="&lt;div style=&quot;font-weight: bold; color: #0F766E; font-size: 11px; margin-bottom: 4px;&quot;&gt;▶️ Execution (Solicitud en Tiempo Real)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; organization_id (FK)&lt;br/&gt;&amp;bull; agent_id (FK)&lt;br/&gt;&amp;bull; tool_action_id (FK)&lt;br/&gt;&amp;bull; resource (String)&lt;br/&gt;&amp;bull; decision (Enum)&lt;br/&gt;&amp;bull; status (Enum)&lt;br/&gt;&amp;bull; timestamp (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#CCFBF1;strokeColor=#0F766E;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="960" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_appr" value="&lt;div style=&quot;font-weight: bold; color: #BE185D; font-size: 11px; margin-bottom: 4px;&quot;&gt;✅ Approval (Aprobación Humana)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; execution_id (FK)&lt;br/&gt;&amp;bull; assigned_approver_id (FK, Nullable)&lt;br/&gt;&amp;bull; status (Enum)&lt;br/&gt;&amp;bull; resolution_reason (Text)&lt;br/&gt;&amp;bull; resolved_at (Timestamp, Nullable)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FCE7F3;strokeColor=#BE185D;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="960" width="230" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_alert" value="&lt;div style=&quot;font-weight: bold; color: #7E22CE; font-size: 11px; margin-bottom: 4px;&quot;&gt;⚠️ Alert (Incidente de Seguridad)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; organization_id (FK)&lt;br/&gt;&amp;bull; execution_id (FK, Nullable)&lt;br/&gt;&amp;bull; severity (Enum)&lt;br/&gt;&amp;bull; status (Enum)&lt;br/&gt;&amp;bull; resolved_by_user_id (FK, Nullable)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#7E22CE;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="530" y="960" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="mini_audit" value="&lt;div style=&quot;font-weight: bold; color: #334155; font-size: 11px; margin-bottom: 4px;&quot;&gt;📜 AuditEvent (Trazabilidad)&lt;/div&gt;&lt;div style=&quot;font-size: 9.5px; color: #475569; line-height: 1.35;&quot;&gt;&amp;bull; id (PK, UUID)&lt;br/&gt;&amp;bull; organization_id (FK)&lt;br/&gt;&amp;bull; actor_type (Enum)&lt;br/&gt;&amp;bull; actor_id (UUID)&lt;br/&gt;&amp;bull; event_type (String)&lt;br/&gt;&amp;bull; metadata (JSONB)&lt;br/&gt;&amp;bull; timestamp (Timestamp)&lt;/div&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#334155;strokeWidth=1;align=left;verticalAlign=top;padding=6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="770" y="960" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="box_corrections" value="
+    &lt;div style=&quot;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;&quot;&gt;
+      &lt;div style=&quot;background-color: #0F172A; color: white; padding: 7px 12px; font-weight: 700; font-size: 13px; border-top-left-radius: 6px; border-top-right-radius: 6px;&quot;&gt;
+        Resumen de las correcciones
+      &lt;/div&gt;
+      &lt;div style=&quot;padding: 12px; font-size: 10.5px; color: #1E293B; line-height: 1.45; background-color: #FFFFFF; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;&quot;&gt;
+        &lt;div style=&quot;display: flex; gap: 8px; margin-bottom: 8px;&quot;&gt;
+          &lt;span style=&quot;background-color: #2563EB; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 18px;&quot;&gt;1&lt;/span&gt;
+          &lt;div&gt;&lt;b&gt;Agente ↔ Herramientas (N:N):&lt;/b&gt; Se agregó la entidad AgentTool para modelar correctamente que un agente puede usar varias herramientas y una herramienta puede ser utilizada por varios agentes.&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div style=&quot;display: flex; gap: 8px; margin-bottom: 8px;&quot;&gt;
+          &lt;span style=&quot;background-color: #059669; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 18px;&quot;&gt;2&lt;/span&gt;
+          &lt;div&gt;&lt;b&gt;PolicyRule y Execution referencian ToolAction:&lt;/b&gt; Se eliminó el campo action (String) y se reemplazó por tool_action_id (FK) para evitar duplicidad y garantizar consistencia.&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div style=&quot;display: flex; gap: 8px; margin-bottom: 8px;&quot;&gt;
+          &lt;span style=&quot;background-color: #4F46E5; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 18px;&quot;&gt;3&lt;/span&gt;
+          &lt;div&gt;&lt;b&gt;Política con prioridad:&lt;/b&gt; Se agregó priority en Policy para resolver conflictos entre políticas activas. DENY tiene precedencia sobre ALLOW, salvo reglas explícitas de aprobación.&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div style=&quot;display: flex; gap: 8px; margin-bottom: 8px;&quot;&gt;
+          &lt;span style=&quot;background-color: #EA580C; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 18px;&quot;&gt;4&lt;/span&gt;
+          &lt;div&gt;&lt;b&gt;Alert con estado:&lt;/b&gt; Se reemplazó is_resolved por un campo status y se agregaron resolved_by_user_id y resolved_at para mayor trazabilidad.&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div style=&quot;display: flex; gap: 8px; margin-bottom: 8px;&quot;&gt;
+          &lt;span style=&quot;background-color: #0891B2; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 18px;&quot;&gt;5&lt;/span&gt;
+          &lt;div&gt;&lt;b&gt;Contexto de ejecución seguro:&lt;/b&gt; Se renombró context_payload a request_context y se aclara que debe estar sanitizado para evitar el almacenamiento de secretos.&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div style=&quot;display: flex; gap: 8px; margin-bottom: 8px;&quot;&gt;
+          &lt;span style=&quot;background-color: #BE185D; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 18px;&quot;&gt;6&lt;/span&gt;
+          &lt;div&gt;&lt;b&gt;Relación más clara y normalizada:&lt;/b&gt; Se ajustaron las cardinalidades y relaciones para un modelo más coherente, manteniendo la compatibilidad multi-tenant.&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div style=&quot;display: flex; gap: 8px;&quot;&gt;
+          &lt;span style=&quot;background-color: #475569; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 18px;&quot;&gt;7&lt;/span&gt;
+          &lt;div&gt;&lt;b&gt;Evolución futura:&lt;/b&gt; Se documenta la posibilidad de agregar PolicyEvaluation, AgentCredential y otras entidades en futuras versiones, sin sobrecargar el MVP.&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    " style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1;align=left;verticalAlign=top;shadow=1;overflow=hidden;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="660" width="590" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="box_badge" value="
+    &lt;div style=&quot;display: flex; align-items: center; gap: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;&quot;&gt;
+      &lt;div style=&quot;font-size: 26px; color: #059669;&quot;&gt;🛡️&lt;/div&gt;
+      &lt;div&gt;
+        &lt;div style=&quot;font-weight: 700; font-size: 11.5px; color: #065F46;&quot;&gt;El modelo resultante es sólido, escalable y defendible&lt;/div&gt;
+        &lt;div style=&quot;font-size: 10px; color: #047857; margin-top: 1px;&quot;&gt;Para un proyecto de Desarrollo Web, con enfoque en seguridad, trazabilidad y multi-tenancy.&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    " style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#6EE7B7;strokeWidth=1.5;align=left;verticalAlign=middle;padding=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="985" width="590" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="footer_banner" value="&lt;div style=&quot;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10.5px; color: #64748B; display: flex; justify-content: space-between;&quot;&gt;&lt;span&gt;🛡️ AgentGuard &amp;nbsp;|&amp;nbsp; Modelo Entidad-Relación (MER) &amp;nbsp;|&amp;nbsp; v2.0&lt;/span&gt;&lt;span&gt;Control. Seguridad. Trazabilidad. &amp;nbsp;|&amp;nbsp; AgentGuard Multi-Tenant Architecture&lt;/span&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1075" width="1580" height="30" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
