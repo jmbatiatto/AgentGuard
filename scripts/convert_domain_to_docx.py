@@ -218,7 +218,7 @@ def add_markdown_to_docx(doc, md_text):
         i += 1
 
 def build_domain_docx():
-    base_dir = r"c:\Users\jonat\Downloads\Codigos\AgentGuard\02-domain"
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "02-domain"))
     files = [
         ("mer.md", "mer.docx"),
         ("business-rules.md", "business-rules.docx"),

@@ -4,8 +4,18 @@ Este repositorio contiene el **Modelo Entidad-Relación (MER) v2.0** de **AgentG
 
 ---
 
-## 📁 Archivos Generados
+## 📁 Archivos de Especificación y Modelo de Dominio
 
+### Especificaciones Conceptuales y Reglas
+| Documento | Formatos | Contenido y Propósito |
+| :--- | :---: | :--- |
+| **Modelo Entidad-Relación (MER v2.0)** | [`mer.md`](./mer.md) • [`mer.docx`](./mer.docx) | Definición formal de las 12 entidades, claves primarias, claves foráneas, cardinalidades y restricciones. |
+| **Modelo de Autorización** | [`authorization-model.md`](./authorization-model.md) • [`authorization-model.docx`](./authorization-model.docx) | Dimensiones de decisión `[Principal, Delegator, ToolAction, Resource, Context]`, precedencia de reglas y fail-close. |
+| **Reglas de Negocio** | [`business-rules.md`](./business-rules.md) • [`business-rules.docx`](./business-rules.docx) | Políticas de corte (`RN-01` a `RN-10`), umbrales de aprobación HITL, sanitización y ciclos de vida. |
+| **Dossier Consolidado de Dominio** | [`AgentGuard_Documentacion_Dominio_Completa.docx`](./AgentGuard_Documentacion_Dominio_Completa.docx) | Documento unificado en formato Word listo para entrega o revisión docente. |
+| **Infografía del Modelo** | [`Mer multitenant.png`](./Mer%20multitenant.png) | Render visual de referencia de la arquitectura multi-tenant. |
+
+### Diagramas Editables y Esquemas de Base de Datos
 | Archivo | Formato / Tipo | Cómo usarlo |
 | :--- | :--- | :--- |
 | [`AgentGuard_MER_v2.0.drawio`](./AgentGuard_MER_v2.0.drawio) | **Nativo Draw.io** | Abrir directamente en **VS Code** con la extensión de Draw.io o en [app.diagrams.net](https://app.diagrams.net). |
@@ -13,6 +23,7 @@ Este repositorio contiene el **Modelo Entidad-Relación (MER) v2.0** de **AgentG
 | [`AgentGuard_MER_v2.0.mmd`](./AgentGuard_MER_v2.0.mmd) | **Mermaid ER** | Importable en Draw.io vía `Arrange > Insert > Advanced > Mermaid` o visualizable en GitHub / Markdown. |
 | [`AgentGuard_MER_v2.0.puml`](./AgentGuard_MER_v2.0.puml) | **PlantUML ER** | Importable en Draw.io vía `Arrange > Insert > Advanced > PlantUML`. |
 | [`AgentGuard_Schema.sql`](./AgentGuard_Schema.sql) | **SQL DDL (PostgreSQL)** | Importable en Draw.io vía `Arrange > Insert > Advanced > SQL` para auto-generar tablas y relaciones. |
+
 
 ---
 

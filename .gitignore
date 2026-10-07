@@ -1,3 +1,12 @@
+# Draw.io backup files
+.$*.bkp
+*.bkp
+
+# Office temp locks
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
 # OS Files
 Thumbs.db
 ehthumbs.db
@@ -12,8 +21,14 @@ $RECYCLE.BIN/
 .vscode/.ropeproject
 .idea/
 
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Node / Dependencies (future-proof)
 node_modules/
 dist/
 .env
 .env.local
+

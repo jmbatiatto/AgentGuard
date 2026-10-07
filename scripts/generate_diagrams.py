@@ -834,19 +834,23 @@ CREATE TABLE audit_events (
 
 
 if __name__ == "__main__":
+    import os
+    domain_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "02-domain"))
+    os.makedirs(domain_dir, exist_ok=True)
+    
     drawio_content = build_drawio_xml()
-    with open("AgentGuard_MER_v2.0.drawio", "w", encoding="utf-8") as f:
+    with open(os.path.join(domain_dir, "AgentGuard_MER_v2.0.drawio"), "w", encoding="utf-8") as f:
         f.write(drawio_content)
-    with open("AgentGuard_MER_v2.0.xml", "w", encoding="utf-8") as f:
+    with open(os.path.join(domain_dir, "AgentGuard_MER_v2.0.xml"), "w", encoding="utf-8") as f:
         f.write(drawio_content)
     
-    with open("AgentGuard_MER_v2.0.mmd", "w", encoding="utf-8") as f:
+    with open(os.path.join(domain_dir, "AgentGuard_MER_v2.0.mmd"), "w", encoding="utf-8") as f:
         f.write(build_mermaid())
         
-    with open("AgentGuard_MER_v2.0.puml", "w", encoding="utf-8") as f:
+    with open(os.path.join(domain_dir, "AgentGuard_MER_v2.0.puml"), "w", encoding="utf-8") as f:
         f.write(build_plantuml())
 
-    with open("AgentGuard_Schema.sql", "w", encoding="utf-8") as f:
+    with open(os.path.join(domain_dir, "AgentGuard_Schema.sql"), "w", encoding="utf-8") as f:
         f.write(build_sql())
 
-    print("Successfully generated all diagram files for Draw.io!")
+    print(f"Successfully generated all diagram files in: {domain_dir}")

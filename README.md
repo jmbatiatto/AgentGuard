@@ -49,10 +49,33 @@ Este repositorio contiene la arquitectura completa del sistema modelada en archi
 | **5. Máquinas de Estados y Ciclo de Vida** | [`agentguard_estados_ciclo_vida.drawio`](./agentguard_estados_ciclo_vida.drawio) | [`agentguard_estados_ciclo_vida.md`](./agentguard_estados_ciclo_vida.md) | Transiciones de estado para peticiones asíncronas (`Execution`), bandeja de aprobaciones (`Approval`) e incidentes (`Alert`) con principio *Fail-Closed*. |
 | **6. Diagrama de Casos de Uso (UML)** | [`agentguard_casos_de_uso.drawio`](./agentguard_casos_de_uso.drawio) | [`agentguard_casos_de_uso.md`](./agentguard_casos_de_uso.md) | Mapeo integral de requerimientos funcionales (RF-01 a RF-12), actores humanos y autónomos, con relaciones `<<include>>` y `<<extend>>`. |
 
-### 📄 Documentos de Base y Especificación
-* 📘 [`AgentGuard_Propuesta_Desarrollo_Web_v2.pdf`](./AgentGuard_Propuesta_Desarrollo_Web_v2.pdf) — Informe completo de propuesta reformulada y validada (12 páginas con marco teórico, benchmark competitivo, modelo de amenazas y roadmap de Sprints 0 al 6).
-* 📝 [`AgentGuard Programación Web.md`](./AgentGuard%20Programaci%C3%B3n%20Web.md) — Acta de constitución de equipo, roles y planificación inicial del Sprint 0.
-* 🖼️ [`Mer multitenant.png`](./Mer%20multitenant.png) — Infografía de referencia del modelo de datos v2.0.
+### 📚 Documentación de Ingeniería y Dominio
+
+* 📁 **[`01-product/`](./01-product/)** — Especificación Formal de Requisitos y Gestión Ágil:
+  * [`product-brief.md`](./01-product/product-brief.md) — Visión de producto, análisis de mercado (CSA 2026) y marco de gobernanza.
+  * [`requirements.md`](./01-product/requirements.md) — Requisitos Funcionales (`RF-01` a `RF-12`) y No Funcionales (`RNF-01` a `RNF-06`).
+  * [`use-cases.md`](./01-product/use-cases.md) — Especificación formal de casos de uso (`CU-01` a `CU-10`).
+  * [`user-stories.md`](./01-product/user-stories.md) — Product Backlog con historias de usuario y criterios Gherkin.
+  * [`AgentGuard_Documentacion_Producto_Completa.docx`](./01-product/AgentGuard_Documentacion_Producto_Completa.docx) — Dossier consolidado en formato Word.
+
+* 📁 **[`02-domain/`](./02-domain/)** — Modelo de Dominio, Reglas de Negocio y Base de Datos:
+  * [`mer.md`](./02-domain/mer.md) — Especificación técnica del modelo relacional multi-tenant de 12 entidades.
+  * [`authorization-model.md`](./02-domain/authorization-model.md) — Modelo pentadimensional de autorización contextual y matrices de decisión.
+  * [`business-rules.md`](./02-domain/business-rules.md) — Reglas de negocio (`RN-01` a `RN-10`), umbrales HITL y políticas fail-closed.
+  * [`AgentGuard_Schema.sql`](./02-domain/AgentGuard_Schema.sql) — Script DDL para PostgreSQL con tablas, claves, índices y constraints.
+  * [`AgentGuard_MER_v2.0.drawio`](./02-domain/AgentGuard_MER_v2.0.drawio) (y exportaciones `.xml`, `.mmd`, `.puml`).
+  * [`Mer multitenant.png`](./02-domain/Mer%20multitenant.png) — Infografía de referencia del modelo de datos v2.0.
+
+* 🎓 **Guías de Presentación y Pitch de Defensa:**
+  * 📑 [`guia_simple_proyecto_agentguard.pdf`](./guia_simple_proyecto_agentguard.pdf) • [`HTML`](./guia_simple_proyecto_agentguard.html) — Guía ejecutiva ultrarrápida de 3 páginas para el equipo.
+  * 🎙️ [`mega_guion_agentguard_proyecto_completo.md`](./mega_guion_agentguard_proyecto_completo.md) — Guión integral para defensa oral académica (5 minutos) con prompts visuales.
+  * 🎬 [`guion_video_demo_4_escenarios.md`](./guion_video_demo_4_escenarios.md) — Storyboard y guión para video demo rápido (2 minutos).
+  * 🖼️ [`secuencia_demo_4_escenarios.png`](./secuencia_demo_4_escenarios.png) • [`SVG`](./secuencia_demo_4_escenarios.svg) — Infografía vectorial de la demo de los 4 escenarios.
+  * 📘 [`AgentGuard_Propuesta_Desarrollo_Web_v2.pdf`](./AgentGuard_Propuesta_Desarrollo_Web_v2.pdf) — Propuesta ejecutiva y técnica reformulada v2.0 (documento oficial).
+
+* 🛠️ **[`scripts/`](./scripts/)** — Herramientas de automatización para generar diagramas y exportar documentos a Word.
+* 📦 **[`00-legacy/`](./00-legacy/)** — Archivo histórico de actas y notas preliminares del Sprint 0.
+
 
 ---
 

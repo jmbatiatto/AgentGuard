@@ -227,7 +227,7 @@ def add_markdown_to_docx(doc, md_text):
         i += 1
 
 def build_docx_files():
-    base_dir = r"c:\Users\jonat\Downloads\Codigos\AgentGuard\01-product"
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "01-product"))
     files = [
         ("product-brief.md", "product-brief.docx", "AgentGuard — Product Brief v2.0"),
         ("requirements.md", "requirements.docx", "AgentGuard — Requisitos de Software (SRS) v2.0"),
