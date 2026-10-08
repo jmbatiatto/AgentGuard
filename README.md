@@ -36,72 +36,13 @@ Los agentes autónomos de IA modernos no se limitan a generar texto: seleccionan
 
 ---
 
-## 📦 1. Especificación de Producto y Requisitos (`01-product/`)
+## 🛡️ Suite de Diagramas Arquitectónicos y Guías de Defensa (Raíz)
 
-Toda la definición funcional y de gestión ágil se encuentra estructurada en el directorio [`01-product/`](./01-product/):
-
-### 📑 Documentos de Producto
-| Documento | Formatos | Propósito y Contenido |
-| :--- | :---: | :--- |
-| **Product Brief** | [`product-brief.md`](./01-product/product-brief.md) • [`docx`](./01-product/product-brief.docx) | Visión de producto, tesis central, análisis de mercado (CSA 2026), modelo de amenazas (OWASP Agentic 2026) y alcance del MVP. |
-| **Requisitos de Software (SRS)** | [`requirements.md`](./01-product/requirements.md) • [`docx`](./01-product/requirements.docx) | Especificación formal de requisitos funcionales (`RF-01` a `RF-12`) y no funcionales (`RNF-01` a `RNF-06`) con priorización MoSCoW. |
-| **Casos de Uso del Sistema** | [`use-cases.md`](./01-product/use-cases.md) • [`docx`](./01-product/use-cases.docx) | Especificación detallada de casos de uso (`CU-01` a `CU-10`) con precondiciones, flujos principales, alternativos y postcondiciones. |
-| **Historias de Usuario (Backlog)** | [`user-stories.md`](./01-product/user-stories.md) • [`docx`](./01-product/user-stories.docx) | Product Backlog ágil con historias de usuario (`HU-01` a `HU-10`), criterios de aceptación Gherkin (Given-When-Then) y Story Points. |
-| **Dossier Consolidado de Producto** | [`AgentGuard_Documentacion_Producto_Completa.docx`](./01-product/AgentGuard_Documentacion_Producto_Completa.docx) | Documento unificado en formato Word que reúne los 4 documentos anteriores listo para entrega o impresión. |
-
-### 👥 Roles del Sistema Definidos
-* **`ADMIN`**: Administrador del tenant. Configura políticas globales, gestiona usuarios, registra agentes y herramientas externas.
-* **`OPERATOR`**: Operador de seguridad. Monitorea trazas de ejecución en tiempo real, analiza métricas y opera el Playground de simulación.
-* **`APPROVER`**: Aprobador humano (HITL). Interviene en solicitudes de alto riesgo para conceder o denegar la ejecución (`ALLOW`/`DENY`).
-* **`Agente IA (Principal)`**: Entidad autónoma de software con identidad propia que solicita ejecutar herramientas sobre sistemas de la organización.
-
----
-
-## 🏛️ 2. Modelo de Dominio, Reglas y Base de Datos (`02-domain/`)
-
-Toda la arquitectura de persistencia y reglas de decisión reside en el directorio [`02-domain/`](./02-domain/):
-
-### 📄 Especificaciones Técnicas
-| Documento | Formatos | Contenido y Propósito |
-| :--- | :---: | :--- |
-| **Modelo Entidad-Relación (MER v2.0)** | [`mer.md`](./02-domain/mer.md) • [`docx`](./02-domain/mer.docx) | Definición formal de las 12 entidades, claves primarias (UUIDv4), foráneas, cardinalidades y restricciones. |
-| **Modelo de Autorización** | [`authorization-model.md`](./02-domain/authorization-model.md) • [`docx`](./02-domain/authorization-model.docx) | Dimensiones de decisión `[Principal, Delegator, ToolAction, Resource, Context]`, precedencia de reglas y fail-close. |
-| **Reglas de Negocio** | [`business-rules.md`](./02-domain/business-rules.md) • [`docx`](./02-domain/business-rules.docx) | Políticas deterministas (`RN-01` a `RN-10`), umbrales de aprobación HITL, sanitización y ciclos de vida. |
-| **Dossier Consolidado de Dominio** | [`AgentGuard_Documentacion_Dominio_Completa.docx`](./02-domain/AgentGuard_Documentacion_Dominio_Completa.docx) | Documento unificado en Word con todas las especificaciones de dominio. |
-| **Infografía del Modelo** | [`Mer multitenant.png`](./02-domain/Mer%20multitenant.png) | Render visual de referencia del esquema relacional multi-tenant. |
-
-### 📊 Entidades del Modelo MER v2.0 (12 Tablas)
-1. **`Organization`**: Tenant multi-empresa para aislamiento estricto de datos.
-2. **`User`**: Usuarios humanos del sistema con roles (`ADMIN`, `OPERATOR`, `APPROVER`).
-3. **`Agent`**: Identidad del agente de IA (`ACTIVE`, `SUSPENDED`, `REVOKED`) con usuario responsable (`owner_user_id`).
-4. **`Tool`**: Herramientas externas integrables (protocolos `MCP`, `REST`).
-5. **`ToolAction`**: Acciones atómicas de herramientas con nivel de riesgo tipificado (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
-6. **`AgentTool`**: Tabla asociativa N:N que gestiona permisos y configuraciones específicas (`config JSONB`) por agente.
-7. **`Policy`**: Contenedor de reglas con prioridad y estado activo/inactivo.
-8. **`PolicyRule`**: Reglas de decisión (`ALLOW`, `DENY`, `REQUIRE_APPROVAL`) con predicados dinámicos `JSONB` y prioridad.
-9. **`Execution`**: Registro de solicitudes en tiempo real con contexto de ejecución sanitizado y enmascarado.
-10. **`Approval`**: Cola de aprobación humana (HITL) con estados (`PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`).
-11. **`Alert`**: Incidentes de seguridad con severidad y trazabilidad de resolución (`resolved_by_user_id`).
-12. **`AuditEvent`**: Bitácora inmutable de auditoría para operaciones administrativas y cumplimiento regulatorio.
-
-### 📐 Formatos Editables y Esquemas de Base de Datos
-| Archivo | Formato / Tipo | Cómo usarlo |
-| :--- | :--- | :--- |
-| [`AgentGuard_MER_v2.0.drawio`](./02-domain/AgentGuard_MER_v2.0.drawio) | **Nativo Draw.io** | Abrir directamente en **VS Code** con la extensión Draw.io o en [app.diagrams.net](https://app.diagrams.net). |
-| [`AgentGuard_MER_v2.0.xml`](./02-domain/AgentGuard_MER_v2.0.xml) | **XML Draw.io** | Importar en [draw.io](https://app.diagrams.net) vía `File > Open From > Device`. |
-| [`AgentGuard_MER_v2.0.mmd`](./02-domain/AgentGuard_MER_v2.0.mmd) | **Mermaid ER** | Importable en Draw.io (`+ > Advanced > Mermaid`) o visualizable en GitHub. |
-| [`AgentGuard_MER_v2.0.puml`](./02-domain/AgentGuard_MER_v2.0.puml) | **PlantUML ER** | Importable en Draw.io vía `+ > Advanced > PlantUML`. |
-| [`AgentGuard_Schema.sql`](./02-domain/AgentGuard_Schema.sql) | **SQL DDL (PostgreSQL)** | Script DDL completo con tablas, constraints e índices. Importable en Draw.io vía `+ > Advanced > SQL`. |
-
----
-
-## 🛡️ 3. Suite de Diagramas y Guías de Defensa (Raíz)
-
-Para la defensa académica y presentaciones técnicas, la raíz del repositorio incluye 6 diagramas vectoriales nativos de **Draw.io** (`.drawio`) junto a sus contrapartes de justificación teórica y preguntas frecuentes de examen (`.md`):
+La arquitectura técnica del sistema se encuentra completamente formalizada en archivos vectoriales nativos de **Draw.io** (`.drawio`) junto a sus contrapartes de justificación teórica y respuestas de examen en Markdown (`.md`):
 
 | Componente / Modelo | Diagrama Editable (`.drawio`) | Guía de Defensa (`.md`) | Descripción y Justificación Técnica |
 | :--- | :---: | :---: | :--- |
-| **1. MER Relacional Multi-Tenant** | [`agentguard_mer_relacional.drawio`](./agentguard_mer_relacional.drawio) | [`agentguard_mer_relacional.md`](./agentguard_mer_relacional.md) | Modelo lógico/físico v2.0 (PostgreSQL, UUIDs, JSONB, aislamiento por organización, relación N:N `AgentTool`, `ToolAction` tipificada y trazas). |
+| **1. MER Relacional Multi-Tenant** | [`agentguard_mer_relacional.drawio`](./agentguard_mer_relacional.drawio) | [`agentguard_mer_relacional.md`](./agentguard_mer_relacional.md) | Modelo lógico/físico v2.0 (PostgreSQL, 12 tablas, UUIDs, JSONB, aislamiento por organización, relación N:N `AgentTool`, `ToolAction` tipificada y trazas). |
 | **2. MER Conceptual (Notación Chen)** | [`agentguard_er_conceptual_chen.drawio`](./agentguard_er_conceptual_chen.drawio) | [`agentguard_er_conceptual_chen.md`](./agentguard_er_conceptual_chen.md) | Grafo conceptual formal con rombos de relación y cardinalidades `(mín, máx)`, acompañado de su **Biblioteca de Atributos** desacoplada. |
 | **3. Arquitectura Runtime (PEP/PDP)** | [`agentguard_arquitectura_runtime.drawio`](./agentguard_arquitectura_runtime.drawio) | [`agentguard_arquitectura_runtime.md`](./agentguard_arquitectura_runtime.md) | Arquitectura Zero Trust (XACML RFC 2904), Gateway (PEP), Policy Engine (PDP), caché ultrarrápida con Redis y conectores MCP. |
 | **4. Secuencia de la Demo Principal** | [`agentguard_secuencia_demo.drawio`](./agentguard_secuencia_demo.drawio) | [`agentguard_secuencia_demo.md`](./agentguard_secuencia_demo.md) | Diagrama de secuencia UML con los 4 escenarios de la defensa: `create_quote` (ALLOW), `update_price` (DENY), `refund` (REQUIRE_APPROVAL) y Prompt Injection (DENY+ALERT). |
@@ -110,7 +51,7 @@ Para la defensa académica y presentaciones técnicas, la raíz del repositorio 
 
 ---
 
-## 🎬 4. La Secuencia de la Demo Principal (En Vivo)
+## 🎬 La Secuencia de la Demo Principal (En Vivo)
 
 Durante la presentación ante la cátedra, el sistema demuestra su valor mediante 4 decisiones consecutivas sobre el mismo agente de ventas:
 
@@ -161,31 +102,23 @@ sequenceDiagram
 
 ---
 
-## 🛠️ 5. Scripts de Automatización (`scripts/`)
+## 🤖 Guía y Reglas para Agentes de IA (`AGENTS.md`)
 
-El directorio [`scripts/`](./scripts/) contiene herramientas en Python para automatizar la regeneración de artefactos:
+Todo trabajo de desarrollo por parte de asistentes y agentes de IA (Antigravity, Cursor, Copilot, etc.) en cualquier clon del equipo se rige por las directivas obligatorias definidas en:
 
-| Script | Propósito | Salida Generada |
-| :--- | :--- | :--- |
-| [`generate_diagrams.py`](./scripts/generate_diagrams.py) | Genera el modelo MER v2.0 en 5 formatos interoperables (Draw.io XML/drawio, Mermaid, PlantUML y PostgreSQL SQL DDL). | `02-domain/AgentGuard_MER_v2.0.*` y `02-domain/AgentGuard_Schema.sql` |
-| [`convert_docs_to_docx.py`](./scripts/convert_docs_to_docx.py) | Convierte la suite de producto (`01-product/*.md`) a archivos Word `.docx`, incluyendo el documento consolidado. | `01-product/*.docx` |
-| [`convert_domain_to_docx.py`](./scripts/convert_domain_to_docx.py) | Convierte las especificaciones técnicas de dominio (`02-domain/*.md`) a `.docx`. | `02-domain/*.docx` |
-
-### Ejecución:
-```bash
-pip install python-docx
-python scripts/generate_diagrams.py
-python scripts/convert_docs_to_docx.py
-python scripts/convert_domain_to_docx.py
-```
+👉 **[`AGENTS.md`](./AGENTS.md)**:
+* **Metodología SDD (Spec-Driven Development):** Fases estrictas, prohibición de over-coding o generación autónoma descontrolada.
+* **Commits Atómicos en Español:** Formato convencional (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`).
+* **Reglas Core de Dominio:** Fail-closed por defecto, aislamiento multi-tenant estricto (`organization_id`), sanitización de contexto y ciclo HITL.
+* **Testing y Calidad:** Cobertura para los 4 escenarios de la demo y política zero-regression.
 
 ---
 
-## 📄 Documentos Oficiales y Archivo Histórico
+## 📄 Documentos Oficiales y Scripts
 
 * 📘 [`AgentGuard_Propuesta_Desarrollo_Web_v2.pdf`](./AgentGuard_Propuesta_Desarrollo_Web_v2.pdf) — Propuesta ejecutiva y técnica reformulada v2.0 (documento oficial del proyecto).
-* 📑 [`guia_simple_proyecto_agentguard.pdf`](./guia_simple_proyecto_agentguard.pdf) • [`HTML`](./guia_simple_proyecto_agentguard.html) — Guía ejecutiva ultrarrápida de 3 páginas para el equipo de desarrollo.
-* 📦 [`00-legacy/`](./00-legacy/) — Archivo histórico que conserva el acta inicial del Sprint 0 ([`AgentGuard_Sprint0_Propuesta.md`](./00-legacy/AgentGuard_Sprint0_Propuesta.md)).
+* 📑 [`guia_simple_proyecto_agentguard.pdf`](./guia_simple_proyecto_agentguard.pdf) • [`HTML`](./guia_simple_proyecto_agentguard.html) — Guía ejecutiva de 3 páginas para el equipo de desarrollo.
+* 🛠️ [`scripts/`](./scripts/) — Scripts en Python para regenerar artefactos y diagramas (`generate_diagrams.py`, etc.).
 
 ---
 
@@ -202,7 +135,7 @@ python scripts/convert_domain_to_docx.py
 ## 🖥️ Cómo Visualizar y Editar los Diagramas
 
 1. **En Visual Studio Code (Recomendado):** Instalar la extensión oficial [Draw.io Integration (Hediet)](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio). Permite abrir y editar los archivos `.drawio` de forma visual directamente dentro del editor.
-2. **En el Navegador Web:** Ingresar a [app.diagrams.net](https://app.diagrams.net), seleccionar *"Abrir diagrama existente"* y seleccionar cualquiera de los archivos `.drawio` o `.xml`.
+2. **En el Navegador Web:** Ingresar a [app.diagrams.net](https://app.diagrams.net), seleccionar *"Abrir diagrama existente"* y seleccionar cualquiera de los archivos `.drawio`.
 
 ---
 
