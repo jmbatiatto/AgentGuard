@@ -99,10 +99,10 @@ Para que el profesor y los compañeros entiendan el valor en 2 minutos, la demo 
 
 ---
 
-## 5. Próxima Decisión Inmediata del Equipo 🚀
+## 5. Decisión Oficial del Equipo: Fullstack TypeScript con pnpm 🚀
 
-Para arrancar con el **Paso 1 (Estructura y Base de Datos)**, definir la tecnología del backend:
-* **Opción A — Node.js (TypeScript con Express o Fastify):** Estándar en la materia, unifica frontend y backend bajo el mismo lenguaje.
-* **Opción B — Python (FastAPI):** Muy rápido de implementar, validación automática con Pydantic y tipado estricto.
-
-Cualquiera de las dos opciones encaja perfectamente con la arquitectura HTTP REST de AgentGuard.
+El equipo definió de forma unánime unificar todo el desarrollo bajo **TypeScript de punta a punta** gestionado con **`pnpm`**:
+* **Backend:** Node.js (v20+ LTS / v24+) con TypeScript (Express o Fastify).
+* **Frontend:** React con Vite y TypeScript.
+* **Gestor de Paquetes y Monorepo:** `pnpm` (workspaces) para máxima velocidad, deduplicación de dependencias y tipos compartidos de extremo a extremo.
+* **Detalle formal:** Registrado en el documento de arquitectura [`DECISIONS.md`](./DECISIONS.md) (ADR-001 y ADR-002).

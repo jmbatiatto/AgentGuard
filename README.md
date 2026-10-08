@@ -114,21 +114,43 @@ Todo trabajo de desarrollo por parte de asistentes y agentes de IA (Antigravity,
 
 ---
 
-## 📄 Documentos Oficiales y Scripts
+## 📄 Documentos Oficiales y Decisiones de Arquitectura
 
 * 📘 [`AgentGuard_Propuesta_Desarrollo_Web_v2.pdf`](./AgentGuard_Propuesta_Desarrollo_Web_v2.pdf) — Propuesta ejecutiva y técnica reformulada v2.0 (documento oficial del proyecto).
-* 📑 [`guia_simple_proyecto_agentguard.pdf`](./guia_simple_proyecto_agentguard.pdf) • [`HTML`](./guia_simple_proyecto_agentguard.html) — Guía ejecutiva de 3 páginas para el equipo de desarrollo.
-* 🛠️ [`scripts/`](./scripts/) — Scripts en Python para regenerar artefactos y diagramas (`generate_diagrams.py`, etc.).
+* 🏛️ [`DECISIONS.md`](./DECISIONS.md) — Registro oficial de Decisiones Arquitectónicas (ADRs) adoptadas por el equipo.
+* 📑 [`guia_simple_proyecto_agentguard.pdf`](./guia_simple_proyecto_agentguard.pdf) • [`HTML`](./guia_simple_proyecto_agentguard.html) • [`MD`](./guia_simple_proyecto_agentguard.md) — Guía ejecutiva y hoja de ruta para el equipo.
+* 🛡️ [`AGENTS.md`](./AGENTS.md) — Reglas innegociables de desarrollo, metodología SDD y distribución de roles.
+* 🛠️ [`scripts/`](./scripts/) — Scripts para regenerar artefactos, diagramas y utilidades.
 
 ---
 
-## 💻 Stack Tecnológico Previsto
+## 💻 Stack Tecnológico Oficial (Fullstack TypeScript)
 
-* **Frontend:** Single Page Application (React / Vite o Vanilla JS con CSS moderno), WebSockets para notificaciones reactivas de aprobación en vivo.
-* **Backend:** Node.js (Express / Fastify) o Python (FastAPI), arquitectura desacoplada basada en servicios.
+El proyecto unifica todo su stack bajo **TypeScript de punta a punta** gestionado mediante **`pnpm`** (workspaces):
+
+* **Lenguaje:** TypeScript 5+ (compartido en backend, frontend y utilidades de demo).
+* **Gestor de Paquetes y Monorepo:** `pnpm` (workspaces definidos en `pnpm-workspace.yaml`).
+* **Backend:** Node.js (v20+ LTS / v24+) con TypeScript (Express o Fastify), arquitectura desacoplada por servicios.
+* **Frontend:** Single Page Application con React, Vite y TypeScript, con WebSockets para notificaciones reactivas de aprobación humana.
 * **Gateway & Enforcement (PEP):** Reverse Proxy HTTP REST con interceptor de peticiones, validación de esquemas y headers de autorización.
-* **Motor de Políticas (PDP):** Evaluador determinista de predicados sobre estructuras `JSONB` y caché en memoria.
-* **Persistencia:** PostgreSQL (modelo relacional multi-tenant con Row-Level Security e índices GIN) + Redis (sesiones, rate-limiting y colas Pub/Sub).
+* **Motor de Políticas (PDP):** Evaluador determinista de predicados sobre estructuras `JSONB` y caché en memoria volátil.
+* **Persistencia:** PostgreSQL 16 (modelo relacional multi-tenant con Row-Level Security e índices GIN) + Redis 7 (caché ultrarrápida y colas Pub/Sub).
+
+---
+
+## 🗂️ Estructura del Monorepositorio
+
+```text
+AgentGuard/
+├── backend/              # API REST (Gestión + Gateway PEP + Motor PDP) [Node.js + TS]
+├── frontend/             # Dashboard Web SPA (Auditoría, Políticas, Approvals) [React + Vite + TS]
+├── agent-demo/           # Script cliente autónomo del Agente para la demo [Node.js / TS]
+├── diagramas/            # Archivos vectoriales de respaldo de Draw.io (*.drawio)
+├── scripts/              # Utilidades de mantenimiento, regeneración y seeds
+├── pnpm-workspace.yaml   # Configuración de workspaces de pnpm
+├── package.json          # Root package.json con scripts unificados
+└── *.md                  # Suite de documentación, guías de defensa y reglas de dominio
+```
 
 ---
 

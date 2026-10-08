@@ -7,6 +7,15 @@
 - **Contexto Institucional y Académico:** Cátedra de Desarrollo Web (5to Semestre), Tecnicatura Universitaria en Desarrollo de Software, Instituto Tecnológico Universitario (ITU) — Universidad Nacional de Cuyo (2026).
 - **Repositorio Remoto:** `https://github.com/jmbatiatto/AgentGuard.git` (rama principal: `main`).
 - **Directorio de Trabajo Oficial:** `C:\Users\jonat\Downloads\Codigos\AgentGuard`
+- **Registro de Decisiones Arquitectónicas (ADRs):** [`DECISIONS.md`](./DECISIONS.md)
+
+### 1.1 Stack Tecnológico y Tooling Oficial
+- **Lenguaje Unificado:** TypeScript (v5+) de extremo a extremo (Fullstack TypeScript).
+- **Runtime:** Node.js (v20+ LTS o v24+).
+- **Gestor de Paquetes y Monorepo:** `pnpm` (workspaces definidos en `pnpm-workspace.yaml`).
+- **Backend:** Node.js + TypeScript (Express / Fastify).
+- **Frontend:** React + Vite + TypeScript (SPA reactiva con WebSockets).
+- **Persistencia:** PostgreSQL 16 (12 tablas, multi-tenant RLS, JSONB) + Redis 7 (caché PDP y Pub/Sub).
 
 ---
 
