@@ -1,5 +1,5 @@
 # 🛡️ Guía de Defensa: Modelo Entidad-Relación Relacional Multi-Tenant v2.0
-**Archivo asociado:** [`agentguard_mer_relacional.drawio`](file:///f:/General/ITU/OneDrive%20-%20Universidad%20Nacional%20de%20Cuyo/Desarrollo%20de%20Software/Quinto%20semestre/Desarrollo%20WEB/agentguard_mer_relacional.drawio)  
+**Archivo visual opcional (Draw.io):** [`diagramas/agentguard_mer_relacional.drawio`](./diagramas/agentguard_mer_relacional.drawio)  
 **Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
 **Cátedra:** Desarrollo Web — 5to Semestre, ITU - Universidad Nacional de Cuyo  
 
@@ -9,11 +9,164 @@
 
 Este diagrama modela la **capa relacional lógica/física** de AgentGuard. Representa cómo la base de datos almacena el estado de las organizaciones, los agentes de IA, las herramientas que consumen, las políticas de autorización contextual y la trazabilidad forense de cada ejecución en tiempo real (*Execution Traces*).
 
-Está optimizado para un motor **PostgreSQL** moderno, combinando la rigidez y consistencia del modelo relacional con la flexibilidad de campos semiestructurados (`JSONB`) donde el dominio lo exige.
+Está optimizado para un motor **PostgreSQL** moderno, combinando la consistencia relacional con campos semiestructurados (`JSONB`) indexados mediante GIN.
 
 ---
 
-## 2. Decisiones Arquitectónicas y Justificación Técnica
+## 2. Diagrama del Modelo Entidad-Relación (Mermaid)
+
+```mermaid
+erDiagram
+    ORGANIZATION ||--o{ USER : "posee miembros (1:N)"
+    ORGANIZATION ||--o{ AGENT : "registra agentes (1:N)"
+    ORGANIZATION ||--o{ TOOL : "administra tools (1:N)"
+    ORGANIZATION ||--o{ POLICY : "define politicas (1:N)"
+    ORGANIZATION ||--o{ EXECUTION : "registra trazas (1:N)"
+    ORGANIZATION ||--o{ ALERT : "monitorea alertas (1:N)"
+    ORGANIZATION ||--o{ AUDIT_EVENT : "audita cambios (1:N)"
+
+    USER ||--o{ AGENT : "es sponsor / owner (1:N)"
+    USER ||--o{ APPROVAL : "resuelve como approver (1:N)"
+    USER ||--o{ ALERT : "investiga incidente (1:N)"
+
+    AGENT ||--o{ AGENT_TOOL : "tiene autorizada (1:N)"
+    TOOL ||--o{ AGENT_TOOL : "asignada a (1:N)"
+    TOOL ||--o{ TOOL_ACTION : "expone acciones (1:N)"
+
+    POLICY ||--o{ POLICY_RULE : "contiene reglas (1:N)"
+    TOOL_ACTION ||--o{ POLICY_RULE : "objeto de regla (1:N)"
+    AGENT ||--o{ POLICY_RULE : "aplica opcionalmente (1:N)"
+
+    AGENT ||--o{ EXECUTION : "invoca runtime (1:N)"
+    USER ||--o{ EXECUTION : "delega sesion (1:N)"
+    TOOL ||--o{ EXECUTION : "recurso destino (1:N)"
+    TOOL_ACTION ||--o{ EXECUTION : "accion solicitada (1:N)"
+    POLICY_RULE ||--o{ EXECUTION : "regla evaluada (1:N)"
+
+    EXECUTION ||--o| APPROVAL : "requiere intervencion (1:1)"
+    EXECUTION ||--o| ALERT : "dispara incidente (1:1)"
+
+    ORGANIZATION {
+        UUID id PK
+        VARCHAR name "Nombre de la empresa / tenant"
+        TIMESTAMPTZ created_at
+    }
+
+    USER {
+        UUID id PK
+        UUID organization_id FK
+        VARCHAR email "Email unico corporativo"
+        ENUM role "ADMIN | OPERATOR | APPROVER"
+        TIMESTAMPTZ created_at
+    }
+
+    AGENT {
+        UUID id PK
+        UUID organization_id FK
+        UUID owner_user_id FK "Humano responsable (Sponsor)"
+        VARCHAR name "Nombre del agente de IA"
+        TEXT purpose "Proposito / Alcance declarado"
+        ENUM status "ACTIVE | SUSPENDED | REVOKED"
+        TIMESTAMPTZ created_at
+    }
+
+    AGENT_TOOL {
+        UUID id PK
+        UUID agent_id FK
+        UUID tool_id FK
+        BOOLEAN enabled "Habilitacion individual"
+        JSONB config "Configuracion especifica del agente"
+        TIMESTAMPTZ created_at
+    }
+
+    TOOL {
+        UUID id PK
+        UUID organization_id FK
+        VARCHAR name "Nombre de la herramienta externa"
+        VARCHAR protocol "REST"
+        VARCHAR endpoint_url "URL base del servicio web"
+        TEXT description
+        TIMESTAMPTZ created_at
+    }
+
+    TOOL_ACTION {
+        UUID id PK
+        UUID tool_id FK
+        VARCHAR action_name "create_quote, refund, etc."
+        ENUM risk_level "LOW | MEDIUM | HIGH | CRITICAL"
+        TEXT description
+        TIMESTAMPTZ created_at
+    }
+
+    POLICY {
+        UUID id PK
+        UUID organization_id FK
+        VARCHAR name "Nombre de la politica"
+        TEXT description
+        INTEGER priority "Orden de resolucion de politicas"
+        BOOLEAN is_active
+        TIMESTAMPTZ created_at
+    }
+
+    POLICY_RULE {
+        UUID id PK
+        UUID policy_id FK
+        INTEGER priority "Prioridad de evaluacion (Fail-Closed)"
+        ENUM effect "ALLOW | DENY | REQUIRE_APPROVAL"
+        UUID tool_action_id FK "Accion objeto de control"
+        UUID target_agent_id FK "Agente especifico (o NULL para todos)"
+        JSONB conditions "Predicados logicos (montos, roles, horarios)"
+        TIMESTAMPTZ created_at
+    }
+
+    EXECUTION {
+        UUID id PK
+        UUID organization_id FK
+        UUID agent_id FK
+        UUID delegator_user_id FK "Usuario que origino la tarea (Nullable)"
+        UUID tool_id FK
+        UUID tool_action_id FK
+        VARCHAR resource "Identificador de recurso"
+        JSONB request_context "Parametros sanitizados del llamado"
+        ENUM decision "ALLOW | DENY | REQUIRE_APPROVAL"
+        ENUM status "PENDING_APPROVAL | REJECTED | EXECUTED"
+        UUID evaluated_policy_rule_id FK "Regla legal que justifico"
+        TIMESTAMPTZ timestamp "Marca temporal inmutable"
+    }
+
+    APPROVAL {
+        UUID id PK
+        UUID execution_id FK
+        UUID assigned_approver_id FK "Operador que resolvio (Nullable)"
+        ENUM status "PENDING | APPROVED | REJECTED | EXPIRED"
+        TEXT resolution_reason "Motivo documentado del humano"
+        TIMESTAMPTZ resolved_at
+    }
+
+    ALERT {
+        UUID id PK
+        UUID organization_id FK
+        UUID execution_id FK "Trazabilidad forense (Nullable)"
+        ENUM severity "LOW | MEDIUM | HIGH | CRITICAL"
+        ENUM status "OPEN | INVESTIGATING | RESOLVED | DISMISSED"
+        UUID resolved_by_user_id FK "Operador investigador (Nullable)"
+        TIMESTAMPTZ created_at
+    }
+
+    AUDIT_EVENT {
+        UUID id PK
+        UUID organization_id FK
+        ENUM actor_type "USER | AGENT | SYSTEM"
+        UUID actor_id "ID del autor de la accion"
+        VARCHAR event_type "POLICY_CREATED, CREDENTIAL_REVOKED, etc."
+        JSONB metadata "Detalle forense inmutable"
+        TIMESTAMPTZ timestamp
+    }
+```
+
+---
+
+## 3. Decisiones Arquitectónicas y Justificación Técnica
 
 ### A. Estrategia Multi-Tenant: Base de Datos Compartida con Discriminador de Tenant
 * **Decisión:** Todas las tablas de dominio raíz portan la columna `organization_id (UUID)`.
@@ -39,7 +192,7 @@ En el modelo observamos `JSONB` en cuatro lugares clave:
 
 ---
 
-## 3. Las 7 Correcciones y Mejoras de la Versión 2.0
+## 4. Las 7 Correcciones y Mejoras de la Versión 2.0
 
 Frente a la primera versión del proyecto, este modelo incorpora mejoras estructurales que deben destacarse durante la presentación:
 
@@ -53,7 +206,7 @@ Frente a la primera versión del proyecto, este modelo incorpora mejoras estruct
 
 ---
 
-## 4. Preguntas Difíciles del Profesor y Respuestas Recomendadas
+## 5. Preguntas Difíciles del Profesor y Respuestas Recomendadas
 
 ### ❓ P1: *"¿Por qué la tabla `Execution` tiene tantas claves foráneas? ¿No genera dependencia acoplada?"*
 > **Respuesta:** «Las claves foráneas en `Execution` son deliberadas: representan la cadena de delegación y auditoría inmutable exigida por estándares de gobernanza agentic (CSA 2026). Necesitamos correlacionar de forma atómica: **Quién solicitó** (`agent_id`), **En nombre de quién** (`delegator_user_id`), **Qué herramienta** (`tool_id`), **Qué acción puntual** (`tool_action_id`) y **Bajo qué regla legal** (`evaluated_policy_rule_id`). Esto asegura integridad referencial y permite consultar trazas forenses instantáneas sin ambigüedades».

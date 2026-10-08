@@ -1,5 +1,5 @@
 # 🔄 Guía de Defensa: Máquinas de Estados y Ciclo de Vida en Runtime
-**Archivo asociado:** [`agentguard_estados_ciclo_vida.drawio`](file:///f:/General/ITU/OneDrive%20-%20Universidad%20Nacional%20de%20Cuyo/Desarrollo%20de%20Software/Quinto%20semestre/Desarrollo%20WEB/agentguard_estados_ciclo_vida.drawio)  
+**Archivo visual opcional (Draw.io):** [`diagramas/agentguard_estados_ciclo_vida.drawio`](./diagramas/agentguard_estados_ciclo_vida.drawio)  
 **Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
 **Cátedra:** Desarrollo Web — 5to Semestre, ITU - Universidad Nacional de Cuyo  
 
@@ -14,11 +14,70 @@ En sistemas distribuidos donde intervienen humanos (*Human-in-the-loop*), las pe
 
 ---
 
-## 2. Análisis Detallado de las 3 Máquinas de Estados
+## 2. Diagramas de Estados UML (Mermaid)
 
 ### A. Máquina 1: Ciclo de Vida de una Ejecución (`Execution`)
-Controla la solicitud HTTP REST desde que llega al Gateway hasta su culminación:
 
+```mermaid
+stateDiagram-v2
+    [*] --> RECEIVED: Tool Call HTTP recibida en Gateway
+    
+    RECEIVED --> EVALUATING: Autenticación OK y Contexto Extraído
+    RECEIVED --> BLOCKED: Token Inválido o Malformado
+    
+    EVALUATING --> BLOCKED: Decisión PDP == DENY
+    EVALUATING --> DISPATCHING: Decisión PDP == ALLOW
+    EVALUATING --> PENDING_APPROVAL: Decisión PDP == REQUIRE_APPROVAL
+    
+    PENDING_APPROVAL --> DISPATCHING: Operador Aprueba Ticket
+    PENDING_APPROVAL --> REJECTED_BY_APPROVER: Operador Rechaza Ticket
+    PENDING_APPROVAL --> ABORTED_BY_TIMEOUT: Expiración TTL (15 minutos)
+    
+    DISPATCHING --> COMPLETED: API REST responde (200 OK)
+    DISPATCHING --> FAILED: Error en API destino (5xx / Red)
+    
+    BLOCKED --> [*]: Retorna 403 Forbidden
+    REJECTED_BY_APPROVER --> [*]: Retorna 403 con Justificación
+    ABORTED_BY_TIMEOUT --> [*]: Retorna 408 Request Timeout
+    COMPLETED --> [*]: Retorna Payload Exitoso
+    FAILED --> [*]: Retorna 502 Bad Gateway
+```
+
+### B. Máquina 2: Ciclo de Vida de una Aprobación (`Approval`)
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: Generado por regla de riesgo (Monto >= $500)
+    
+    PENDING --> APPROVED: Operador hace click en [Aprobar]
+    PENDING --> REJECTED: Operador hace click en [Rechazar]
+    PENDING --> EXPIRED: Superado límite de tiempo (TTL)
+    
+    APPROVED --> [*]: Descongela llamada hacia API destino
+    REJECTED --> [*]: Cancela ejecución y notifica motivo
+    EXPIRED --> [*]: Cierra ticket por principio Fail-Closed
+```
+
+### C. Máquina 3: Ciclo de Vida de un Incidente de Seguridad (`Alert`)
+
+```mermaid
+stateDiagram-v2
+    [*] --> OPEN: Detectado por PDP (Prompt Injection / Egress anómalo)
+    
+    OPEN --> INVESTIGATING: Operador abre incidente en Dashboard
+    
+    INVESTIGATING --> RESOLVED: Mitigación aplicada (Revocación / Nueva regla)
+    INVESTIGATING --> DISMISSED: Falso positivo justificado y auditado
+    
+    RESOLVED --> [*]: Incidente cerrado
+    DISMISSED --> [*]: Incidente descartado
+```
+
+---
+
+## 3. Análisis Detallado de las Transiciones
+
+### Máquina 1: Ejecución en Runtime
 1. **`RECEIVED`:** La tool call es recibida en el Gateway. Se validan sintaxis y autenticidad del token del agente.
 2. **`EVALUATING`:** El PDP toma la tupla contextual y evalúa las políticas cacheadas en Redis.
 3. **Bifurcación de Decisión:**
@@ -30,23 +89,9 @@ Controla la solicitud HTTP REST desde que llega al Gateway hasta su culminación
    * Si el operador rechaza $\rightarrow$ Transición a `REJECTED_BY_APPROVER` (403 con motivo explícito).
    * Si vence el TTL $\rightarrow$ Transición a `ABORTED_BY_TIMEOUT` (408 Request Timeout).
 
-### B. Máquina 2: Ciclo de Vida de una Aprobación (`Approval`)
-Modela la entidad de negocio que gestiona la intervención humana:
-* **`PENDING`:** Creada y visible en la bandeja *Inbox* del Dashboard de los aprobadores.
-* **`APPROVED`:** Estado terminal alcanzado cuando un usuario con rol `APPROVER` o `ADMIN` autoriza la acción, registrando su `user_id`, marca de tiempo y justificación.
-* **`REJECTED`:** Estado terminal cuando el humano deniega la acción, obligando al ingreso de un motivo para auditoría.
-* **`EXPIRED`:** Estado terminal automático cuando transcurren más de 15 minutos sin respuesta (*Fail-Closed* preventivo).
-
-### C. Máquina 3: Ciclo de Vida de un Incidente de Seguridad (`Alert`)
-Gobierna la gestión de vulnerabilidades y violaciones detectadas:
-* **`OPEN`:** Alerta generada automáticamente por el PDP al detectar una transgresión de severidad media/alta (ej. intento de evasión de políticas o inyección de prompts).
-* **`INVESTIGATING`:** Un operador humano toma el ticket en el panel para analizar los metadatos forenses.
-* **`RESOLVED`:** Incidente mitigado (ej. revocación de credenciales del agente o ajuste de reglas).
-* **`DISMISSED`:** Incidente descartado justificadamente por considerarse un falso positivo.
-
 ---
 
-## 3. Principios de Robustez: Idempotencia y Prevención de Condiciones de Carrera
+## 4. Principios de Robustez: Idempotencia y Prevención de Condiciones de Carrera
 
 Durante la defensa, es vital explicar cómo el backend resuelve los problemas de concurrencia:
 
@@ -61,10 +106,10 @@ Durante la defensa, es vital explicar cómo el backend resuelve los problemas de
 
 ---
 
-## 4. Preguntas Difíciles del Profesor y Respuestas Sugeridas
+## 5. Preguntas Difíciles del Profesor y Respuestas Sugeridas
 
 ### ❓ P1: *"¿Cómo hace el Gateway para mantener al agente esperando mientras el humano aprueba en la web sin agotar las conexiones del servidor?"*
 > **Respuesta:** «En Node.js o arquitecturas asíncronas modernas, las conexiones son no bloqueantes basadas en el *Event Loop*. Cuando una llamada entra en `PENDING_APPROVAL`, no se congela un hilo del sistema operativo; se deja una promesa (*Promise*) o suscripción a un canal Redis Pub/Sub a la espera del evento de resolución. Cuando el operador hace click en el frontend, la API publica el evento en Redis y el Gateway despacha la respuesta inmediatamente, consumiendo un mínimo de memoria».
 
 ### ❓ P2: *"¿Por qué consideraron el estado `EXPIRED` en lugar de dejar que la aprobación espere indefinidamente?"*
-> **Respuesta:** «Por el principio de seguridad **Fail-Closed**. Un agente no puede esperar eternamente porque los modelos y los frameworks clientes (como LangChain o clientes HTTP) tienen tiempos límite de desconexión. Si nadie aprueba una transferencia de dinero en 15 minutos, asumir el silencio como rechazo seguro evita que se ejecuten transacciones fuera de contexto horas más tarde».
+> **Respuesta:** «Por el principio de seguridad **Fail-Closed**. Un agente no puede esperar eternamente porque los modelos y los clientes HTTP tienen tiempos límite de desconexión (*socket timeouts*). Si nadie aprueba una transferencia de dinero en 15 minutos, asumir el silencio como rechazo seguro evita que se ejecuten transacciones fuera de contexto horas más tarde».

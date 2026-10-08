@@ -1,5 +1,5 @@
 # 🎯 Guía de Defensa: Diagrama de Casos de Uso del Sistema (UML)
-**Archivo asociado:** [`agentguard_casos_de_uso.drawio`](file:///f:/General/ITU/OneDrive%20-%20Universidad%20Nacional%20de%20Cuyo/Desarrollo%20de%20Software/Quinto%20semestre/Desarrollo%20WEB/agentguard_casos_de_uso.drawio)  
+**Archivo visual opcional (Draw.io):** [`diagramas/agentguard_casos_de_uso.drawio`](./diagramas/agentguard_casos_de_uso.drawio)  
 **Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
 **Cátedra:** Desarrollo Web — 5to Semestre, ITU - Universidad Nacional de Cuyo  
 
@@ -20,7 +20,81 @@ En la ingeniería de software moderna, modelar sistemas que interactúan con Int
 
 ---
 
-## 2. Mapeo con los Requisitos Funcionales del Informe (RF-01 a RF-12)
+## 2. Diagrama de Casos de Uso del Sistema (Mermaid)
+
+```mermaid
+flowchart LR
+    %% Actores a la izquierda
+    Admin["👤 Administrador<br/><i>(Tenant Admin)</i>"]
+    Dev["🛠️ Desarrollador<br/><i>(Ingeniero IA)</i>"]
+    Operator["👤 Operador<br/><i>(Aprobador)</i>"]
+    Agent["🤖 Agente de IA<br/><i>(Actor Autónomo)</i>"]
+
+    %% Actor a la derecha
+    Receptor["🛠️ API REST Destino<br/><i>(Sistema Receptor)</i>"]
+
+    %% Límite del Sistema
+    subgraph Sistema ["LÍMITE DEL SISTEMA: PLATAFORMA AGENTGUARD"]
+        UC01(["UC01: Gestionar Organización y Usuarios"])
+        UC02(["UC02: Registrar y Configurar Agentes"])
+        UC03(["UC03: Conectar Herramientas (APIs REST)"])
+        UC04(["UC04: Configurar Políticas de Acceso"])
+        UC05(["UC05: Solicitar Ejecución en Runtime"])
+        UC06(["UC06: Resolver Aprobación Humana"])
+        UC07(["UC07: Consultar Trazas de Ejecución"])
+        UC08(["UC08: Investigar Alertas de Seguridad"])
+        UC09(["UC09: Simular Escenarios en Playground"])
+        UC10(["UC10: Despachar a API REST Protegida"])
+
+        %% Subprocesos Inclusiones y Extensiones
+        UC05_Auth(["Autenticar y Sanitizar Contexto"])
+        UC05_PDP(["Evaluar Reglas en PDP"])
+        UC05_Block(["Bloquear Petición y Alertar"])
+        UC05_Pause(["Pausar para Aprobación Humana"])
+
+        %% Relaciones include / extend
+        UC05 -. "<<include>>" .-> UC05_Auth
+        UC05 -. "<<include>>" .-> UC05_PDP
+        UC05_Block -. "<<extend>> [DENY]" .-> UC05
+        UC05_Pause -. "<<extend>> [APPROVAL]" .-> UC05
+        UC05 --> UC10
+    end
+
+    %% Asociaciones de Actores Humanos
+    Admin --- UC01
+    Admin --- UC02
+    Admin --- UC04
+    Admin --- UC07
+
+    Dev --- UC02
+    Dev --- UC03
+    Dev --- UC04
+    Dev --- UC09
+
+    Operator --- UC06
+    Operator --- UC07
+    Operator --- UC08
+
+    %% Asociación de Actor Autónomo
+    Agent === UC05
+
+    %% Asociación a Receptor
+    UC10 === Receptor
+
+    %% Estilos
+    classDef actor fill:#f1f5f9,stroke:#334155,stroke-width:2px,color:#0f172a,font-weight:bold;
+    classDef uc fill:#ffffff,stroke:#0284c7,stroke-width:2px,color:#0f172a;
+    classDef subuc fill:#f8fafc,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:3 3,color:#475569;
+    classDef dispatch fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#166534,font-weight:bold;
+    class Admin,Dev,Operator,Agent,Receptor actor;
+    class UC01,UC02,UC03,UC04,UC05,UC06,UC07,UC08,UC09 uc;
+    class UC05_Auth,UC05_PDP,UC05_Block,UC05_Pause subuc;
+    class UC10 dispatch;
+```
+
+---
+
+## 3. Mapeo con los Requisitos Funcionales del Informe (RF-01 a RF-12)
 
 El diagrama de casos de uso cubre rigurosamente los requerimientos funcionales aprobados en la Sección 14 de la propuesta v2.0:
 
@@ -35,10 +109,11 @@ El diagrama de casos de uso cubre rigurosamente los requerimientos funcionales a
 | **UC07: Consultar Trazas de Ejecución** | **RF-09, RF-10** | Almacenamiento y filtrado de trazas forenses (*Execution Traces*). |
 | **UC08: Investigar Alertas de Seguridad** | **RF-11** | Detección de transgresiones (Prompt Injection, desvío de scope) y mitigación. |
 | **UC09: Simular Escenarios en Playground**| **RF-12** | Entorno seguro para reproducir peticiones antes de pasarlas a producción. |
+| **UC10: Despachar a API REST Protegida** | **RF-05, RF-07** | Reenvío de la orden HTTP validada hacia el endpoint externo homologado. |
 
 ---
 
-## 3. Justificación Teórica de Relaciones `<<include>>` y `<<extend>>`
+## 4. Justificación Teórica de Relaciones `<<include>>` y `<<extend>>`
 
 Una de las preguntas favoritas de los profesores de análisis de sistemas es la distinción formal entre inclusiones y extensiones:
 
@@ -53,7 +128,7 @@ Una de las preguntas favoritas de los profesores de análisis de sistemas es la 
 
 ---
 
-## 4. Especificación Detallada del Caso de Uso Crítico: UC05
+## 5. Especificación Detallada del Caso de Uso Crítico: UC05
 
 * **Caso de Uso:** UC05 – Solicitar Ejecución de Acción en Runtime.
 * **Actor Principal:** Agente de IA.
@@ -75,7 +150,7 @@ Una de las preguntas favoritas de los profesores de análisis de sistemas es la 
 
 ---
 
-## 5. Preguntas de Examen / Defensa y Respuestas Clave
+## 6. Preguntas de Examen / Defensa y Respuestas Clave
 
 ### ❓ P1: *"¿Por qué el Agente de IA está modelado como un Actor si no es una persona?"*
 > **Respuesta:** «En UML estándar, un Actor se define como cualquier entidad externa al límite del sistema que interactúa con él intercambiando información o consumiendo sus servicios. Dado que los agentes de IA toman decisiones autónomas en tiempo de ejecución y envían peticiones HTTP REST al Gateway en nombre propio o delegados por un usuario, son formalmente actores primarios no humanos de la plataforma».

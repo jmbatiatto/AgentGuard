@@ -1,5 +1,5 @@
 # 🏗️ Guía de Defensa: Arquitectura de Runtime y Flujo de Intercepción PEP / PDP
-**Archivo asociado:** [`agentguard_arquitectura_runtime.drawio`](file:///f:/General/ITU/OneDrive%20-%20Universidad%20Nacional%20de%20Cuyo/Desarrollo%20de%20Software/Quinto%20semestre/Desarrollo%20WEB/agentguard_arquitectura_runtime.drawio)  
+**Archivo visual opcional (Draw.io):** [`diagramas/agentguard_arquitectura_runtime.drawio`](./diagramas/agentguard_arquitectura_runtime.drawio)  
 **Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
 **Cátedra:** Desarrollo Web — 5to Semestre, ITU - Universidad Nacional de Cuyo  
 
@@ -16,7 +16,76 @@ El axioma de seguridad más importante de AgentGuard es:
 
 ---
 
-## 2. Los Dos Componentes Clave: PEP y PDP (Estándar XACML / RFC 2904)
+## 2. Diagrama de Arquitectura de Runtime y Flujo de Intercepción (Mermaid)
+
+```mermaid
+flowchart TB
+    %% ================= CAPA 1: CLIENTES =================
+    subgraph Capa1 ["CAPA 1: CLIENTES & ORIGEN DE LLAMADAS"]
+        Agent["🤖 Agente de IA / LLM Client<br/><i>(LangChain, Claude, Autogen)</i><br/>• Propone acción<br/>• Emite HTTP REST<br/>• Porta Token de Agente"]
+        Operator["👤 Operador / Aprobador<br/><i>(Dashboard Web SPA)</i><br/>• Approvals Inbox en vivo<br/>• Métricas y Alertas"]
+        Dev["🛠️ Desarrollador / Admin Tenant<br/><i>(Playground & Config)</i><br/>• Define políticas<br/>• Alta de agentes y APIs"]
+    end
+
+    %% ================= CAPA 2: PERÍMETRO PEP =================
+    subgraph Capa2 ["CAPA 2: PERÍMETRO DE ENFORCEMENT (PEP)"]
+        Gateway["🛡️ Agent Runtime Gateway (PEP)<br/><i>Policy Enforcement Point • Reverse Proxy HTTP REST</i><br/>1. Intercepción Total<br/>2. Autenticación y Delegación<br/>3. Extractor de Contexto<br/>4. Sanitizador de Parámetros<br/>5. Enforcement Estricto Fail-Closed<br/>6. Enrutador Seguro a APIs de destino"]
+    end
+
+    %% ================= CAPA 3: MOTOR PDP =================
+    subgraph Capa3 ["CAPA 3: MOTOR DE DECISIÓN (PDP)"]
+        PDP["⚖️ Policy Decision Point (PDP)<br/><i>Policy Engine Determinista</i><br/>• Resuelve predicados JSONB<br/>• Aplica orden de prioridad<br/>• Emite veredicto inmutable"]
+        Redis[("⚡ Redis Policy Cache<br/>Reglas en memoria volátil<br/>Ultrarrápida / Baja latencia")]
+    end
+
+    %% ================= CAPA 4: PERSISTENCIA =================
+    subgraph Capa4 ["CAPA 4: PERSISTENCIA & AUDITORÍA"]
+        DB[("🗄️ PostgreSQL Database<br/>• Multi-Tenant con RLS<br/>• Índices GIN en JSONB")]
+        AuditSvc["📜 Audit & Alert Service<br/>Trazas de ejecución forenses"]
+        WS["📡 WebSocket Hub<br/>Notificaciones reactivas"]
+    end
+
+    %% ================= CAPA 5: RECURSOS =================
+    subgraph Capa5 ["CAPA 5: RECURSOS Y APIS REST PROTEGIDAS"]
+        CRM["💼 CRM REST API<br/><i>(Salesforce / HubSpot)</i><br/><code>tools: [consultar, create_quote]</code>"]
+        ERP["💳 ERP & Payments REST API<br/><i>(Stripe / SAP)</i><br/><code>tools: [refund, update_price]</code>"]
+        DATA["🗄️ Internal Data REST API<br/><i>(Analytics / Storage)</i><br/><code>tools: [query, export_file]</code>"]
+    end
+
+    %% Flujos de interacción numerados
+    Agent -->|"1. Tool Call Request (HTTP REST)"| Gateway
+    Gateway -->|"2. Evaluar Tupla Contextual"| PDP
+    PDP <-->|"Caché de Reglas"| Redis
+    PDP -.->|"3. Veredicto: ALLOW / DENY / REQUIRE_APPROVAL"| Gateway
+
+    Gateway ==>|"4A. ALLOW: Enruta petición autorizada"| CRM
+    Gateway ==>|"4A. ALLOW: Enruta petición autorizada"| ERP
+    Gateway ==>|"4A. ALLOW: Enruta petición autorizada"| DATA
+
+    Gateway -->|"4B. DENY: 403 Forbidden (Bloqueo en seco)"| Agent
+    Gateway -->|"4C. REQUIRE_APPROVAL: Pausa y Ticket #APR"| WS
+    WS -->|"Push notificación en vivo"| Operator
+    Operator -->|"Resolución (Aprobar / Rechazar)"| Gateway
+
+    Gateway -.->|"Registro asíncrono (Off-Path)"| AuditSvc
+    AuditSvc --> DB
+
+    %% Estilos
+    classDef client fill:#dbeafe,stroke:#1d4ed8,stroke-width:2px;
+    classDef gateway fill:#ffffff,stroke:#0284c7,stroke-width:3px;
+    classDef engine fill:#f3e8ff,stroke:#7e22ce,stroke-width:2px;
+    classDef storage fill:#ecfdf5,stroke:#047857,stroke-width:2px;
+    classDef target fill:#fef3c7,stroke:#b45309,stroke-width:2px;
+    class Agent,Operator,Dev client;
+    class Gateway gateway;
+    class PDP,Redis engine;
+    class DB,AuditSvc,WS storage;
+    class CRM,ERP,DATA target;
+```
+
+---
+
+## 3. Los Dos Componentes Clave: PEP y PDP (Estándar XACML / RFC 2904)
 
 En la literatura de seguridad de redes y autorización de grano fino (RFC 2904 y estándares XACML/ABAC), la arquitectura separa expresamente:
 
@@ -32,7 +101,7 @@ En la literatura de seguridad de redes y autorización de grano fino (RFC 2904 y
 
 ---
 
-## 3. Manejo de Latencia y Rendimiento en la Ruta Crítica
+## 4. Manejo de Latencia y Rendimiento en la Ruta Crítica
 
 Una objeción recurrente de los profesores en materias web es: *"Poner un proxy en el medio va a ralentizar todas las llamadas de la IA"*. 
 
@@ -43,7 +112,7 @@ Nuestra respuesta técnica se sustenta en tres mecanismos:
 
 ---
 
-## 4. Preguntas Difíciles del Profesor y Respuestas Magistrales
+## 5. Preguntas Difíciles del Profesor y Respuestas Magistrales
 
 ### ❓ P1: *"¿Por qué dicen que esto no es simplemente un API Gateway como Kong o Nginx?"*
 > **Respuesta:** «Un API Gateway tradicional (Kong, Nginx, AWS API Gateway) realiza enrutamiento perimetral, rate-limiting por IP y validación de tokens estáticos (JWT de usuario).  

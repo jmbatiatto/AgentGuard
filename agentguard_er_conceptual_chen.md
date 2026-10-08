@@ -1,5 +1,5 @@
 # 📐 Guía de Defensa: Modelo Conceptual (Chen) y Diccionario de Atributos
-**Archivo asociado:** [`agentguard_er_conceptual_chen.drawio`](file:///f:/General/ITU/OneDrive%20-%20Universidad%20Nacional%20de%20Cuyo/Desarrollo%20de%20Software/Quinto%20semestre/Desarrollo%20WEB/agentguard_er_conceptual_chen.drawio)  
+**Archivo visual opcional (Draw.io):** [`diagramas/agentguard_er_conceptual_chen.drawio`](./diagramas/agentguard_er_conceptual_chen.drawio)  
 **Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
 **Cátedra:** Desarrollo Web — 5to Semestre, ITU - Universidad Nacional de Cuyo  
 
@@ -8,7 +8,7 @@
 ## 1. Propósito y Valor Académico de la Notación Chen
 
 En el desarrollo de software y la ingeniería de datos clásica (Peter Chen, 1976), existe una separación indispensable entre:
-1. **El Modelo Conceptual:** Captura la semántica pura del negocio, las entidades del mundo real y cómo interactúan entre sí a través de relaciones explícitas (rombos), sin preocuparse todavía por claves foráneas o tipos de almacenamiento en disco.
+1. **El Modelo Conceptual:** Captura la semántica pura del negocio, las entidades del mundo real y cómo interactúan entre sí a través de relaciones explícitas (rombos), sin preocuparse todavía por claves foráneas o tipos de almacenamiento físico.
 2. **La Biblioteca / Diccionario de Atributos:** Documenta formalmente cada propiedad, su dominio, su obligatoriedad y su función.
 
 > **Argumento ante el docente:**  
@@ -16,7 +16,61 @@ En el desarrollo de software y la ingeniería de datos clásica (Peter Chen, 197
 
 ---
 
-## 2. Análisis Semántico de las Relaciones y Cardinalidades
+## 2. Diagrama Conceptual de Entidad-Relación (Notación Chen)
+
+```mermaid
+flowchart TB
+    %% Entidades de Negocio (Rectángulos)
+    ORG["🏢 ORGANIZACIÓN"]
+    USER["👤 USUARIO"]
+    AGENT["🤖 AGENTE (IA)"]
+    TOOL["🛠️ HERRAMIENTA (API REST)"]
+    ACTION["⚡ ACCIÓN_TOOL"]
+    POLICY["🛡️ POLÍTICA"]
+    RULE["⚖️ REGLA_POLÍTICA"]
+    EXEC["▶️ EJECUCIÓN"]
+    APPR["✋ APROBACIÓN"]
+    ALERT["⚠️ ALERTA"]
+    AUDIT["📜 AUDITORÍA"]
+
+    %% Relaciones Semánticas (Rombos)
+    r_pertenece{"PERTENECE_A"}
+    r_admin{"ADMINISTRA (SPONSOR)"}
+    r_aut{"AUTORIZADO_EN<br/>[attr: enabled, config]"}
+    r_expone{"EXPONE"}
+    r_define{"DEFINE"}
+    r_contiene{"CONTIENE"}
+    r_aplica{"APLICA_SOBRE"}
+    r_solicita{"SOLICITA"}
+    r_invoca{"INVOCA"}
+    r_interviene{"REQUIERE_INTERVENCIÓN"}
+    r_dispara{"DISPARA"}
+    r_registra{"REGISTRA"}
+
+    %% Conexiones con Cardinalidades Formales (mín, máx)
+    ORG --- |"(1, n)"| r_pertenece --- |"(1, 1)"| USER
+    USER --- |"(0, n)"| r_admin --- |"(1, 1)"| AGENT
+    AGENT --- |"(0, n)"| r_aut --- |"(0, n)"| TOOL
+    TOOL --- |"(1, n)"| r_expone --- |"(1, 1)"| ACTION
+    ORG --- |"(1, n)"| r_define --- |"(1, 1)"| POLICY
+    POLICY --- |"(1, n)"| r_contiene --- |"(1, 1)"| RULE
+    ACTION --- |"(0, n)"| r_aplica --- |"(1, 1)"| RULE
+    AGENT --- |"(1, n)"| r_solicita --- |"(1, 1)"| EXEC
+    EXEC --- |"(1, 1)"| r_invoca --- |"(0, n)"| ACTION
+    EXEC --- |"(0, 1)"| r_interviene --- |"(1, 1)"| APPR
+    EXEC --- |"(0, 1)"| r_dispara --- |"(1, 1)"| ALERT
+    ORG --- |"(1, n)"| r_registra --- |"(1, 1)"| AUDIT
+
+    %% Estilos visuales
+    classDef entidad fill:#e2e8f0,stroke:#334155,stroke-width:2px,color:#0f172a,font-weight:bold;
+    classDef relacion fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#9a3412,font-weight:bold;
+    class ORG,USER,AGENT,TOOL,ACTION,POLICY,RULE,EXEC,APPR,ALERT,AUDIT entidad;
+    class r_pertenece,r_admin,r_aut,r_expone,r_define,r_contiene,r_aplica,r_solicita,r_invoca,r_interviene,r_dispara,r_registra relacion;
+```
+
+---
+
+## 3. Análisis Semántico de las Relaciones y Cardinalidades
 
 A continuación se detalla la justificación formal de las cardinalidades mínimas y máximas expresadas en notación `(mín, máx)`:
 
@@ -48,24 +102,20 @@ A continuación se detalla la justificación formal de las cardinalidades mínim
 
 ---
 
-## 3. Biblioteca de Atributos: Clasificación por Naturaleza
+## 4. Biblioteca de Atributos: Clasificación por Naturaleza
 
-En la biblioteca de atributos (Parte II del lienzo), los campos se han categorizado según la teoría clásica de bases de datos:
+En la biblioteca de atributos (documentada en la Parte II del modelo formal), los campos se han categorizado según la teoría clásica de bases de datos:
 
-1. **Atributos Simples / Atómicos:** Cadenas y números indivisibles (`name`, `priority`, `email`).
-2. **Atributos Compuestos y Semiestructurados (`JSONB`):** 
-   - `PolicyRule.conditions`: Expresa predicados lógicos compuestos (operadores booleanos, umbrales numéricos, restricciones horarias).
-   - `Execution.request_context`: Metadatos de la sesión, IP, origen y parámetros de llamada.
-3. **Atributos Derivados / Temporales:** Marcas de tiempo de auditoría (`created_at`, `resolved_at`, `timestamp`) indispensables para la trazabilidad y detección de expiración en aprobaciones (*Timeouts*).
-4. **Dominios Restringidos (Enums):**
-   - Estados de Agente: `ACTIVE`, `SUSPENDED`, `REVOKED`.
-   - Niveles de Riesgo de Acción: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`.
-   - Decisión de Política: `ALLOW`, `DENY`, `REQUIRE_APPROVAL`.
-   - Estados de Aprobación: `PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`.
+| Naturaleza del Atributo | Ejemplos en el Modelo | Propósito Técnico |
+| :--- | :--- | :--- |
+| **Simples / Atómicos** | `name`, `email`, `priority`, `endpoint_url` | Cadenas y valores escalares indivisibles. |
+| **Compuestos y Semiestructurados (`JSONB`)** | `PolicyRule.conditions`, `Execution.request_context`, `AgentTool.config`, `AuditEvent.metadata` | Almacenamiento ágil de predicados lógicos y contextos de sesión indexados mediante GIN sin requerir esquema rígido EAV. |
+| **Temporales y de Auditoría** | `created_at`, `resolved_at`, `timestamp` | Marcas temporales UTC para trazabilidad forense inmutable y cálculo de timeouts TTL. |
+| **Dominios Restringidos (Enums)** | `status`, `role`, `risk_level`, `decision`, `severity` | Control de integridad estricto en PostgreSQL para transiciones de estado deterministas. |
 
 ---
 
-## 4. Preguntas de Cátedra y Respuestas Sugeridas
+## 5. Preguntas de Cátedra y Respuestas Sugeridas
 
 ### ❓ P1: *"¿Por qué modelan `AgentTool` como una relación $M:N$ en lugar de incluir un array de herramientas dentro del agente?"*
 > **Respuesta:** «Un array de IDs o de strings dentro de la entidad `Agent` violaría la **Primera Forma Normal (1FN)**, dificultaría indexar búsquedas del tipo *"¿qué agentes tienen acceso a la herramienta de Facturación?"* y no permitiría adjuntar metadatos de relación, como la configuración específica de conexión (`config`) o deshabilitar una herramienta para un agente sin eliminarla del sistema».

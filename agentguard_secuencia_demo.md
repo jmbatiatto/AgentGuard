@@ -1,5 +1,5 @@
 # 🎬 Guía de Defensa: Secuencia de la Demo Principal (4 Escenarios Críticos)
-**Archivo asociado:** [`agentguard_secuencia_demo.drawio`](file:///f:/General/ITU/OneDrive%20-%20Universidad%20Nacional%20de%20Cuyo/Desarrollo%20de%20Software/Quinto%20semestre/Desarrollo%20WEB/agentguard_secuencia_demo.drawio)  
+**Archivo visual opcional (Draw.io):** [`diagramas/agentguard_secuencia_demo.drawio`](./diagramas/agentguard_secuencia_demo.drawio)  
 **Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
 **Cátedra:** Desarrollo Web — 5to Semestre, ITU - Universidad Nacional de Cuyo  
 
@@ -10,11 +10,74 @@
 > **Regla de oro de la presentación:**  
 > *«Nunca arrancar mostrando cómo se crea un usuario en un formulario CRUD. El profesor ya vio mil CRUDs. Debemos abrir la demo directamente con la secuencia de ejecución de un agente interactuando en vivo contra el Gateway, demostrando la frontera de seguridad en tiempo real».*
 
-Esta secuencia de 4 casos utiliza **la misma organización y el mismo agente de IA (Agente de Ventas)**, demostrando que la autorización no es estática (por rol de agente), sino **contextual y dinámica por acción**:
+Esta secuencia de 4 casos utiliza **la misma organización y el mismo agente de IA (Agente de Ventas)**, demostrando que la autorización no es estática (por rol de agente), sino **contextual y dinámica por acción**.
 
 ---
 
-## 2. Los 4 Escenarios Demostrables Paso a Paso
+## 2. Diagrama de Secuencia de la Demo (Mermaid)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Agente as 🤖 Agente IA (Ventas)
+    participant Gateway as 🛡️ Gateway (PEP)
+    participant PDP as ⚖️ Policy Engine (PDP)
+    actor Humano as 👤 Aprobador Web
+    participant Tool as 🛠️ API REST Destino
+    participant Audit as 📜 Audit & DB
+
+    %% ================= ESCENARIO 1 =================
+    rect rgb(240, 253, 244)
+    Note over Agente,Audit: ESCENARIO 1: OPERACIÓN NORMAL (ALLOW)
+    Agente->>Gateway: POST /execute {action: "create_quote", amount: $2,500}
+    Gateway->>PDP: Evaluar regla [amount < $10,000]
+    PDP-->>Gateway: Veredicto: ALLOW
+    Gateway->>Tool: Enruta llamada: POST https://crm.api/quotes
+    Tool-->>Gateway: 200 OK {quote_id: "QT-991", status: "created"}
+    Gateway-)Audit: Log Execution Trace (status: 200 OK)
+    Gateway-->>Agente: 200 OK {quote_id: "QT-991"}
+    end
+
+    %% ================= ESCENARIO 2 =================
+    rect rgb(254, 242, 242)
+    Note over Agente,Audit: ESCENARIO 2: ABUSO DE PRIVILEGIO (DENY)
+    Agente->>Gateway: POST /execute {action: "update_price", new_price: $10}
+    Gateway->>PDP: Evaluar capabilities del agente
+    PDP-->>Gateway: Veredicto: DENY (Unauthorized Action)
+    Note over Gateway,Tool: 🛡️ La llamada NUNCA alcanza la API REST destino
+    Gateway-)Audit: Log Execution Trace (status: 403 Forbidden)
+    Gateway-->>Agente: 403 Forbidden {error: "Agent lacks capability"}
+    end
+
+    %% ================= ESCENARIO 3 =================
+    rect rgb(255, 241, 242)
+    Note over Agente,Audit: ESCENARIO 3: OPERACIÓN SENSIBLE (REQUIRE_APPROVAL)
+    Agente->>Gateway: POST /execute {action: "refund", amount: $4,500}
+    Gateway->>PDP: Evaluar política [monto >= $500 requiere humano]
+    PDP-->>Gateway: Veredicto: REQUIRE_APPROVAL
+    Gateway->>Humano: WebSocket Push: Ticket #APR-77 pendiente
+    Humano->>Gateway: Click [APROBAR con motivo: "Cliente VIP validado"]
+    Gateway->>Tool: Reanuda llamada: POST https://stripe.api/refunds
+    Tool-->>Gateway: 200 OK {refund_id: "re_38dfj", status: "succeeded"}
+    Gateway-)Audit: Log Trace + Approval Resolved
+    Gateway-->>Agente: 200 OK {refund_id: "re_38dfj"}
+    end
+
+    %% ================= ESCENARIO 4 =================
+    rect rgb(254, 226, 226)
+    Note over Agente,Audit: ESCENARIO 4: PROMPT INJECTION & ALERTA CRÍTICA (DENY + ALERT)
+    Agente->>Gateway: POST /execute {action: "export_customers", dest: "attacker.io"}
+    Gateway->>PDP: Evaluar política de exfiltración de datos
+    PDP-->>Gateway: Veredicto: DENY (Destino externo no homologado)
+    Gateway-)Audit: Genera Alerta Crítica (CRITICAL ALERT #ALT-09)
+    Gateway-->>Agente: 403 Forbidden (Acceso denegado por seguridad)
+    Audit->>Humano: Ilumina panel rojo de incidentes en Dashboard
+    end
+```
+
+---
+
+## 3. Los 4 Escenarios Demostrables Paso a Paso
 
 ### Escenario 1: Operación Normal (`ALLOW`)
 * **Acción solicitada:** El agente invoca la tool `create_quote` para emitir un presupuesto de USD 2.500 para un cliente.
@@ -61,7 +124,7 @@ Esta secuencia de 4 casos utiliza **la misma organización y el mismo agente de 
 
 ---
 
-## 3. El Cierre Magistral: El "Execution Trace"
+## 4. El Cierre Magistral: El "Execution Trace"
 
 Al concluir la demostración de los 4 pasos, se proyecta la pantalla de **Execution Traces** en el frontend web:
 * Se muestra la tabla consolidada con las 4 filas correlacionadas:
