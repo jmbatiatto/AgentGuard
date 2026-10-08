@@ -41,12 +41,12 @@ Todo trabajo en este repositorio se rige bajo el principio de **Desarrollo Guiad
 
 2. **Fase 1 (Completada): Suite de Especificación Arquitectónica y Modelado Formal**
    - La arquitectura del sistema está completamente formalizada en los 6 diagramas vectoriales Draw.io y sus guías de defensa técnica en Markdown ubicados en la raíz:
-     - [`agentguard_mer_relacional.drawio`](./agentguard_mer_relacional.drawio) & [`agentguard_mer_relacional.md`](./agentguard_mer_relacional.md) — Modelo Relacional Lógico/Físico (PostgreSQL, 12 tablas, UUIDs, JSONB, aislamiento estricto por tenant).
-     - [`agentguard_er_conceptual_chen.drawio`](./agentguard_er_conceptual_chen.drawio) & [`agentguard_er_conceptual_chen.md`](./agentguard_er_conceptual_chen.md) — Modelo Conceptual formal con notación Chen y biblioteca de atributos desacoplada.
-     - [`agentguard_arquitectura_runtime.drawio`](./agentguard_arquitectura_runtime.drawio) & [`agentguard_arquitectura_runtime.md`](./agentguard_arquitectura_runtime.md) — Arquitectura Zero Trust (PEP / PDP), proxy HTTP REST y caché Redis.
-     - [`agentguard_secuencia_demo.drawio`](./agentguard_secuencia_demo.drawio) & [`agentguard_secuencia_demo.md`](./agentguard_secuencia_demo.md) — Diagrama de Secuencia con los 4 escenarios de evaluación en tiempo real de la demo.
-     - [`agentguard_estados_ciclo_vida.drawio`](./agentguard_estados_ciclo_vida.drawio) & [`agentguard_estados_ciclo_vida.md`](./agentguard_estados_ciclo_vida.md) — Máquinas de estados para ejecuciones asíncronas, cola de aprobaciones e incidentes.
-     - [`agentguard_casos_de_uso.drawio`](./agentguard_casos_de_uso.drawio) & [`agentguard_casos_de_uso.md`](./agentguard_casos_de_uso.md) — Casos de uso UML con relaciones `<<include>>` y `<<extend>>`.
+     - [`agentguard_mer_relacional.drawio`](./diagramas/agentguard_mer_relacional.drawio) & [`agentguard_mer_relacional.md`](./diagramas/agentguard_mer_relacional.md) — Modelo Relacional Lógico/Físico (PostgreSQL, 12 tablas, UUIDs, JSONB, aislamiento estricto por tenant).
+     - [`agentguard_er_conceptual_chen.drawio`](./diagramas/agentguard_er_conceptual_chen.drawio) & [`agentguard_er_conceptual_chen.md`](./diagramas/agentguard_er_conceptual_chen.md) — Modelo Conceptual formal con notación Chen y biblioteca de atributos desacoplada.
+     - [`agentguard_arquitectura_runtime.drawio`](./diagramas/agentguard_arquitectura_runtime.drawio) & [`agentguard_arquitectura_runtime.md`](./diagramas/agentguard_arquitectura_runtime.md) — Arquitectura Zero Trust (PEP / PDP), proxy HTTP REST y caché Redis.
+     - [`agentguard_secuencia_demo.drawio`](./diagramas/agentguard_secuencia_demo.drawio) & [`agentguard_secuencia_demo.md`](./diagramas/agentguard_secuencia_demo.md) — Diagrama de Secuencia con los 4 escenarios de evaluación en tiempo real de la demo.
+     - [`agentguard_estados_ciclo_vida.drawio`](./diagramas/agentguard_estados_ciclo_vida.drawio) & [`agentguard_estados_ciclo_vida.md`](./diagramas/agentguard_estados_ciclo_vida.md) — Máquinas de estados para ejecuciones asíncronas, cola de aprobaciones e incidentes.
+     - [`agentguard_casos_de_uso.drawio`](./diagramas/agentguard_casos_de_uso.drawio) & [`agentguard_casos_de_uso.md`](./diagramas/agentguard_casos_de_uso.md) — Casos de uso UML con relaciones `<<include>>` y `<<extend>>`.
 
 3. **Fase 2 (Próxima): Plan de Implementación a Largo Plazo y Contratos Técnicos**
    - Definición de estructura del proyecto / monorepo.
