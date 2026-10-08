@@ -18,7 +18,7 @@ El proyecto es desarrollado por un equipo de cuatro desarrolladores. Toda tarea 
 | **Agustín Belardinelli** | Product Owner & Backend Core | Definición del alcance, visión funcional del producto, historias de usuario, motor PDP de evaluación de políticas y lógica de negocio. |
 | **Juan Martín Battiato** | Scrum Master & Frontend Core | Facilitación ágil, seguimiento de sprints, dashboard web de auditoría, panel de control de agentes y bandeja de aprobaciones reactivas en vivo. |
 | **Mateo Ortega** | Diseñador UI/UX & Frontend | Diseño visual de la interfaz, mockups y wireframes, componentes de diseño interactivos y experiencia de usuario del dashboard. |
-| **Jonathan Araujo** | Backend Architecture & Gateway | Arquitectura del API Gateway (PEP), interceptor de llamadas a herramientas (MCP / REST), capa de persistencia (PostgreSQL/Redis), integración y suite de pruebas. |
+| **Jonathan Araujo** | Backend Architecture & Gateway | Arquitectura del API Gateway (PEP), interceptor de llamadas a herramientas vía API REST, capa de persistencia (PostgreSQL/Redis), integración y suite de pruebas. |
 
 > [!IMPORTANT]
 > ### 🚨 Regla de Convivencia para Agentes de IA (Anti "Over-coding" / Anti Descontrol)
@@ -36,21 +36,21 @@ Todo trabajo en este repositorio se rige bajo el principio de **Desarrollo Guiad
 ### 3.1 Fases Estrictas y Progresivas del Proyecto
 1. **Fase 0 (Completada): Visión del Producto y Propuesta Reformulada v2.0**
    - Documento oficial de propuesta validada: [`AgentGuard_Propuesta_Desarrollo_Web_v2.pdf`](./AgentGuard_Propuesta_Desarrollo_Web_v2.pdf).
-   - Resumen ejecutivo del equipo: [`guia_simple_proyecto_agentguard.pdf`](./guia_simple_proyecto_agentguard.pdf) / [`.html`](./guia_simple_proyecto_agentguard.html).
+   - Resumen ejecutivo del equipo: [`guia_simple_proyecto_agentguard.pdf`](./guia_simple_proyecto_agentguard.pdf) / [`guia_simple_proyecto_agentguard.md`](./guia_simple_proyecto_agentguard.md).
    - Marco teórico, benchmark de mercado (estudios CSA 2026) y modelo de amenazas (OWASP Top 10 for Agentic Applications 2026).
 
 2. **Fase 1 (Completada): Suite de Especificación Arquitectónica y Modelado Formal**
    - La arquitectura del sistema está completamente formalizada en los 6 diagramas vectoriales Draw.io y sus guías de defensa técnica en Markdown ubicados en la raíz:
      - [`agentguard_mer_relacional.drawio`](./agentguard_mer_relacional.drawio) & [`agentguard_mer_relacional.md`](./agentguard_mer_relacional.md) — Modelo Relacional Lógico/Físico (PostgreSQL, 12 tablas, UUIDs, JSONB, aislamiento estricto por tenant).
      - [`agentguard_er_conceptual_chen.drawio`](./agentguard_er_conceptual_chen.drawio) & [`agentguard_er_conceptual_chen.md`](./agentguard_er_conceptual_chen.md) — Modelo Conceptual formal con notación Chen y biblioteca de atributos desacoplada.
-     - [`agentguard_arquitectura_runtime.drawio`](./agentguard_arquitectura_runtime.drawio) & [`agentguard_arquitectura_runtime.md`](./agentguard_arquitectura_runtime.md) — Arquitectura Zero Trust (PEP / PDP), conectores Model Context Protocol (MCP) y caché Redis.
+     - [`agentguard_arquitectura_runtime.drawio`](./agentguard_arquitectura_runtime.drawio) & [`agentguard_arquitectura_runtime.md`](./agentguard_arquitectura_runtime.md) — Arquitectura Zero Trust (PEP / PDP), proxy HTTP REST y caché Redis.
      - [`agentguard_secuencia_demo.drawio`](./agentguard_secuencia_demo.drawio) & [`agentguard_secuencia_demo.md`](./agentguard_secuencia_demo.md) — Diagrama de Secuencia con los 4 escenarios de evaluación en tiempo real de la demo.
      - [`agentguard_estados_ciclo_vida.drawio`](./agentguard_estados_ciclo_vida.drawio) & [`agentguard_estados_ciclo_vida.md`](./agentguard_estados_ciclo_vida.md) — Máquinas de estados para ejecuciones asíncronas, cola de aprobaciones e incidentes.
      - [`agentguard_casos_de_uso.drawio`](./agentguard_casos_de_uso.drawio) & [`agentguard_casos_de_uso.md`](./agentguard_casos_de_uso.md) — Casos de uso UML con relaciones `<<include>>` y `<<extend>>`.
 
 3. **Fase 2 (Próxima): Plan de Implementación a Largo Plazo y Contratos Técnicos**
    - Definición de estructura del proyecto / monorepo.
-   - Contratos de APIs y esquemas de mensajes (OpenAPI / MCP JSON-RPC).
+   - Contratos de APIs y esquemas de mensajes (OpenAPI / JSON REST).
    - Migraciones DDL iniciales para PostgreSQL y semillas de prueba (`seeds`).
 
 4. **Fase 3+: Implementación Guiada Módulo a Módulo**

@@ -124,7 +124,7 @@ def build_drawio_xml():
         "id (PK, UUID)",
         "organization_id (FK)",
         "name (String)",
-        "protocol (Enum: MCP, REST)",
+        "protocol (String: REST)",
         "endpoint_url (String)",
         "description (Text)",
         "created_at (Timestamp)"
@@ -267,7 +267,7 @@ def build_drawio_xml():
         ("mini_agent", "Agent (Agente de IA)", "🤖", "#2E7D32", "#E8F5E9", ["id (PK, UUID)", "organization_id (FK)", "owner_user_id (FK)", "name (String)", "purpose (Text)", "status (Enum: ACTIVE, SUSPENDED, REVOKED)", "created_at (Timestamp)"], 530, 710, 220, 110),
         ("mini_agent_tool", "AgentTool (Acceso a Herramientas)", "🔗", "#EA580C", "#FFEDD5", ["id (PK, UUID)", "agent_id (FK)", "tool_id (FK)", "enabled (Boolean)", "config (JSONB, Nullable)", "created_at (Timestamp)"], 770, 710, 220, 110),
         
-        ("mini_tool", "Tool (Herramienta Externa)", "🔧", "#00838F", "#E0F7FA", ["id (PK, UUID)", "organization_id (FK)", "name (String)", "protocol (Enum: MCP, REST)", "endpoint_url (String)", "description (Text)", "created_at (Timestamp)"], 40, 835, 220, 110),
+        ("mini_tool", "Tool (Herramienta Externa)", "🔧", "#00838F", "#E0F7FA", ["id (PK, UUID)", "organization_id (FK)", "name (String)", "protocol (String: REST)", "endpoint_url (String)", "description (Text)", "created_at (Timestamp)"], 40, 835, 220, 110),
         ("mini_tool_action", "ToolAction (Acción de Herramienta)", "⚙️", "#D97706", "#FEF3C7", ["id (PK, UUID)", "tool_id (FK)", "action_name (String)", "risk_level (Enum)", "description (Text)", "created_at (Timestamp)"], 280, 835, 230, 110),
         ("mini_policy", "Policy (Política)", "🛡️", "#D32F2F", "#FFEBEE", ["id (PK, UUID)", "organization_id (FK)", "name (String)", "description (Text)", "priority (Integer)", "is_active (Boolean)", "created_at (Timestamp)"], 530, 835, 220, 110),
         ("mini_policy_rule", "PolicyRule (Regla de Autorización)", "📋", "#512DA8", "#EDE7F6", ["id (PK, UUID)", "policy_id (FK)", "priority (Integer)", "effect (Enum)", "tool_action_id (FK)", "target_agent_id (FK, Nullable)", "conditions (JSONB)"], 770, 835, 220, 110),
@@ -410,7 +410,7 @@ def build_mermaid():
         UUID id PK
         UUID organization_id FK
         string name
-        string protocol "MCP | REST"
+        string protocol "REST"
         string endpoint_url
         string description
         timestamp created_at
@@ -549,7 +549,7 @@ entity "Tool" as Tool #E0F7FA {
     --
     * organization_id : UUID [FK]
     * name : VARCHAR
-    * protocol : ENUM (MCP, REST)
+    * protocol : VARCHAR [REST]
     * endpoint_url : VARCHAR
     * description : TEXT
     * created_at : TIMESTAMP
@@ -688,7 +688,7 @@ def build_sql():
 -- ENUMS
 CREATE TYPE user_role AS ENUM ('ADMIN', 'OPERATOR', 'APPROVER');
 CREATE TYPE agent_status AS ENUM ('ACTIVE', 'SUSPENDED', 'REVOKED');
-CREATE TYPE tool_protocol AS ENUM ('MCP', 'REST');
+CREATE TYPE tool_protocol AS ENUM ('REST');
 CREATE TYPE risk_level AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
 CREATE TYPE rule_effect AS ENUM ('ALLOW', 'DENY', 'REQUIRE_APPROVAL');
 CREATE TYPE execution_decision AS ENUM ('ALLOW', 'DENY', 'REQUIRE_APPROVAL');
@@ -835,22 +835,22 @@ CREATE TABLE audit_events (
 
 if __name__ == "__main__":
     import os
-    domain_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "02-domain"))
-    os.makedirs(domain_dir, exist_ok=True)
+    out_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "out"))
+    os.makedirs(out_dir, exist_ok=True)
     
     drawio_content = build_drawio_xml()
-    with open(os.path.join(domain_dir, "AgentGuard_MER_v2.0.drawio"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "AgentGuard_MER_v2.0.drawio"), "w", encoding="utf-8") as f:
         f.write(drawio_content)
-    with open(os.path.join(domain_dir, "AgentGuard_MER_v2.0.xml"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "AgentGuard_MER_v2.0.xml"), "w", encoding="utf-8") as f:
         f.write(drawio_content)
     
-    with open(os.path.join(domain_dir, "AgentGuard_MER_v2.0.mmd"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "AgentGuard_MER_v2.0.mmd"), "w", encoding="utf-8") as f:
         f.write(build_mermaid())
         
-    with open(os.path.join(domain_dir, "AgentGuard_MER_v2.0.puml"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "AgentGuard_MER_v2.0.puml"), "w", encoding="utf-8") as f:
         f.write(build_plantuml())
 
-    with open(os.path.join(domain_dir, "AgentGuard_Schema.sql"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "AgentGuard_Schema.sql"), "w", encoding="utf-8") as f:
         f.write(build_sql())
 
-    print(f"Successfully generated all diagram files in: {domain_dir}")
+    print(f"Successfully generated all diagram files in: {out_dir}")

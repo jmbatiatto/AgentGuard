@@ -43,13 +43,13 @@ En el modelo observamos `JSONB` en cuatro lugares clave:
 
 Frente a la primera versión del proyecto, este modelo incorpora mejoras estructurales que deben destacarse durante la presentación:
 
-1. **Relación $N:N$ entre Agente y Herramienta (`AgentTool`):** En la versión inicial un agente tenía herramientas fijas o viceversa. Ahora, una herramienta (ej. *Salesforce MCP Server*) puede asignarse a múltiples agentes, cada uno con configuraciones, scopes y estados de habilitación independientes.
+1. **Relación $N:N$ entre Agente y Herramienta (`AgentTool`):** En la versión inicial un agente tenía herramientas fijas o viceversa. Ahora, una herramienta (ej. *API REST de Salesforce*) puede asignarse a múltiples agentes, cada uno con configuraciones, scopes y estados de habilitación independientes.
 2. **Granularidad Fina con `ToolAction`:** Anteriormente se autorizaba la herramienta genérica o mediante un string de texto libre. Ahora se modela la acción atómica (`ToolAction`) con su propio `risk_level` (LOW, MEDIUM, HIGH, CRITICAL), garantizando integridad referencial con FKs.
 3. **Mecanismo Determinista de Prioridad y Precedencia:** `Policy` y `PolicyRule` cuentan con un campo `priority (INTEGER)`. La regla fundamental de seguridad es el **Principio de Mínimo Privilegio y Denegación por Defecto (*Fail-Closed*)**: ante un conflicto o empate de reglas, `DENY` siempre vence a `ALLOW`.
 4. **Desacoplamiento del Ciclo de Vida de Aprobación (`Approval`):** Las aprobaciones no son un flag booleano en la ejecución, sino una entidad hija con estados (`PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`), asignación de usuario aprobador y motivo de resolución.
 5. **Entidad de Seguridad `Alert`:** Permite registrar incidentes anómalos o intentos de violación (ej. *Prompt Injection* detectado) y rastrear quién la investigó (`resolved_by_user_id`).
 6. **Separación de `AuditEvent` y `Execution`:** `Execution` almacena llamadas operativas de agentes en runtime; `AuditEvent` audita acciones administrativas humanas (quién creó una política, quién revocó una credencial, quién cambió permisos).
-7. **Extensibilidad Preparada para MCP:** Las herramientas soportan el protocolo MCP (*Model Context Protocol*) con sus `endpoint_url` y esquemas de autorización basados en OAuth 2.1.
+7. **Estandarización 100% RESTful:** Las herramientas externas se registran mediante sus URLs de endpoints HTTP protegidos (`endpoint_url`), métodos HTTP y esquemas de autenticación estándar (Bearer Token / API Key), permitiendo integrar cualquier API web sin dependencias de protocolos propietarios.
 
 ---
 

@@ -30,7 +30,7 @@ A continuación se detalla la justificación formal de las cardinalidades mínim
 
 ### C. Agente y Herramienta: `AUTORIZADO_EN` (Relación $M:N$)
 * `AGENTE` $\rightarrow$ `(0,n)` $\rightarrow$ Un agente recién creado puede no tener herramientas asociadas hasta que se le asignen capacidades.
-* `HERRAMIENTA` $\rightarrow$ `(0,n)` $\rightarrow$ Un servidor MCP o API REST registrada puede estar temporalmente en desuso o ser consumida por decenas de agentes.
+* `HERRAMIENTA` $\rightarrow$ `(0,n)` $\rightarrow$ Una API REST externa registrada puede estar temporalmente en desuso o ser consumida por decenas de agentes.
 * **Atributos de la Relación:** Esta relación alberga atributos propios del vínculo: `enabled (booleano)` para deshabilitar temporalmente una tool para un agente específico, y `config (JSONB)` para guardar configuraciones particulares de invocación.
 
 ### D. Herramienta y Acción: `EXPONE`

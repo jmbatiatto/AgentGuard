@@ -22,7 +22,7 @@ Esta secuencia de 4 casos utiliza **la misma organización y el mismo agente de 
 * **Comportamiento del Sistema:** 
   1. El Gateway intercepta la llamada.
   2. El PDP valida la condición matemática y emite `ALLOW`.
-  3. La petición viaja al servidor MCP (CRM/Facturación), se ejecuta con éxito y el cliente recibe su ID de cotización.
+  3. La petición viaja a la API REST de destino (CRM/Facturación), se ejecuta con éxito y el cliente recibe su ID de cotización.
   4. En segundo plano, se registra el `Execution Trace` en PostgreSQL con código 200.
 
 ---
@@ -46,7 +46,7 @@ Esta secuencia de 4 casos utiliza **la misma organización y el mismo agente de 
   2. Se emite un evento instantáneo por WebSocket al Dashboard web del operador.
   3. En la pantalla del profesor, aparece la notificación en vivo en la bandeja **Approvals Inbox**.
   4. El operador humano hace click en **"Aprobar"**, ingresando un motivo (*"Caso validado con gerencia"*).
-  5. El Gateway descongela la llamada, la despacha hacia la API de pagos (Stripe MCP) y completa el reembolso.
+  5. El Gateway descongela la llamada, la despacha hacia la API REST de pagos (Stripe API) y completa el reembolso.
 
 ---
 

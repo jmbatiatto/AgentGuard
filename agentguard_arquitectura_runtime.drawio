@@ -9,7 +9,7 @@
         <mxCell id="top_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="30" width="2320" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="top_title" value="&lt;font color=&#39;#ffffff&#39; face=&#39;Helvetica&#39;&gt;&lt;b style=&#39;font-size:26px;&#39;&gt;🏗️ AgentGuard — Arquitectura de Runtime y Flujo de Intercepción PEP / PDP&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:14px;color:#94a3b8;&#39;&gt;Frontera Externa al LLM • Modelo Zero Trust de Autorización Contextual (XACML RFC 2904 / MCP OAuth 2.1)&lt;/span&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="top_title" value="&lt;font color=&#39;#ffffff&#39; face=&#39;Helvetica&#39;&gt;&lt;b style=&#39;font-size:26px;&#39;&gt;🏗️ AgentGuard — Arquitectura de Runtime y Flujo de Intercepción PEP / PDP&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:14px;color:#94a3b8;&#39;&gt;Frontera Externa al LLM • Modelo Zero Trust de Autorización Contextual (XACML RFC 2904 / HTTP REST OAuth 2.1)&lt;/span&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="70" y="42" width="1650" height="66" as="geometry" />
         </mxCell>
         <mxCell id="top_tag" value="&lt;b&gt;ZERO TRUST EN RUNTIME&lt;/b&gt;&lt;br&gt;Policy Enforcement Point (PEP)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e293b;strokeColor=#10b981;fontColor=#34d399;fontSize=11;align=center;" vertex="1" parent="1">
@@ -24,7 +24,7 @@
           <mxGeometry y="30" width="380" height="710" as="geometry" />
         </mxCell>
 
-        <mxCell id="comp_agent_client" value="&lt;b style=&#39;font-size:15px;&#39;&gt;🤖 Agente de IA / LLM Client&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#475569;&#39;&gt;(Claude Desktop, LangChain, Cursor, Autogen)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;div align=&#39;left&#39; style=&#39;font-size:11px;background:#e2e8f0;padding:6px;border-radius:4px;&#39;&gt;• Propone la acción (&lt;i&gt;create_quote, refund&lt;/i&gt;)&lt;br&gt;• Soporta protocolo &lt;b&gt;MCP Client&lt;/b&gt; o REST&lt;br&gt;• Porta credenciales de agente (Token)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d1fae5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer1_content">
+        <mxCell id="comp_agent_client" value="&lt;b style=&#39;font-size:15px;&#39;&gt;🤖 Agente de IA / LLM Client&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#475569;&#39;&gt;(Claude Desktop, LangChain, Cursor, Autogen)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;div align=&#39;left&#39; style=&#39;font-size:11px;background:#e2e8f0;padding:6px;border-radius:4px;&#39;&gt;• Propone la acción (&lt;i&gt;create_quote, refund&lt;/i&gt;)&lt;br&gt;• Emite peticiones &lt;b&gt;HTTP REST&lt;/b&gt; estándar&lt;br&gt;• Porta credenciales de agente (Token)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d1fae5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer1_content">
           <mxGeometry x="25" y="40" width="330" height="150" as="geometry" />
         </mxCell>
 
@@ -32,7 +32,7 @@
           <mxGeometry x="25" y="270" width="330" height="150" as="geometry" />
         </mxCell>
 
-        <mxCell id="comp_dev_client" value="&lt;b style=&#39;font-size:15px;&#39;&gt;🛠️ Desarrollador / Admin Tenant&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#475569;&#39;&gt;(AgentGuard Playground / Config)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;div align=&#39;left&#39; style=&#39;font-size:11px;background:#e2e8f0;padding:6px;border-radius:4px;&#39;&gt;• Define políticas de autorización contextual&lt;br&gt;• Simula escenarios de ataque controlados&lt;br&gt;• Da de alta agentes y servidores MCP&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer1_content">
+        <mxCell id="comp_dev_client" value="&lt;b style=&#39;font-size:15px;&#39;&gt;🛠️ Desarrollador / Admin Tenant&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#475569;&#39;&gt;(AgentGuard Playground / Config)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;div align=&#39;left&#39; style=&#39;font-size:11px;background:#e2e8f0;padding:6px;border-radius:4px;&#39;&gt;• Define políticas de autorización contextual&lt;br&gt;• Simula escenarios de ataque controlados&lt;br&gt;• Da de alta agentes y APIs REST de destino&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer1_content">
           <mxGeometry x="25" y="500" width="330" height="150" as="geometry" />
         </mxCell>
 
@@ -44,7 +44,7 @@
           <mxGeometry y="30" width="460" height="710" as="geometry" />
         </mxCell>
 
-        <mxCell id="comp_gateway_pep" value="&lt;b style=&#39;font-size:16px;&#39;&gt;🛡️ Agent Runtime Gateway (PEP)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#0284c7;&#39;&gt;(Policy Enforcement Point • Reverse Proxy MCP/REST)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;div align=&#39;left&#39; style=&#39;font-size:11px;background:#f0f9ff;padding:8px;border-radius:4px;line-height:1.4;&#39;&gt;
+        <mxCell id="comp_gateway_pep" value="&lt;b style=&#39;font-size:16px;&#39;&gt;🛡️ Agent Runtime Gateway (PEP)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#0284c7;&#39;&gt;(Policy Enforcement Point • Reverse Proxy HTTP REST)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;div align=&#39;left&#39; style=&#39;font-size:11px;background:#f0f9ff;padding:8px;border-radius:4px;line-height:1.4;&#39;&gt;
 1. &lt;b&gt;Intercepción Total:&lt;/b&gt; Toda tool call es detenida antes de alcanzar la red protegida.&lt;br&gt;
 2. &lt;b&gt;Autenticación y Delegación:&lt;/b&gt; Valida Agent ID, Tenant ID y Delegator User ID.&lt;br&gt;
 3. &lt;b&gt;Extractor de Contexto:&lt;/b&gt; Extrae hora, importe, IP, recurso y parámetros.&lt;br&gt;
@@ -129,21 +129,21 @@
           <mxGeometry y="30" width="370" height="710" as="geometry" />
         </mxCell>
 
-        <mxCell id="comp_mcp_crm" value="&lt;b style=&#39;font-size:14px;&#39;&gt;💼 CRM MCP Server&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#475569;&#39;&gt;(Salesforce / HubSpot Adapter)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;code style=&#39;font-size:10px;&#39;&gt;tools: [consultar_clientes,&lt;br&gt;create_quote, export_data]&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer5_content">
+        <mxCell id="comp_mcp_crm" value="&lt;b style=&#39;font-size:14px;&#39;&gt;💼 CRM REST API&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#475569;&#39;&gt;(Salesforce / CRM Webhook API)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;code style=&#39;font-size:10px;&#39;&gt;tools: [consultar_clientes,&lt;br&gt;create_quote, export_data]&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer5_content">
           <mxGeometry x="25" y="50" width="320" height="130" as="geometry" />
         </mxCell>
 
-        <mxCell id="comp_mcp_erp" value="&lt;b style=&#39;font-size:14px;&#39;&gt;💳 ERP &amp;amp; Payments Server&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#475569;&#39;&gt;(Stripe / SAP Integration)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;code style=&#39;font-size:10px;&#39;&gt;tools: [refund, update_price,&lt;br&gt;process_payment]&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer5_content">
+        <mxCell id="comp_mcp_erp" value="&lt;b style=&#39;font-size:14px;&#39;&gt;💳 ERP &amp;amp; Payments REST API&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#475569;&#39;&gt;(Stripe / SAP Integration)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;code style=&#39;font-size:10px;&#39;&gt;tools: [refund, update_price,&lt;br&gt;process_payment]&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer5_content">
           <mxGeometry x="25" y="240" width="320" height="130" as="geometry" />
         </mxCell>
 
-        <mxCell id="comp_db_server" value="&lt;b style=&#39;font-size:14px;&#39;&gt;🗄️ Internal Data &amp;amp; Files API&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#475569;&#39;&gt;(PostgreSQL / S3 MCP Adapter)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;code style=&#39;font-size:10px;&#39;&gt;tools: [query_analytics,&lt;br&gt;download_file]&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer5_content">
+        <mxCell id="comp_db_server" value="&lt;b style=&#39;font-size:14px;&#39;&gt;🗄️ Internal Data &amp;amp; Files API&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:11px;color:#475569;&#39;&gt;(PostgreSQL / S3 Storage API)&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;code style=&#39;font-size:10px;&#39;&gt;tools: [query_analytics,&lt;br&gt;download_file]&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;strokeWidth=2;fontColor=#1e293b;shadow=1;" vertex="1" parent="box_layer5_content">
           <mxGeometry x="25" y="430" width="320" height="130" as="geometry" />
         </mxCell>
 
         <!-- ================= RUNTIME FLOW ARROWS ================= -->
         <!-- 1. Agent to Gateway (Tool Call Request) -->
-        <mxCell id="flow_agent_gw" value="1. Tool Call Request&lt;br&gt;(MCP / JSON-RPC)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=3;fontColor=#0284c7;fontStyle=1;fontSize=11;" edge="1" parent="1" source="comp_agent_client" target="comp_gateway_pep">
+        <mxCell id="flow_agent_gw" value="1. Tool Call Request&lt;br&gt;(HTTP REST / JSON)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=3;fontColor=#0284c7;fontStyle=1;fontSize=11;" edge="1" parent="1" source="comp_agent_client" target="comp_gateway_pep">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="450" y="300" />
@@ -167,8 +167,8 @@
           </mxGeometry>
         </mxCell>
 
-        <!-- 4A. Path ALLOW -> Gateway forwards to MCP Server -->
-        <mxCell id="flow_gw_allow" value="4A. ALLOW:&lt;br&gt;Enruta petición a Tool" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=4;fontColor=#047857;fontStyle=1;fontSize=12;" edge="1" parent="1" source="comp_gateway_pep" target="comp_mcp_crm">
+        <!-- 4A. Path ALLOW -> Gateway forwards to REST API -->
+        <mxCell id="flow_gw_allow" value="4A. ALLOW:&lt;br&gt;Enruta petición a API REST" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=4;fontColor=#047857;fontStyle=1;fontSize=12;" edge="1" parent="1" source="comp_gateway_pep" target="comp_mcp_crm">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="950" y="240" />

@@ -22,8 +22,8 @@ En la literatura de seguridad de redes y autorización de grano fino (RFC 2904 y
 
 1. **Policy Enforcement Point (PEP) — El "Guardián":**
    * Es el **Agent Runtime Gateway**.
-   * Opera como un *Reverse Proxy* que habla el protocolo **MCP (Model Context Protocol)** o REST.
-   * Intercepta la llamada, extrae las credenciales del agente, sanitiza los parámetros y no permite que un solo byte llegue al servidor MCP protegido sin el aval explícito del PDP.
+   * Opera como un *Reverse Proxy HTTP REST* que intercepta llamadas atómicas de herramientas.
+   * Extrae las credenciales del agente, sanitiza los parámetros JSON y no permite que un solo byte llegue a la API externa protegida sin el aval explícito del PDP.
 2. **Policy Decision Point (PDP) — El "Juez":**
    * Es el **Policy Engine**.
    * Recibe la tupla contextual de 5 dimensiones:
@@ -49,8 +49,8 @@ Nuestra respuesta técnica se sustenta en tres mecanismos:
 > **Respuesta:** «Un API Gateway tradicional (Kong, Nginx, AWS API Gateway) realiza enrutamiento perimetral, rate-limiting por IP y validación de tokens estáticos (JWT de usuario).  
 > AgentGuard va mucho más allá:  
 > 1. Modela el dominio específico de **sistemas autónomos de IA**, comprendiendo cadenas de delegación (*Usuario $\rightarrow$ Agente $\rightarrow$ Tarea $\rightarrow$ Herramienta*).  
-> 2. Implementa **Human-in-the-loop**, suspendiendo la conexión HTTP/WebSocket de la herramienta y levantando un ticket en tiempo real hacia una bandeja de aprobación humana antes de despachar la acción.  
-> 3. Soporta nativamente **MCP (Model Context Protocol)**, el estándar emergente impulsado por la industria para conectar modelos con herramientas».
+> 2. Implementa **Human-in-the-loop**, suspendiendo la conexión HTTP del cliente y levantando un ticket en tiempo real hacia una bandeja de aprobación humana antes de despachar la acción hacia el servicio destino.  
+> 3. Estandariza la autorización sobre **APIs REST universales**, permitiendo proteger cualquier servicio web empresarial sin requerir protocolos complejos o dependencias propietarias».
 
 ### ❓ P2: *"¿Dónde está la Inteligencia Artificial si el backend es determinista?"*
 > **Respuesta:** «La IA está en el cliente que interactúa con nuestra plataforma: son los agentes autónomos de venta, soporte o finanzas que toman decisiones y proponen acciones. AgentGuard es la **capa de gobernanza y control perimetral** que las empresas necesitan para poder poner esos agentes en producción sin riesgo de demandas legales o fugas de datos. Pretender que el guardia de seguridad también sea una IA no determinista aumentaría la superficie de ataque; la seguridad debe ser determinista, auditable y explicable».

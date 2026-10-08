@@ -37,8 +37,8 @@
           <mxGeometry x="80" y="1250" width="50" height="90" as="geometry" />
         </mxCell>
 
-        <!-- Actor 5: Servidor MCP Destino (Actor Secundario Receptor) -->
-        <mxCell id="act_mcp_server" value="🛠️ Servidor MCP /&lt;br&gt;Tool Externa&lt;br&gt;(Sistema Receptor)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f1f5f9;strokeColor=#475569;strokeWidth=2;fontColor=#1e293b;fontStyle=1;" vertex="1" parent="1">
+        <!-- Actor 5: API REST Destino (Actor Secundario Receptor) -->
+        <mxCell id="act_mcp_server" value="🛠️ API REST Destino /&lt;br&gt;Tool Externa&lt;br&gt;(Sistema Receptor)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f1f5f9;strokeColor=#475569;strokeWidth=2;fontColor=#1e293b;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="2250" y="1250" width="50" height="90" as="geometry" />
         </mxCell>
 
@@ -61,7 +61,7 @@
         </mxCell>
 
         <!-- UC03: Registrar Herramientas y Acciones -->
-        <mxCell id="uc_03" value="&lt;b&gt;UC03: Conectar y Descubrir Herramientas (MCP/REST)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Importar schemas de acciones y clasificar risk_level)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
+        <mxCell id="uc_03" value="&lt;b&gt;UC03: Conectar y Configurar Herramientas (APIs REST)&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Registrar endpoints de acciones y clasificar risk_level)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;strokeWidth=2;fontColor=#1e293b;fontSize=12;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="320" y="440" width="310" height="75" as="geometry" />
         </mxCell>
 
@@ -115,8 +115,8 @@
           <mxGeometry x="1270" y="1320" width="280" height="65" as="geometry" />
         </mxCell>
 
-        <!-- UC10: Enrutar a Servidor MCP Destino -->
-        <mxCell id="uc_10" value="&lt;b&gt;UC10: Despachar Llamada a Tool MCP Protegida&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Solo si la decisión es ALLOW o Humano Aprobó)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontColor=#166534;fontSize=12;shadow=1;" vertex="1" parent="1">
+        <!-- UC10: Enrutar a API REST Destino -->
+        <mxCell id="uc_10" value="&lt;b&gt;UC10: Despachar Petición a API REST Protegida&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:10px;color:#64748b;&#39;&gt;(Solo si la decisión es ALLOW o Humano Aprobó)&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontColor=#166534;fontSize=12;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="1740" y="1255" width="340" height="80" as="geometry" />
         </mxCell>
 

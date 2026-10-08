@@ -37,8 +37,8 @@
           <mxGeometry x="1230" y="160" width="170" height="1550" as="geometry" />
         </mxCell>
 
-        <!-- 5. External Tool / MCP Server -->
-        <mxCell id="ll_tool" value="🛠️ Servidor MCP / Tool&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;(CRM / Stripe / ERP)&lt;/span&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontColor=#1e293b;fontStyle=1;size=40;" vertex="1" parent="1">
+        <!-- 5. External Tool / Protected REST API -->
+        <mxCell id="ll_tool" value="🛠️ API REST Destino / Tool&lt;br&gt;&lt;span style=&#39;font-size:10px;&#39;&gt;(CRM / Stripe / ERP API)&lt;/span&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontColor=#1e293b;fontStyle=1;size=40;" vertex="1" parent="1">
           <mxGeometry x="1620" y="160" width="170" height="1550" as="geometry" />
         </mxCell>
 
@@ -73,7 +73,7 @@
           </mxGeometry>
         </mxCell>
 
-        <mxCell id="msg_1_4" value="4. Enruta llamada protegida al Servidor MCP" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_tool">
+        <mxCell id="msg_1_4" value="4. Enruta llamada protegida a la API REST" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_tool">
           <mxGeometry relative="1" as="geometry">
             <Array as="points"><mxPoint x="1100" y="395" /></Array>
           </mxGeometry>
@@ -121,7 +121,7 @@
           </mxGeometry>
         </mxCell>
 
-        <mxCell id="note_never_reaches" value="🛡️ LA LLAMADA NUNCA ALCANZA EL SERVIDOR MCP DESTINO (ENFORCEMENT EXTERNO AL LLM)" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fillColor=#fee2e2;strokeColor=#dc2626;fontColor=#991b1b;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="note_never_reaches" value="🛡️ LA LLAMADA NUNCA ALCANZA LA API REST DESTINO (ENFORCEMENT EXTERNO AL LLM)" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fillColor=#fee2e2;strokeColor=#dc2626;fontColor=#991b1b;fontSize=10;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="1100" y="640" width="480" height="40" as="geometry" />
         </mxCell>
 
@@ -173,7 +173,7 @@
           </mxGeometry>
         </mxCell>
 
-        <mxCell id="msg_3_6" value="6. Reanuda llamada aprobada hacia Servidor MCP Stripe" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_tool">
+        <mxCell id="msg_3_6" value="6. Reanuda llamada aprobada hacia API REST Stripe" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=11;fontStyle=1;" edge="1" parent="1" source="ll_gateway" target="ll_tool">
           <mxGeometry relative="1" as="geometry">
             <Array as="points"><mxPoint x="1100" y="1090" /></Array>
           </mxGeometry>

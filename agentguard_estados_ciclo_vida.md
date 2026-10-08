@@ -17,13 +17,13 @@ En sistemas distribuidos donde intervienen humanos (*Human-in-the-loop*), las pe
 ## 2. Análisis Detallado de las 3 Máquinas de Estados
 
 ### A. Máquina 1: Ciclo de Vida de una Ejecución (`Execution`)
-Controla la solicitud HTTP / MCP desde que llega al Gateway hasta su culminación:
+Controla la solicitud HTTP REST desde que llega al Gateway hasta su culminación:
 
 1. **`RECEIVED`:** La tool call es recibida en el Gateway. Se validan sintaxis y autenticidad del token del agente.
 2. **`EVALUATING`:** El PDP toma la tupla contextual y evalúa las políticas cacheadas en Redis.
 3. **Bifurcación de Decisión:**
    * **Rama `BLOCKED` (Si la decisión es `DENY`):** Transición terminal inmediata. Se corta la conexión, se devuelve `403 Forbidden` y la herramienta externa jamás es invocada.
-   * **Rama `DISPATCHING` (Si la decisión es `ALLOW`):** Se enruta al servidor MCP. Si este responde con éxito, culmina en el estado final **`COMPLETED` (200 OK)**.
+   * **Rama `DISPATCHING` (Si la decisión es `ALLOW`):** Se enruta a la API REST de destino. Si esta responde con éxito, culmina en el estado final **`COMPLETED` (200 OK)**.
    * **Rama `PENDING_APPROVAL` (Si la decisión es `REQUIRE_APPROVAL`):** La solicitud se congela en el Gateway, se persiste en base de datos y se dispara la alerta por WebSocket hacia la interfaz del operador humano.
 4. **Resolución de la Espera Humana:**
    * Si el operador acepta $\rightarrow$ Transición a `DISPATCHING` $\rightarrow$ `COMPLETED`.
@@ -67,4 +67,4 @@ Durante la defensa, es vital explicar cómo el backend resuelve los problemas de
 > **Respuesta:** «En Node.js o arquitecturas asíncronas modernas, las conexiones son no bloqueantes basadas en el *Event Loop*. Cuando una llamada entra en `PENDING_APPROVAL`, no se congela un hilo del sistema operativo; se deja una promesa (*Promise*) o suscripción a un canal Redis Pub/Sub a la espera del evento de resolución. Cuando el operador hace click en el frontend, la API publica el evento en Redis y el Gateway despacha la respuesta inmediatamente, consumiendo un mínimo de memoria».
 
 ### ❓ P2: *"¿Por qué consideraron el estado `EXPIRED` en lugar de dejar que la aprobación espere indefinidamente?"*
-> **Respuesta:** «Por el principio de seguridad **Fail-Closed**. Un agente no puede esperar eternamente porque los modelos y los frameworks clientes (como LangChain o clientes MCP) tienen tiempos límite de desconexión. Si nadie aprueba una transferencia de dinero en 15 minutos, asumir el silencio como rechazo seguro evita que se ejecuten transacciones fuera de contexto horas más tarde».
+> **Respuesta:** «Por el principio de seguridad **Fail-Closed**. Un agente no puede esperar eternamente porque los modelos y los frameworks clientes (como LangChain o clientes HTTP) tienen tiempos límite de desconexión. Si nadie aprueba una transferencia de dinero en 15 minutos, asumir el silencio como rechazo seguro evita que se ejecuten transacciones fuera de contexto horas más tarde».
