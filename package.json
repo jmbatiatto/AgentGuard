@@ -4,11 +4,12 @@
   "private": true,
   "description": "AgentGuard \u2014 Runtime Authorization & Governance for AI Agents",
   "scripts": {
-    "dev:backend": "pnpm --filter backend dev",
     "dev:frontend": "pnpm --filter frontend dev",
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint"
+    "build:frontend": "pnpm --filter frontend build",
+    "test:frontend": "pnpm --filter frontend test",
+    "lint:frontend": "pnpm --filter frontend lint",
+    "dev:backend": "cd backend && uvicorn app.main:app --reload --port 8000",
+    "test:backend": "cd backend && pytest"
   },
   "packageManager": "pnpm@12.10.1",
   "engines": {

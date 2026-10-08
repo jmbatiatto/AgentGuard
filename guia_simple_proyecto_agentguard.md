@@ -99,10 +99,11 @@ Para que el profesor y los compañeros entiendan el valor en 2 minutos, la demo 
 
 ---
 
-## 5. Decisión Oficial del Equipo: Fullstack TypeScript con pnpm 🚀
+## 5. Decisión Oficial del Equipo: Arquitectura Políglota (Python FastAPI + React TypeScript) 🚀
 
-El equipo definió de forma unánime unificar todo el desarrollo bajo **TypeScript de punta a punta** gestionado con **`pnpm`**:
-* **Backend:** Node.js (v20+ LTS / v24+) con TypeScript (Express o Fastify).
-* **Frontend:** React con Vite y TypeScript.
-* **Gestor de Paquetes y Monorepo:** `pnpm` (workspaces) para máxima velocidad, deduplicación de dependencias y tipos compartidos de extremo a extremo.
-* **Detalle formal:** Registrado en el documento de arquitectura [`DECISIONS.md`](./DECISIONS.md) (ADR-001 y ADR-002).
+Siguiendo la directiva explícita de la cátedra de no repetir el mismo lenguaje en ambos lados del stack para evaluar integración heterogénea, el equipo formalizó la arquitectura definitiva:
+* **Frontend:** **TypeScript (v5+) con React y Vite** (gestor: `pnpm`).
+* **Backend:** **Python 3.12+ con FastAPI** (asíncrono, validación con Pydantic v2 y Swagger interactivo en `/docs`).
+* **Versionado de Base de Datos:** **Alembic** (herramienta oficial de migraciones de SQLAlchemy para trazabilidad y versionado de cambios DDL en PostgreSQL).
+* **Persistencia:** PostgreSQL 16 (12 tablas relacionales del MER) + Redis 7 (caché volátil de políticas y WebSockets).
+* **Detalle formal:** Registrado en el documento de arquitectura [`DECISIONS.md`](./DECISIONS.md) (ADR-001 a ADR-005).

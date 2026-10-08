@@ -9,13 +9,13 @@
 - **Directorio de Trabajo Oficial:** `C:\Users\jonat\Downloads\Codigos\AgentGuard`
 - **Registro de Decisiones Arquitectónicas (ADRs):** [`DECISIONS.md`](./DECISIONS.md)
 
-### 1.1 Stack Tecnológico y Tooling Oficial
-- **Lenguaje Unificado:** TypeScript (v5+) de extremo a extremo (Fullstack TypeScript).
-- **Runtime:** Node.js (v20+ LTS o v24+).
-- **Gestor de Paquetes y Monorepo:** `pnpm` (workspaces definidos en `pnpm-workspace.yaml`).
-- **Backend:** Node.js + TypeScript (Express / Fastify).
-- **Frontend:** React + Vite + TypeScript (SPA reactiva con WebSockets).
-- **Persistencia:** PostgreSQL 16 (12 tablas, multi-tenant RLS, JSONB) + Redis 7 (caché PDP y Pub/Sub).
+### 1.1 Stack Tecnológico y Tooling Oficial (Arquitectura Políglota)
+- **Requerimiento Docente:** El profesor de la cátedra exige explícitamente **diversidad tecnológica** (lenguajes diferentes en frontend y backend).
+- **Frontend:** **TypeScript (v5+) con React y Vite**, gestionado mediante **`pnpm`**.
+- **Backend:** **Python 3.12+ con FastAPI**, servidor ASGI **Uvicorn**, validación **Pydantic v2** y ORM **SQLAlchemy 2.0 asíncrono** (`asyncpg`).
+- **Control de Versiones y Migraciones de Base de Datos:** **Alembic** (gestión formal de versiones de esquema DDL con `upgrade`/`downgrade` y tabla `alembic_version`).
+- **Persistencia:** **PostgreSQL 16** (12 tablas relacionales, multi-tenant con discriminador `organization_id`, claves UUID v4 e índices GIN sobre `JSONB`) + **Redis 7** (caché volátil de políticas y WebSockets).
+- **Decisiones Formales:** Ver [`DECISIONS.md`](./DECISIONS.md) (ADR-001 a ADR-005).
 
 ---
 

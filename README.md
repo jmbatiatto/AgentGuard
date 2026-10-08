@@ -124,17 +124,17 @@ Todo trabajo de desarrollo por parte de asistentes y agentes de IA (Antigravity,
 
 ---
 
-## 💻 Stack Tecnológico Oficial (Fullstack TypeScript)
+## 💻 Stack Tecnológico Oficial (Arquitectura Políglota)
 
-El proyecto unifica todo su stack bajo **TypeScript de punta a punta** gestionado mediante **`pnpm`** (workspaces):
+Atendiendo la consigna pedagógica de la cátedra de Desarrollo Web de no repetir el mismo lenguaje en ambos lados del stack para evaluar integración heterogénea:
 
-* **Lenguaje:** TypeScript 5+ (compartido en backend, frontend y utilidades de demo).
-* **Gestor de Paquetes y Monorepo:** `pnpm` (workspaces definidos en `pnpm-workspace.yaml`).
-* **Backend:** Node.js (v20+ LTS / v24+) con TypeScript (Express o Fastify), arquitectura desacoplada por servicios.
-* **Frontend:** Single Page Application con React, Vite y TypeScript, con WebSockets para notificaciones reactivas de aprobación humana.
+* **Frontend:** **TypeScript (v5+) con React y Vite**, gestionado mediante **`pnpm`** (WebSockets reactivos para la bandeja de aprobaciones en vivo).
+* **Backend:** **Python 3.12+ con FastAPI**, servidor ASGI **Uvicorn**, validación **Pydantic v2** y ORM **SQLAlchemy 2.0 asíncrono** (`asyncpg`).
+* **Versionado y Migraciones de Base de Datos:** **Alembic** (herramienta oficial para trazabilidad de esquemas DDL versionados en Git con soporte bidireccional `upgrade` / `downgrade`).
 * **Gateway & Enforcement (PEP):** Reverse Proxy HTTP REST con interceptor de peticiones, validación de esquemas y headers de autorización.
 * **Motor de Políticas (PDP):** Evaluador determinista de predicados sobre estructuras `JSONB` y caché en memoria volátil.
 * **Persistencia:** PostgreSQL 16 (modelo relacional multi-tenant con Row-Level Security e índices GIN) + Redis 7 (caché ultrarrápida y colas Pub/Sub).
+* **Decisiones Formales:** Ver [`DECISIONS.md`](./DECISIONS.md) (ADR-001 a ADR-005).
 
 ---
 
@@ -142,13 +142,19 @@ El proyecto unifica todo su stack bajo **TypeScript de punta a punta** gestionad
 
 ```text
 AgentGuard/
-├── backend/              # API REST (Gestión + Gateway PEP + Motor PDP) [Node.js + TS]
-├── frontend/             # Dashboard Web SPA (Auditoría, Políticas, Approvals) [React + Vite + TS]
-├── agent-demo/           # Script cliente autónomo del Agente para la demo [Node.js / TS]
+├── backend/              # API REST (FastAPI + Pydantic + SQLAlchemy + Alembic) [Python 3.12+]
+│   ├── alembic/          # Historial de migraciones y versionado de BD
+│   ├── app/              # Código fuente (core, api, models, schemas, services)
+│   ├── requirements.txt  # Dependencias Python
+│   └── alembic.ini       # Configuración de migraciones
+├── frontend/             # Dashboard Web SPA (React + Vite + TypeScript) [pnpm]
+│   ├── src/              # Código fuente de componentes y vistas
+│   └── package.json      # Dependencias frontend
+├── agent-demo/           # Script cliente autónomo del Agente para la demo [Python]
 ├── diagramas/            # Archivos vectoriales de respaldo de Draw.io (*.drawio)
 ├── scripts/              # Utilidades de mantenimiento, regeneración y seeds
-├── pnpm-workspace.yaml   # Configuración de workspaces de pnpm
-├── package.json          # Root package.json con scripts unificados
+├── pnpm-workspace.yaml   # Configuración de workspaces de pnpm para el frontend
+├── package.json          # Root scripts coordinados
 └── *.md                  # Suite de documentación, guías de defensa y reglas de dominio
 ```
 
