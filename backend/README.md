@@ -69,3 +69,9 @@ El versionado de las 12 tablas relacionales en PostgreSQL se gestiona mediante c
   ```bash
   alembic downgrade -1
   ```
+
+---
+
+## 📋 Especificaciones y Hitos de Desarrollo
+
+* **Semana 1:** [Desglose de Pasos: Base de Datos & Setup Inicial](./desglose_de_pasos_semana_1_base_de_datos_y_setup_inicial.md) — Guía declarativa y fundamentación técnica de los 4 pasos (Docker Compose, FastAPI, SQLAlchemy 2.0 y Alembic).
