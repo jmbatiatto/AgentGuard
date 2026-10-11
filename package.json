@@ -8,8 +8,9 @@
     "build:frontend": "pnpm --filter frontend build",
     "test:frontend": "pnpm --filter frontend test",
     "lint:frontend": "pnpm --filter frontend lint",
-    "dev:backend": "cd backend && uvicorn app.main:app --reload --port 8000",
-    "test:backend": "cd backend && pytest"
+    "dev:backend": "powershell -ExecutionPolicy Bypass -File scripts/start-backend.ps1",
+    "test:backend": "cd backend && pytest",
+    "start:backend": "powershell -ExecutionPolicy Bypass -File scripts/start-backend.ps1"
   },
   "packageManager": "pnpm@12.10.1",
   "engines": {
