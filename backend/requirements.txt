@@ -1,0 +1,34 @@
+# ==============================================================================
+# AgentGuard Backend - Dependencias Congeladas de Producción y Desarrollo
+# Runtime: Python 3.12+ | Arquitectura Asíncrona (FastAPI + SQLAlchemy 2.0)
+# ==============================================================================
+
+# Framework Web Asíncrono & Servidor ASGI
+fastapi>=0.111.0,<0.112.0
+uvicorn[standard]>=0.30.0,<0.31.0
+
+# Capa de Persistencia & Base de Datos Relacional (PostgreSQL 16)
+sqlalchemy[asyncio]>=2.0.30,<2.1.0
+asyncpg>=0.29.0,<0.30.0
+psycopg2-binary>=2.9.9,<3.0.0
+
+# Versionado y Migraciones DDL
+alembic>=1.13.0,<1.14.0
+
+# Validación de Datos & Configuración Tipada (Pydantic v2 en Rust)
+pydantic>=2.7.0,<2.8.0
+pydantic-settings>=2.3.0,<2.4.0
+
+# Almacén en Memoria & Caché Volátil de Políticas (Redis 7)
+redis>=5.0.0,<5.1.0
+
+# Cliente HTTP Asíncrono (para llamadas del PEP / Gateway a herramientas)
+httpx>=0.27.0,<0.28.0
+
+# Seguridad, Criptografía & Tokens
+python-jose[cryptography]>=3.3.0,<3.4.0
+passlib[bcrypt]>=1.7.4,<1.8.0
+
+# Testing & Validación Automatizada
+pytest>=8.2.0,<8.3.0
+pytest-asyncio>=0.23.0,<0.24.0
