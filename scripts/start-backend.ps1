@@ -30,14 +30,11 @@ if (-not $dockerCmd) {
     exit 1
 }
 
+# Comprobar si el motor de Docker esta corriendo suprimiendo warnings inocuos de stderr
 $dockerRunning = $false
-try {
-    $null = docker info 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        $dockerRunning = $true
-    }
-} catch {
-    $dockerRunning = $false
+& docker info --format "{{.ServerVersion}}" *>$null
+if ($LASTEXITCODE -eq 0) {
+    $dockerRunning = $true
 }
 
 if (-not $dockerRunning) {
@@ -47,13 +44,8 @@ if (-not $dockerRunning) {
     Write-Host ""
     $prompt = Read-Host "Presiona [ENTER] una vez que Docker Desktop este abierto para continuar..."
     
-    try {
-        $null = docker info 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "[!] No se pudo conectar al daemon de Docker. Abortando arranque." -ForegroundColor Red
-            exit 1
-        }
-    } catch {
+    & docker info --format "{{.ServerVersion}}" *>$null
+    if ($LASTEXITCODE -ne 0) {
         Write-Host "[!] No se pudo conectar al daemon de Docker. Abortando arranque." -ForegroundColor Red
         exit 1
     }
@@ -63,11 +55,11 @@ Write-Host "[+] Levantando contenedores (PostgreSQL 16 + Redis 7)..." -Foregroun
 docker compose up -d
 
 Write-Host "[*] Esperando disponibilidad de PostgreSQL..." -ForegroundColor Gray
-$retries = 10
+$retries = 15
 $ready = $false
 while ($retries -gt 0 -and -not $ready) {
     Start-Sleep -Seconds 2
-    $null = docker compose exec -T postgres pg_isready -U agentguard -d agentguard_db 2>&1
+    & docker compose exec -T postgres pg_isready -U agentguard -d agentguard_db *>$null
     if ($LASTEXITCODE -eq 0) {
         $ready = $true
     }
