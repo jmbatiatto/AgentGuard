@@ -13,6 +13,10 @@ from app.services.tool_service import (
     ToolService,
     tool_service,
 )
+from app.services.tool_action_service import (
+    ToolActionService,
+    tool_action_service,
+)
 
 __all__ = [
     "OrganizationService",
@@ -21,4 +25,6 @@ __all__ = [
     "user_service",
     "ToolService",
     "tool_service",
+    "ToolActionService",
+    "tool_action_service",
 ]
