@@ -9,9 +9,16 @@ from app.services.user_service import (
     user_service,
 )
 
+from app.services.tool_service import (
+    ToolService,
+    tool_service,
+)
+
 __all__ = [
     "OrganizationService",
     "organization_service",
     "UserService",
     "user_service",
+    "ToolService",
+    "tool_service",
 ]
