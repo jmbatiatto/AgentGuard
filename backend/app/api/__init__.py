@@ -7,6 +7,7 @@ from app.api.tools import router as tools_router
 from app.api.tool_actions import router as tool_actions_router
 from app.api.agents import router as agents_router
 from app.api.policies import router as policies_router
+from app.api.policy_rules import router as policy_rules_router
 
 api_router = APIRouter()
 api_router.include_router(organizations_router)
@@ -15,5 +16,6 @@ api_router.include_router(tools_router)
 api_router.include_router(tool_actions_router)
 api_router.include_router(agents_router)
 api_router.include_router(policies_router)
+api_router.include_router(policy_rules_router)
 
 __all__ = ["api_router"]
