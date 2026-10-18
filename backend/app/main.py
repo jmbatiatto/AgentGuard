@@ -17,6 +17,7 @@ import redis.asyncio as aioredis
 
 from app.core.config import settings
 from app.core.database import engine
+from app.api import api_router
 
 # Configuración básica de logging
 logging.basicConfig(
@@ -88,6 +89,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Inclusión de routers de API REST por dominio (/api/v1)
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
 @app.get(
