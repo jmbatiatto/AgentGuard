@@ -21,6 +21,10 @@ from app.services.agent_service import (
     AgentService,
     agent_service,
 )
+from app.services.policy_service import (
+    PolicyService,
+    policy_service,
+)
 
 __all__ = [
     "OrganizationService",
@@ -33,4 +37,6 @@ __all__ = [
     "tool_action_service",
     "AgentService",
     "agent_service",
+    "PolicyService",
+    "policy_service",
 ]
