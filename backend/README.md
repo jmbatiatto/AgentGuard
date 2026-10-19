@@ -76,3 +76,4 @@ El versionado de las 12 tablas relacionales en PostgreSQL se gestiona mediante c
 
 * **Semana 1:** [Desglose de Pasos: Base de Datos & Setup Inicial](./desglose_de_pasos_semana_1_base_de_datos_y_setup_inicial.md) — Guía declarativa y fundamentación técnica de los 4 pasos (Docker Compose, FastAPI, SQLAlchemy 2.0 y Alembic).
 * **Semana 2:** [Desglose de Pasos: API REST de Gestión Administrativa](./desglose_de_pasos_semana_2_api_rest_de_gestion.md) — Especificación técnica de los 8 pasos (Schemas Pydantic v2, Servicios y Routers REST con rutas separadas).
+* **Semana 3:** [Desglose de Pasos: Gateway Interceptor (PEP) y Motor de Políticas (PDP)](./desglose_de_pasos_semana_3_gateway_interceptor_y_pdp.md) — Núcleo en runtime, evaluación contextual 5D, sanitización OWASP LLM06 y los 4 escenarios de la demo.
