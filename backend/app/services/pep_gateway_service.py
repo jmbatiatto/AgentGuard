@@ -359,6 +359,7 @@ class PEPGatewayService:
         stmt = (
             select(Approval)
             .join(Execution, Approval.execution_id == Execution.id)
+            .options(selectinload(Approval.execution))
             .order_by(Approval.created_at.desc())
             .offset(skip)
             .limit(limit)
