@@ -8,7 +8,6 @@ from app.services.user_service import (
     UserService,
     user_service,
 )
-
 from app.services.tool_service import (
     ToolService,
     tool_service,
@@ -29,6 +28,11 @@ from app.services.policy_rule_service import (
     PolicyRuleService,
     policy_rule_service,
 )
+from app.services.pdp_engine import (
+    PDPEngine,
+    pdp_engine,
+    PDPDecisionResult,
+)
 
 __all__ = [
     "OrganizationService",
@@ -45,4 +49,7 @@ __all__ = [
     "policy_service",
     "PolicyRuleService",
     "policy_rule_service",
+    "PDPEngine",
+    "pdp_engine",
+    "PDPDecisionResult",
 ]
