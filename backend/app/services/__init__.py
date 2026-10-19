@@ -37,6 +37,10 @@ from app.services.sanitizer_service import (
     SanitizerService,
     sanitizer_service,
 )
+from app.services.pep_gateway_service import (
+    PEPGatewayService,
+    pep_gateway_service,
+)
 
 __all__ = [
     "OrganizationService",
@@ -58,4 +62,6 @@ __all__ = [
     "PDPDecisionResult",
     "SanitizerService",
     "sanitizer_service",
+    "PEPGatewayService",
+    "pep_gateway_service",
 ]
