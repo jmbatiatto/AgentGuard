@@ -33,6 +33,10 @@ from app.services.pdp_engine import (
     pdp_engine,
     PDPDecisionResult,
 )
+from app.services.sanitizer_service import (
+    SanitizerService,
+    sanitizer_service,
+)
 
 __all__ = [
     "OrganizationService",
@@ -52,4 +56,6 @@ __all__ = [
     "PDPEngine",
     "pdp_engine",
     "PDPDecisionResult",
+    "SanitizerService",
+    "sanitizer_service",
 ]
