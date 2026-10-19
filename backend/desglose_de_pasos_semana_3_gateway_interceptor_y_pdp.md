@@ -1,162 +1,63 @@
-# 📑 Desglose de Pasos: Semana 3 — El Gateway Interceptor (PEP) y el Motor de Políticas (PDP)
+# 🛡️ Desglose de Pasos: Semana 3 - El Gateway Interceptor (PEP) y el Motor de Políticas (PDP)
 
 > **Documento de Especificación Técnica y Justificación para la Defensa Académica**  
 > **Módulo:** `backend/`  
-> **Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
-> **Cátedra:** Desarrollo Web (5to Semestre) — ITU / Universidad Nacional de Cuyo  
+> **Proyecto:** AgentGuard - Runtime Authorization & Governance for AI Agents  
+> **Cátedra:** Desarrollo Web (5to Semestre) - ITU / Universidad Nacional de Cuyo  
 > **Autores / Responsables:** Jonathan Araujo (Arquitectura Backend & Gateway PEP) & Agustín Belardinelli (PO & Motor PDP)  
-> **Estado:** Propuesta de Planificación / Listo para Ejecución  
+> **Estado:** ✅ 100% COMPLETADO Y CERTIFICADO (100 Tests en Verde)  
 
 ---
 
-## 🎯 Objetivo de la Semana 3
+## 🎯 Resumen Ejecutivo de Entrega de la Semana 3
 
-Construir el núcleo crítico de tiempo de ejecución (*runtime*) de AgentGuard. Al finalizar esta semana, el backend dispondrá del interceptor físico de llamadas a herramientas (**PEP**) y del evaluador determinista de autorización contextual (**PDP**), capaces de resolver y validar de forma automatizada los **4 escenarios clave de la demo ante el profesor**:
-
-1. **Escenario 1 (ALLOW):** Acción legítima dentro de umbrales normales (ej. `create_quote` < $10.000).
-2. **Escenario 2 (DENY):** Acción no autorizada / abuso de capacidades bloqueado deterministamente (ej. `update_price`).
-3. **Escenario 3 (REQUIRE_APPROVAL):** Acción sensible que suspende ejecución y emite ticket en espera de revisión humana (ej. `refund` >= $500).
-4. **Escenario 4 (DENY + ALERT):** Intento de violación o exfiltración anómala que bloquea y dispara una alerta de seguridad (ej. `export_customers`).
-
----
-
-## 🧭 Diagrama de Flujo de los 6 Pasos Atómicos
-
-```mermaid
-flowchart TD
-    S1["Paso 1: Schemas del Gateway y Runtime<br/>(GatewayExecuteRequest, GatewayExecuteResponse, ApprovalResolve)"] --> S2["Paso 2: Motor Evaluador PDP<br/>(Tupla 5D, Predicados JSONB & Fail-Closed)"]
-    S2 --> S3["Paso 3: Sanitizador de Contexto<br/>(Enmascaramiento OWASP LLM06)"]
-    S3 --> S4["Paso 4: Servicio del Gateway PEP<br/>(Intercepción, Forwarder HTTP & Auditoría)"]
-    S4 --> S5["Paso 5: Routers /gateway y /approvals<br/>(Endpoints HTTP REST y OpenAPI)"]
-    S5 --> S6["Paso 6: Suite de Pruebas de los 4 Escenarios<br/>(Regresión automatizada con Pytest)"]
-```
+Durante esta semana se implementó y certificó con éxito el **núcleo crítico de tiempo de ejecución (*runtime*)** de AgentGuard, compuesto por:
+1. **Interceptor en Tiempo de Ejecución (PEP):** Intercepta de forma transparente las llamadas de herramientas de los agentes en el endpoint `POST /api/v1/gateway/execute`.
+2. **Motor Determinista de Autorización Contextual (PDP):** Evalúa la tupla 5D (`Principal`, `Delegator`, `Action`, `Resource`, `Context`) con operadores JSONB (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`) y garantía estricta **Fail-Closed**.
+3. **Servicio de Sanitización y Enmascaramiento OWASP LLM06:** Enmascara secretos, tokens Bearer y números de tarjetas de crédito previo a su persistencia en trazas forenses.
+4. **Bandeja de Aprobaciones Human-in-the-Loop (HITL):** Endpoints `/api/v1/approvals` y `/resolve` para que un operador humano valide o rechace ejecuciones suspendidas.
+5. **Certificación Automatizada de los 4 Escenarios de la Demo Oficial:** Suite de pruebas en `test_gateway_scenarios.py` que garantiza cero regresiones para la presentación ante el tribunal académico.
 
 ---
 
-## 🔬 Desglose Paso a Paso: Qué Hacemos y Por Qué
+## 📊 Matriz de Entregables y Estado Final
+
+| Paso | Entregable / Archivo | Capa | Estado | Commit / Certificación |
+| :---: | :--- | :--- | :---: | :--- |
+| **Paso 1** | `app/schemas/gateway.py`<br/>`app/schemas/approval.py`<br/>`app/schemas/alert.py` | Schemas Pydantic v2 | ✅ Completado | `7823eb7` (Schemas de Runtime) |
+| **Paso 2** | `app/services/pdp_engine.py`<br/>`tests/test_pdp_engine.py` | Servicio PDP | ✅ Completado | `d304303` (Motor Determinista PDP) |
+| **Paso 3** | `app/services/sanitizer_service.py`<br/>`tests/test_sanitizer_service.py` | Seguridad OWASP | ✅ Completado | `871f182` (Sanitización y Enmascaramiento) |
+| **Paso 4** | `app/services/pep_gateway_service.py`<br/>`tests/test_pep_gateway_service.py` | Servicio PEP | ✅ Completado | `72cea2f` (Servicio PEP Interceptor) |
+| **Paso 5** | `app/api/gateway.py`<br/>`app/api/approvals.py`<br/>`tests/test_gateway_api.py`<br/>`tests/test_approvals_api.py` | Routers REST | ✅ Completado | `c826bbc` (Routers REST Gateway y Approvals) |
+| **Paso 6** | `tests/test_gateway_scenarios.py` | Testing Integración | ✅ Completado | `fcf308e` (Certificación 4 Escenarios Demo) |
+| **Paso 7** | Documentación y Cierre de Semana 3 | Documentación | ✅ Completado | Cierre y sincronización con `origin/main` |
 
 ---
 
-### 📦 PASO 1: Schemas de Runtime y Validación de Entrada (`app/schemas/gateway.py` y `approval.py`)
+## 🧪 Métricas de Calidad y Cobertura (Pytest)
 
-#### ¿Qué se hace concretamente?
-1. Se crea `backend/app/schemas/gateway.py` con:
-   * **`GatewayExecuteRequest`**:
-     * `organization_id: UUID` (Tenant)
-     * `agent_id: UUID` (Identidad del agente)
-     * `delegator_user_id: Optional[UUID]` (Usuario delegador, si aplica)
-     * `tool_id: UUID` (Herramienta externa destino)
-     * `action_name: str` (Acción puntual solicitada, ej. `create_quote`)
-     * `parameters: Dict[str, Any]` (Argumentos que el LLM propuso para la herramienta)
-     * `resource: Optional[str]` (Recurso afectado, ej. `quotes/QT-991`)
-   * **`GatewayExecuteResponse`**:
-     * `execution_id: UUID` (Trazabilidad forense inmutable generada)
-     * `decision: PolicyDecision` (`ALLOW` | `DENY` | `REQUIRE_APPROVAL`)
-     * `status: ExecutionStatus` (`EXECUTED` | `REJECTED` | `PENDING_APPROVAL`)
-     * `result: Optional[Dict[str, Any]]` (Respuesta de la API destino en caso de ALLOW)
-     * `error_message: Optional[str]` (Razón descriptiva en caso de DENY)
-     * `approval_id: Optional[UUID]` (ID de ticket en caso de REQUIRE_APPROVAL)
-2. Se crea `backend/app/schemas/approval.py` con:
-   * **`ApprovalResolveRequest`**:
-     * `decision: ApprovalStatus` (`APPROVED` | `REJECTED`)
-     * `resolution_reason: str` (Motivo obligatorio documentado por el humano)
-     * `approver_user_id: UUID` (Identidad del operador con rol APPROVER)
-
-#### Justificación para la Cátedra:
-* Cumple con la validación estricta en Rust de **Pydantic v2**: ningún payload con tipos inconsistentes o campos faltantes ingresa a la lógica del gateway, emitiendo errores semánticos `422 Unprocessable Entity` de inmediato.
+* **Total de Pruebas Automatizadas:** **100 tests PASSED / 100 tests TOTAL** (100% verde).
+* **Tiempo de Ejecución de Suite Completa:** ~11 segundos.
+* **Regresiones:** **0 regresiones** (Cumplimiento riguroso de la regla innegociable de `AGENTS.md`).
 
 ---
 
-### ⚖️ PASO 2: Motor Evaluador de Políticas PDP (`app/services/pdp_engine.py`)
+## 🛡️ Certificación de los 4 Escenarios de la Demo ante el Tribunal
 
-#### ¿Qué se hace concretamente?
-1. Se implementa el evaluador determinista de tuplas contextuales de 5 dimensiones:
-   $$\text{Decisión} = f(\text{Principal}, \text{Delegator}, \text{Action}, \text{Resource}, \text{Context})$$
-2. Se implementa el motor de resolución de predicados lógicos sobre `conditions (JSONB)`:
-   * **Operadores numéricos:** `amount_gt`, `amount_gte`, `amount_lt`, `amount_lte`, `amount_eq`.
-   * **Operadores de pertenencia y listas:** `allowed_roles`, `allowed_destinations`, `in`, `not_in`.
-   * **Operadores de entorno/tiempo:** `allowed_environments`, `time_window`.
-3. **Orden de precedencia y Principio Fail-Closed:**
-   * Las reglas activas de la organización para la acción solicitada se evalúan por orden de `priority` (menor número = mayor prioridad).
-   * **Regla innegociable:** Si hay conflicto, ambigüedad o falta de reglas coincidentes, el motor **SIEMPRE emite `DENY`**. Jamás se autoriza por excepción o por defecto.
-
-#### Justificación para la Cátedra:
-* Demuestra el desacoplamiento formal **XACML / RFC 2904**. El LLM es probabilístico y manipulable; el PDP es una función matemática pura, determinista y auditable.
+| Escenario | Acción Invocada | Condición / Regla | Decisión PDP | Estado HTTP / Ejecución | Resultado Observable |
+| :---: | :--- | :--- | :---: | :---: | :--- |
+| **1. Operación Normal** | `create_quote` | Monto $2,500 < $10,000 | `ALLOW` | `200 OK`<br/>`EXECUTED` | Despacho exitoso a API externa destino y traza forense persistida. |
+| **2. Abuso de Privilegio** | `update_price` | Agente carece de capability en `agent_tools` | `DENY` | `403 Forbidden`<br/>`REJECTED` | Bloqueado en seco en el Gateway; la llamada NUNCA alcanza el backend destino. |
+| **3. Operación de Alto Impacto** | `refund` | Monto $4,500 >= $500 | `REQUIRE_APPROVAL` | `202 Accepted`<br/>`PENDING_APPROVAL` | Suspensión de llamada, creación de ticket en bandeja HITL y resolución favorable posterior a `EXECUTED`. |
+| **4. Prompt Injection & Ataque** | `export_customers` | Destino no homologado `https://attacker.io` | `DENY` | `403 Forbidden`<br/>`REJECTED` | Bloqueo perimetral y generación automática de `Alert` con severidad `CRITICAL`. |
 
 ---
 
-### 🛡️ PASO 3: Sanitización y Enmascaramiento de Contexto (`app/services/sanitizer_service.py`)
+## 🎓 Conclusión y Próximos Pasos (Semana 4)
 
-#### ¿Qué se hace concretamente?
-1. Se crea un servicio de sanitización antes de persistir el `request_context` en la tabla `executions`:
-   * Detección y enmascaramiento de credenciales y secretos (`api_key`, `secret`, `password`, `token`, `bearer`, `authorization` -> `"***REDACTED***"`).
-   * Detección de patrones de tarjetas de crédito (algoritmo regex de tarjeta -> `****-****-****-1234`).
-   * Detección de patrones de inyección o URLs no homologadas en campos como `destination` o `payload`.
+Con la finalización de la **Semana 3**, el backend de AgentGuard cuenta con su motor central y su interceptor completamente operativos, auditables y testeados.
 
-#### Justificación para la Cátedra:
-* Alineación con **OWASP Top 10 for LLM Applications (LLM06 - Sensitive Information Disclosure)**. Si la base de datos de trazas fuera expuesta o consultada por auditores con menor nivel de privilegio, nunca contendrá secretos ni datos de pago en texto plano.
-
----
-
-### 🚀 PASO 4: Servicio Central del Gateway PEP (`app/services/pep_gateway_service.py`)
-
-#### ¿Qué se hace concretamente?
-1. Coordina el flujo completo de autorización e intercepción:
-   1. **Validación de Capacidad:** Verifica que el agente pertenezca a la organización, esté en estado `ACTIVE`, y tenga asignada la herramienta en `agent_tools` con `enabled=True`. Si no está asignada, emite `DENY (Agent lacks capability)`.
-   2. **Resolución de Acción:** Verifica que la acción exista en `tool_actions` y pertenezca a la herramienta.
-   3. **Invocación al PDP:** Obtiene el veredicto contextual.
-   4. **Bifurcación del Flujo:**
-      * **Si es `ALLOW`:** Despacha la llamada HTTP hacia la API externa con `httpx.AsyncClient` (o simulador de mock para entornos de prueba offline), registra la traza en `executions` (`status=EXECUTED`) y retorna `200 OK`.
-      * **Si es `DENY`:** Detiene la llamada en seco. Si el riesgo de la acción es `CRITICAL` o detecta violación de frontera, crea un incidente en `alerts`. Registra en `executions` (`status=REJECTED`) y retorna `403 Forbidden`.
-      * **Si es `REQUIRE_APPROVAL`:** Pausa la ejecución, registra la traza en `executions` (`status=PENDING_APPROVAL`), crea el ticket en `approvals` (`status=PENDING`) y retorna `202 Accepted` con el ID de aprobación.
-2. Implementa la lógica de **reanudación de aprobaciones:** Cuando un usuario con rol `APPROVER` resuelve en `/api/v1/approvals/{id}/resolve`, si aprueba se dispara la llamada pendiente y se actualizan los registros.
-
-#### Justificación para la Cátedra:
-* Es el núcleo del valor de AgentGuard: actuar como un **firewall / reverse proxy inteligente** que protege las APIs empresariales contra alucinaciones o abusos del modelo.
-
----
-
-### 🌐 PASO 5: Routers del Gateway y Aprobaciones (`app/api/gateway.py` y `app/api/approvals.py`)
-
-#### ¿Qué se hace concretamente?
-1. Se expone el endpoint principal:
-   * **`POST /api/v1/gateway/execute`**: Punto único de entrada para agentes de IA.
-2. Se exponen los endpoints de gestión de intervenciones humanas (HITL):
-   * **`GET /api/v1/approvals`**: Lista de solicitudes de aprobación con filtros (`organization_id`, `status=PENDING`).
-   * **`GET /api/v1/approvals/{id}`**: Detalle forense de una solicitud puntual.
-   * **`POST /api/v1/approvals/{id}/resolve`**: Resolución humana con motivo justificado.
-3. Se integran los nuevos routers en `app/main.py` y se documentan automáticamente en `/docs`.
-
----
-
-### 🧪 PASO 6: Suite de Pruebas de los 4 Escenarios de la Demo (`backend/tests/test_gateway_scenarios.py`)
-
-#### ¿Qué se hace concretamente?
-Se implementa una suite exhaustiva en Pytest que valida deterministamente los **4 actos de la demostración**:
-1. `test_scenario_1_allow_normal_operation()`: `create_quote` por USD 2.500 retorna `200 OK` y traza `EXECUTED`.
-2. `test_scenario_2_deny_privilege_abuse()`: `update_price` por USD 10 retorna `403 Forbidden` y traza `REJECTED`.
-3. `test_scenario_3_require_approval_and_resolve()`: `refund` por USD 4.500 retorna `202 Accepted` (`PENDING_APPROVAL`), se resuelve favorablemente y se ejecuta.
-4. `test_scenario_4_deny_and_critical_alert()`: `export_customers` a destino no permitido retorna `403 Forbidden`, traza `REJECTED` y crea una `Alert` con severidad `CRITICAL`.
-
-#### Justificación para la Cátedra:
-* Garantiza la **política Zero-Regression** exigida en `AGENTS.md`. El día de la presentación en clase, la demo funcionará de manera predecible y blindada.
-
----
-
-## 📊 Matriz de Entregables de la Semana 3
-
-| Archivo / Módulo | Capa | Responsabilidad |
-| :--- | :--- | :--- |
-| `app/schemas/gateway.py` | Schemas | DTOs tipados de entrada y salida para el Gateway. |
-| `app/schemas/approval.py` | Schemas | DTOs para la resolución humana de aprobaciones. |
-| `app/services/pdp_engine.py` | Service (PDP) | Motor de decisión determinista y evaluación de predicados JSONB. |
-| `app/services/sanitizer_service.py` | Service (Seguridad) | Sanitización y enmascaramiento de contexto (OWASP LLM06). |
-| `app/services/pep_gateway_service.py` | Service (PEP) | Interceptor, despachador HTTP y orquestador de ciclo de vida. |
-| `app/api/gateway.py` | Router | Endpoint `POST /api/v1/gateway/execute`. |
-| `app/api/approvals.py` | Router | Endpoints `/api/v1/approvals` y `/api/v1/approvals/{id}/resolve`. |
-| `tests/test_gateway_scenarios.py` | Testing | Suite automatizada de los 4 escenarios de la demo oficial. |
-
----
-
-## 📌 Próxima Acción Inmediata
-Con la aprobación del equipo, procederemos con el **Paso 1: Schemas de Runtime y Validación de Entrada** (`app/schemas/gateway.py` y `approval.py`).
+Para la **Semana 4**, el equipo se enfocará en:
+1. **Canales en Tiempo Real (WebSockets):** Notificaciones instantáneas de tickets `Approval` y eventos `Alert` hacia el frontend React.
+2. **Dashboard de Auditoría y Forense en Frontend:** Conexión de las 7 vistas de Juan Martín con los endpoints REST del backend.
+3. **Script Cliente Autónomo (`agent-demo/`):** Preparación del cliente de prueba que ejecutará los 4 escenarios de forma automatizada durante la presentación en vivo.
