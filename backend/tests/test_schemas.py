@@ -163,3 +163,110 @@ def test_policy_and_policy_rule_schemas_fail_closed():
             tool_action_id=action_id,
             priority=0,
         )
+
+
+from app.models.enums import PolicyDecision, ExecutionStatus, ApprovalStatus, AlertSeverity, AlertStatus
+from app.schemas import (
+    GatewayExecuteRequest,
+    GatewayExecuteResponse,
+    ExecutionRead,
+    ApprovalResolveRequest,
+    ApprovalRead,
+    AlertRead,
+)
+
+
+def test_gateway_schemas():
+    """Valida creación y validación de esquemas del Gateway (PEP)."""
+    org_id = uuid.uuid4()
+    agent_id = uuid.uuid4()
+    tool_id = uuid.uuid4()
+    exec_id = uuid.uuid4()
+
+    req = GatewayExecuteRequest(
+        organization_id=org_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        action_name="create_quote",
+        parameters={"amount": 2500},
+    )
+    assert req.action_name == "create_quote"
+    assert req.parameters["amount"] == 2500
+    assert req.delegator_user_id is None
+
+    # Respuesta ALLOW
+    resp = GatewayExecuteResponse(
+        execution_id=exec_id,
+        organization_id=org_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        action_name="create_quote",
+        decision=PolicyDecision.ALLOW,
+        status=ExecutionStatus.EXECUTED,
+        result={"quote_id": "QT-991"},
+    )
+    assert resp.decision == PolicyDecision.ALLOW
+    assert resp.status == ExecutionStatus.EXECUTED
+    assert resp.result["quote_id"] == "QT-991"
+
+    # Respuesta REQUIRE_APPROVAL
+    appr_id = uuid.uuid4()
+    resp_appr = GatewayExecuteResponse(
+        execution_id=exec_id,
+        organization_id=org_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        action_name="refund",
+        decision=PolicyDecision.REQUIRE_APPROVAL,
+        status=ExecutionStatus.PENDING_APPROVAL,
+        approval_id=appr_id,
+    )
+    assert resp_appr.decision == PolicyDecision.REQUIRE_APPROVAL
+    assert resp_appr.approval_id == appr_id
+
+
+def test_approval_resolve_schema():
+    """Valida que ApprovalResolveRequest solo admita APPROVED o REJECTED y valide motivo."""
+    user_id = uuid.uuid4()
+    req_ok = ApprovalResolveRequest(
+        decision=ApprovalStatus.APPROVED,
+        resolution_reason="Cliente VIP verificado manualmente",
+        approver_user_id=user_id,
+    )
+    assert req_ok.decision == ApprovalStatus.APPROVED
+    assert req_ok.resolution_reason == "Cliente VIP verificado manualmente"
+
+    # PENDING no es una resolución permitida
+    with pytest.raises(ValidationError):
+        ApprovalResolveRequest(
+            decision=ApprovalStatus.PENDING,
+            resolution_reason="Aún no resuelto",
+            approver_user_id=user_id,
+        )
+
+    # Razón demasiado corta (< 3 caracteres)
+    with pytest.raises(ValidationError):
+        ApprovalResolveRequest(
+            decision=ApprovalStatus.REJECTED,
+            resolution_reason="ok",
+            approver_user_id=user_id,
+        )
+
+
+def test_alert_schema():
+    """Valida serialización del esquema AlertRead."""
+    org_id = uuid.uuid4()
+    alert_id = uuid.uuid4()
+    now = datetime.now(timezone.utc)
+
+    alert = AlertRead(
+        id=alert_id,
+        organization_id=org_id,
+        title="Prompt Injection Detectado",
+        severity=AlertSeverity.CRITICAL,
+        status=AlertStatus.OPEN,
+        created_at=now,
+    )
+    assert alert.title == "Prompt Injection Detectado"
+    assert alert.severity == AlertSeverity.CRITICAL
+    assert alert.status == AlertStatus.OPEN

@@ -31,6 +31,19 @@ from app.schemas.policy_rule import (
     PolicyRuleCreate,
     PolicyRuleRead,
 )
+from app.schemas.gateway import (
+    GatewayExecuteRequest,
+    GatewayExecuteResponse,
+    ExecutionRead,
+)
+from app.schemas.approval import (
+    ApprovalResolveRequest,
+    ApprovalRead,
+    ApprovalDetailRead,
+)
+from app.schemas.alert import (
+    AlertRead,
+)
 
 __all__ = [
     "BaseSchema",
@@ -50,4 +63,11 @@ __all__ = [
     "PolicyRead",
     "PolicyRuleCreate",
     "PolicyRuleRead",
+    "GatewayExecuteRequest",
+    "GatewayExecuteResponse",
+    "ExecutionRead",
+    "ApprovalResolveRequest",
+    "ApprovalRead",
+    "ApprovalDetailRead",
+    "AlertRead",
 ]
