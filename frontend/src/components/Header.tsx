@@ -1,5 +1,6 @@
 import React from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/useTheme';
 
 interface HeaderProps {
   title: string;
@@ -8,6 +9,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton }) => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header style={{
       height: 'var(--header-height)',
@@ -39,16 +42,46 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
         </p>
       </div>
 
-      {/* Right Controls: Action + Operational Status + User profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      {/* Right Controls: Action + Theme Toggle + Operational Status + User profile */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         {actionButton}
+
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          aria-label="Intercambiar tema claro/oscuro"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '34px',
+            height: '34px',
+            borderRadius: '8px',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            color: theme === 'dark' ? '#FBBF24' : '#0284C7',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border-focus)';
+            e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border-subtle)';
+            e.currentTarget.style.backgroundColor = 'var(--bg-card)';
+          }}
+        >
+          {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
 
         {/* Operational Status Pill */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '7px',
-          backgroundColor: '#101724',
+          backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '9999px',
           padding: '5px 12px',
@@ -79,14 +112,14 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             width: '28px',
             height: '28px',
             borderRadius: '6px',
-            backgroundColor: '#1E293B',
-            border: '1px solid #334155',
+            backgroundColor: 'var(--avatar-bg)',
+            border: '1px solid var(--avatar-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '11px',
             fontWeight: 700,
-            color: '#94A3B8',
+            color: 'var(--avatar-text)',
           }}>
             MC
           </div>

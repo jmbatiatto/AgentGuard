@@ -51,15 +51,15 @@ export const PoliciesView: React.FC = () => {
               <ShieldCheck size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#F0F9FF' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Policy coverage: 92%
               </div>
-              <div style={{ fontSize: '12px', color: '#7DD3FC' }}>
+              <div style={{ fontSize: '12px', color: 'var(--brand-primary)' }}>
                 2 of 24 registered actions do not have an explicit authorization policy.
               </div>
             </div>
           </div>
-          <button className="btn btn-secondary" style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', borderColor: 'rgba(56, 189, 248, 0.3)', color: '#F0F9FF' }}>
+          <button className="btn btn-secondary">
             Review coverage
           </button>
         </div>
@@ -116,7 +116,7 @@ export const PoliciesView: React.FC = () => {
             <thead>
               <tr style={{
                 borderBottom: '1px solid var(--border-subtle)',
-                backgroundColor: 'rgba(11, 15, 23, 0.4)',
+                backgroundColor: 'var(--table-header-bg)',
               }}>
                 <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>POLICY</th>
                 <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>AGENT</th>

@@ -109,10 +109,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             <div style={{ flex: 1, height: '220px', position: 'relative', marginTop: '10px' }}>
               <svg viewBox="0 0 700 200" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
                 {/* Horizontal Grid lines */}
-                <line x1="40" y1="20" x2="680" y2="20" stroke="#1B2436" strokeDasharray="3 3" />
-                <line x1="40" y1="80" x2="680" y2="80" stroke="#1B2436" strokeDasharray="3 3" />
-                <line x1="40" y1="140" x2="680" y2="140" stroke="#1B2436" strokeDasharray="3 3" />
-                <line x1="40" y1="190" x2="680" y2="190" stroke="#1B2436" />
+                <line x1="40" y1="20" x2="680" y2="20" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                <line x1="40" y1="80" x2="680" y2="80" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                <line x1="40" y1="140" x2="680" y2="140" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                <line x1="40" y1="190" x2="680" y2="190" stroke="var(--border-subtle)" />
 
                 {/* Y Axis Labels */}
                 <text x="10" y="24" fill="#64748B" fontSize="10">1.5k</text>

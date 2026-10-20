@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Workspace Selector */}
       <div style={{ padding: '0 16px 20px 16px' }}>
         <div style={{
-          backgroundColor: '#121826',
+          backgroundColor: 'var(--workspace-box-bg)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '8px',
           padding: '8px 12px',
@@ -98,14 +98,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               width: '24px',
               height: '24px',
               borderRadius: '6px',
-              backgroundColor: '#1E293B',
-              border: '1px solid #334155',
+              backgroundColor: 'var(--avatar-bg)',
+              border: '1px solid var(--avatar-border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '11px',
               fontWeight: 600,
-              color: '#94A3B8',
+              color: 'var(--avatar-text)',
             }}>
               AN
             </div>
@@ -151,9 +151,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   width: '100%',
                   padding: '9px 12px',
                   borderRadius: '7px',
-                  backgroundColor: isActive ? '#192236' : 'transparent',
-                  color: isActive ? '#F8FAFC' : 'var(--text-secondary)',
-                  border: isActive ? '1px solid #2B3A58' : '1px solid transparent',
+                  backgroundColor: isActive ? 'var(--nav-active-bg)' : 'transparent',
+                  color: isActive ? 'var(--nav-active-text)' : 'var(--text-secondary)',
+                  border: isActive ? '1px solid var(--nav-active-border)' : '1px solid transparent',
                   cursor: 'pointer',
                   fontSize: '13px',
                   fontWeight: isActive ? 600 : 500,
@@ -162,8 +162,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.backgroundColor = '#131A29';
-                    e.currentTarget.style.color = '#E2E8F0';
+                    e.currentTarget.style.backgroundColor = 'var(--nav-hover-bg)';
+                    e.currentTarget.style.color = 'var(--nav-hover-text)';
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -177,7 +177,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Icon 
                     size={17} 
                     strokeWidth={isActive ? 2.2 : 1.8} 
-                    color={isActive ? '#38BDF8' : 'var(--text-muted)'} 
+                    color={isActive ? 'var(--brand-primary)' : 'var(--text-muted)'} 
                   />
                   <span>{item.label}</span>
                 </div>
@@ -207,7 +207,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Security Posture Widget */}
       <div style={{ padding: '16px' }}>
         <div style={{
-          backgroundColor: '#111724',
+          backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '8px',
           padding: '14px',
@@ -225,7 +225,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div style={{
             width: '100%',
             height: '5px',
-            backgroundColor: '#1E293B',
+            backgroundColor: 'var(--border-subtle)',
             borderRadius: '9999px',
             overflow: 'hidden',
             marginBottom: '10px',
@@ -255,8 +255,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             padding: '10px 12px',
             marginTop: '12px',
             borderRadius: '7px',
-            backgroundColor: currentView === 'settings' ? '#192236' : 'transparent',
-            color: currentView === 'settings' ? '#F8FAFC' : 'var(--text-secondary)',
+            backgroundColor: currentView === 'settings' ? 'var(--nav-active-bg)' : 'transparent',
+            color: currentView === 'settings' ? 'var(--nav-active-text)' : 'var(--text-secondary)',
             border: 'none',
             cursor: 'pointer',
             fontSize: '13px',
@@ -265,8 +265,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }}
           onMouseEnter={(e) => {
             if (currentView !== 'settings') {
-              e.currentTarget.style.backgroundColor = '#131A29';
-              e.currentTarget.style.color = '#E2E8F0';
+              e.currentTarget.style.backgroundColor = 'var(--nav-hover-bg)';
+              e.currentTarget.style.color = 'var(--nav-hover-text)';
             }
           }}
           onMouseLeave={(e) => {

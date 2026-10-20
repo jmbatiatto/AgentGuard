@@ -1,11 +1,30 @@
 :root {
-  /* Color Palette - Cyber / AI Governance Theme */
+  /* Color Palette - Cyber / AI Governance Theme (Dark by default) */
   --bg-app: #0B0F17;
   --bg-sidebar: #0D121D;
   --bg-card: #121826;
   --bg-card-hover: #171F32;
   --bg-surface: #151D2F;
   --bg-input: #0F1523;
+
+  /* Component specifics */
+  --workspace-box-bg: #121826;
+  --avatar-bg: #1E293B;
+  --avatar-border: #334155;
+  --avatar-text: #94A3B8;
+  --nav-active-bg: #192236;
+  --nav-active-border: #2B3A58;
+  --nav-active-text: #F8FAFC;
+  --nav-hover-bg: #131A29;
+  --nav-hover-text: #E2E8F0;
+  --table-header-bg: rgba(11, 15, 23, 0.4);
+  --json-bg: #0A0E17;
+  --json-border: #1E293B;
+  --json-text: #38BDF8;
+  --code-pill-bg: #151C2C;
+  --code-pill-border: #202B3F;
+  --code-pill-text: #CBD5E1;
+  --badge-secondary-bg: #1A2234;
 
   /* Borders */
   --border-subtle: #1B2436;
@@ -57,6 +76,78 @@
   --sidebar-width: 250px;
   --header-height: 64px;
 }
+
+[data-theme="light"] {
+  /* Color Palette - White background with Celeste/Sky blue tones */
+  --bg-app: #F8FAFC;
+  --bg-sidebar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F0F9FF;
+  --bg-surface: #F0F9FF;
+  --bg-input: #FFFFFF;
+
+  /* Component specifics */
+  --workspace-box-bg: #F8FAFC;
+  --avatar-bg: #E0F2FE;
+  --avatar-border: #BAE6FD;
+  --avatar-text: #0284C7;
+  --nav-active-bg: #E0F2FE;
+  --nav-active-border: #BAE6FD;
+  --nav-active-text: #0369A1;
+  --nav-hover-bg: #F0F9FF;
+  --nav-hover-text: #0284C7;
+  --table-header-bg: #F1F5F9;
+  --json-bg: #F8FAFC;
+  --json-border: #E2E8F0;
+  --json-text: #0369A1;
+  --code-pill-bg: #F1F5F9;
+  --code-pill-border: #E2E8F0;
+  --code-pill-text: #0F172A;
+  --badge-secondary-bg: #F1F5F9;
+
+  /* Borders */
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --border-focus: #0284C7;
+
+  /* Typography Colors */
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-dim: #94A3B8;
+
+  /* Semantic Accents - Celestes / Sky blue */
+  --brand-primary: #0284C7;
+  --brand-primary-hover: #0369A1;
+  --brand-indigo: #0EA5E9;
+
+  --success: #059669;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --success-border: rgba(16, 185, 129, 0.35);
+  --success-text: #065F46;
+
+  --danger: #DC2626;
+  --danger-bg: rgba(220, 38, 38, 0.1);
+  --danger-border: rgba(220, 38, 38, 0.3);
+  --danger-text: #991B1B;
+
+  --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.12);
+  --warning-border: rgba(217, 119, 6, 0.3);
+  --warning-text: #92400E;
+
+  --info: #0284C7;
+  --info-bg: #E0F2FE;
+  --info-border: #BAE6FD;
+  --info-text: #0369A1;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-glow-blue: 0 0 20px rgba(2, 132, 199, 0.2);
+}
+
 
 /* Reset & Box Sizing */
 *, *::before, *::after {
@@ -169,7 +260,7 @@ code, pre {
 }
 
 .badge-secondary {
-  background-color: #1A2234;
+  background-color: var(--badge-secondary-bg);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
 }
@@ -201,11 +292,11 @@ code, pre {
 }
 .btn-primary:hover {
   background-color: var(--brand-primary-hover);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.4);
 }
 
 .btn-secondary {
-  background-color: #151D2C;
+  background-color: var(--bg-card);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
 }
@@ -266,10 +357,10 @@ code, pre {
   font-family: var(--font-mono);
   font-size: 11px;
   padding: 3px 6px;
-  background-color: #151C2C;
-  border: 1px solid #202B3F;
+  background-color: var(--code-pill-bg);
+  border: 1px solid var(--code-pill-border);
   border-radius: 4px;
-  color: #CBD5E1;
+  color: var(--code-pill-text);
 }
 
 /* Card Surface */
@@ -279,3 +370,4 @@ code, pre {
   border-radius: 10px;
   padding: 18px;
 }
+

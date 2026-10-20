@@ -72,7 +72,7 @@ export const ToolsView: React.FC = () => {
             <thead>
               <tr style={{
                 borderBottom: '1px solid var(--border-subtle)',
-                backgroundColor: 'rgba(11, 15, 23, 0.4)',
+                backgroundColor: 'var(--table-header-bg)',
               }}>
                 <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>TOOL</th>
                 <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>DESCRIPTION</th>
@@ -100,14 +100,14 @@ export const ToolsView: React.FC = () => {
                         width: '32px',
                         height: '32px',
                         borderRadius: '8px',
-                        backgroundColor: '#1E293B',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--avatar-bg)',
+                        border: '1px solid var(--avatar-border)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '11px',
                         fontWeight: 700,
-                        color: '#94A3B8',
+                        color: 'var(--avatar-text)',
                         flexShrink: 0,
                       }}>
                         {tool.initials}

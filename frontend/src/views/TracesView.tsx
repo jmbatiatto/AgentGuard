@@ -116,7 +116,7 @@ export const TracesView: React.FC = () => {
             <thead>
               <tr style={{
                 borderBottom: '1px solid var(--border-subtle)',
-                backgroundColor: 'rgba(11, 15, 23, 0.4)',
+                backgroundColor: 'var(--table-header-bg)',
               }}>
                 <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>TRACE ID</th>
                 <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>TIMESTAMP</th>

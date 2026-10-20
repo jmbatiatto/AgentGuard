@@ -109,8 +109,8 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                     style={{
                       padding: '14px 18px',
                       borderBottom: '1px solid var(--border-subtle)',
-                      backgroundColor: isSelected ? '#162032' : 'transparent',
-                      borderLeft: isSelected ? '3px solid #38BDF8' : '3px solid transparent',
+                      backgroundColor: isSelected ? 'var(--nav-active-bg)' : 'transparent',
+                      borderLeft: isSelected ? '3px solid var(--brand-primary)' : '3px solid transparent',
                       cursor: 'pointer',
                       transition: 'all 0.12s ease',
                       display: 'flex',
@@ -129,14 +129,14 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                         width: '32px',
                         height: '32px',
                         borderRadius: '8px',
-                        backgroundColor: '#1E293B',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--avatar-bg)',
+                        border: '1px solid var(--avatar-border)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '11px',
                         fontWeight: 700,
-                        color: '#94A3B8',
+                        color: 'var(--avatar-text)',
                         flexShrink: 0,
                       }}>
                         {item.agentInitials}
@@ -233,19 +233,19 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                 REQUEST DETAILS
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #182030', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Agent</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{selectedRequest.agentName}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #182030', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Action</span>
                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{selectedRequest.action}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #182030', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Resource</span>
                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{selectedRequest.resource}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #182030', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Delegated by</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{selectedRequest.delegatedBy}</span>
                 </div>
@@ -264,7 +264,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                 AGENT JUSTIFICATION
               </div>
               <div style={{
-                backgroundColor: '#0F1522',
+                backgroundColor: 'var(--bg-surface)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '8px',
                 padding: '14px 18px',
@@ -280,23 +280,23 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
             {/* Applied Policy Box */}
             <div style={{ padding: '24px', flex: 1 }}>
               <div style={{
-                backgroundColor: 'rgba(59, 130, 246, 0.06)',
-                border: '1px solid rgba(59, 130, 246, 0.2)',
+                backgroundColor: 'rgba(2, 132, 199, 0.08)',
+                border: '1px solid rgba(2, 132, 199, 0.25)',
                 borderRadius: '8px',
                 padding: '14px 18px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
               }}>
-                <Shield size={20} color="#38BDF8" />
+                <Shield size={20} color="var(--brand-primary)" />
                 <div>
-                  <div style={{ fontSize: '11px', color: '#7DD3FC', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     APPLIED POLICY
                   </div>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>
                     {selectedRequest.appliedPolicy.name}
                   </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                     {selectedRequest.appliedPolicy.condition}
                   </div>
                 </div>
@@ -307,7 +307,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
             <div style={{
               padding: '18px 24px',
               borderTop: '1px solid var(--border-subtle)',
-              backgroundColor: '#0E1420',
+              backgroundColor: 'var(--bg-card)',
               display: 'flex',
               justifyContent: 'flex-end',
               gap: '12px',
