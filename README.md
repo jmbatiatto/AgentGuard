@@ -16,9 +16,9 @@
 | Rol | Integrante | Responsabilidad Principal |
 | :--- | :--- | :--- |
 | **Product Owner** | Agustín Belardinelli | Definición del alcance, visión del producto y priorización del backlog. |
-| **Scrum Master** | Juan Martín Battiato | Facilitación ágil, seguimiento de sprints y remoción de impedimentos. |
+| **Scrum Master** | Juan Martín Batiatto | Facilitación ágil, seguimiento de sprints y remoción de impedimentos. |
 | **Backend Developers** | Agustín Belardinelli & Jonathan Araujo | Arquitectura del API Gateway, motor PDP, servicios de autorización y persistencia. |
-| **Frontend Developers** | Juan Martín Battiato & Mateo Ortega | Dashboard de auditoría, panel de control de agentes y bandeja de aprobaciones en vivo. |
+| **Frontend Developers** | Juan Martín Batiatto & Mateo Ortega | Dashboard de auditoría, panel de control de agentes y bandeja de aprobaciones en vivo. |
 | **Diseñador UI/UX** | Mateo Ortega | Diseño de wireframes, flujos de experiencia de usuario y prototipado. |
 
 ---
