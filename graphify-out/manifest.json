@@ -558,9 +558,219 @@
     "semantic_hash": "f32aafe248ee522cb7bf6b91051ed8c3"
   },
   "scripts/start-backend.ps1": {
-    "mtime": 1791727989.7088816,
-    "seen": 1792679930.2839012,
-    "ast_hash": "b3a4296ad58ae9b169c0d32cdad8f2e7",
-    "semantic_hash": "b3a4296ad58ae9b169c0d32cdad8f2e7"
+    "mtime": 1792682821.7267568,
+    "seen": 1792682881.678428,
+    "ast_hash": "2ebe6a4f39b0d3a3527b5aa2bdf9ec9e",
+    "semantic_hash": ""
+  },
+  ".claude/settings.json": {
+    "mtime": 1792680086.1008062,
+    "seen": 1792682881.677256,
+    "ast_hash": "df609d62ddb222c77646c025f17f7a36",
+    "semantic_hash": ""
+  },
+  ".codex/hooks.json": {
+    "mtime": 1792680086.8202066,
+    "seen": 1792682881.677256,
+    "ast_hash": "da1c0aea2f6c3f9d35014bdc5a958462",
+    "semantic_hash": ""
+  },
+  "backend/scripts/seed_demo.py": {
+    "mtime": 1792681976.432879,
+    "seen": 1792682881.677834,
+    "ast_hash": "197fcbc0e81523dcee9edbcd0612883e",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_seed_demo.py": {
+    "mtime": 1792682608.7619631,
+    "seen": 1792682881.677834,
+    "ast_hash": "cdd6b18b5c661c64c2785493abb0e3ba",
+    "semantic_hash": ""
+  },
+  "scripts/seed_demo.py": {
+    "mtime": 1792681784.8328495,
+    "seen": 1792682881.678428,
+    "ast_hash": "6eae1ba84063a0e3dbc8d8855341e2c1",
+    "semantic_hash": ""
+  },
+  ".github/copilot-instructions.md": {
+    "mtime": 1792680087.8031876,
+    "seen": 1792682881.678428,
+    "ast_hash": "ec2dc0dc7bef63488889f34de2f5584d",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1792680220.8712811,
+    "seen": 1792682881.678428,
+    "ast_hash": "90ae4d5def11aedb0eb7d1cd8a7b2659",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1792680086.059894,
+    "seen": 1792682881.678428,
+    "ast_hash": "67d88e9d0760c3ba54c75dfd9551c1c5",
+    "semantic_hash": ""
+  },
+  "DECISIONS.md": {
+    "mtime": 1791485149.9914296,
+    "seen": 1792682881.678428,
+    "ast_hash": "c9f235c4eb3e26be4815ceaf19fbd258",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1792678298.6696093,
+    "seen": 1792682881.678428,
+    "ast_hash": "824e2589419589f714de226bd450cff9",
+    "semantic_hash": ""
+  },
+  "agent-demo/README.md": {
+    "mtime": 1791483393.8036213,
+    "seen": 1792682881.678428,
+    "ast_hash": "8d0e03965afac71df1847359efbf96f9",
+    "semantic_hash": ""
+  },
+  "agentguard_arquitectura_runtime.md": {
+    "mtime": 1791481498.3975487,
+    "seen": 1792682881.678428,
+    "ast_hash": "467200f51bcb836ed87095116cf6e14c",
+    "semantic_hash": ""
+  },
+  "agentguard_casos_de_uso.md": {
+    "mtime": 1791481626.7861307,
+    "seen": 1792682881.678428,
+    "ast_hash": "b67426719f61afdc900a45ac21d38b38",
+    "semantic_hash": ""
+  },
+  "agentguard_er_conceptual_chen.md": {
+    "mtime": 1791481452.7574177,
+    "seen": 1792682881.678428,
+    "ast_hash": "42f952404229ba85e4453eb0f5fe1229",
+    "semantic_hash": ""
+  },
+  "agentguard_estados_ciclo_vida.md": {
+    "mtime": 1791481579.8484688,
+    "seen": 1792682881.678428,
+    "ast_hash": "d3fa08c0c2a2c8e671ea16e7e0c64adb",
+    "semantic_hash": ""
+  },
+  "agentguard_mer_relacional.md": {
+    "mtime": 1791481412.9853647,
+    "seen": 1792682881.678428,
+    "ast_hash": "58fb0b7cfdca3925c58251310d2b5db1",
+    "semantic_hash": ""
+  },
+  "agentguard_secuencia_demo.md": {
+    "mtime": 1791481544.1224782,
+    "seen": 1792682881.678428,
+    "ast_hash": "92e5d99e31133274fd4dc9fe4ed41a14",
+    "semantic_hash": ""
+  },
+  "backend/README.md": {
+    "mtime": 1792442816.4341803,
+    "seen": 1792682881.678428,
+    "ast_hash": "888e87793f63836a0e332a1f1832d705",
+    "semantic_hash": ""
+  },
+  "backend/desglose_de_pasos_semana_1_base_de_datos_y_setup_inicial.md": {
+    "mtime": 1791586548.3805275,
+    "seen": 1792682881.678428,
+    "ast_hash": "e0dd43a16e35cfbf9163799cf6caab21",
+    "semantic_hash": ""
+  },
+  "backend/desglose_de_pasos_semana_2_api_rest_de_gestion.md": {
+    "mtime": 1792363183.325188,
+    "seen": 1792682881.678428,
+    "ast_hash": "1c60dd6d02f4515c6c958aa35be04bf5",
+    "semantic_hash": ""
+  },
+  "backend/desglose_de_pasos_semana_3_gateway_interceptor_y_pdp.md": {
+    "mtime": 1792446210.432828,
+    "seen": 1792682881.678428,
+    "ast_hash": "8b88458bda5867bbe6e067505915fe0b",
+    "semantic_hash": ""
+  },
+  "backend/requirements.txt": {
+    "mtime": 1792678298.6805933,
+    "seen": 1792682881.678428,
+    "ast_hash": "cf1604484efff891105c4a63082f636a",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1791721905.4218543,
+    "seen": 1792682881.678428,
+    "ast_hash": "dd0598ac0049ed21e5cabcb2fa590c32",
+    "semantic_hash": ""
+  },
+  "frontend/README.md": {
+    "mtime": 1791483393.8014078,
+    "seen": 1792682881.678428,
+    "ast_hash": "68aa58389f75a33d10eebc0dcf707f3d",
+    "semantic_hash": ""
+  },
+  "frontend/index.html": {
+    "mtime": 1792363183.3676605,
+    "seen": 1792682881.678428,
+    "ast_hash": "4ab371416a8b0daaab42512f46c5b508",
+    "semantic_hash": ""
+  },
+  "guia_simple_proyecto_agentguard.html": {
+    "mtime": 1791485357.7358074,
+    "seen": 1792682881.678428,
+    "ast_hash": "c2d8f9f1ebc4b581ba713c84440040e7",
+    "semantic_hash": ""
+  },
+  "guia_simple_proyecto_agentguard.md": {
+    "mtime": 1791485357.569806,
+    "seen": 1792682881.678428,
+    "ast_hash": "9c51ee6188fb9a50cf1335a5a325f978",
+    "semantic_hash": ""
+  },
+  "pnpm-workspace.yaml": {
+    "mtime": 1791485526.8488317,
+    "seen": 1792682881.678428,
+    "ast_hash": "67c37f25b36cf5e85ec1750e98041322",
+    "semantic_hash": ""
+  },
+  "AgentGuard_Propuesta_Desarrollo_Web_v2.pdf": {
+    "mtime": 1791394928.5692146,
+    "seen": 1792682881.678428,
+    "ast_hash": "49652b0b42c0d8c5d647ba29010bf6ec",
+    "semantic_hash": ""
+  },
+  "guia_simple_proyecto_agentguard.pdf": {
+    "mtime": 1791394928.6877294,
+    "seen": 1792682881.678428,
+    "ast_hash": "da9dcf28f851b2d7b30f1c1a4db80b85",
+    "semantic_hash": ""
+  },
+  "frontend/public/favicon.svg": {
+    "mtime": 1792363183.3734937,
+    "seen": 1792682881.678428,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": ""
+  },
+  "frontend/public/icons.svg": {
+    "mtime": 1792363183.3764944,
+    "seen": 1792682881.678428,
+    "ast_hash": "21c7473c592c67dc87223d49892c8f0a",
+    "semantic_hash": ""
+  },
+  "frontend/src/assets/hero.png": {
+    "mtime": 1792363183.3891895,
+    "seen": 1792682881.678428,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": ""
+  },
+  "frontend/src/assets/react.svg": {
+    "mtime": 1792363183.3917243,
+    "seen": 1792682881.678428,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": ""
+  },
+  "frontend/src/assets/vite.svg": {
+    "mtime": 1792363183.3947165,
+    "seen": 1792682881.678428,
+    "ast_hash": "6d5180a782d64c8cf51ba01c2a2184d8",
+    "semantic_hash": ""
   }
 }

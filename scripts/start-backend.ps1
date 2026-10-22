@@ -119,6 +119,18 @@ try {
 Write-Host ""
 
 # ------------------------------------------------------------------------------
+# 3.1 Semillas de Datos para Demostración Oficial
+# ------------------------------------------------------------------------------
+Write-Host "[*] Verificando semillas de datos para la demo oficial..." -ForegroundColor Yellow
+$seedScript = Join-Path $backendDir "scripts\seed_demo.py"
+try {
+    & $venvPython $seedScript
+} catch {
+    Write-Host "[!] Nota: No se pudo ejecutar el seeder o los datos ya existen." -ForegroundColor Yellow
+}
+Write-Host ""
+
+# ------------------------------------------------------------------------------
 # 4. Iniciar Servidor FastAPI con Uvicorn
 # ------------------------------------------------------------------------------
 Write-Host "[4/4] Iniciando servidor FastAPI con Uvicorn..." -ForegroundColor Green

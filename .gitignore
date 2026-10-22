@@ -45,3 +45,4 @@ htmlcov/
 # Graphify local cache & temporary sidecars
 graphify-out/cache/
 graphify-out/.graphify_*
+graphify-out/20*/
