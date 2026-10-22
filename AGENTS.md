@@ -134,3 +134,21 @@ Cualquier fragmento de código o diseño implementado en este proyecto debe cump
    - Validar variables de entorno críticas en el arranque del servidor. Si falta una variable requerida (ej. conexión a PostgreSQL, claves de cifrado), el proceso debe detenerse de inmediato (*fail-fast*) con un mensaje descriptivo.
 2. **Sincronización de `.env.example`:**
    - Cada nueva variable requerida debe reflejarse en `.env.example` con comentarios claros y sin valores confidenciales.
+
+---
+
+## 9. Grafo de Conocimiento y Navegación Arquitectónica (Graphify)
+
+Este proyecto cuenta con un grafo de conocimiento persistente generado en el directorio `graphify-out/` que mapea la arquitectura, modelos, componentes de frontend, relaciones entre archivos y *god nodes* (abstracciones centrales).
+
+Cualquier agente de IA (Antigravity, Cursor, Claude Code, GitHub Copilot, Codex, etc.) que asista a los integrantes del equipo debe aprovechar esta infraestructura para evitar búsquedas a ciegas (*grep/read* masivos):
+
+### Reglas para Agentes de IA:
+1. **Consulta Previa al Grafo:** Cuando exista `graphify-out/graph.json`, antes de hacer un escaneo masivo de archivos para responder preguntas sobre la arquitectura o flujo del sistema, ejecutar `graphify query "<pregunta>"` (CLI) o utilizar `graphify path "<Origen>" "<Destino>"` para trazar relaciones entre módulos (ej. `Agent` a `ExecutionTrace`), y `graphify explain "<concepto>"` para entender una abstracción aislada.
+2. **Visualización y Reportes:**
+   - Para revisar la arquitectura global, consultar `graphify-out/GRAPH_REPORT.md`.
+   - Para exploración visual interactiva en el navegador, abrir `graphify-out/graph.html`.
+3. **Mantenimiento Incremental:**
+   - Después de modificar o agregar archivos de código, ejecutar `graphify update .` para mantener el grafo sincronizado (ejecución AST local, costo 0).
+4. **Manejo de Versiones:**
+   - Los archivos en `graphify-out/` forman parte de la base de conocimiento local del proyecto y pueden actualizarse incrementalmente en cada sprint.
