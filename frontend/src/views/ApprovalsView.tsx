@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Shield, Clock, Check, X, MoreHorizontal } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, Clock, Check, X, MoreHorizontal, Radio } from 'lucide-react';
 import { Header } from '../components/Header';
 import { mockApprovals } from '../data/mockData';
 import type { ApprovalRequest } from '../types/domain';
+import { api, DEMO_IDS } from '../services/api';
+import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 
 interface ApprovalsViewProps {
   onUpdatePendingCount?: (count: number) => void;
@@ -13,10 +15,82 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
   const [selectedId, setSelectedId] = useState<string>(mockApprovals[0]?.id || '');
   const [resolutionNotice, setResolutionNotice] = useState<string | null>(null);
 
+  // Cargar aprobaciones iniciales desde el backend (con fallback a mockData)
+  useEffect(() => {
+    let isMounted = true;
+    api.getApprovals().then((data) => {
+      if (isMounted && data && data.length > 0) {
+        setRequests(data);
+        const firstPending = data.find(d => d.status === 'PENDING');
+        if (firstPending) {
+          setSelectedId(firstPending.id);
+        }
+        if (onUpdatePendingCount) {
+          onUpdatePendingCount(data.filter(d => d.status === 'PENDING').length);
+        }
+      }
+    });
+    return () => { isMounted = false; };
+  }, [onUpdatePendingCount]);
+
+  // Suscripción WebSocket para actualizaciones y nuevos tickets en vivo
+  const { isConnected } = useAgentGuardWebSocket({
+    onNewApproval: (data) => {
+      const amountVal = data.parameters?.amount != null 
+        ? `$${Number(data.parameters.amount).toLocaleString('en-US')}.00` 
+        : '$4,500.00';
+
+      const newReq: ApprovalRequest = {
+        id: data.approval_id || `appr_${Date.now()}`,
+        agentName: data.agent_name || 'AI Agent',
+        agentInitials: (data.agent_name || 'AI').substring(0, 2).toUpperCase(),
+        action: data.action_name || 'refund.create',
+        resource: data.parameters?.gateway || 'payment/stripe_live',
+        amount: amountVal,
+        requestedAt: 'Recién (En Vivo ⚡)',
+        status: 'PENDING',
+        delegatedBy: 'Automated Gateway Trigger',
+        riskLevel: (data.risk_level === 'CRITICAL' ? 'Critical' : 'High') as any,
+        justification: data.parameters?.reason || 'Operación sensible interceptada por AgentGuard PEP que superó el umbral autónomo.',
+        appliedPolicy: {
+          name: 'Real-time HITL Interception Policy',
+          condition: 'amount >= $500',
+        },
+      };
+
+      setRequests(prev => {
+        const filtered = prev.filter(r => r.id !== newReq.id);
+        const updated = [newReq, ...filtered];
+        if (onUpdatePendingCount) {
+          onUpdatePendingCount(updated.filter(r => r.status === 'PENDING').length);
+        }
+        return updated;
+      });
+      setSelectedId(newReq.id);
+      setResolutionNotice(`⚡ Nueva solicitud en tiempo real: ${newReq.action} (${newReq.amount}) de ${newReq.agentName}`);
+      setTimeout(() => setResolutionNotice(null), 5000);
+    },
+    onResolvedApproval: (data) => {
+      setRequests(prev => {
+        const updated = prev.map(r => {
+          if (r.id === data.approval_id) {
+            return { ...r, status: data.status as any };
+          }
+          return r;
+        });
+        if (onUpdatePendingCount) {
+          onUpdatePendingCount(updated.filter(r => r.status === 'PENDING').length);
+        }
+        return updated;
+      });
+    },
+  });
+
   const pendingRequests = requests.filter(r => r.status === 'PENDING');
   const selectedRequest = requests.find(r => r.id === selectedId) || pendingRequests[0];
 
-  const handleResolve = (id: string, action: 'APPROVED' | 'REJECTED') => {
+  const handleResolve = async (id: string, action: 'APPROVED' | 'REJECTED') => {
+    // 1. Actualización optimista de estado local
     const updated = requests.map(r => {
       if (r.id === id) {
         return { ...r, status: action };
@@ -37,6 +111,14 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
     if (nextPending) {
       setSelectedId(nextPending.id);
     }
+
+    // 2. Notificar al backend de forma persistente
+    await api.resolveApproval(
+      id,
+      action,
+      action === 'APPROVED' ? 'Aprobado formalmente por operador en Dashboard HITL' : 'Rechazado por riesgo de seguridad en Dashboard HITL',
+      DEMO_IDS.USER_APPROVER_ID
+    );
   };
 
   return (
@@ -82,13 +164,29 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
           <div style={{
             padding: '16px 18px',
             borderBottom: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              Pending requests
-            </h2>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-              {pendingRequests.length} requests require your review
-            </p>
+            <div>
+              <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Pending requests
+              </h2>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {pendingRequests.length} requests require your review
+              </p>
+            </div>
+            {isConnected ? (
+              <span style={{ fontSize: '11px', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981', display: 'inline-block' }} />
+                Live WS
+              </span>
+            ) : (
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Radio size={12} />
+                Offline
+              </span>
+            )}
           </div>
 
           {/* List items */}

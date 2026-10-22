@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import type { Agent } from '../types/domain';
 import { Plus, Search, ChevronDown, SlidersHorizontal, ChevronRight } from 'lucide-react';
 import { Header } from '../components/Header';
 import { mockAgents } from '../data/mockData';
 
 export const AgentsView: React.FC = () => {
+  const [agents, setAgents] = useState<Agent[]>(mockAgents);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  const filteredAgents = mockAgents.filter(agent => {
+  useEffect(() => {
+    let isMounted = true;
+    api.getAgents().then(data => {
+      if (isMounted && data && data.length > 0) setAgents(data);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const filteredAgents = agents.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           agent.identifier.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || agent.status === statusFilter;

@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import type { Policy } from '../types/domain';
 import { Plus, Search, ChevronDown, MoreHorizontal, ShieldCheck } from 'lucide-react';
 import { Header } from '../components/Header';
 import { mockPolicies } from '../data/mockData';
 
 export const PoliciesView: React.FC = () => {
+  const [policies, setPolicies] = useState<Policy[]>(mockPolicies);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredPolicies = mockPolicies.filter(p => 
+  useEffect(() => {
+    let isMounted = true;
+    api.getPolicies().then(data => {
+      if (isMounted && data && data.length > 0) setPolicies(data);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const filteredPolicies = policies.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.agent.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.action.toLowerCase().includes(searchTerm.toLowerCase())

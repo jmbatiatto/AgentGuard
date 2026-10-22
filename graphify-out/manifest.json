@@ -414,10 +414,10 @@
     "semantic_hash": "4a5f7450ef8c74441f8b8f1c10477bed"
   },
   "frontend/src/App.tsx": {
-    "mtime": 1792678298.6912162,
-    "seen": 1792679930.2839012,
-    "ast_hash": "2e4ecfb7a821cb74f9706ffa22bf049b",
-    "semantic_hash": "2e4ecfb7a821cb74f9706ffa22bf049b"
+    "mtime": 1792688987.5363696,
+    "seen": 1792689248.3435857,
+    "ast_hash": "afe50370127398cc4e479f8935e4258b",
+    "semantic_hash": ""
   },
   "frontend/src/components/Header.tsx": {
     "mtime": 1792678298.6965978,
@@ -468,16 +468,16 @@
     "semantic_hash": "9783d1abd0b649cd4ae7b716e2f467f9"
   },
   "frontend/src/views/AgentsView.tsx": {
-    "mtime": 1792678298.7163224,
-    "seen": 1792679930.2839012,
-    "ast_hash": "08b4753d0f25290782ef457a01ee6bc9",
-    "semantic_hash": "08b4753d0f25290782ef457a01ee6bc9"
+    "mtime": 1792689098.0446432,
+    "seen": 1792689248.3445964,
+    "ast_hash": "4c8d4a68deeaa42ce57c5e0206e7810c",
+    "semantic_hash": ""
   },
   "frontend/src/views/ApprovalsView.tsx": {
-    "mtime": 1792678298.7308328,
-    "seen": 1792679930.2839012,
-    "ast_hash": "dcc0f57fe194d18c7d065e66d58e4c34",
-    "semantic_hash": "dcc0f57fe194d18c7d065e66d58e4c34"
+    "mtime": 1792688987.5317967,
+    "seen": 1792689248.3445964,
+    "ast_hash": "80755f3c3fe5c1d2b134fb337cdd5e9d",
+    "semantic_hash": ""
   },
   "frontend/src/views/OverviewView.tsx": {
     "mtime": 1792678298.7308328,
@@ -486,22 +486,22 @@
     "semantic_hash": "c4b7f466c159a1591861d7aed1c6288e"
   },
   "frontend/src/views/PlaygroundView.tsx": {
-    "mtime": 1792678298.7308328,
-    "seen": 1792679930.2839012,
-    "ast_hash": "f5524767844295970b1e020367e80469",
-    "semantic_hash": "f5524767844295970b1e020367e80469"
+    "mtime": 1792689025.2495801,
+    "seen": 1792689248.3445964,
+    "ast_hash": "911c79b1b0b5274bbd290371d08233cd",
+    "semantic_hash": ""
   },
   "frontend/src/views/PoliciesView.tsx": {
-    "mtime": 1792678298.7491262,
-    "seen": 1792679930.2839012,
-    "ast_hash": "ab8e145857143876981cf4e2f35bea76",
-    "semantic_hash": "ab8e145857143876981cf4e2f35bea76"
+    "mtime": 1792689098.0506513,
+    "seen": 1792689248.3445964,
+    "ast_hash": "8756bd567fc3528896c226d53dafe14c",
+    "semantic_hash": ""
   },
   "frontend/src/views/ToolsView.tsx": {
-    "mtime": 1792678298.7511466,
-    "seen": 1792679930.2839012,
-    "ast_hash": "afc118c413a998136add9872d471a5d4",
-    "semantic_hash": "afc118c413a998136add9872d471a5d4"
+    "mtime": 1792689098.048644,
+    "seen": 1792689248.3445964,
+    "ast_hash": "cee34d4e860180af1117b7ee10c5bdf0",
+    "semantic_hash": ""
   },
   "frontend/src/views/TracesView.tsx": {
     "mtime": 1792678298.762756,
@@ -528,10 +528,10 @@
     "semantic_hash": "74cde0261ad0a13045ca0a05ab1542ae"
   },
   "frontend/vite.config.ts": {
-    "mtime": 1792363183.4800465,
-    "seen": 1792679930.2839012,
-    "ast_hash": "9331e7d7740bf0286a7f5666477715da",
-    "semantic_hash": "9331e7d7740bf0286a7f5666477715da"
+    "mtime": 1792688830.8104136,
+    "seen": 1792689248.3445964,
+    "ast_hash": "30aada4c90435ccab7172c0c59c216ce",
+    "semantic_hash": ""
   },
   "package.json": {
     "mtime": 1791726006.3333786,
@@ -789,6 +789,18 @@
     "mtime": 1792686057.8120432,
     "seen": 1792686171.3074222,
     "ast_hash": "705ab10d27c2b03f3490731a437499b6",
+    "semantic_hash": ""
+  },
+  "frontend/src/services/api.ts": {
+    "mtime": 1792688830.8069222,
+    "seen": 1792689248.3445964,
+    "ast_hash": "03ed6edaf83e4938d88fe2834c3fb12d",
+    "semantic_hash": ""
+  },
+  "frontend/src/services/useAgentGuardWebSocket.ts": {
+    "mtime": 1792688830.809137,
+    "seen": 1792689248.3445964,
+    "ast_hash": "041887f8bdddf9fcbaaab0dd93a10c32",
     "semantic_hash": ""
   }
 }

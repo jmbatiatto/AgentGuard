@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import type { Tool } from '../types/domain';
 import { Plus, Search, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { Header } from '../components/Header';
 import { mockTools } from '../data/mockData';
 
 export const ToolsView: React.FC = () => {
+  const [tools, setTools] = useState<Tool[]>(mockTools);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredTools = mockTools.filter(tool => 
+  useEffect(() => {
+    let isMounted = true;
+    api.getTools().then(data => {
+      if (isMounted && data && data.length > 0) setTools(data);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const filteredTools = tools.filter(tool => 
     tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tool.description.toLowerCase().includes(searchTerm.toLowerCase())
   );

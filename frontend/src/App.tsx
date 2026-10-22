@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeProvider';
 import { Sidebar } from './components/Sidebar';
 import { OverviewView } from './views/OverviewView';
@@ -9,10 +9,33 @@ import { ApprovalsView } from './views/ApprovalsView';
 import { TracesView } from './views/TracesView';
 import { PlaygroundView } from './views/PlaygroundView';
 import type { NavView } from './types/domain';
+import { useAgentGuardWebSocket } from './services/useAgentGuardWebSocket';
+import { api } from './services/api';
 
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<NavView>('agents');
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
+
+  // Inicializar contador real desde backend (con fallback automático)
+  useEffect(() => {
+    let isMounted = true;
+    api.getApprovals('PENDING').then((list) => {
+      if (isMounted && list) {
+        setPendingApprovalsCount(list.length);
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  // Suscripción WebSocket global para mantener sincronizado el badge de la Sidebar
+  useAgentGuardWebSocket({
+    onNewApproval: () => {
+      setPendingApprovalsCount(prev => prev + 1);
+    },
+    onResolvedApproval: () => {
+      setPendingApprovalsCount(prev => Math.max(0, prev - 1));
+    },
+  });
 
   const handleTriggerApprovalFromPlayground = () => {
     setPendingApprovalsCount(prev => prev + 1);
