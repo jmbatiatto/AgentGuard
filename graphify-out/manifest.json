@@ -18,10 +18,10 @@
     "semantic_hash": "c195556ef1467d5a3bcd117e807adfd3"
   },
   "backend/app/api/__init__.py": {
-    "mtime": 1792445518.5261772,
-    "seen": 1792679930.2827182,
-    "ast_hash": "5dda49ea3f8c8256ab66a51071a5b4a3",
-    "semantic_hash": "5dda49ea3f8c8256ab66a51071a5b4a3"
+    "mtime": 1792686011.182566,
+    "seen": 1792686171.3063385,
+    "ast_hash": "30d3ec2c317305db8cafd105a4349b5a",
+    "semantic_hash": ""
   },
   "backend/app/api/agents.py": {
     "mtime": 1792363183.2472286,
@@ -264,10 +264,10 @@
     "semantic_hash": "c3ba5d9e4c5679d981c7af08f9462ff0"
   },
   "backend/app/services/pep_gateway_service.py": {
-    "mtime": 1792445518.5206397,
-    "seen": 1792679930.2839012,
-    "ast_hash": "264ac3e52064ec0e6492acc05565c0d7",
-    "semantic_hash": "264ac3e52064ec0e6492acc05565c0d7"
+    "mtime": 1792686011.1868694,
+    "seen": 1792686171.3074222,
+    "ast_hash": "6f14354d24fb5fce62929d1594f57413",
+    "semantic_hash": ""
   },
   "backend/app/services/policy_rule_service.py": {
     "mtime": 1792363183.3136504,
@@ -771,6 +771,24 @@
     "mtime": 1792363183.3947165,
     "seen": 1792682881.678428,
     "ast_hash": "6d5180a782d64c8cf51ba01c2a2184d8",
+    "semantic_hash": ""
+  },
+  "backend/app/api/websocket.py": {
+    "mtime": 1792686011.181404,
+    "seen": 1792686171.3074222,
+    "ast_hash": "0ec29c91a580f71b4a76064daf6b2815",
+    "semantic_hash": ""
+  },
+  "backend/app/core/websocket_manager.py": {
+    "mtime": 1792686011.1792097,
+    "seen": 1792686171.3074222,
+    "ast_hash": "783267d892912a881d8d1fa8417f5da9",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_websocket.py": {
+    "mtime": 1792686057.8120432,
+    "seen": 1792686171.3074222,
+    "ast_hash": "705ab10d27c2b03f3490731a437499b6",
     "semantic_hash": ""
   }
 }

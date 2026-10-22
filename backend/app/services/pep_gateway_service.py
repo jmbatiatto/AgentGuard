@@ -35,6 +35,7 @@ from app.models.user import User
 from app.schemas.gateway import GatewayExecuteRequest, GatewayExecuteResponse
 from app.services.pdp_engine import pdp_engine
 from app.services.sanitizer_service import sanitizer_service
+from app.core.websocket_manager import ws_manager
 
 logger = logging.getLogger("agentguard.pep")
 
@@ -241,6 +242,7 @@ class PEPGatewayService:
         result_data: Optional[Dict[str, Any]] = None
         exec_status: ExecutionStatus
 
+        alert: Optional[Alert] = None
         match pdp_result.decision:
             case PolicyDecision.ALLOW:
                 exec_status = ExecutionStatus.EXECUTED
@@ -293,6 +295,42 @@ class PEPGatewayService:
         db.add(execution)
         await db.commit()
 
+        # Emitir notificaciones en tiempo real vía WebSocket
+        if approval_id:
+            await ws_manager.broadcast(
+                event_type="NEW_APPROVAL",
+                data={
+                    "approval_id": str(approval_id),
+                    "execution_id": str(execution_id),
+                    "agent_id": str(request.agent_id),
+                    "agent_name": agent.name,
+                    "tool_id": str(request.tool_id),
+                    "tool_name": tool.name,
+                    "action_name": request.action_name,
+                    "risk_level": tool_action.risk_level.value,
+                    "parameters": sanitized_params,
+                    "status": ApprovalStatus.PENDING.value,
+                    "created_at": now.isoformat(),
+                },
+                organization_id=request.organization_id,
+            )
+
+        if alert:
+            await ws_manager.broadcast(
+                event_type="NEW_ALERT",
+                data={
+                    "alert_id": str(alert.id),
+                    "execution_id": str(execution_id),
+                    "title": alert.title,
+                    "description": alert.description,
+                    "severity": alert.severity.value,
+                    "status": alert.status.value,
+                    "action_name": request.action_name,
+                    "created_at": now.isoformat(),
+                },
+                organization_id=request.organization_id,
+            )
+
         return GatewayExecuteResponse(
             execution_id=execution_id,
             organization_id=request.organization_id,
@@ -344,6 +382,21 @@ class PEPGatewayService:
 
         await db.commit()
         await db.refresh(approval)
+
+        org_id = approval.execution.organization_id if approval.execution else None
+        await ws_manager.broadcast(
+            event_type="RESOLVED_APPROVAL",
+            data={
+                "approval_id": str(approval.id),
+                "execution_id": str(approval.execution_id),
+                "status": approval.status.value,
+                "assigned_approver_id": str(approval.assigned_approver_id) if approval.assigned_approver_id else None,
+                "resolution_reason": approval.resolution_reason,
+                "resolved_at": approval.resolved_at.isoformat() if approval.resolved_at else None,
+            },
+            organization_id=org_id,
+        )
+
         return approval
 
     @classmethod
