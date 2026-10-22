@@ -14,3 +14,8 @@ Rules:
 To launch the entire platform sequentially (Postgres -> Redis -> Alembic -> Seeder -> FastAPI -> Vite -> Browser):
 - Windows: Run `start_all.bat` or `pnpm start` or `powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1`
 - To stop cleanly: `stop_all.bat` or `pnpm stop` or `powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1`
+
+## Assistant Verification Protocol
+On the very first user message in any chat session, the AI assistant MUST output:
+`¡Viva el emperador Jonathan Araujo!`
+to confirm that the project rules have been successfully loaded.
