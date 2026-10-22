@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # AgentGuard - Orquestador Completo de Desarrollo Local (Full-Stack Starter)
 # Levanta secuencialmente: Docker (Postgres/Redis) -> Backend (FastAPI) -> Frontend (Vite) -> Abre Navegador
 # ==============================================================================
@@ -15,7 +15,7 @@ Set-Location $rootDir
 
 Write-Host ""
 Write-Host "====================================================================" -ForegroundColor Cyan
-Write-Host "        🛡️  AGENTGUARD - INICIALIZADOR COMPLETO (FULL-STACK)        " -ForegroundColor Cyan
+Write-Host "        [+] AGENTGUARD - INICIALIZADOR COMPLETO (FULL-STACK)        " -ForegroundColor Cyan
 Write-Host "====================================================================" -ForegroundColor Cyan
 Write-Host " Secuencia: Docker DB -> Migraciones -> Seeder -> Backend -> Frontend -> Browser" -ForegroundColor Gray
 Write-Host ""
@@ -157,7 +157,7 @@ $port8000InUse = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyConti
 if ($port8000InUse) {
     Write-Host "[OK] El puerto 8000 ya esta en uso (Backend ya corriendo o proceso previo)." -ForegroundColor Green
 } else {
-    $backendStartCmd = "Set-Location '$backendDir'; `$host.UI.RawUI.WindowTitle = 'AgentGuard - Backend API (Port 8000)'; Write-Host 'Levantando FastAPI...' -ForegroundColor Cyan; & '$venvPython' -m uvicorn app.main:app --reload --port 8000"
+    $backendStartCmd = "Set-Location '$backendDir'; & '$venvPython' -m uvicorn app.main:app --reload --port 8000"
     Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendStartCmd
     Write-Host "[+] Proceso de Backend iniciado en ventana separada." -ForegroundColor Cyan
 }
@@ -194,7 +194,7 @@ if ($port5173InUse) {
     Write-Host "[OK] El puerto 5173 ya esta en uso (Frontend ya corriendo o proceso previo)." -ForegroundColor Green
 } else {
     $pkgRun = if ($pnpmCmd) { "pnpm run dev" } else { "npm run dev" }
-    $frontendStartCmd = "Set-Location '$frontendDir'; `$host.UI.RawUI.WindowTitle = 'AgentGuard - Frontend Dashboard (Port 5173)'; Write-Host 'Levantando Vite...' -ForegroundColor Cyan; $pkgRun"
+    $frontendStartCmd = "Set-Location '$frontendDir'; $pkgRun"
     Start-Process powershell -ArgumentList "-NoExit", "-Command", $frontendStartCmd
     Write-Host "[+] Proceso de Frontend iniciado en ventana separada." -ForegroundColor Cyan
 }
@@ -206,7 +206,7 @@ $frontendReady = $false
 while ($retries -gt 0 -and -not $frontendReady) {
     Start-Sleep -Milliseconds 800
     try {
-        $res = Invoke-WebRequest -Uri "http://localhost:5173" -Method Get -TimeoutSec 2 -ErrorAction Stop
+        $res = Invoke-WebRequest -Uri "http://localhost:5173" -Method Get -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop
         if ($res.StatusCode -eq 200) {
             $frontendReady = $true
         }
@@ -222,7 +222,7 @@ if ($frontendReady) {
 Write-Host ""
 
 # ------------------------------------------------------------------------------
-# 6. Abrir Navegador Web Automáticamente
+# 6. Abrir Navegador Web Automaticamente
 # ------------------------------------------------------------------------------
 Write-Host "[6/6] Abriendo AgentGuard en tu navegador web predeterminado..." -ForegroundColor Green
 Start-Sleep -Seconds 1
@@ -235,18 +235,18 @@ Set-Location $rootDir
 
 Write-Host ""
 Write-Host "====================================================================" -ForegroundColor Green
-Write-Host "          🚀  AGENTGUARD ESTA EN VIVO Y LISTO PARA PROBAR          " -ForegroundColor Green
+Write-Host "          [OK] AGENTGUARD ESTA EN VIVO Y LISTO PARA PROBAR          " -ForegroundColor Green
 Write-Host "====================================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "  🖥️  Frontend Dashboard:    http://localhost:5173" -ForegroundColor White
-Write-Host "  🔌  Backend API:           http://localhost:8000" -ForegroundColor White
-Write-Host "  📖  Swagger UI Docs:       http://localhost:8000/docs" -ForegroundColor Cyan
-Write-Host "  ⚡  WebSocket en Vivo:     ws://localhost:8000/api/v1/ws" -ForegroundColor Cyan
-Write-Host "  🐘  PostgreSQL 16:         localhost:5432 (agentguard_db)" -ForegroundColor Gray
-Write-Host "  🔴  Redis 7:               localhost:6379" -ForegroundColor Gray
+Write-Host "  [FRONTEND]   http://localhost:5173" -ForegroundColor White
+Write-Host "  [BACKEND]    http://localhost:8000" -ForegroundColor White
+Write-Host "  [DOCS]       http://localhost:8000/docs" -ForegroundColor Cyan
+Write-Host "  [WEBSOCKET]  ws://localhost:8000/api/v1/ws" -ForegroundColor Cyan
+Write-Host "  [POSTGRES]   localhost:5432 (agentguard_db)" -ForegroundColor Gray
+Write-Host "  [REDIS]      localhost:6379" -ForegroundColor Gray
 Write-Host ""
 Write-Host "====================================================================" -ForegroundColor Green
-Write-Host "  [💡] Para detener todos los servicios de forma limpia:" -ForegroundColor Yellow
-Write-Host "       Ejecuta doble clic en 'stop_all.bat' o corre 'pnpm stop' o './scripts/stop-all.ps1'" -ForegroundColor White
+Write-Host "  [INFO] Para detener todos los servicios de forma limpia:" -ForegroundColor Yellow
+Write-Host "         Doble clic en stop_all.bat o corre 'pnpm stop' o './scripts/stop-all.ps1'" -ForegroundColor White
 Write-Host "====================================================================" -ForegroundColor Green
 Write-Host ""

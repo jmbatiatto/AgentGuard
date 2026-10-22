@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # AgentGuard - Script de Parada Limpia (Full-Stack Stopper)
 # Detiene los procesos de Backend (puerto 8000), Frontend (puerto 5173) y Docker
 # ==============================================================================
@@ -11,7 +11,7 @@ Set-Location $rootDir
 
 Write-Host ""
 Write-Host "====================================================================" -ForegroundColor Cyan
-Write-Host "          🛑  AGENTGUARD - DETENIENDO SERVICIOS LOCALES            " -ForegroundColor Cyan
+Write-Host "          [STOP] AGENTGUARD - DETENIENDO SERVICIOS LOCALES          " -ForegroundColor Cyan
 Write-Host "====================================================================" -ForegroundColor Cyan
 Write-Host ""
 

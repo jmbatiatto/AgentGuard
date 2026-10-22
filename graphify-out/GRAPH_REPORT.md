@@ -1,17 +1,17 @@
 # Graph Report - AgentGuard  (2026-10-22)
 
 ## Corpus Check
-- 125 files · ~67,126 words
+- 127 files · ~68,349 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 19 file(s) not represented in the graph (top: .drawio 6, .bat 5, (none) 2)
 
 ## Summary
-- 1178 nodes · 2946 edges · 63 communities (45 shown, 18 thin omitted)
+- 1180 nodes · 2946 edges · 65 communities (45 shown, 20 thin omitted)
 - Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 414 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `56c343a2`
+- Built from commit: `3edfc390`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -98,7 +98,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (63 total, 18 thin omitted)
+## Communities (65 total, 20 thin omitted)
 
 ### Community 1 - "App.tsx"
 Cohesion: 0.08
@@ -282,22 +282,22 @@ Nodes (5): ⚙️ AgentGuard — Backend (Python + FastAPI), 🏗️ Arquitectur
 
 ## Knowledge Gaps
 - **5 isolated node(s):** `@types/node`, `@types/react`, `@types/react-dom`, `oxlint`, `typescript`
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 577 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 579 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AgentTool` connect `enums.py` to `agent_service.py`, `test_pep_gateway_service.py`, `assign_tool_to_agent`, `test_demo_scenario_4_prompt_injection_deny_and_critical_alert`, `env.py`, `📑 Desglose de Pasos: Semana 2 — API REST de Gestión Administrativa`, `📐 Guía de Defensa: Modelo Conceptual (Chen) y Diccionario de Atributos`?**
-  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+  _High betweenness centrality (0.053) - this node is a cross-community bridge._
 - **Are the 23 inferred relationships involving `Tool` (e.g. with `PEPGatewayService` and `ToolService`) actually correct?**
   _`Tool` has 23 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `@types/node`, `@types/react`, `@types/react-dom` to the rest of the system?**
   _5 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.07614035087719298 - nodes in this community are weakly interconnected._
-- **Why does `ToolAction` connect `test_tool_actions.py` to `test_pep_gateway_service.py`, `asyncio`, `ToolActionService`, `test_demo_scenario_4_prompt_injection_deny_and_critical_alert`, `env.py`, `📑 Desglose de Pasos: Semana 2 — API REST de Gestión Administrativa`, `typing`, `enums.py`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+- **Why does `🛡️ AgentGuard — Runtime Authorization & Governance for AI Agents` connect `🛡️ AgentGuard — Runtime Authorization & Governance for AI Agents` to `README.md`, `enums.py`, `downgrade`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `ToolAction` (e.g. with `4. Las 7 Correcciones y Mejoras de la Versión 2.0` and `4. Reglas Innegociables de Seguridad y Dominio (AgentGuard Core)`) actually correct?**
   _`ToolAction` has 26 INFERRED edges - model-reasoned connections that need verification._
 - **Should `convert_docs_to_docx.py` be split into smaller, more focused modules?**
