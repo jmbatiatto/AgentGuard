@@ -14,6 +14,8 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
   const [requests, setRequests] = useState<ApprovalRequest[]>(mockApprovals);
   const [selectedId, setSelectedId] = useState<string>(mockApprovals[0]?.id || '');
   const [resolutionNotice, setResolutionNotice] = useState<string | null>(null);
+  const [isResolving, setIsResolving] = useState<boolean>(false);
+  const [filterTab, setFilterTab] = useState<'PENDING' | 'ALL'>('PENDING');
 
   // Cargar aprobaciones iniciales desde el backend (con fallback a mockData)
   useEffect(() => {
@@ -24,6 +26,8 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
         const firstPending = data.find(d => d.status === 'PENDING');
         if (firstPending) {
           setSelectedId(firstPending.id);
+        } else {
+          setSelectedId(data[0].id);
         }
         if (onUpdatePendingCount) {
           onUpdatePendingCount(data.filter(d => d.status === 'PENDING').length);
@@ -67,6 +71,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
         return updated;
       });
       setSelectedId(newReq.id);
+      setFilterTab('PENDING');
       setResolutionNotice(`⚡ Nueva solicitud en tiempo real: ${newReq.action} (${newReq.amount}) de ${newReq.agentName}`);
       setTimeout(() => setResolutionNotice(null), 5000);
     },
@@ -86,10 +91,25 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
     },
   });
 
-  const pendingRequests = requests.filter(r => r.status === 'PENDING');
-  const selectedRequest = requests.find(r => r.id === selectedId) || pendingRequests[0];
+  const displayedRequests = filterTab === 'PENDING' 
+    ? requests.filter(r => r.status === 'PENDING')
+    : requests;
+
+  const pendingRequestsCount = requests.filter(r => r.status === 'PENDING').length;
+  const selectedRequest = requests.find(r => r.id === selectedId) || displayedRequests[0];
 
   const handleResolve = async (id: string, action: 'APPROVED' | 'REJECTED') => {
+    if (isResolving) return;
+
+    const targetReq = requests.find(r => r.id === id);
+    if (!targetReq || targetReq.status !== 'PENDING') {
+      setResolutionNotice('Esta solicitud ya fue resuelta previamente.');
+      setTimeout(() => setResolutionNotice(null), 3000);
+      return;
+    }
+
+    setIsResolving(true);
+
     // 1. Actualización optimista de estado local
     const updated = requests.map(r => {
       if (r.id === id) {
@@ -104,7 +124,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       onUpdatePendingCount(remainingCount);
     }
 
-    setResolutionNotice(`Solicitud ${selectedRequest?.action} (${selectedRequest?.amount}) ha sido ${action === 'APPROVED' ? 'Aprobada ✅' : 'Rechazada ❌'}.`);
+    setResolutionNotice(`Solicitud ${targetReq.action} (${targetReq.amount}) ha sido ${action === 'APPROVED' ? 'Aprobada ✅' : 'Rechazada ❌'}.`);
     setTimeout(() => setResolutionNotice(null), 4000);
 
     const nextPending = updated.find(r => r.status === 'PENDING');
@@ -113,12 +133,16 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
     }
 
     // 2. Notificar al backend de forma persistente
-    await api.resolveApproval(
-      id,
-      action,
-      action === 'APPROVED' ? 'Aprobado formalmente por operador en Dashboard HITL' : 'Rechazado por riesgo de seguridad en Dashboard HITL',
-      DEMO_IDS.USER_APPROVER_ID
-    );
+    try {
+      await api.resolveApproval(
+        id,
+        action,
+        action === 'APPROVED' ? 'Aprobado formalmente por operador en Dashboard HITL' : 'Rechazado por riesgo de seguridad en Dashboard HITL',
+        DEMO_IDS.USER_APPROVER_ID
+      );
+    } finally {
+      setIsResolving(false);
+    }
   };
 
   return (
@@ -149,7 +173,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       )}
 
       <div style={{ flex: 1, padding: '24px 28px', display: 'flex', gap: '20px', overflow: 'hidden' }}>
-        {/* Left Column: Pending Requests List */}
+        {/* Left Column: Requests List */}
         <div style={{
           width: '380px',
           display: 'flex',
@@ -164,40 +188,70 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
           <div style={{
             padding: '16px 18px',
             borderBottom: '1px solid var(--border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
           }}>
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Pending requests
+                Bandeja de Aprobaciones
               </h2>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                {pendingRequests.length} requests require your review
-              </p>
+              {isConnected ? (
+                <span style={{ fontSize: '11px', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981', display: 'inline-block' }} />
+                  Live WS
+                </span>
+              ) : (
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Radio size={12} />
+                  Offline
+                </span>
+              )}
             </div>
-            {isConnected ? (
-              <span style={{ fontSize: '11px', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981', display: 'inline-block' }} />
-                Live WS
-              </span>
-            ) : (
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Radio size={12} />
-                Offline
-              </span>
-            )}
+
+            {/* Tabs Filter */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setFilterTab('PENDING')}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: filterTab === 'PENDING' ? 'var(--brand-primary)' : 'var(--bg-surface)',
+                  color: filterTab === 'PENDING' ? '#FFFFFF' : 'var(--text-secondary)',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Pendientes ({pendingRequestsCount})
+              </button>
+              <button
+                onClick={() => setFilterTab('ALL')}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: filterTab === 'ALL' ? 'var(--brand-primary)' : 'var(--bg-surface)',
+                  color: filterTab === 'ALL' ? '#FFFFFF' : 'var(--text-secondary)',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Todas ({requests.length})
+              </button>
+            </div>
           </div>
 
           {/* List items */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            {pendingRequests.length === 0 ? (
+            {displayedRequests.length === 0 ? (
               <div style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                 <Check size={28} color="#10B981" style={{ margin: '0 auto 10px auto', display: 'block' }} />
-                No hay solicitudes pendientes de aprobación.
+                No hay solicitudes en esta sección.
               </div>
             ) : (
-              pendingRequests.map((item) => {
+              displayedRequests.map((item) => {
                 const isSelected = selectedRequest?.id === item.id;
 
                 return (
@@ -256,8 +310,14 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                       <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
                         {item.amount}
                       </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        {item.requestedAt}
+                      <div style={{ marginTop: '4px' }}>
+                        {item.status === 'PENDING' ? (
+                          <span style={{ fontSize: '10px', color: '#F59E0B', fontWeight: 600 }}>PENDIENTE</span>
+                        ) : item.status === 'APPROVED' ? (
+                          <span style={{ fontSize: '10px', color: '#10B981', fontWeight: 600 }}>APROBADA</span>
+                        ) : (
+                          <span style={{ fontSize: '10px', color: '#EF4444', fontWeight: 600 }}>RECHAZADA</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -288,11 +348,31 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
             }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <Clock size={15} color="#F59E0B" />
-                  <span className="badge badge-warning">
-                    <span className="badge-dot" />
-                    <span>PENDING REVIEW</span>
-                  </span>
+                  {selectedRequest.status === 'PENDING' ? (
+                    <>
+                      <Clock size={15} color="#F59E0B" />
+                      <span className="badge badge-warning">
+                        <span className="badge-dot" />
+                        <span>PENDING REVIEW</span>
+                      </span>
+                    </>
+                  ) : selectedRequest.status === 'APPROVED' ? (
+                    <>
+                      <Check size={15} color="#10B981" />
+                      <span className="badge badge-success">
+                        <span className="badge-dot" />
+                        <span>APPROVED</span>
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <X size={15} color="#EF4444" />
+                      <span className="badge badge-danger">
+                        <span className="badge-dot" />
+                        <span>REJECTED</span>
+                      </span>
+                    </>
+                  )}
                 </div>
                 <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   {selectedRequest.action}
@@ -401,32 +481,55 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
               </div>
             </div>
 
-            {/* Action Buttons: Reject & Approve */}
+            {/* Action Buttons / Resolution Status */}
             <div style={{
               padding: '18px 24px',
               borderTop: '1px solid var(--border-subtle)',
               backgroundColor: 'var(--bg-card)',
               display: 'flex',
               justifyContent: 'flex-end',
+              alignItems: 'center',
               gap: '12px',
             }}>
-              <button 
-                onClick={() => handleResolve(selectedRequest.id, 'REJECTED')}
-                className="btn btn-danger-outline"
-                style={{ padding: '9px 18px' }}
-              >
-                <X size={15} />
-                <span>Reject request</span>
-              </button>
+              {selectedRequest.status === 'PENDING' ? (
+                <>
+                  <button 
+                    disabled={isResolving}
+                    onClick={() => handleResolve(selectedRequest.id, 'REJECTED')}
+                    className="btn btn-danger-outline"
+                    style={{ padding: '9px 18px', opacity: isResolving ? 0.5 : 1, cursor: isResolving ? 'not-allowed' : 'pointer' }}
+                  >
+                    <X size={15} />
+                    <span>Reject request</span>
+                  </button>
 
-              <button 
-                onClick={() => handleResolve(selectedRequest.id, 'APPROVED')}
-                className="btn btn-success"
-                style={{ padding: '9px 20px', fontWeight: 600 }}
-              >
-                <Check size={16} strokeWidth={2.5} />
-                <span>Approve request</span>
-              </button>
+                  <button 
+                    disabled={isResolving}
+                    onClick={() => handleResolve(selectedRequest.id, 'APPROVED')}
+                    className="btn btn-success"
+                    style={{ padding: '9px 20px', fontWeight: 600, opacity: isResolving ? 0.5 : 1, cursor: isResolving ? 'not-allowed' : 'pointer' }}
+                  >
+                    <Check size={16} strokeWidth={2.5} />
+                    <span>{isResolving ? 'Procesando...' : 'Approve request'}</span>
+                  </button>
+                </>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  backgroundColor: selectedRequest.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                  border: `1px solid ${selectedRequest.status === 'APPROVED' ? '#10B981' : '#EF4444'}`,
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: selectedRequest.status === 'APPROVED' ? '#10B981' : '#EF4444',
+                }}>
+                  {selectedRequest.status === 'APPROVED' ? <Check size={15} /> : <X size={15} />}
+                  <span>Solicitud ya resuelta ({selectedRequest.status})</span>
+                </div>
+              )}
             </div>
           </div>
         ) : (
