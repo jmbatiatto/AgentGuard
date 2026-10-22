@@ -138,6 +138,39 @@ Atendiendo la consigna pedagógica de la cátedra de Desarrollo Web de no repeti
 
 ---
 
+---
+
+## 🚀 Arranque Rápido con un Solo Clic (Quickstart Local)
+
+Para iniciar toda la plataforma de forma secuencial y coordinada con un solo comando o doble clic:
+
+```bash
+# Opción 1 (Recomendada en Windows): Doble clic en la raíz
+start_all.bat
+
+# Opción 2: Vía PowerShell
+powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1
+
+# Opción 3: Vía PNPM / NPM
+pnpm start
+```
+
+### ¿Qué hace el orquestador automáticamente?
+1. 🐳 **Docker:** Levanta los contenedores de **PostgreSQL 16** y **Redis 7** y espera a que la base de datos esté lista.
+2. 🐘 **Migraciones y Semillas:** Aplica migraciones DDL de **Alembic** y ejecuta el **Seeder oficial** (población determinista de Acme Corp, agentes, herramientas y políticas).
+3. ⚡ **Backend FastAPI:** Inicia Uvicorn en el puerto `8000` y verifica el endpoint de `/health`.
+4. ⚛️ **Frontend React/Vite:** Inicia el servidor de desarrollo en el puerto `5173`.
+5. 🌐 **Apertura Automática:** Abre `http://localhost:5173` en tu navegador web predeterminado para comenzar a interactuar de inmediato.
+
+Para detener todos los servicios limpiamente:
+```bash
+stop_all.bat
+# o también:
+pnpm stop
+```
+
+---
+
 ## 🗂️ Estructura del Monorepositorio
 
 ```text

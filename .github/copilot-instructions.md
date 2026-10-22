@@ -15,3 +15,8 @@ source files when (a) modifying/debugging specific code, (b) the graph lacks the
 (c) the graph is missing or stale.
 
 Type `/graphify` in Copilot Chat to build or update the graph.
+
+## Local Dev Orchestration
+To start all services in sequence (Docker, Alembic, Seeder, FastAPI backend, Vite frontend, and open default browser):
+- Run `start_all.bat` or `pnpm start` or `powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1`.
+- Clean shutdown: `stop_all.bat` or `pnpm stop`.

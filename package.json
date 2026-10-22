@@ -10,7 +10,11 @@
     "lint:frontend": "pnpm --filter frontend lint",
     "dev:backend": "powershell -ExecutionPolicy Bypass -File scripts/start-backend.ps1",
     "test:backend": "cd backend && pytest",
-    "start:backend": "powershell -ExecutionPolicy Bypass -File scripts/start-backend.ps1"
+    "start:backend": "powershell -ExecutionPolicy Bypass -File scripts/start-backend.ps1",
+    "start": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1",
+    "stop": "powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1",
+    "start:all": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1",
+    "stop:all": "powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1"
   },
   "packageManager": "pnpm@12.10.1",
   "engines": {

@@ -152,3 +152,24 @@ Cualquier agente de IA (Antigravity, Cursor, Claude Code, GitHub Copilot, Codex,
    - Después de modificar o agregar archivos de código, ejecutar `graphify update .` para mantener el grafo sincronizado (ejecución AST local, costo 0).
 4. **Manejo de Versiones:**
    - Los archivos en `graphify-out/` forman parte de la base de conocimiento local del proyecto y pueden actualizarse incrementalmente en cada sprint.
+
+---
+
+## 10. Orquestación y Arranque Secuencial Local (`start_all` / `start-all.ps1`)
+
+Para asegurar que cualquier integrante del equipo (**Juan Martín Battiato**, **Mateo Ortega**, **Agustín Belardinelli**, **Jonathan Araujo**) o cualquier agente de IA pueda levantar y probar el sistema de manera rápida y sin fricción, se dispone de un orquestador secuencial automatizado:
+
+### 10.1 Comandos de Arranque y Parada Oficiales
+- **Doble Clic en Windows:** Ejecutar [`start_all.bat`](./start_all.bat) (o `start_dev.bat`) en la raíz del proyecto.
+- **PowerShell:** `powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1`
+- **NPM / PNPM:** `pnpm start` o `npm run start`
+- **Detener Todo Limpiamente:** Doble clic en [`stop_all.bat`](./stop_all.bat) o `pnpm stop`.
+
+### 10.2 Secuencia Estricta de Inicialización
+El script ejecuta secuencialmente y con verificación de salud cada capa:
+1. **Persistencia (Docker):** Comprueba Docker Desktop y ejecuta `docker compose up -d` para PostgreSQL 16 y Redis 7. Espera con sondeo `pg_isready` hasta disponibilidad total.
+2. **Setup y Migraciones Backend:** Verifica `.env`, entorno virtual `.venv` y dependencias; aplica migraciones con `alembic upgrade head` (12 tablas del MER).
+3. **Seeder Determinista:** Ejecuta `scripts/seed_demo.py` para garantizar la organización Acme Corp, usuarios, agentes, herramientas, políticas y reglas de los 5 escenarios.
+4. **Backend FastAPI:** Inicia el servidor Uvicorn en el puerto 8000 en su propia consola titulada y monitorea `/health` hasta responder 200 OK.
+5. **Frontend Vite:** Inicia el servidor de desarrollo en el puerto 5173 en su propia consola titulada y espera que esté disponible.
+6. **Apertura de Navegador:** Abre automáticamente `http://localhost:5173` en el navegador web predeterminado del sistema.

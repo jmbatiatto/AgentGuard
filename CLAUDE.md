@@ -8,3 +8,9 @@ Rules:
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
 - A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.
+
+## Local Dev Orchestration
+
+To launch the entire platform sequentially (Postgres -> Redis -> Alembic -> Seeder -> FastAPI -> Vite -> Browser):
+- Windows: Run `start_all.bat` or `pnpm start` or `powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1`
+- To stop cleanly: `stop_all.bat` or `pnpm stop` or `powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1`

@@ -534,10 +534,10 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1791726006.3333786,
-    "seen": 1792679930.2839012,
-    "ast_hash": "e81acd87f096429011d7396f6e197311",
-    "semantic_hash": "e81acd87f096429011d7396f6e197311"
+    "mtime": 1792690532.6805062,
+    "seen": 1792691468.802531,
+    "ast_hash": "6548636abd819d75bc3e3ed658df9799",
+    "semantic_hash": ""
   },
   "scripts/convert_docs_to_docx.py": {
     "mtime": 1791397779.41371,
@@ -594,21 +594,21 @@
     "semantic_hash": ""
   },
   ".github/copilot-instructions.md": {
-    "mtime": 1792680087.8031876,
-    "seen": 1792682881.678428,
-    "ast_hash": "ec2dc0dc7bef63488889f34de2f5584d",
+    "mtime": 1792691437.253231,
+    "seen": 1792691468.802531,
+    "ast_hash": "d3aab161b71ab8253c5b8ee619b79757",
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1792680220.8712811,
-    "seen": 1792682881.678428,
-    "ast_hash": "90ae4d5def11aedb0eb7d1cd8a7b2659",
+    "mtime": 1792690532.6834135,
+    "seen": 1792691468.802531,
+    "ast_hash": "488df2594462ff0d5a75ed446ec4cc2d",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792680086.059894,
-    "seen": 1792682881.678428,
-    "ast_hash": "67d88e9d0760c3ba54c75dfd9551c1c5",
+    "mtime": 1792691437.2510798,
+    "seen": 1792691468.802531,
+    "ast_hash": "1e8f4857ce45540c44d596fc08b15891",
     "semantic_hash": ""
   },
   "DECISIONS.md": {
@@ -618,9 +618,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1792678298.6696093,
-    "seen": 1792682881.678428,
-    "ast_hash": "824e2589419589f714de226bd450cff9",
+    "mtime": 1792690532.6869342,
+    "seen": 1792691468.802531,
+    "ast_hash": "46126bc106f4ce3fe92fc7fb8e4afce4",
     "semantic_hash": ""
   },
   "agent-demo/README.md": {
@@ -801,6 +801,24 @@
     "mtime": 1792688830.809137,
     "seen": 1792689248.3445964,
     "ast_hash": "041887f8bdddf9fcbaaab0dd93a10c32",
+    "semantic_hash": ""
+  },
+  "scripts/start-all.ps1": {
+    "mtime": 1792690532.6639707,
+    "seen": 1792691468.802531,
+    "ast_hash": "ba0dfb4b03683395886408a1b43d4f1b",
+    "semantic_hash": ""
+  },
+  "scripts/stop-all.ps1": {
+    "mtime": 1792690532.666707,
+    "seen": 1792691468.802531,
+    "ast_hash": "d14ef95e43503efe4a465dd482191211",
+    "semantic_hash": ""
+  },
+  ".agents/rules/local_dev_orchestration.md": {
+    "mtime": 1792691437.246668,
+    "seen": 1792691468.802531,
+    "ast_hash": "3933ca416c87265079400d9381980eb5",
     "semantic_hash": ""
   }
 }

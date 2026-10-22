@@ -1,0 +1,20 @@
+---
+description: Reglas y comandos de inicio de desarrollo local de AgentGuard
+globs: ["*"]
+alwaysApply: true
+---
+
+# 🚀 Orquestación y Arranque de Desarrollo Local (AgentGuard)
+
+Cuando el usuario pregunte cómo levantar el proyecto o probar los componentes:
+- Indicar que puede hacer doble clic en `start_all.bat` (o `start_dev.bat`) en la raíz del proyecto.
+- O ejecutar por terminal: `pnpm start` o `powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1`.
+- Para detener todos los procesos: `stop_all.bat` o `pnpm stop`.
+
+El orquestador levanta secuencialmente:
+1. Docker Compose (PostgreSQL 16 + Redis 7)
+2. Migraciones Alembic (`alembic upgrade head`)
+3. Seeder Oficial (`seed_demo.py`)
+4. Backend FastAPI (`http://localhost:8000`)
+5. Frontend Vite (`http://localhost:5173`)
+6. Apertura automática del navegador web
