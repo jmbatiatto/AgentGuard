@@ -11,6 +11,7 @@ from app.api.policy_rules import router as policy_rules_router
 from app.api.gateway import router as gateway_router
 from app.api.approvals import router as approvals_router
 from app.api.websocket import router as websocket_router
+from app.api.executions import router as executions_router
 
 api_router = APIRouter()
 api_router.include_router(organizations_router)
@@ -23,5 +24,6 @@ api_router.include_router(policy_rules_router)
 api_router.include_router(gateway_router)
 api_router.include_router(approvals_router)
 api_router.include_router(websocket_router)
+api_router.include_router(executions_router)
 
 __all__ = ["api_router"]

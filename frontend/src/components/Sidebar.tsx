@@ -142,6 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             return (
               <button
+                id={`nav-${item.id}`}
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 style={{

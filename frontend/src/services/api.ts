@@ -19,6 +19,7 @@ import type {
   Policy,
   ApprovalRequest,
   SecurityAlert,
+  ExecutionTrace,
   ApprovalStatus,
   PolicyDecision,
 } from '../types/domain';
@@ -323,6 +324,54 @@ class AgentGuardApiClient {
   /**
    * Obtiene alertas de seguridad (con fallback a mockAlerts)
    */
+
+  /**
+   * Obtiene la lista forense de ejecuciones (/api/v1/executions)
+   */
+  async getExecutions(
+    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    decision?: PolicyDecision
+  ): Promise<ExecutionTrace[]> {
+    try {
+      const query = new URLSearchParams({ organization_id: orgId });
+      if (decision) query.append('decision', decision);
+
+      const res = await fetch(`${this.baseUrl}/api/v1/executions?${query.toString()}`, {
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          return data.map((item: any) => ({
+            id: item.id,
+            organizationId: item.organization_id,
+            agentId: item.agent_id,
+            agentName: item.agent_name || 'AI Agent',
+            toolId: item.tool_id,
+            toolName: item.tool_name || 'External Tool',
+            actionName: item.action_name || 'execute',
+            resource: item.resource || 'global/resource',
+            requestContext: item.request_context || {},
+            decision: item.decision as PolicyDecision,
+            status: item.status || 'EXECUTED',
+            evaluatedPolicyRuleId: item.evaluated_policy_rule_id,
+            timestamp: item.timestamp,
+            latencyMs: item.latency_ms || 22.0,
+            approvalStatus: item.approval_status || null,
+            approvalResolvedAt: item.approval_resolved_at || null,
+            resolutionReason: item.resolution_reason || null,
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] No se pudo obtener ejecuciones del backend:', err);
+    }
+
+    // Retorna arreglo vacío o datos iniciales si no hay backend
+    return [];
+  }
+
   async getAlerts(): Promise<SecurityAlert[]> {
     return mockAlerts;
   }

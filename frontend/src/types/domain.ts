@@ -71,3 +71,23 @@ export interface SecurityAlert {
   timeAgo: string;
   severity: 'critical' | 'warning' | 'info';
 }
+
+export interface ExecutionTrace {
+  id: string;
+  organizationId: string;
+  agentId: string;
+  agentName: string;
+  toolId: string;
+  toolName: string;
+  actionName: string;
+  resource: string;
+  requestContext: Record<string, any>;
+  decision: PolicyDecision;
+  status: string;
+  evaluatedPolicyRuleId?: string | null;
+  timestamp: string;
+  latencyMs: number;
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | null;
+  approvalResolvedAt?: string | null;
+  resolutionReason?: string | null;
+}

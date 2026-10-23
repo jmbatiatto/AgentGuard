@@ -12,7 +12,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { DEMO_IDS } from './api';
 
 export interface WebSocketEventMessage {
-  type: 'NEW_APPROVAL' | 'RESOLVED_APPROVAL' | 'NEW_ALERT' | 'PONG' | 'CONNECTED';
+  type: 'NEW_APPROVAL' | 'RESOLVED_APPROVAL' | 'NEW_ALERT' | 'NEW_EXECUTION' | 'PONG' | 'CONNECTED';
   timestamp?: string;
   data?: any;
 }
@@ -23,6 +23,7 @@ export interface UseAgentGuardWebSocketOptions {
   onNewApproval?: (data: any) => void;
   onResolvedApproval?: (data: any) => void;
   onNewAlert?: (data: any) => void;
+  onNewExecution?: (data: any) => void;
   onMessage?: (message: WebSocketEventMessage) => void;
 }
 
@@ -32,6 +33,7 @@ export function useAgentGuardWebSocket({
   onNewApproval,
   onResolvedApproval,
   onNewAlert,
+  onNewExecution,
   onMessage,
 }: UseAgentGuardWebSocketOptions = {}) {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -47,7 +49,8 @@ export function useAgentGuardWebSocket({
     // Calcular WebSocket URL
     const isHttps = window.location.protocol === 'https:';
     const wsProto = isHttps ? 'wss:' : 'ws:';
-    const wsHost = import.meta.env.VITE_WS_URL || `${wsProto}//localhost:8000`;
+    const host = window.location.hostname || 'localhost';
+    const wsHost = import.meta.env.VITE_WS_URL || `${wsProto}//${host}:8000`;
     const url = `${wsHost}/api/v1/ws/${orgId}`;
 
     try {
@@ -74,7 +77,9 @@ export function useAgentGuardWebSocket({
 
           if (onMessage) onMessage(parsed);
 
-          if (parsed.type === 'NEW_APPROVAL' && onNewApproval) {
+          if (parsed.type === 'NEW_EXECUTION' && onNewExecution) {
+            onNewExecution(parsed.data);
+          } else if (parsed.type === 'NEW_APPROVAL' && onNewApproval) {
             onNewApproval(parsed.data);
           } else if (parsed.type === 'RESOLVED_APPROVAL' && onResolvedApproval) {
             onResolvedApproval(parsed.data);

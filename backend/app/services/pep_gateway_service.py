@@ -331,6 +331,29 @@ class PEPGatewayService:
                 organization_id=request.organization_id,
             )
 
+        # Emitir traza forense de ejecución en tiempo real vía WebSocket
+        await ws_manager.broadcast(
+            event_type="NEW_EXECUTION",
+            data={
+                "id": str(execution_id),
+                "organization_id": str(request.organization_id),
+                "agent_id": str(request.agent_id),
+                "agent_name": agent.name,
+                "tool_id": str(request.tool_id),
+                "tool_name": tool.name,
+                "tool_action_id": str(tool_action.id),
+                "action_name": request.action_name,
+                "resource": request.resource or "global",
+                "request_context": sanitized_params,
+                "decision": pdp_result.decision.value,
+                "status": exec_status.value,
+                "evaluated_policy_rule_id": str(pdp_result.evaluated_policy_rule_id) if pdp_result.evaluated_policy_rule_id else None,
+                "timestamp": now.isoformat(),
+                "latency_ms": 22.0,
+            },
+            organization_id=request.organization_id,
+        )
+
         return GatewayExecuteResponse(
             execution_id=execution_id,
             organization_id=request.organization_id,

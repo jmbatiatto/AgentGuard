@@ -12,9 +12,32 @@ import type { NavView } from './types/domain';
 import { useAgentGuardWebSocket } from './services/useAgentGuardWebSocket';
 import { api } from './services/api';
 
+const getInitialView = (): NavView => {
+  const hash = window.location.hash.replace('#', '').toLowerCase() as NavView;
+  const validViews: NavView[] = ['overview', 'agents', 'tools', 'policies', 'approvals', 'traces', 'playground', 'settings'];
+  return validViews.includes(hash) ? hash : 'overview';
+};
+
 export const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<NavView>('agents');
+  const [currentView, setCurrentView] = useState<NavView>(getInitialView);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
+
+  const handleNavigate = (view: NavView) => {
+    setCurrentView(view);
+    window.location.hash = `#${view}`;
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase() as NavView;
+      const validViews: NavView[] = ['overview', 'agents', 'tools', 'policies', 'approvals', 'traces', 'playground', 'settings'];
+      if (validViews.includes(hash)) {
+        setCurrentView(hash);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Inicializar contador real desde backend (con fallback automático)
   useEffect(() => {
@@ -47,7 +70,7 @@ export const App: React.FC = () => {
         {/* Fixed Left Navigation Bar */}
         <Sidebar 
           currentView={currentView} 
-          onNavigate={setCurrentView} 
+          onNavigate={handleNavigate} 
           pendingApprovalsCount={pendingApprovalsCount}
         />
 

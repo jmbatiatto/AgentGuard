@@ -494,6 +494,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
               {selectedRequest.status === 'PENDING' ? (
                 <>
                   <button 
+                    id="btn-reject-request"
                     disabled={isResolving}
                     onClick={() => handleResolve(selectedRequest.id, 'REJECTED')}
                     className="btn btn-danger-outline"
@@ -504,6 +505,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                   </button>
 
                   <button 
+                    id="btn-approve-request"
                     disabled={isResolving}
                     onClick={() => handleResolve(selectedRequest.id, 'APPROVED')}
                     className="btn btn-success"

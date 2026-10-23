@@ -363,7 +363,7 @@ async def seed_data(reset: bool = False) -> None:
             priority=100,
             effect=RuleEffect.REQUIRE_APPROVAL,
             tool_action_id=ACTION_REFUND_ID,
-            target_agent_id=AGENT_SALES_ID,
+            target_agent_id=None,
             conditions={"amount": {"gte": 500}},
             created_at=now,
         )
@@ -374,7 +374,7 @@ async def seed_data(reset: bool = False) -> None:
             priority=50,
             effect=RuleEffect.ALLOW,
             tool_action_id=ACTION_REFUND_ID,
-            target_agent_id=AGENT_SALES_ID,
+            target_agent_id=None,
             conditions={"amount": {"lt": 500}},
             created_at=now,
         )

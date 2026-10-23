@@ -165,7 +165,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ onTriggerApprova
       });
       setIsLoading(false);
 
-      if (onTriggerApproval) {
+      if (onTriggerApproval && !res.isLiveBackend) {
         onTriggerApproval();
       }
 
@@ -180,7 +180,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ onTriggerApprova
         isProtected: true,
         payload: {
           agent_id: 'agt_finance_02',
-          action: 'refund.create',
+          action: res.action_name || 'refund',
           context: { amount: 4500, gateway: 'stripe' },
           decision: res.decision,
           approval_id: res.approval_id || 'appr_demo_live',
@@ -556,6 +556,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ onTriggerApprova
               El agente solicita un reembolso de $4,500 en Stripe. Supera el límite de $500 y suspende la llamada para revisión humana.
             </p>
             <button 
+              id="btn-simulate-scenario-3"
               onClick={runScenario3}
               disabled={isLoading}
               className="btn btn-secondary" 
@@ -670,6 +671,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ onTriggerApprova
 
                 {activeResult.scenario === 3 && activeResult.isProtected && onNavigate && (
                   <button 
+                    id="btn-goto-approvals"
                     onClick={() => onNavigate('approvals')}
                     className="btn btn-primary"
                     style={{ fontSize: '12px', padding: '8px 14px' }}

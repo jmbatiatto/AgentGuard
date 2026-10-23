@@ -150,9 +150,20 @@ class PDPEngine:
                         if val not in cond_val:
                             return False
                     elif isinstance(cond_val, dict):
-                        # Diccionario de sub-operadores ej: {"<": 100, ">=": 10}
+                        # Diccionario de sub-operadores ej: {"<": 100, ">=": 10, "lte": 10000, "gte": 500}
                         for sub_op, target in cond_val.items():
-                            op_name = {"<": "lt", "<=": "lte", ">": "gt", ">=": "gte", "==": "eq"}.get(sub_op)
+                            op_name = {
+                                "<": "lt",
+                                "<=": "lte",
+                                ">": "gt",
+                                ">=": "gte",
+                                "==": "eq",
+                                "lt": "lt",
+                                "lte": "lte",
+                                "gt": "gt",
+                                "gte": "gte",
+                                "eq": "eq",
+                            }.get(str(sub_op).lower())
                             if not op_name or not cls._evaluate_numeric_condition(val, target, op_name):
                                 return False
                     elif val != cond_val:
