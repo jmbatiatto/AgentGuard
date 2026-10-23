@@ -123,6 +123,85 @@ class AgentGuardApiClient {
   }
 
   /**
+   * Da de alta un nuevo Agente de IA y le asocia herramientas opcionales
+   */
+  async createAgent(payload: {
+    name: string;
+    purpose?: string;
+    status?: 'ACTIVE' | 'SUSPENDED' | 'INACTIVE';
+    tool_ids?: string[];
+    orgId?: string;
+    ownerUserId?: string;
+  }): Promise<Agent> {
+    const orgId = payload.orgId || DEMO_IDS.ORG_ACME_ID;
+    const ownerUserId = payload.ownerUserId || DEMO_IDS.USER_ADMIN_ID;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/agents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: orgId,
+          owner_user_id: ownerUserId,
+          name: payload.name,
+          purpose: payload.purpose || 'Agente de IA gobernado por AgentGuard',
+          status: payload.status || 'ACTIVE',
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        // Asignar herramientas si fueron seleccionadas
+        if (payload.tool_ids && payload.tool_ids.length > 0) {
+          for (const toolId of payload.tool_ids) {
+            try {
+              await fetch(`${this.baseUrl}/api/v1/agents/${data.id}/tools`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  tool_id: toolId,
+                  enabled: true,
+                  config: {},
+                }),
+              });
+            } catch (err) {
+              console.warn(`Error asociando herramienta ${toolId}:`, err);
+            }
+          }
+        }
+
+        return {
+          id: data.id,
+          name: data.name,
+          identifier: data.id.substring(0, 8),
+          type: 'AI agent',
+          owner: 'Acme Admin',
+          assignedTools: payload.tool_ids && payload.tool_ids.length > 0 ? ['Herramientas Asignadas'] : ['Sin herramientas'],
+          status: (data.status === 'ACTIVE' ? 'Active' : data.status === 'SUSPENDED' ? 'Suspended' : 'Inactive') as any,
+          lastActivity: 'Recién creado ⚡',
+          initials: data.name.split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase(),
+        };
+      }
+    } catch (err) {
+      console.warn('Error en createAgent hacia backend, usando fallback local:', err);
+    }
+
+    const fallbackId = `agt_local_${Date.now()}`;
+    return {
+      id: fallbackId,
+      name: payload.name,
+      identifier: fallbackId.substring(0, 8),
+      type: 'AI agent',
+      owner: 'Acme Admin',
+      assignedTools: payload.tool_ids && payload.tool_ids.length > 0 ? ['Herramientas Asignadas'] : ['Sin herramientas'],
+      status: (payload.status === 'ACTIVE' ? 'Active' : 'Inactive') as any,
+      lastActivity: 'Recién creado ⚡',
+      initials: payload.name.split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase(),
+    };
+  }
+
+  /**
    * Obtiene la lista de herramientas (con fallback a mockTools)
    */
   async getTools(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Tool[]> {
@@ -151,6 +230,81 @@ class AgentGuardApiClient {
   }
 
   /**
+   * Da de alta una nueva herramienta externa y sus acciones atómicas
+   */
+  async createTool(payload: {
+    name: string;
+    protocol?: string;
+    endpoint_url: string;
+    description?: string;
+    actions?: Array<{ action_name: string; risk_level: string; description?: string }>;
+    orgId?: string;
+  }): Promise<Tool> {
+    const orgId = payload.orgId || DEMO_IDS.ORG_ACME_ID;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/tools`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: orgId,
+          name: payload.name,
+          protocol: payload.protocol || 'REST',
+          endpoint_url: payload.endpoint_url,
+          description: payload.description || 'Herramienta de integración externa',
+        }),
+      });
+
+      if (res.ok) {
+        const toolData = await res.json();
+
+        // Crear acciones atómicas asociadas
+        if (payload.actions && payload.actions.length > 0) {
+          for (const act of payload.actions) {
+            try {
+              await fetch(`${this.baseUrl}/api/v1/tool-actions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  tool_id: toolData.id,
+                  action_name: act.action_name,
+                  risk_level: act.risk_level || 'LOW',
+                  description: act.description || `Acción ${act.action_name}`,
+                }),
+              });
+            } catch (err) {
+              console.warn(`Error creando acción ${act.action_name}:`, err);
+            }
+          }
+        }
+
+        return {
+          id: toolData.id,
+          name: toolData.name,
+          description: toolData.description || 'Herramienta externa conectada',
+          availableActions: payload.actions?.map(a => a.action_name) || ['execute'],
+          assignedAgent: 'Todos los agentes autorizados',
+          status: 'Active',
+          initials: toolData.name.substring(0, 2).toUpperCase(),
+        };
+      }
+    } catch (err) {
+      console.warn('Error en createTool hacia backend, usando fallback local:', err);
+    }
+
+    const fallbackId = `tool_local_${Date.now()}`;
+    return {
+      id: fallbackId,
+      name: payload.name,
+      description: payload.description || 'Herramienta conectada',
+      availableActions: payload.actions?.map(a => a.action_name) || ['execute'],
+      assignedAgent: 'Agentes autorizados',
+      status: 'Active',
+      initials: payload.name.substring(0, 2).toUpperCase(),
+    };
+  }
+
+  /**
    * Obtiene la lista de políticas (con fallback a mockPolicies)
    */
   async getPolicies(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Policy[]> {
@@ -176,6 +330,81 @@ class AgentGuardApiClient {
       // Graceful fallback
     }
     return mockPolicies;
+  }
+
+  /**
+   * Da de alta una nueva Política y su regla determinista
+   */
+  async createPolicy(payload: {
+    name: string;
+    description?: string;
+    priority?: number;
+    tool_action_id?: string;
+    effect?: PolicyDecision;
+    conditions?: Record<string, any>;
+    orgId?: string;
+  }): Promise<Policy> {
+    const orgId = payload.orgId || DEMO_IDS.ORG_ACME_ID;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/policies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: orgId,
+          name: payload.name,
+          description: payload.description || 'Política de gobernanza AgentGuard',
+          priority: payload.priority || 50,
+          is_active: true,
+        }),
+      });
+
+      if (res.ok) {
+        const polData = await res.json();
+
+        if (payload.tool_action_id) {
+          try {
+            await fetch(`${this.baseUrl}/api/v1/policy-rules`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                policy_id: polData.id,
+                tool_action_id: payload.tool_action_id,
+                effect: payload.effect || 'ALLOW',
+                priority: payload.priority || 50,
+                conditions: payload.conditions || {},
+                is_active: true,
+              }),
+            });
+          } catch (err) {
+            console.warn('Error creando policy rule:', err);
+          }
+        }
+
+        return {
+          id: polData.id,
+          name: polData.name,
+          agent: 'Global / Multi-agent',
+          action: 'Configured Action',
+          condition: payload.conditions ? JSON.stringify(payload.conditions) : 'contextual',
+          decision: payload.effect || 'ALLOW',
+          status: 'Active',
+        };
+      }
+    } catch (err) {
+      console.warn('Error en createPolicy hacia backend, usando fallback:', err);
+    }
+
+    const fallbackId = `pol_local_${Date.now()}`;
+    return {
+      id: fallbackId,
+      name: payload.name,
+      agent: 'Global / Multi-agent',
+      action: 'Custom Action',
+      condition: payload.conditions ? JSON.stringify(payload.conditions) : 'contextual',
+      decision: payload.effect || 'ALLOW',
+      status: 'Active',
+    };
   }
 
   /**

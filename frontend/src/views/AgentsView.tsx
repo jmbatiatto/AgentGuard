@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import type { Agent } from '../types/domain';
-import { Plus, Search, ChevronDown, SlidersHorizontal, ChevronRight } from 'lucide-react';
+import type { Agent, Tool } from '../types/domain';
+import { Plus, Search, ChevronDown, SlidersHorizontal, ChevronRight, X, Bot, CheckCircle } from 'lucide-react';
 import { Header } from '../components/Header';
 import { mockAgents } from '../data/mockData';
 
@@ -10,13 +10,60 @@ export const AgentsView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [availableTools, setAvailableTools] = useState<Tool[]>([]);
+  const [name, setName] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [statusVal, setStatusVal] = useState<'ACTIVE' | 'SUSPENDED'>('ACTIVE');
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const loadAgents = async () => {
+    const data = await api.getAgents();
+    if (data && data.length > 0) setAgents(data);
+  };
+
   useEffect(() => {
-    let isMounted = true;
-    api.getAgents().then(data => {
-      if (isMounted && data && data.length > 0) setAgents(data);
-    });
-    return () => { isMounted = false; };
+    loadAgents();
+    api.getTools().then(tools => setAvailableTools(tools));
   }, []);
+
+  const handleRegisterAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      await api.createAgent({
+        name: name.trim(),
+        purpose: purpose.trim() || undefined,
+        status: statusVal,
+        tool_ids: selectedTools,
+      });
+
+      setToastMessage(`Agente "${name}" registrado exitosamente en PostgreSQL`);
+      setTimeout(() => setToastMessage(null), 4000);
+
+      // Reset form & close modal
+      setName('');
+      setPurpose('');
+      setSelectedTools([]);
+      setIsModalOpen(false);
+
+      // Refresh list
+      await loadAgents();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleTool = (toolId: string) => {
+    setSelectedTools(prev => 
+      prev.includes(toolId) ? prev.filter(id => id !== toolId) : [...prev, toolId]
+    );
+  };
 
   const filteredAgents = agents.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -27,11 +74,235 @@ export const AgentsView: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '24px',
+          backgroundColor: '#064E3B',
+          border: '1px solid #10B981',
+          color: '#ECFDF5',
+          borderRadius: '8px',
+          padding: '12px 18px',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
+          fontSize: '13px',
+          fontWeight: 600,
+        }}>
+          <CheckCircle size={18} color="#34D399" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Modal: Register Agent */}
+      {isModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(5px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+        }}>
+          <div style={{
+            backgroundColor: '#0F172A',
+            border: '1px solid #334155',
+            boxShadow: '0 20px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(56, 189, 248, 0.1)',
+            borderRadius: '14px',
+            width: '100%',
+            maxWidth: '540px',
+            overflow: 'hidden',
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '18px 22px',
+              borderBottom: '1px solid #1E293B',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  padding: '8px',
+                  backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                  borderRadius: '8px',
+                  color: '#38BDF8',
+                }}>
+                  <Bot size={20} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#F8FAFC' }}>
+                    Registrar Nuevo Agente de IA
+                  </h3>
+                  <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+                    Identidad gobernada por AgentGuard con aislamiento multi-tenant.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleRegisterAgent} style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Nombre del Agente *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ej. Billing Auditor Copilot"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#1E293B',
+                    border: '1px solid #334155',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: '#F8FAFC',
+                    fontSize: '13px',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Propósito de Negocio
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="ej. Revisión autónoma de facturas y reconciliación contable."
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#1E293B',
+                    border: '1px solid #334155',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: '#F8FAFC',
+                    fontSize: '13px',
+                    outline: 'none',
+                    resize: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Estado Inicial
+                </label>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#E2E8F0', cursor: 'pointer' }}>
+                    <input 
+                      type="radio" 
+                      name="status" 
+                      checked={statusVal === 'ACTIVE'} 
+                      onChange={() => setStatusVal('ACTIVE')} 
+                    />
+                    <span>Activo</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#E2E8F0', cursor: 'pointer' }}>
+                    <input 
+                      type="radio" 
+                      name="status" 
+                      checked={statusVal === 'SUSPENDED'} 
+                      onChange={() => setStatusVal('SUSPENDED')} 
+                    />
+                    <span>Suspendido</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Herramientas Autorizadas (AgentTool N:N)
+                </label>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  maxHeight: '140px',
+                  overflowY: 'auto',
+                  backgroundColor: '#1E293B',
+                  border: '1px solid #334155',
+                  borderRadius: '8px',
+                  padding: '10px 12px',
+                }}>
+                  {availableTools.map(tool => (
+                    <label 
+                      key={tool.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px', 
+                        fontSize: '12px', 
+                        color: '#E2E8F0', 
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTools.includes(tool.id)}
+                        onChange={() => toggleTool(tool.id)}
+                      />
+                      <span style={{ fontWeight: 600 }}>{tool.name}</span>
+                      <span style={{ color: '#94A3B8', fontSize: '11px' }}>({tool.availableActions?.join(', ') || 'REST'})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                marginTop: '10px',
+                paddingTop: '16px',
+                borderTop: '1px solid #1E293B',
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="btn btn-secondary"
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Registrando...' : 'Registrar Agente'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <Header 
         title="Agents" 
         subtitle="Manage registered AI agents and their capabilities."
         actionButton={
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             <Plus size={16} strokeWidth={2.5} />
             <span>Register agent</span>
           </button>

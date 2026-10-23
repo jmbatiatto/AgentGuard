@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/AgentsView.tsx": {
-    "mtime": 1792689098.0446432,
-    "seen": 1792689248.3445964,
-    "ast_hash": "4c8d4a68deeaa42ce57c5e0206e7810c",
+    "mtime": 1792758019.017058,
+    "seen": 1792758774.1152897,
+    "ast_hash": "8a37d1d148d4fef52db0f95f7a3536eb",
     "semantic_hash": ""
   },
   "frontend/src/views/ApprovalsView.tsx": {
@@ -492,15 +492,15 @@
     "semantic_hash": ""
   },
   "frontend/src/views/PoliciesView.tsx": {
-    "mtime": 1792689098.0506513,
-    "seen": 1792689248.3445964,
-    "ast_hash": "8756bd567fc3528896c226d53dafe14c",
+    "mtime": 1792758655.3964968,
+    "seen": 1792758774.1152897,
+    "ast_hash": "4d1cdc6b476b8abbc695c249fd05eac1",
     "semantic_hash": ""
   },
   "frontend/src/views/ToolsView.tsx": {
-    "mtime": 1792689098.048644,
-    "seen": 1792689248.3445964,
-    "ast_hash": "cee34d4e860180af1117b7ee10c5bdf0",
+    "mtime": 1792758612.9512722,
+    "seen": 1792758774.1152897,
+    "ast_hash": "d1b2f3ce119f8f45ee5dc6809b4afe83",
     "semantic_hash": ""
   },
   "frontend/src/views/TracesView.tsx": {
@@ -792,9 +792,9 @@
     "semantic_hash": ""
   },
   "frontend/src/services/api.ts": {
-    "mtime": 1792756396.3865705,
-    "seen": 1792757213.7840793,
-    "ast_hash": "22c7ba65e34c8f497422ceeba4a9e4f3",
+    "mtime": 1792757915.641579,
+    "seen": 1792758774.1152897,
+    "ast_hash": "654d340ece15209a23a9a9342ff18858",
     "semantic_hash": ""
   },
   "frontend/src/services/useAgentGuardWebSocket.ts": {
