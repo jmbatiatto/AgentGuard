@@ -480,9 +480,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/OverviewView.tsx": {
-    "mtime": 1792723388.3188531,
-    "seen": 1792723735.8116477,
-    "ast_hash": "6d414cf9ba2317905791403998183cc0",
+    "mtime": 1792771925.5177479,
+    "seen": 1792772028.5846522,
+    "ast_hash": "4efff68f3f000470dc5ab8229b82e375",
     "semantic_hash": ""
   },
   "frontend/src/views/PlaygroundView.tsx": {
@@ -600,9 +600,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1792766459.4443312,
-    "seen": 1792770798.1605859,
-    "ast_hash": "4ac01fdaa5d18388f29b60031dc8f94f",
+    "mtime": 1792771569.9014363,
+    "seen": 1792772028.5846522,
+    "ast_hash": "208e45863786684f4599e396e1a37e61",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -855,12 +855,6 @@
     "mtime": 1792769616.5592902,
     "seen": 1792770798.1605859,
     "ast_hash": "456d1dcfcc160aa1b6d4434b98699080",
-    "semantic_hash": ""
-  },
-  "backend/uvicorn_log.txt": {
-    "mtime": 1792770708.8481855,
-    "seen": 1792770798.1605859,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   }
 }

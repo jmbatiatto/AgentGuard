@@ -1,17 +1,17 @@
 # Graph Report - AgentGuard  (2026-10-23)
 
 ## Corpus Check
-- 131 files · ~88,130 words
+- 131 files · ~89,002 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 19 file(s) not represented in the graph (top: .drawio 6, .bat 5, (none) 2)
 
 ## Summary
-- 1321 nodes · 3368 edges · 82 communities (56 shown, 26 thin omitted)
+- 1321 nodes · 3370 edges · 82 communities (56 shown, 26 thin omitted)
 - Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 474 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `eb8729b8`
+- Built from commit: `db251060`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -348,15 +348,15 @@ Nodes (12): 🛡️ AgentGuard — Runtime Authorization & Governance for AI Age
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `🛡️ Reglas de Proyecto: AgentGuard — Runtime Authorization & Governance for AI Agents` connect `env.py` to `README.md`?**
-  _High betweenness centrality (0.178) - this node is a cross-community bridge._
+  _High betweenness centrality (0.177) - this node is a cross-community bridge._
 - **Are the 24 inferred relationships involving `Tool` (e.g. with `PEPGatewayService` and `ToolService`) actually correct?**
   _`Tool` has 24 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `@types/node`, `@types/react`, `@types/react-dom` to the rest of the system?**
   _5 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.056105610561056105 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.056493884682585906 - nodes in this community are weakly interconnected._
 - **Why does `4. Reglas Innegociables de Seguridad y Dominio (AgentGuard Core)` connect `env.py` to `enums.py`, `Execution`?**
-  _High betweenness centrality (0.148) - this node is a cross-community bridge._
+  _High betweenness centrality (0.147) - this node is a cross-community bridge._
 - **Are the 28 inferred relationships involving `ToolAction` (e.g. with `4. Las 7 Correcciones y Mejoras de la Versión 2.0` and `4. Reglas Innegociables de Seguridad y Dominio (AgentGuard Core)`) actually correct?**
   _`ToolAction` has 28 INFERRED edges - model-reasoned connections that need verification._
 - **Should `test_schemas.py` be split into smaller, more focused modules?**
