@@ -132,3 +132,44 @@ async def test_pdp_evaluate_require_approval():
 
     assert verdict.decision == PolicyDecision.REQUIRE_APPROVAL
     assert verdict.evaluated_policy_rule_id == rule_id
+
+
+@pytest.mark.asyncio
+async def test_pdp_evaluate_priority_tie_deny_wins():
+    """Valida principio Fail-Closed: ante empate de prioridad entre ALLOW y DENY, DENY siempre gana."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    agent_id = uuid.uuid4()
+    action_id = uuid.uuid4()
+    deny_rule_id = uuid.uuid4()
+    allow_rule_id = uuid.uuid4()
+
+    deny_rule = PolicyRule(
+        id=deny_rule_id,
+        priority=100,
+        effect=RuleEffect.DENY,
+        conditions={"amount": {"gt": 500}},
+    )
+    allow_rule = PolicyRule(
+        id=allow_rule_id,
+        priority=100,
+        effect=RuleEffect.ALLOW,
+        conditions={"amount": {"gt": 500}},
+    )
+
+    # El order_by de SQLAlchemy ubica la regla DENY primera ante empate de prioridad
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [deny_rule, allow_rule]
+    mock_db.execute.return_value = mock_result
+
+    verdict = await pdp_engine.evaluate(
+        db=mock_db,
+        organization_id=org_id,
+        agent_id=agent_id,
+        tool_action_id=action_id,
+        parameters={"amount": 1000},
+    )
+
+    assert verdict.decision == PolicyDecision.DENY
+    assert verdict.evaluated_policy_rule_id == deny_rule_id
+

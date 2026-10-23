@@ -28,6 +28,7 @@ from app.models.enums import (
     ExecutionStatus,
     PolicyDecision,
     RiskLevel,
+    UserRole,
 )
 from app.models.execution import Execution
 from app.models.tool import Tool, ToolAction
@@ -109,20 +110,6 @@ class PEPGatewayService:
         agent = agent_res.scalar_one_or_none()
 
         if not agent:
-            # Registrar traza de agente no encontrado
-            execution = Execution(
-                id=execution_id,
-                organization_id=request.organization_id,
-                agent_id=request.agent_id,
-                delegator_user_id=request.delegator_user_id,
-                tool_id=request.tool_id,
-                tool_action_id=uuid.uuid4(),  # ID sintético para traza
-                resource=request.resource,
-                request_context=sanitized_params,
-                decision=PolicyDecision.DENY,
-                status=ExecutionStatus.REJECTED,
-                timestamp=now,
-            )
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -249,6 +236,7 @@ class PEPGatewayService:
         result_data: Optional[Dict[str, Any]] = None
         exec_status: ExecutionStatus
         alert: Optional[Alert] = None
+        approval: Optional[Approval] = None
         security_telemetry: Dict[str, Any]
         final_decision: PolicyDecision
         evaluated_rule_id: Optional[UUID] = pdp_result.evaluated_policy_rule_id
@@ -282,7 +270,6 @@ class PEPGatewayService:
                 status=AlertStatus.OPEN,
                 created_at=now,
             )
-            db.add(alert)
 
             security_telemetry = {
                 "is_threat": True,
@@ -320,7 +307,6 @@ class PEPGatewayService:
                         status=ApprovalStatus.PENDING,
                         created_at=now,
                     )
-                    db.add(approval)
 
                 case PolicyDecision.DENY | _:
                     exec_status = ExecutionStatus.REJECTED
@@ -336,9 +322,8 @@ class PEPGatewayService:
                             status=AlertStatus.OPEN,
                             created_at=now,
                         )
-                        db.add(alert)
 
-        # 7. Persistir Traza Forense Inmutable en Execution
+        # 7. Persistir Traza Forense Inmutable en Execution (Orden FK estricto: Execution antes que hijos)
         execution = Execution(
             id=execution_id,
             organization_id=request.organization_id,
@@ -354,6 +339,15 @@ class PEPGatewayService:
             timestamp=now,
         )
         db.add(execution)
+
+        if alert:
+            alert.execution = execution
+            db.add(alert)
+
+        if approval:
+            approval.execution = execution
+            db.add(approval)
+
         await db.commit()
 
         # Emitir notificaciones en tiempo real vía WebSocket
@@ -441,10 +435,13 @@ class PEPGatewayService:
         decision: ApprovalStatus,
         resolution_reason: str,
     ) -> Optional[Approval]:
-        """Resuelve un ticket de aprobación humana, actualizando el estado de la ejecución."""
+        """Resuelve un ticket de aprobación humana, validando rol APPROVER/ADMIN, TTL de 15 min y reanudando despacho."""
         stmt = (
             select(Approval)
-            .options(selectinload(Approval.execution))
+            .options(
+                selectinload(Approval.execution).selectinload(Execution.tool),
+                selectinload(Approval.execution).selectinload(Execution.tool_action),
+            )
             .where(Approval.id == approval_id)
         )
         result = await db.execute(stmt)
@@ -453,16 +450,52 @@ class PEPGatewayService:
         if not approval or approval.status != ApprovalStatus.PENDING:
             return None
 
-        # Actualizar aprobación
+        # 1. Validar rol del usuario aprobador (Regla 6 AGENTS.md: APPROVER o ADMIN)
+        if approver_user_id:
+            approver_res = await db.execute(select(User).where(User.id == approver_user_id))
+            approver = approver_res.scalar_one_or_none()
+            if approver and approver.role not in (UserRole.APPROVER, UserRole.ADMIN):
+                logger.warning(
+                    "Usuario %s (rol %s) no tiene privilegios de APPROVER o ADMIN para resolver aprobaciones.",
+                    approver_user_id, approver.role
+                )
+                return None
+
+        # 2. Verificar TTL / Expiración de 15 minutos (Fail-Closed)
+        now = datetime.now(timezone.utc)
+        created_at = approval.created_at
+        if created_at:
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+            if (now - created_at).total_seconds() > 900:  # 15 minutos
+                approval.status = ApprovalStatus.EXPIRED
+                approval.resolution_reason = "Expirado por timeout de seguridad (TTL de 15 minutos superado sin intervención)"
+                if approval.execution:
+                    approval.execution.status = ExecutionStatus.REJECTED
+                await db.commit()
+                await db.refresh(approval)
+                return approval
+
+        # 3. Actualizar aprobación
         approval.assigned_approver_id = approver_user_id
         approval.status = decision
         approval.resolution_reason = resolution_reason
-        approval.resolved_at = datetime.now(timezone.utc)
+        approval.resolved_at = now
 
-        # Actualizar estado de la traza de ejecución
+        # 4. Actualizar estado de la traza de ejecución y reanudar herramienta si APPROVED
         if approval.execution:
             if decision == ApprovalStatus.APPROVED:
                 approval.execution.status = ExecutionStatus.EXECUTED
+                # Reanudar llamada hacia la herramienta externa (Escenario 3)
+                if approval.execution.tool and approval.execution.tool_action:
+                    try:
+                        await cls._dispatch_to_tool(
+                            tool=approval.execution.tool,
+                            action_name=approval.execution.tool_action.action_name,
+                            parameters=approval.execution.request_context or {},
+                        )
+                    except Exception as exc:
+                        logger.warning("Fallo al re-despachar a herramienta tras aprobación: %s", exc)
             else:
                 approval.execution.status = ExecutionStatus.REJECTED
 

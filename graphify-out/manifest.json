@@ -258,22 +258,22 @@
     "semantic_hash": "96a793210f7c58e81194e630ee63d55e"
   },
   "backend/app/services/pdp_engine.py": {
-    "mtime": 1792703402.14419,
-    "seen": 1792704600.693966,
-    "ast_hash": "c07400c9b7133daf20f64405c288775b",
+    "mtime": 1792788615.1917448,
+    "seen": 1792789337.368107,
+    "ast_hash": "8c83e3abc666c1998ea1cdeadba13dcb",
     "semantic_hash": ""
   },
   "backend/app/services/pep_gateway_service.py": {
-    "mtime": 1792780673.601465,
-    "seen": 1792782689.533195,
-    "ast_hash": "4d07a39341d5dd0a32daca4b231952f4",
+    "mtime": 1792789083.2958615,
+    "seen": 1792789337.368107,
+    "ast_hash": "8a48604d9a93fc45c5e0ef75f1869f77",
     "semantic_hash": ""
   },
   "backend/app/services/policy_rule_service.py": {
-    "mtime": 1792363183.3136504,
-    "seen": 1792679930.2839012,
-    "ast_hash": "29844ab1588af4a21ffff33756a079db",
-    "semantic_hash": "29844ab1588af4a21ffff33756a079db"
+    "mtime": 1792789110.0058641,
+    "seen": 1792789337.368107,
+    "ast_hash": "b7b922a992ca7d79792ba171ce60c57d",
+    "semantic_hash": ""
   },
   "backend/app/services/policy_service.py": {
     "mtime": 1792761973.0644472,
@@ -348,10 +348,10 @@
     "semantic_hash": "53fe21eddba1d6252beefbf4eb862de3"
   },
   "backend/tests/test_pdp_engine.py": {
-    "mtime": 1792443582.0259645,
-    "seen": 1792679930.2839012,
-    "ast_hash": "f414eb793307f9cc75ac0d865965fe81",
-    "semantic_hash": "f414eb793307f9cc75ac0d865965fe81"
+    "mtime": 1792789169.3842783,
+    "seen": 1792789337.368107,
+    "ast_hash": "bb362a944b51d72e5599d7725963ae80",
+    "semantic_hash": ""
   },
   "backend/tests/test_pep_gateway_service.py": {
     "mtime": 1792444966.9554207,
@@ -648,9 +648,9 @@
     "semantic_hash": ""
   },
   "agentguard_estados_ciclo_vida.md": {
-    "mtime": 1791481579.8484688,
-    "seen": 1792682881.678428,
-    "ast_hash": "d3fa08c0c2a2c8e671ea16e7e0c64adb",
+    "mtime": 1792788970.9081056,
+    "seen": 1792789337.368107,
+    "ast_hash": "059ffa3ec0788f701778c83f04c33344",
     "semantic_hash": ""
   },
   "agentguard_mer_relacional.md": {

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import PolicyDecision, RuleEffect
@@ -214,6 +214,11 @@ class PDPEngine:
                 (PolicyRule.target_agent_id.isnot(None)).desc(),  # Reglas específicas del agente primero
                 Policy.priority.desc(),
                 PolicyRule.priority.desc(),
+                case(
+                    (PolicyRule.effect == RuleEffect.DENY, 1),
+                    (PolicyRule.effect == RuleEffect.REQUIRE_APPROVAL, 2),
+                    else_=3,
+                ).asc(),  # Fail-Closed: ante empate de prioridad, DENY precede a REQUIRE_APPROVAL y ALLOW
                 PolicyRule.created_at.desc(),
             )
         )

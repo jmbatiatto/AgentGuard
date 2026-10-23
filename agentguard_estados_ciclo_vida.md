@@ -98,7 +98,7 @@ Durante la defensa, es vital explicar cómo el backend resuelve los problemas de
 1. **Bloqueo Optimista / Atómico en Base de Datos:** Cuando dos operadores intentan aprobar la misma solicitud al mismo tiempo, la actualización SQL se realiza mediante una cláusula atómica:
    ```sql
    UPDATE approvals 
-   SET status = 'APPROVED', resolved_by_user_id = :userId, resolved_at = NOW() 
+   SET status = 'APPROVED', assigned_approver_id = :userId, resolved_at = NOW() 
    WHERE id = :approvalId AND status = 'PENDING';
    ```
    Si la fila ya no está en `PENDING`, la segunda transacción no afecta registros y recibe un error amigable, impidiendo doble ejecución.
@@ -109,7 +109,7 @@ Durante la defensa, es vital explicar cómo el backend resuelve los problemas de
 ## 5. Preguntas Difíciles del Profesor y Respuestas Sugeridas
 
 ### ❓ P1: *"¿Cómo hace el Gateway para mantener al agente esperando mientras el humano aprueba en la web sin agotar las conexiones del servidor?"*
-> **Respuesta:** «En Node.js o arquitecturas asíncronas modernas, las conexiones son no bloqueantes basadas en el *Event Loop*. Cuando una llamada entra en `PENDING_APPROVAL`, no se congela un hilo del sistema operativo; se deja una promesa (*Promise*) o suscripción a un canal Redis Pub/Sub a la espera del evento de resolución. Cuando el operador hace click en el frontend, la API publica el evento en Redis y el Gateway despacha la respuesta inmediatamente, consumiendo un mínimo de memoria».
+> **Respuesta:** «En Python con FastAPI y el servidor ASGI Uvicorn (ADR-001: arquitectura asíncrona basada en el *Event Loop* de `asyncio`), las conexiones son completamente no bloqueantes. Cuando una llamada entra en `PENDING_APPROVAL`, no se bloquea un hilo del sistema operativo; la corutina suspende su flujo cediendo el control al Event Loop y emite un broadcast reactivo por WebSockets a la bandeja de aprobaciones del frontend. Cuando el operador humano con rol `APPROVER` hace click en Aprobar, el Gateway reanuda la ejecución y despacha la respuesta inmediatamente, consumiendo un mínimo de recursos de CPU y memoria».
 
 ### ❓ P2: *"¿Por qué consideraron el estado `EXPIRED` en lugar de dejar que la aprobación espere indefinidamente?"*
 > **Respuesta:** «Por el principio de seguridad **Fail-Closed**. Un agente no puede esperar eternamente porque los modelos y los clientes HTTP tienen tiempos límite de desconexión (*socket timeouts*). Si nadie aprueba una transferencia de dinero en 15 minutos, asumir el silencio como rechazo seguro evita que se ejecuten transacciones fuera de contexto horas más tarde».
