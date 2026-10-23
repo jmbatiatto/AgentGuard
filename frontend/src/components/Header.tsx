@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Sun, Moon, Check, Shield, Lock, RotateCcw, AlertCircle } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Check, Shield, Lock, RotateCcw } from 'lucide-react';
 import { useTheme } from '../context/useTheme';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { ResetDemoModal } from './ResetDemoModal';
 
 interface HeaderProps {
   title: string;
@@ -14,33 +14,8 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
   const { theme, toggleTheme } = useTheme();
   const { currentUser, switchUser, availableUsers } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [resetFeedback, setResetFeedback] = useState<string | null>(null);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const handleResetDemo = async () => {
-    if (!window.confirm('¿Deseas reiniciar la base de datos de PostgreSQL al estado inicial de la demo académica? Se restablecerán las 4 herramientas, 3 agentes de IA y políticas base de Acme Corp.')) {
-      return;
-    }
-    setIsResetting(true);
-    try {
-      const res = await api.resetDemoData();
-      if (res.success) {
-        setResetFeedback('¡Entorno demo restablecido con éxito! Actualizando...');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1200);
-      } else {
-        setResetFeedback(`Error: ${res.message}`);
-        setTimeout(() => setResetFeedback(null), 4000);
-      }
-    } catch {
-      setResetFeedback('Fallo de red al invocar el endpoint de reset');
-      setTimeout(() => setResetFeedback(null), 4000);
-    } finally {
-      setIsResetting(false);
-    }
-  };
 
   // Close dropdown on outside click or Escape key
   useEffect(() => {
@@ -103,8 +78,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
         {/* Reset Demo Button */}
         <button
           id="btn-header-reset-demo"
-          onClick={handleResetDemo}
-          disabled={isResetting}
+          onClick={() => setIsResetModalOpen(true)}
           title="Restablecer base de datos PostgreSQL y políticas al estado inicial de la demo (Factory Reset)"
           aria-label="Restablecer entorno demo"
           style={{
@@ -119,16 +93,13 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             color: 'var(--text-secondary)',
             fontSize: '12px',
             fontWeight: 500,
-            cursor: isResetting ? 'not-allowed' : 'pointer',
-            opacity: isResetting ? 0.6 : 1,
+            cursor: 'pointer',
             transition: 'all 0.15s ease',
           }}
           onMouseEnter={(e) => {
-            if (!isResetting) {
-              e.currentTarget.style.borderColor = '#F59E0B';
-              e.currentTarget.style.color = '#F59E0B';
-              e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
-            }
+            e.currentTarget.style.borderColor = '#F59E0B';
+            e.currentTarget.style.color = '#F59E0B';
+            e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.borderColor = 'var(--border-subtle)';
@@ -136,8 +107,8 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             e.currentTarget.style.backgroundColor = 'var(--bg-card)';
           }}
         >
-          <RotateCcw size={14} className={isResetting ? 'animate-spin' : ''} style={{ color: '#F59E0B' }} />
-          <span>{isResetting ? 'Re-sembrando...' : 'Reset Demo'}</span>
+          <RotateCcw size={14} style={{ color: '#F59E0B' }} />
+          <span>Reset Demo</span>
         </button>
 
         {/* Theme Toggle Button */}
@@ -390,9 +361,8 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
                   id="btn-dropdown-reset-demo"
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    handleResetDemo();
+                    setIsResetModalOpen(true);
                   }}
-                  disabled={isResetting}
                   style={{
                     width: '100%',
                     display: 'flex',
@@ -406,20 +376,18 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
                     color: '#F59E0B',
                     fontSize: '11px',
                     fontWeight: 600,
-                    cursor: isResetting ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
-                    if (!isResetting) {
-                      e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.16)';
-                    }
+                    e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.16)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.08)';
                   }}
                 >
-                  <RotateCcw size={13} className={isResetting ? 'animate-spin' : ''} />
-                  <span>{isResetting ? 'Restableciendo base de datos...' : 'Reiniciar Estado Demo (Factory Reset)'}</span>
+                  <RotateCcw size={13} />
+                  <span>Reiniciar Estado Demo (Factory Reset)</span>
                 </button>
               </div>
 
@@ -441,29 +409,11 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
         </div>
       </div>
 
-      {/* Floating feedback toast */}
-      {resetFeedback && (
-        <div style={{
-          position: 'fixed',
-          top: '16px',
-          right: '24px',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '10px 16px',
-          borderRadius: '8px',
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid #F59E0B',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-          color: '#FBBF24',
-          fontSize: '13px',
-          fontWeight: 600,
-        }}>
-          <AlertCircle size={16} color="#F59E0B" />
-          <span>{resetFeedback}</span>
-        </div>
-      )}
+      {/* In-App Confirmation & Reset Modal */}
+      <ResetDemoModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+      />
     </header>
   );
 };

@@ -420,9 +420,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Header.tsx": {
-    "mtime": 1792774838.2483304,
-    "seen": 1792776190.641839,
-    "ast_hash": "2f0550fc53032f23083dc853e651702c",
+    "mtime": 1792777420.6885152,
+    "seen": 1792778938.4352934,
+    "ast_hash": "7408e30dd579e5802bf7fd82890bbb7b",
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.tsx": {
@@ -852,9 +852,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/SettingsView.tsx": {
-    "mtime": 1792774773.6929255,
-    "seen": 1792776190.641839,
-    "ast_hash": "283068cf3f8cd89fc9e04ee9d863411e",
+    "mtime": 1792777689.8140912,
+    "seen": 1792778938.4352934,
+    "ast_hash": "e77fb36c39bf2a80babc3dc8aacb05a1",
     "semantic_hash": ""
   },
   "frontend/src/context/AuthContext.tsx": {
@@ -867,6 +867,12 @@
     "mtime": 1792773824.1983876,
     "seen": 1792776190.641839,
     "ast_hash": "a4fa288ff392cb4ccb9a87e89967fa8a",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/ResetDemoModal.tsx": {
+    "mtime": 1792777275.3170316,
+    "seen": 1792778938.4352934,
+    "ast_hash": "001f31318ddfc04c7a9ef624df9b36fb",
     "semantic_hash": ""
   }
 }

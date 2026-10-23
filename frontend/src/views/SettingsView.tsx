@@ -22,6 +22,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { Header } from '../components/Header';
+import { ResetDemoModal } from '../components/ResetDemoModal';
 
 export const SettingsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'general' | 'apikeys' | 'team' | 'security' | 'siem'>('general');
@@ -47,29 +48,7 @@ export const SettingsView: React.FC = () => {
     setTimeout(() => setCopiedTenantId(false), 2000);
   };
 
-  const [isResettingDemo, setIsResettingDemo] = useState(false);
-
-  const handleFactoryResetDemo = async () => {
-    if (!window.confirm('¿Confirmas el restablecimiento de la base de datos de PostgreSQL 16 al estado inicial de la demo académica? Se re-sembrarán los agentes, herramientas y políticas base de Acme Corp.')) {
-      return;
-    }
-    setIsResettingDemo(true);
-    try {
-      const res = await api.resetDemoData();
-      if (res.success) {
-        showToast('¡Base de datos demo restablecida con éxito! Actualizando...', 'success');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1200);
-      } else {
-        showToast(`Error al restablecer: ${res.message}`, 'error');
-      }
-    } catch {
-      showToast('Error de red al conectar con el endpoint de reset demo', 'error');
-    } finally {
-      setIsResettingDemo(false);
-    }
-  };
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   // -------------------------------------------------------------
   // TAB 2: Gateway API Keys (PEP)
@@ -590,35 +569,31 @@ export const SettingsView: React.FC = () => {
 
               <button
                 id="btn-settings-factory-reset"
-                onClick={handleFactoryResetDemo}
-                disabled={isResettingDemo}
+                onClick={() => setIsResetModalOpen(true)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
                   padding: '10px 18px',
-                  backgroundColor: isResettingDemo ? 'var(--bg-card-hover)' : 'rgba(245, 158, 11, 0.12)',
+                  backgroundColor: 'rgba(245, 158, 11, 0.12)',
                   border: '1px solid #F59E0B',
                   borderRadius: '8px',
                   color: '#F59E0B',
                   fontWeight: 600,
                   fontSize: '13px',
-                  cursor: isResettingDemo ? 'not-allowed' : 'pointer',
-                  opacity: isResettingDemo ? 0.7 : 1,
+                  cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   flexShrink: 0,
                 }}
                 onMouseEnter={(e) => {
-                  if (!isResettingDemo) {
-                    e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.22)';
-                  }
+                  e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.22)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = isResettingDemo ? 'var(--bg-card-hover)' : 'rgba(245, 158, 11, 0.12)';
+                  e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.12)';
                 }}
               >
-                <RotateCcw size={15} className={isResettingDemo ? 'animate-spin' : ''} />
-                <span>{isResettingDemo ? 'Restableciendo base de datos...' : 'Re-sembrar Estado Demo'}</span>
+                <RotateCcw size={15} />
+                <span>Re-sembrar Estado Demo</span>
               </button>
             </div>
           </div>
@@ -1622,6 +1597,12 @@ def execute_guarded_tool(action_name: str, **kwargs):
           </div>
         </div>
       )}
+
+      {/* In-App Factory Reset Modal */}
+      <ResetDemoModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+      />
     </div>
   );
 };
