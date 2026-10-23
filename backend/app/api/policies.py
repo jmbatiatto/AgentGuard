@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.policy import PolicyCreate, PolicyRead
+from app.schemas.policy import PolicyCreate, PolicyRead, PolicyUpdate
 from app.services.organization_service import organization_service
 from app.services.policy_service import policy_service
 
@@ -88,3 +88,45 @@ async def get_policy(
             detail=f"Política con ID {policy_id} no encontrada",
         )
     return policy
+
+
+@router.patch(
+    "/{policy_id}",
+    response_model=PolicyRead,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar Política",
+    description="Actualiza propiedades de una política (is_active, prioridad, nombre, descripción).",
+)
+async def update_policy(
+    policy_id: UUID,
+    policy_in: PolicyUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> PolicyRead:
+    """Actualiza una política existente o retorna 404 si no existe."""
+    updated = await policy_service.update(db=db, policy_id=policy_id, policy_in=policy_in)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Política con ID {policy_id} no encontrada",
+        )
+    return updated
+
+
+@router.delete(
+    "/{policy_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar Política",
+    description="Elimina una política y sus reglas hijas del catálogo.",
+)
+async def delete_policy(
+    policy_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Elimina una política existente."""
+    deleted = await policy_service.delete(db=db, policy_id=policy_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Política con ID {policy_id} no encontrada",
+        )
+

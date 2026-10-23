@@ -48,6 +48,14 @@ class Tool(Base):
     agent_tools: Mapped[List["AgentTool"]] = relationship("AgentTool", back_populates="tool", cascade="all, delete-orphan")
     executions: Mapped[List["Execution"]] = relationship("Execution", back_populates="tool")
 
+    @property
+    def assigned_agents(self) -> List[str]:
+        """Lista los nombres de agentes autorizados a invocar esta herramienta."""
+        if not self.agent_tools:
+            return []
+        return [at.agent.name for at in self.agent_tools if at.agent]
+
+
 
 class ToolAction(Base):
     """Acción atómica expuesta por una herramienta con nivel de riesgo tipificado."""

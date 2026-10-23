@@ -6,9 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.tool import ToolCreate, ToolRead
+from app.schemas.tool import ToolCreate, ToolRead, ToolUpdate
 from app.services.organization_service import organization_service
 from app.services.tool_service import tool_service
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(prefix="/tools", tags=["Tools"])
 
@@ -88,3 +89,52 @@ async def get_tool(
             detail=f"Herramienta con ID {tool_id} no encontrada",
         )
     return tool
+
+
+@router.patch(
+    "/{tool_id}",
+    response_model=ToolRead,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar Herramienta",
+    description="Actualiza propiedades de una herramienta externa (nombre, protocolo, endpoint_url, descripción).",
+)
+async def update_tool(
+    tool_id: UUID,
+    tool_in: ToolUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> ToolRead:
+    """Actualiza una herramienta existente o retorna 404 si no existe."""
+    updated = await tool_service.update(db=db, tool_id=tool_id, tool_in=tool_in)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Herramienta con ID {tool_id} no encontrada",
+        )
+    return updated
+
+
+@router.delete(
+    "/{tool_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar Herramienta",
+    description="Elimina una herramienta externa del catálogo si no tiene dependencias activas.",
+)
+async def delete_tool(
+    tool_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Elimina una herramienta existente."""
+    try:
+        deleted = await tool_service.delete(db=db, tool_id=tool_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Herramienta con ID {tool_id} no encontrada",
+            )
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No se puede eliminar la herramienta porque tiene políticas o ejecuciones históricas vinculadas.",
+        )
+

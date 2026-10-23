@@ -36,6 +36,25 @@ class AgentCreate(BaseSchema):
     )
 
 
+class AgentUpdate(BaseSchema):
+    """Payload para actualizar datos o estado de un agente de IA."""
+
+    name: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+        description="Nuevo nombre asignado al agente",
+    )
+    purpose: Optional[str] = Field(
+        default=None,
+        description="Nuevo propósito o función de negocio",
+    )
+    status: Optional[AgentStatus] = Field(
+        default=None,
+        description="Nuevo estado operativo del agente",
+    )
+
+
 class AgentRead(BaseSchema):
     """Respuesta con los detalles del agente de IA."""
 

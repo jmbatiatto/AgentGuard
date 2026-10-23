@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.agent import Agent, AgentTool
-from app.schemas.agent import AgentCreate, AgentToolCreate
+from app.schemas.agent import AgentCreate, AgentToolCreate, AgentUpdate
 
 
 class AgentService:
@@ -53,6 +53,33 @@ class AgentService:
 
         result = await db.execute(stmt)
         return list(result.scalars().all())
+
+    @staticmethod
+    async def update(db: AsyncSession, agent_id: UUID, agent_in: AgentUpdate) -> Optional[Agent]:
+        """Actualiza atributos o estado de un agente."""
+        agent = await AgentService.get_by_id(db=db, agent_id=agent_id)
+        if not agent:
+            return None
+        if agent_in.name is not None:
+            agent.name = agent_in.name
+        if agent_in.purpose is not None:
+            agent.purpose = agent_in.purpose
+        if agent_in.status is not None:
+            agent.status = agent_in.status
+        db.add(agent)
+        await db.commit()
+        await db.refresh(agent)
+        return agent
+
+    @staticmethod
+    async def delete(db: AsyncSession, agent_id: UUID) -> bool:
+        """Elimina un agente y sus asignaciones de herramientas."""
+        agent = await AgentService.get_by_id(db=db, agent_id=agent_id)
+        if not agent:
+            return False
+        await db.delete(agent)
+        await db.commit()
+        return True
 
     @staticmethod
     async def get_agent_tool(

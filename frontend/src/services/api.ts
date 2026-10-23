@@ -202,6 +202,37 @@ class AgentGuardApiClient {
   }
 
   /**
+   * Actualiza el estado operativo de un agente (ACTIVE <-> SUSPENDED)
+   */
+  async updateAgentStatus(agentId: string, status: 'Active' | 'Suspended' | 'Inactive'): Promise<boolean> {
+    const backendStatus = status === 'Active' ? 'ACTIVE' : status === 'Suspended' ? 'SUSPENDED' : 'INACTIVE';
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/agents/${agentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: backendStatus }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Elimina un agente de IA del tenant
+   */
+  async deleteAgent(agentId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/agents/${agentId}`, {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Obtiene la lista de herramientas (con fallback a mockTools)
    */
   async getTools(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Tool[]> {
@@ -212,15 +243,32 @@ class AgentGuardApiClient {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-          return data.map((t: any) => ({
-            id: t.id,
-            name: t.name,
-            description: t.description || 'Herramienta de integración externa',
-            availableActions: t.actions?.map((a: any) => a.action_name) || ['execute'],
-            assignedAgent: 'Todos los agentes autorizados',
-            status: (t.status === 'ACTIVE' ? 'Active' : 'Inactive') as any,
-            initials: t.name.substring(0, 2).toUpperCase(),
-          }));
+          return data.map((t: any) => {
+            const rawActions: Array<any> = t.actions || [];
+            const actionNames = rawActions.map((a: any) => a.action_name);
+            const assigned = (t.assigned_agents && t.assigned_agents.length > 0)
+              ? t.assigned_agents.join(', ')
+              : 'Todos los agentes autorizados';
+
+            return {
+              id: t.id,
+              name: t.name,
+              description: t.description || 'Herramienta de integración externa',
+              availableActions: actionNames.length > 0 ? actionNames : ['execute'],
+              assignedAgent: assigned,
+              status: (t.status === 'PAUSED' ? 'Paused' : t.status === 'INACTIVE' ? 'Inactive' : 'Active') as any,
+              initials: t.name.substring(0, 2).toUpperCase(),
+              protocol: t.protocol || 'REST',
+              endpoint_url: t.endpoint_url || '',
+              actionsList: rawActions.map((a: any) => ({
+                id: a.id,
+                action_name: a.action_name,
+                risk_level: a.risk_level,
+                description: a.description,
+              })),
+              created_at: t.created_at,
+            };
+          });
         }
       }
     } catch {
@@ -228,6 +276,49 @@ class AgentGuardApiClient {
     }
     return mockTools;
   }
+
+  /**
+   * Crea una nueva acción atómica vinculada a una herramienta en tiempo de ejecución
+   */
+  async createToolAction(payload: {
+    tool_id: string;
+    action_name: string;
+    risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    description?: string;
+  }): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/tool-actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { success: true, data };
+      }
+      const err = await res.json().catch(() => ({ detail: 'Error registrando acción' }));
+      return { success: false, error: err.detail || 'Error en registro' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de conexión' };
+    }
+  }
+
+  /**
+   * Elimina una herramienta del catálogo
+   */
+  async deleteTool(toolId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/tools/${toolId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) return { success: true };
+      const err = await res.json().catch(() => ({ detail: 'Error eliminando herramienta' }));
+      return { success: false, error: err.detail || 'No se pudo eliminar la herramienta' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de conexión' };
+    }
+  }
+
 
   /**
    * Da de alta una nueva herramienta externa y sus acciones atómicas
@@ -307,6 +398,9 @@ class AgentGuardApiClient {
   /**
    * Obtiene la lista de políticas (con fallback a mockPolicies)
    */
+  /**
+   * Obtiene la lista de políticas (con reglas desglosadas o fallback a mockPolicies)
+   */
   async getPolicies(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Policy[]> {
     try {
       const res = await fetch(`${this.baseUrl}/api/v1/policies?organization_id=${orgId}`, {
@@ -315,15 +409,52 @@ class AgentGuardApiClient {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-          return data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            agent: 'Global / Multi-agent',
-            action: p.rules?.[0]?.action_name || '*',
-            condition: p.rules?.[0]?.condition_expression || 'contextual',
-            decision: (p.rules?.[0]?.effect || 'ALLOW') as PolicyDecision,
-            status: p.is_active ? 'Active' : 'Inactive',
-          }));
+          const result: Policy[] = [];
+
+          for (const p of data) {
+            const rules: any[] = p.rules || [];
+            if (rules.length > 0) {
+              for (const r of rules) {
+                const condStr = r.conditions && Object.keys(r.conditions).length > 0
+                  ? JSON.stringify(r.conditions)
+                  : 'Sin restricciones';
+
+                result.push({
+                  id: r.id,
+                  policyId: p.id,
+                  name: p.name,
+                  description: p.description || 'Política de gobernanza AgentGuard',
+                  agent: r.agent_name || 'Global / Multi-agent',
+                  action: r.action_name || '*',
+                  condition: condStr,
+                  decision: (r.effect || 'ALLOW') as PolicyDecision,
+                  status: p.is_active ? 'Active' : 'Inactive',
+                  priority: r.priority || p.priority || 100,
+                  created_at: r.created_at || p.created_at,
+                  rules: [r],
+                  rawConditions: r.conditions || {},
+                });
+              }
+            } else {
+              result.push({
+                id: p.id,
+                policyId: p.id,
+                name: p.name,
+                description: p.description || 'Política de gobernanza AgentGuard',
+                agent: 'Global / Multi-agent',
+                action: 'Todas (*)',
+                condition: 'Base Policy',
+                decision: 'ALLOW',
+                status: p.is_active ? 'Active' : 'Inactive',
+                priority: p.priority || 100,
+                created_at: p.created_at,
+                rules: [],
+                rawConditions: {},
+              });
+            }
+          }
+
+          if (result.length > 0) return result;
         }
       }
     } catch {
@@ -331,6 +462,55 @@ class AgentGuardApiClient {
     }
     return mockPolicies;
   }
+
+  /**
+   * Actualiza el estado activo/inactivo de una política
+   */
+  async updatePolicyStatus(policyId: string, isActive: boolean): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/policies/${policyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: isActive }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Elimina una política y sus reglas asociadas
+   */
+  async deletePolicy(policyId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/policies/${policyId}`, {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Obtiene todas las acciones atómicas del tenant para cálculo de cobertura
+   */
+  async getToolActions(): Promise<any[]> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/tool-actions`, {
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) return data;
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  }
+
 
   /**
    * Da de alta una nueva Política y su regla determinista

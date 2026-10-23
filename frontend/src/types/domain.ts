@@ -26,6 +26,13 @@ export interface Agent {
   initials: string;
 }
 
+export interface ToolActionItem {
+  id: string;
+  action_name: string;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | string;
+  description?: string;
+}
+
 export interface Tool {
   id: string;
   name: string;
@@ -34,17 +41,44 @@ export interface Tool {
   assignedAgent: string;
   status: ToolStatus;
   initials: string;
+  protocol?: string;
+  endpoint_url?: string;
+  actionsList?: ToolActionItem[];
+  created_at?: string;
+}
+
+
+export interface PolicyRuleItem {
+  id: string;
+  policy_id: string;
+  priority: number;
+  effect: PolicyDecision;
+  tool_action_id: string;
+  target_agent_id?: string | null;
+  conditions: Record<string, any>;
+  action_name?: string | null;
+  tool_name?: string | null;
+  agent_name: string;
+  created_at: string;
 }
 
 export interface Policy {
   id: string;
+  policyId?: string;
   name: string;
+  description?: string;
+  priority?: number;
   agent: string;
   action: string;
   condition: string;
   decision: PolicyDecision;
   status: 'Active' | 'Inactive';
+  created_at?: string;
+  rules?: PolicyRuleItem[];
+  rawConditions?: Record<string, any>;
 }
+
+
 
 export interface ApprovalRequest {
   id: string;

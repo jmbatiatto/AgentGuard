@@ -54,3 +54,7 @@ class PolicyRuleRead(BaseSchema):
     target_agent_id: Optional[UUID] = None
     conditions: Dict[str, Any]
     created_at: datetime
+    action_name: Optional[str] = None
+    tool_name: Optional[str] = None
+    agent_name: str = "Global / Multi-agent"
+

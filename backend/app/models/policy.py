@@ -95,3 +95,19 @@ class PolicyRule(Base):
     tool_action: Mapped["ToolAction"] = relationship("ToolAction", back_populates="policy_rules")
     target_agent: Mapped[Optional["Agent"]] = relationship("Agent", back_populates="targeted_rules")
     executions: Mapped[List["Execution"]] = relationship("Execution", back_populates="evaluated_policy_rule")
+
+    @property
+    def action_name(self) -> Optional[str]:
+        """Nombre de la acción atómica evaluada."""
+        return self.tool_action.action_name if self.tool_action else None
+
+    @property
+    def tool_name(self) -> Optional[str]:
+        """Nombre de la herramienta padre."""
+        return self.tool_action.tool.name if self.tool_action and self.tool_action.tool else None
+
+    @property
+    def agent_name(self) -> str:
+        """Nombre del agente objetivo o indicación de regla global."""
+        return self.target_agent.name if self.target_agent else "Global / Multi-agent"
+

@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.schemas.agent import (
     AgentCreate,
     AgentRead,
+    AgentUpdate,
     AgentToolCreate,
     AgentToolRead,
 )
@@ -108,6 +109,47 @@ async def get_agent(
             detail=f"Agente con ID {agent_id} no encontrado",
         )
     return agent
+
+
+@router.patch(
+    "/{agent_id}",
+    response_model=AgentRead,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar Agente",
+    description="Actualiza nombre, propósito o estado operativo de un agente de IA.",
+)
+async def update_agent(
+    agent_id: UUID,
+    agent_in: AgentUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> AgentRead:
+    """Actualiza datos del agente o retorna 404 si no existe."""
+    agent = await agent_service.update(db=db, agent_id=agent_id, agent_in=agent_in)
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agente con ID {agent_id} no encontrado",
+        )
+    return agent
+
+
+@router.delete(
+    "/{agent_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar Agente",
+    description="Elimina una identidad de IA registrada y sus asignaciones de herramientas.",
+)
+async def delete_agent(
+    agent_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Elimina el agente de la base de datos."""
+    deleted = await agent_service.delete(db=db, agent_id=agent_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agente con ID {agent_id} no encontrado",
+        )
 
 
 @router.post(
