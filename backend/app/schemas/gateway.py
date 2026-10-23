@@ -112,12 +112,16 @@ class ExecutionRead(BaseSchema):
     id: UUID
     organization_id: UUID
     agent_id: UUID
+    agent_name: Optional[str] = None
     delegator_user_id: Optional[UUID] = None
     tool_id: UUID
+    tool_name: Optional[str] = None
     tool_action_id: UUID
+    action_name: Optional[str] = None
     resource: Optional[str] = None
     request_context: Dict[str, Any]
     decision: PolicyDecision
     status: ExecutionStatus
     evaluated_policy_rule_id: Optional[UUID] = None
     timestamp: datetime
+

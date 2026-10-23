@@ -95,4 +95,24 @@ class Execution(Base):
     tool_action: Mapped["ToolAction"] = relationship("ToolAction", back_populates="executions")
     evaluated_policy_rule: Mapped[Optional["PolicyRule"]] = relationship("PolicyRule", back_populates="executions")
     approval: Mapped[Optional["Approval"]] = relationship("Approval", back_populates="execution", uselist=False, cascade="all, delete-orphan")
+    # Nota de Arquitectura Forense: 'approval' posee cascade="all, delete-orphan", pero 'alert'
+    # no lo tiene intencionalmente, ya que los incidentes de seguridad constituyen evidencia SIEM inmutable
+    # con ciclo de vida independiente del registro de ejecución.
     alert: Mapped[Optional["Alert"]] = relationship("Alert", back_populates="execution", uselist=False)
+
+    # Propiedades calculadas para serialización en DTOs y lectura enriquecida
+    @property
+    def agent_name(self) -> Optional[str]:
+        """Nombre del agente ejecutor."""
+        return self.agent.name if self.agent else None
+
+    @property
+    def tool_name(self) -> Optional[str]:
+        """Nombre de la herramienta interceptada."""
+        return self.tool.name if self.tool else None
+
+    @property
+    def action_name(self) -> Optional[str]:
+        """Nombre de la acción atómica ejecutada."""
+        return self.tool_action.name if self.tool_action else None
+

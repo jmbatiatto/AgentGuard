@@ -7,6 +7,7 @@ persiste trazas forenses inmutables y enruta o bloquea llamadas.
 """
 
 import logging
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -86,6 +87,7 @@ class PEPGatewayService:
         request: GatewayExecuteRequest,
     ) -> GatewayExecuteResponse:
         """Flujo integral de intercepción, autorización y despacho de una llamada."""
+        start_time = time.perf_counter()
         execution_id = uuid.uuid4()
         now = datetime.now(timezone.utc)
 
@@ -308,7 +310,7 @@ class PEPGatewayService:
                         created_at=now,
                     )
 
-                case PolicyDecision.DENY | _:
+                case PolicyDecision.DENY:
                     exec_status = ExecutionStatus.REJECTED
                     # Si es riesgo crítico o detecta anomalía, disparar Alerta de Seguridad (Escenario 4)
                     if tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
@@ -319,6 +321,21 @@ class PEPGatewayService:
                             title=f"Alerta de Seguridad: Bloqueo en acción crítica '{request.action_name}'",
                             description=f"El agente {agent.name} intentó ejecutar '{request.action_name}' pero fue bloqueado por política. Razón: {pdp_result.reason}",
                             severity=AlertSeverity.CRITICAL if tool_action.risk_level == RiskLevel.CRITICAL else AlertSeverity.HIGH,
+                            status=AlertStatus.OPEN,
+                            created_at=now,
+                        )
+
+                case _:
+                    # Fail-Closed por defecto ante cualquier veredicto desconocido o no tipificado
+                    exec_status = ExecutionStatus.REJECTED
+                    if tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
+                        alert = Alert(
+                            id=uuid.uuid4(),
+                            organization_id=request.organization_id,
+                            execution_id=execution_id,
+                            title=f"Alerta de Seguridad: Bloqueo por veredicto desconocido en acción '{request.action_name}'",
+                            description=f"El agente {agent.name} intentó ejecutar '{request.action_name}' pero fue bloqueado por Fail-Closed estricto.",
+                            severity=AlertSeverity.HIGH,
                             status=AlertStatus.OPEN,
                             created_at=now,
                         )
@@ -386,6 +403,9 @@ class PEPGatewayService:
                 organization_id=request.organization_id,
             )
 
+        # Calcular latencia real de ejecución con alta precisión
+        latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+
         # Emitir traza forense de ejecución en tiempo real vía WebSocket
         await ws_manager.broadcast(
             event_type="NEW_EXECUTION",
@@ -404,7 +424,7 @@ class PEPGatewayService:
                 "status": exec_status.value,
                 "evaluated_policy_rule_id": str(evaluated_rule_id) if evaluated_rule_id else None,
                 "timestamp": now.isoformat(),
-                "latency_ms": 22.0,
+                "latency_ms": latency_ms,
             },
             organization_id=request.organization_id,
         )
@@ -527,11 +547,15 @@ class PEPGatewayService:
         skip: int = 0,
         limit: int = 50,
     ) -> List[Approval]:
-        """Lista solicitudes de aprobación ordenadas por fecha reciente con filtros."""
+        """Lista solicitudes de aprobación ordenadas por fecha reciente con filtros y relaciones cargadas."""
         stmt = (
             select(Approval)
             .join(Execution, Approval.execution_id == Execution.id)
-            .options(selectinload(Approval.execution))
+            .options(
+                selectinload(Approval.execution).selectinload(Execution.agent),
+                selectinload(Approval.execution).selectinload(Execution.tool),
+                selectinload(Approval.execution).selectinload(Execution.tool_action),
+            )
             .order_by(Approval.created_at.desc())
             .offset(skip)
             .limit(limit)
@@ -550,10 +574,14 @@ class PEPGatewayService:
         db: AsyncSession,
         approval_id: UUID,
     ) -> Optional[Approval]:
-        """Obtiene un ticket de aprobación con su ejecución asociada."""
+        """Obtiene un ticket de aprobación con su ejecución asociada y entidades relacionadas."""
         stmt = (
             select(Approval)
-            .options(selectinload(Approval.execution))
+            .options(
+                selectinload(Approval.execution).selectinload(Execution.agent),
+                selectinload(Approval.execution).selectinload(Execution.tool),
+                selectinload(Approval.execution).selectinload(Execution.tool_action),
+            )
             .where(Approval.id == approval_id)
         )
         result = await db.execute(stmt)
