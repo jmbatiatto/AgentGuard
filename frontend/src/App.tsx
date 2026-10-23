@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ShieldAlert } from 'lucide-react';
 import { ThemeProvider } from './context/ThemeProvider';
+import { AuthProvider } from './context/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { OverviewView } from './views/OverviewView';
 import { AgentsView } from './views/AgentsView';
@@ -92,7 +93,8 @@ export const App: React.FC = () => {
 
   return (
     <ThemeProvider>
-      <div className="app-container">
+      <AuthProvider>
+        <div className="app-container">
         {/* Global SIEM Incident Banner */}
         {securityAlert && (
           <div style={{
@@ -188,6 +190,7 @@ export const App: React.FC = () => {
           {currentView === 'settings' && <SettingsView />}
         </main>
       </div>
+      </AuthProvider>
     </ThemeProvider>
   );
 };

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Clock, Check, X, MoreHorizontal, Radio } from 'lucide-react';
+import { Shield, Clock, Check, X, MoreHorizontal, Radio, Lock } from 'lucide-react';
 import { Header } from '../components/Header';
 import { mockApprovals } from '../data/mockData';
 import type { ApprovalRequest } from '../types/domain';
-import { api, DEMO_IDS } from '../services/api';
+import { api } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
+import { useAuth } from '../context/AuthContext';
 
 interface ApprovalsViewProps {
   onUpdatePendingCount?: (count: number) => void;
 }
 
 export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCount }) => {
+  const { currentUser } = useAuth();
   const [requests, setRequests] = useState<ApprovalRequest[]>(mockApprovals);
   const [selectedId, setSelectedId] = useState<string>(mockApprovals[0]?.id || '');
   const [resolutionNotice, setResolutionNotice] = useState<string | null>(null);
@@ -108,6 +110,12 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       return;
     }
 
+    if (!currentUser.canApproveHITL) {
+      setResolutionNotice(`🔒 Permiso denegado: Tu perfil actual (${currentUser.role}) no tiene permisos para resolver solicitudes HITL. Cambia al rol APPROVER o ADMIN en el selector superior.`);
+      setTimeout(() => setResolutionNotice(null), 4000);
+      return;
+    }
+
     setIsResolving(true);
 
     // 1. Actualización optimista de estado local
@@ -124,7 +132,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       onUpdatePendingCount(remainingCount);
     }
 
-    setResolutionNotice(`Solicitud ${targetReq.action} (${targetReq.amount}) ha sido ${action === 'APPROVED' ? 'Aprobada ✅' : 'Rechazada ❌'}.`);
+    setResolutionNotice(`Solicitud ${targetReq.action} (${targetReq.amount}) ha sido ${action === 'APPROVED' ? 'Aprobada ✅' : 'Rechazada ❌'} por ${currentUser.name}.`);
     setTimeout(() => setResolutionNotice(null), 4000);
 
     const nextPending = updated.find(r => r.status === 'PENDING');
@@ -132,13 +140,15 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       setSelectedId(nextPending.id);
     }
 
-    // 2. Notificar al backend de forma persistente
+    // 2. Notificar al backend de forma persistente con el ID del usuario activo
     try {
       await api.resolveApproval(
         id,
         action,
-        action === 'APPROVED' ? 'Aprobado formalmente por operador en Dashboard HITL' : 'Rechazado por riesgo de seguridad en Dashboard HITL',
-        DEMO_IDS.USER_APPROVER_ID
+        action === 'APPROVED' 
+          ? `Aprobado formalmente por ${currentUser.name} (${currentUser.role}) en Dashboard HITL` 
+          : `Rechazado por ${currentUser.name} (${currentUser.role}) en Dashboard HITL`,
+        currentUser.id
       );
     } finally {
       setIsResolving(false);
@@ -493,27 +503,78 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
             }}>
               {selectedRequest.status === 'PENDING' ? (
                 <>
-                  <button 
-                    id="btn-reject-request"
-                    disabled={isResolving}
-                    onClick={() => handleResolve(selectedRequest.id, 'REJECTED')}
-                    className="btn btn-danger-outline"
-                    style={{ padding: '9px 18px', opacity: isResolving ? 0.5 : 1, cursor: isResolving ? 'not-allowed' : 'pointer' }}
-                  >
-                    <X size={15} />
-                    <span>Reject request</span>
-                  </button>
+                  {!currentUser.canApproveHITL ? (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      gap: '12px',
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '12px',
+                        color: 'var(--danger-text)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                        padding: '8px 14px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(239, 68, 68, 0.25)',
+                      }}>
+                        <Lock size={14} />
+                        <span>Perfil en modo solo lectura (<strong>{currentUser.role}</strong>). Cambia a <strong>APPROVER</strong> o <strong>ADMIN</strong> en el menú superior para resolver.</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          disabled
+                          title="Requiere rol APPROVER o ADMIN"
+                          className="btn btn-danger-outline"
+                          style={{ padding: '9px 16px', opacity: 0.35, cursor: 'not-allowed' }}
+                        >
+                          <X size={15} />
+                          <span>Reject</span>
+                        </button>
+                        <button 
+                          disabled
+                          title="Requiere rol APPROVER o ADMIN"
+                          className="btn btn-success"
+                          style={{ padding: '9px 18px', opacity: 0.35, cursor: 'not-allowed' }}
+                        >
+                          <Check size={16} />
+                          <span>Approve</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginRight: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: currentUser.badgeColor }} />
+                        <span>Autorizado como <strong>{currentUser.name}</strong> ({currentUser.role})</span>
+                      </div>
+                      <button 
+                        id="btn-reject-request"
+                        disabled={isResolving}
+                        onClick={() => handleResolve(selectedRequest.id, 'REJECTED')}
+                        className="btn btn-danger-outline"
+                        style={{ padding: '9px 18px', opacity: isResolving ? 0.5 : 1, cursor: isResolving ? 'not-allowed' : 'pointer' }}
+                      >
+                        <X size={15} />
+                        <span>Reject request</span>
+                      </button>
 
-                  <button 
-                    id="btn-approve-request"
-                    disabled={isResolving}
-                    onClick={() => handleResolve(selectedRequest.id, 'APPROVED')}
-                    className="btn btn-success"
-                    style={{ padding: '9px 20px', fontWeight: 600, opacity: isResolving ? 0.5 : 1, cursor: isResolving ? 'not-allowed' : 'pointer' }}
-                  >
-                    <Check size={16} strokeWidth={2.5} />
-                    <span>{isResolving ? 'Procesando...' : 'Approve request'}</span>
-                  </button>
+                      <button 
+                        id="btn-approve-request"
+                        disabled={isResolving}
+                        onClick={() => handleResolve(selectedRequest.id, 'APPROVED')}
+                        className="btn btn-success"
+                        style={{ padding: '9px 20px', fontWeight: 600, opacity: isResolving ? 0.5 : 1, cursor: isResolving ? 'not-allowed' : 'pointer' }}
+                      >
+                        <Check size={16} strokeWidth={2.5} />
+                        <span>{isResolving ? 'Procesando...' : 'Approve request'}</span>
+                      </button>
+                    </>
+                  )}
                 </>
               ) : (
                 <div style={{

@@ -414,16 +414,16 @@
     "semantic_hash": "4a5f7450ef8c74441f8b8f1c10477bed"
   },
   "frontend/src/App.tsx": {
-    "mtime": 1792769452.2349322,
-    "seen": 1792770798.1600192,
-    "ast_hash": "1bd27620c39a21b71d9cddc9630d5b14",
+    "mtime": 1792772714.127489,
+    "seen": 1792773237.153073,
+    "ast_hash": "f1408ad7e2ba4a2203f239578408284e",
     "semantic_hash": ""
   },
   "frontend/src/components/Header.tsx": {
-    "mtime": 1792678298.6965978,
-    "seen": 1792679930.2839012,
-    "ast_hash": "f591a3c7706a36ffa2805d6e7b5b085f",
-    "semantic_hash": "f591a3c7706a36ffa2805d6e7b5b085f"
+    "mtime": 1792773084.7188542,
+    "seen": 1792773237.153073,
+    "ast_hash": "393694fdea7f854315f6134f4af243c9",
+    "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.tsx": {
     "mtime": 1792711786.4894543,
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/ApprovalsView.tsx": {
-    "mtime": 1792712035.9025319,
-    "seen": 1792712319.8639965,
-    "ast_hash": "8a2407f29b4809bf783839543f0f106d",
+    "mtime": 1792773126.545783,
+    "seen": 1792773237.153073,
+    "ast_hash": "4341190a0361dd86c5643480a96bfa8a",
     "semantic_hash": ""
   },
   "frontend/src/views/OverviewView.tsx": {
@@ -855,6 +855,12 @@
     "mtime": 1792769616.5592902,
     "seen": 1792770798.1605859,
     "ast_hash": "456d1dcfcc160aa1b6d4434b98699080",
+    "semantic_hash": ""
+  },
+  "frontend/src/context/AuthContext.tsx": {
+    "mtime": 1792773100.3093088,
+    "seen": 1792773237.153073,
+    "ast_hash": "5e7fd8228867fc0a2c76d2d985a10dbe",
     "semantic_hash": ""
   }
 }
