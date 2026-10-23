@@ -43,6 +43,7 @@ from app.schemas.approval import (
 )
 from app.schemas.alert import (
     AlertRead,
+    AlertUpdateRequest,
 )
 
 __all__ = [
@@ -70,4 +71,5 @@ __all__ = [
     "ApprovalRead",
     "ApprovalDetailRead",
     "AlertRead",
+    "AlertUpdateRequest",
 ]

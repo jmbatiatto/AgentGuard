@@ -70,6 +70,9 @@ export interface SecurityAlert {
   description: string;
   timeAgo: string;
   severity: 'critical' | 'warning' | 'info';
+  status?: 'OPEN' | 'INVESTIGATING' | 'RESOLVED' | 'DISMISSED';
+  createdAt?: string;
+  executionId?: string;
 }
 
 export interface ExecutionTrace {

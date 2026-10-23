@@ -372,8 +372,69 @@ class AgentGuardApiClient {
     return [];
   }
 
-  async getAlerts(): Promise<SecurityAlert[]> {
+  /**
+   * Obtiene alertas de seguridad desde /api/v1/alerts (con fallback a mockAlerts)
+   */
+  async getAlerts(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<SecurityAlert[]> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/alerts?organization_id=${orgId}`, {
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          return data.map((item: any) => {
+            const rawSev = (item.severity || '').toLowerCase();
+            let sev: 'critical' | 'warning' | 'info' = 'warning';
+            if (rawSev === 'critical' || rawSev === 'high') {
+              sev = 'critical';
+            } else if (rawSev === 'low') {
+              sev = 'info';
+            }
+
+            const timeStr = item.created_at
+              ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : 'Reciente';
+
+            return {
+              id: item.id,
+              title: item.title,
+              description: item.description || 'Intento de violación de política detectado por el Gateway PEP',
+              timeAgo: timeStr,
+              severity: sev,
+              status: item.status,
+              createdAt: item.created_at,
+              executionId: item.execution_id,
+            };
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] No se pudo obtener alertas del backend:', err);
+    }
     return mockAlerts;
+  }
+
+  /**
+   * Actualiza el estado de una alerta de seguridad (PATCH /api/v1/alerts/{id}/status)
+   */
+  async updateAlertStatus(
+    alertId: string,
+    status: 'INVESTIGATING' | 'RESOLVED' | 'DISMISSED',
+    userId: string = DEMO_IDS.USER_ADMIN_ID
+  ): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/alerts/${alertId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, resolved_by_user_id: userId }),
+        signal: AbortSignal.timeout(3000),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
   }
 }
 

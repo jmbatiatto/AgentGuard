@@ -1,8 +1,10 @@
-import React from 'react';
-import { Bot, Activity, Ban, Clock, AlertTriangle, ShieldCheck, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bot, Activity, Ban, Clock, AlertTriangle, ShieldCheck, ArrowRight, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { Header } from '../components/Header';
 import { mockAlerts } from '../data/mockData';
-import type { NavView } from '../types/domain';
+import { api } from '../services/api';
+import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
+import type { NavView, SecurityAlert } from '../types/domain';
 
 interface OverviewViewProps {
   onNavigate: (view: NavView) => void;
@@ -10,6 +12,75 @@ interface OverviewViewProps {
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingApprovalsCount }) => {
+  const [alerts, setAlerts] = useState<SecurityAlert[]>(mockAlerts);
+  const [stats, setStats] = useState({
+    activeAgents: 12,
+    totalExecutions: 8429,
+    blockedActions: 147,
+  });
+
+  const loadOverviewData = async () => {
+    try {
+      const [alertsData, executionsData, agentsData] = await Promise.all([
+        api.getAlerts(),
+        api.getExecutions(),
+        api.getAgents(),
+      ]);
+
+      if (alertsData && alertsData.length > 0) {
+        setAlerts(alertsData);
+      }
+
+      const realExecCount = executionsData ? executionsData.length : 0;
+      const realBlockedCount = executionsData ? executionsData.filter(e => e.decision === 'DENY').length : 0;
+      const realActiveAgents = agentsData ? agentsData.filter(a => a.status === 'Active').length : 3;
+
+      setStats({
+        activeAgents: realActiveAgents > 0 ? realActiveAgents : 12,
+        totalExecutions: realExecCount > 0 ? realExecCount : 8429,
+        blockedActions: realBlockedCount > 0 ? realBlockedCount : 147,
+      });
+    } catch (err) {
+      console.warn('[OverviewView] Error cargando métricas:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadOverviewData();
+  }, []);
+
+  // Suscripción WebSocket para alertas y ejecuciones en vivo
+  useAgentGuardWebSocket({
+    onNewAlert: (alertData) => {
+      const newAlert: SecurityAlert = {
+        id: alertData.alert_id || `alert_${Date.now()}`,
+        title: alertData.title || 'Alerta de Seguridad: Acción crítica bloqueada',
+        description: alertData.description || 'Intento de violación de política detectado por el Gateway PEP',
+        timeAgo: 'Recién ⚡',
+        severity: (alertData.severity || 'CRITICAL').toLowerCase() as any,
+        status: (alertData.status || 'OPEN') as any,
+      };
+
+      setAlerts(prev => [newAlert, ...prev]);
+      setStats(prev => ({
+        ...prev,
+        blockedActions: prev.blockedActions + 1,
+      }));
+    },
+    onNewExecution: (execData) => {
+      setStats(prev => ({
+        ...prev,
+        totalExecutions: prev.totalExecutions + 1,
+        blockedActions: execData.decision === 'DENY' ? prev.blockedActions + 1 : prev.blockedActions,
+      }));
+    },
+  });
+
+  const handleResolveAlert = async (alertId: string) => {
+    setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, status: 'RESOLVED' } : a));
+    await api.updateAlertStatus(alertId, 'RESOLVED');
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Header 
@@ -26,39 +97,51 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
           marginBottom: '20px',
         }}>
           {/* Card 1: Active Agents */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div 
+            className="card" 
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
+            onClick={() => onNavigate('agents')}
+          >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Active Agents</span>
               <div style={{ padding: '6px', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderRadius: '6px', color: '#38BDF8' }}>
                 <Bot size={16} />
               </div>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>12</div>
-            <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 500 }}>+2 this month</div>
+            <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.activeAgents}</div>
+            <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 500 }}>Gobernanza activa</div>
           </div>
 
           {/* Card 2: Total Executions */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div 
+            className="card" 
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
+            onClick={() => onNavigate('traces')}
+          >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Total Executions</span>
               <div style={{ padding: '6px', backgroundColor: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', color: '#818CF8' }}>
                 <Activity size={16} />
               </div>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>8,429</div>
-            <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 500 }}>+8.2% vs. last week</div>
+            <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalExecutions.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 500 }}>Trazabilidad forense</div>
           </div>
 
           {/* Card 3: Blocked Actions */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div 
+            className="card" 
+            style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}
+            onClick={() => onNavigate('traces')}
+          >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Blocked Actions</span>
               <div style={{ padding: '6px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', color: '#EF4444' }}>
                 <Ban size={16} />
               </div>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>147</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>1.7% of executions</div>
+            <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.blockedActions}</div>
+            <div style={{ fontSize: '11px', color: '#EF4444', fontWeight: 500 }}>Veredictos DENY del PDP</div>
           </div>
 
           {/* Card 4: Pending Approvals */}
@@ -74,7 +157,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
               </div>
             </div>
             <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{pendingApprovalsCount}</div>
-            <div style={{ fontSize: '11px', color: '#F59E0B', fontWeight: 500 }}>Oldest waiting 12 min</div>
+            <div style={{ fontSize: '11px', color: '#F59E0B', fontWeight: 500 }}>Bandeja HITL en vivo</div>
           </div>
         </div>
 
@@ -162,47 +245,75 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
-              {mockAlerts.map(alert => {
-                let iconColor = '#F59E0B';
-                let Icon = AlertTriangle;
-                if (alert.severity === 'critical') {
-                  iconColor = '#EF4444';
-                } else if (alert.severity === 'info') {
-                  iconColor = '#38BDF8';
-                  Icon = ShieldCheck;
-                }
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1, maxHeight: '380px', overflowY: 'auto' }}>
+              {alerts.length === 0 ? (
+                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  <ShieldCheck size={28} color="#10B981" style={{ margin: '0 auto 8px' }} />
+                  <div>No hay incidentes de seguridad abiertos.</div>
+                  <div style={{ fontSize: '11px', marginTop: '4px' }}>El Gateway está bloqueando amenazas en tiempo de ejecución.</div>
+                </div>
+              ) : (
+                alerts.slice(0, 5).map(alert => {
+                  const isResolved = alert.status === 'RESOLVED';
+                  let iconColor = '#F59E0B';
+                  let Icon = AlertTriangle;
+                  if (alert.severity === 'critical') {
+                    iconColor = '#EF4444';
+                    Icon = ShieldAlert;
+                  } else if (alert.severity === 'info') {
+                    iconColor = '#38BDF8';
+                    Icon = ShieldCheck;
+                  }
 
-                return (
-                  <div 
-                    key={alert.id}
-                    style={{
-                      padding: '12px',
-                      backgroundColor: '#0F1522',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      gap: '12px',
-                      alignItems: 'flex-start',
-                    }}
-                  >
-                    <div style={{ padding: '6px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '6px', flexShrink: 0 }}>
-                      <Icon size={16} color={iconColor} />
+                  return (
+                    <div 
+                      key={alert.id}
+                      style={{
+                        padding: '12px 14px',
+                        backgroundColor: isResolved ? 'rgba(255,255,255,0.01)' : 'rgba(239, 68, 68, 0.05)',
+                        border: isResolved ? '1px solid var(--border-subtle)' : '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'flex-start',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <div style={{ padding: '6px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '6px', flexShrink: 0 }}>
+                        <Icon size={16} color={iconColor} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {alert.title}
+                          </div>
+                          <span className={`badge ${isResolved ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '10px' }}>
+                            {isResolved ? 'RESOLVED' : 'OPEN'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>
+                          {alert.description}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            {alert.timeAgo}
+                          </span>
+                          {!isResolved && (
+                            <button
+                              onClick={() => handleResolveAlert(alert.id)}
+                              className="btn btn-secondary"
+                              style={{ padding: '3px 8px', fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <CheckCircle2 size={11} />
+                              <span>Resolver</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {alert.title}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>
-                        {alert.description}
-                      </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
-                        {alert.timeAgo}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

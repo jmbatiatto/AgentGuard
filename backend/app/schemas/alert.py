@@ -21,3 +21,10 @@ class AlertRead(BaseSchema):
     status: AlertStatus
     resolved_by_user_id: Optional[UUID] = None
     created_at: datetime
+
+
+class AlertUpdateRequest(BaseSchema):
+    """Esquema para actualizar el estado del ciclo de vida de un incidente."""
+
+    status: AlertStatus = Field(..., description="Nuevo estado del incidente: INVESTIGATING, RESOLVED, DISMISSED")
+    resolved_by_user_id: Optional[UUID] = Field(default=None, description="Identificador del operador que resuelve o investiga")
