@@ -59,5 +59,27 @@ class UserService:
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
+    @staticmethod
+    async def update(db: AsyncSession, user_id: UUID, role: str) -> Optional[User]:
+        """Actualiza el rol asignado a un usuario."""
+        user = await UserService.get_by_id(db=db, user_id=user_id)
+        if not user:
+            return None
+        user.role = role
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+    @staticmethod
+    async def delete(db: AsyncSession, user_id: UUID) -> bool:
+        """Elimina un usuario de la organización."""
+        user = await UserService.get_by_id(db=db, user_id=user_id)
+        if not user:
+            return False
+        await db.delete(user)
+        await db.commit()
+        return True
+
 
 user_service = UserService()
+

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.organization_service import organization_service
 from app.services.user_service import user_service
 
@@ -98,3 +98,51 @@ async def get_user(
             detail=f"Usuario con ID {user_id} no encontrado",
         )
     return user
+
+
+@router.patch(
+    "/{user_id}",
+    response_model=UserRead,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar Rol de Usuario",
+    description="Modifica el rol asignado a un usuario corporativo dentro de la organización.",
+)
+async def update_user(
+    user_id: UUID,
+    user_in: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> UserRead:
+    """Actualiza el rol del usuario o retorna 404 si no existe."""
+    if user_in.role is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Se requiere especificar el campo 'role' para actualizar",
+        )
+
+    updated = await user_service.update(db=db, user_id=user_id, role=user_in.role)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Usuario con ID {user_id} no encontrado",
+        )
+    return updated
+
+
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar Usuario",
+    description="Elimina a un usuario corporativo de la organización.",
+)
+async def delete_user(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Elimina el usuario o retorna 404 si no existe."""
+    deleted = await user_service.delete(db=db, user_id=user_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Usuario con ID {user_id} no encontrado",
+        )
+

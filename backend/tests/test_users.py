@@ -309,3 +309,126 @@ async def test_api_get_user_not_found():
             assert "no encontrado" in response.json()["detail"]
 
     app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_user_service_update():
+    """Valida la actualización de rol de un usuario."""
+    mock_db = AsyncMock()
+    user_id = uuid.uuid4()
+    mock_user = User(
+        id=user_id,
+        organization_id=uuid.uuid4(),
+        email="update@corp.com",
+        role=UserRole.OPERATOR,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_user
+    mock_db.execute.return_value = mock_result
+
+    updated = await user_service.update(db=mock_db, user_id=user_id, role=UserRole.ADMIN)
+
+    assert updated is not None
+    assert updated.role == UserRole.ADMIN
+    mock_db.commit.assert_awaited_once()
+    mock_db.refresh.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_user_service_delete():
+    """Valida la eliminación de un usuario."""
+    mock_db = AsyncMock()
+    user_id = uuid.uuid4()
+    mock_user = User(
+        id=user_id,
+        organization_id=uuid.uuid4(),
+        email="delete@corp.com",
+        role=UserRole.OPERATOR,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_user
+    mock_db.execute.return_value = mock_result
+
+    success = await user_service.delete(db=mock_db, user_id=user_id)
+
+    assert success is True
+    mock_db.delete.assert_awaited_once_with(mock_user)
+    mock_db.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_api_patch_user_role():
+    """Valida actualización de rol vía PATCH /api/v1/users/{id}."""
+    mock_db = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    user_id = uuid.uuid4()
+    mock_user = User(
+        id=user_id,
+        organization_id=uuid.uuid4(),
+        email="patched@corp.com",
+        role=UserRole.ADMIN,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    with patch.object(user_service, "update", new_callable=AsyncMock) as mock_update:
+        mock_update.return_value = mock_user
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                f"/api/v1/users/{user_id}",
+                json={"role": "ADMIN"}
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["id"] == str(user_id)
+            assert data["role"] == "ADMIN"
+
+    app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_delete_user():
+    """Valida eliminación de usuario vía DELETE /api/v1/users/{id}."""
+    mock_db = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    user_id = uuid.uuid4()
+
+    with patch.object(user_service, "delete", new_callable=AsyncMock) as mock_delete:
+        mock_delete.return_value = True
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.delete(f"/api/v1/users/{user_id}")
+
+            assert response.status_code == 204
+
+    app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_delete_user_not_found():
+    """Valida eliminación de usuario inexistente (404)."""
+    mock_db = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    user_id = uuid.uuid4()
+
+    with patch.object(user_service, "delete", new_callable=AsyncMock) as mock_delete:
+        mock_delete.return_value = False
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.delete(f"/api/v1/users/{user_id}")
+
+            assert response.status_code == 404
+            assert "no encontrado" in response.json()["detail"]
+
+    app.dependency_overrides.clear()

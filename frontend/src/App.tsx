@@ -9,6 +9,7 @@ import { PoliciesView } from './views/PoliciesView';
 import { ApprovalsView } from './views/ApprovalsView';
 import { TracesView } from './views/TracesView';
 import { PlaygroundView } from './views/PlaygroundView';
+import { SettingsView } from './views/SettingsView';
 import type { NavView } from './types/domain';
 import { useAgentGuardWebSocket } from './services/useAgentGuardWebSocket';
 import { api } from './services/api';
@@ -184,14 +185,7 @@ export const App: React.FC = () => {
               onNavigate={handleNavigate}
             />
           )}
-          {currentView === 'settings' && (
-            <div style={{ padding: '40px', color: 'var(--text-secondary)' }}>
-              <h2>Configuración del Espacio de Trabajo</h2>
-              <p style={{ marginTop: '8px', color: 'var(--text-muted)' }}>
-                Organización: Acme Networks (Tenant ID: org_acme_production)
-              </p>
-            </div>
-          )}
+          {currentView === 'settings' && <SettingsView />}
         </main>
       </div>
     </ThemeProvider>

@@ -1,5 +1,4 @@
-"""Schemas Pydantic v2 para Usuarios y Roles."""
-
+from typing import Optional
 from datetime import datetime
 from uuid import UUID
 from pydantic import Field
@@ -27,6 +26,15 @@ class UserCreate(BaseSchema):
     )
 
 
+class UserUpdate(BaseSchema):
+    """Payload para actualizar el rol de un usuario corporativo."""
+
+    role: Optional[UserRole] = Field(
+        default=None,
+        description="Nuevo rol de autorización asignado al usuario",
+    )
+
+
 class UserRead(BaseSchema):
     """Respuesta con la información del usuario."""
 
@@ -35,3 +43,4 @@ class UserRead(BaseSchema):
     email: str
     role: UserRole
     created_at: datetime
+

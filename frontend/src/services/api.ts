@@ -22,6 +22,8 @@ import type {
   ExecutionTrace,
   ApprovalStatus,
   PolicyDecision,
+  UserMember,
+  UserRole,
 } from '../types/domain';
 
 // Constantes Deterministas de la Demo Oficial (Acme Corp)
@@ -849,7 +851,130 @@ class AgentGuardApiClient {
       return false;
     }
   }
+
+  /**
+   * Obtiene la lista de usuarios y roles RBAC de la organización
+   */
+  async getUsers(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<UserMember[]> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/users?organization_id=${orgId}&skip=0&limit=100`, {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          return data.map((item: any) => ({
+            id: item.id,
+            organizationId: item.organization_id,
+            email: item.email,
+            role: item.role as UserRole,
+            createdAt: item.created_at,
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] No se pudo obtener usuarios del backend:', err);
+    }
+    return [
+      {
+        id: DEMO_IDS.USER_ADMIN_ID,
+        organizationId: orgId,
+        email: 'admin@acmecorp.com',
+        role: 'ADMIN',
+        createdAt: '2026-03-01T10:00:00Z',
+      },
+      {
+        id: DEMO_IDS.USER_APPROVER_ID,
+        organizationId: orgId,
+        email: 'compliance.lead@acmecorp.com',
+        role: 'APPROVER',
+        createdAt: '2026-03-05T14:30:00Z',
+      },
+      {
+        id: DEMO_IDS.USER_OPERATOR_ID,
+        organizationId: orgId,
+        email: 'ops.engineer@acmecorp.com',
+        role: 'OPERATOR',
+        createdAt: '2026-03-10T09:15:00Z',
+      },
+    ];
+  }
+
+  /**
+   * Invita o crea un nuevo usuario corporativo en la organización
+   */
+  async createUser(payload: { email: string; role: UserRole; organization_id?: string }): Promise<UserMember | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: payload.organization_id || DEMO_IDS.ORG_ACME_ID,
+          email: payload.email,
+          role: payload.role,
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const item = await res.json();
+        return {
+          id: item.id,
+          organizationId: item.organization_id,
+          email: item.email,
+          role: item.role as UserRole,
+          createdAt: item.created_at,
+        };
+      }
+    } catch (err) {
+      console.error('[AgentGuard API] Error al crear usuario:', err);
+    }
+    return null;
+  }
+
+  /**
+   * Actualiza el rol RBAC de un usuario corporativo (PATCH /api/v1/users/{id})
+   */
+  async updateUserRole(userId: string, role: UserRole): Promise<UserMember | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const item = await res.json();
+        return {
+          id: item.id,
+          organizationId: item.organization_id,
+          email: item.email,
+          role: item.role as UserRole,
+          createdAt: item.created_at,
+        };
+      }
+    } catch (err) {
+      console.error('[AgentGuard API] Error al actualizar rol de usuario:', err);
+    }
+    return null;
+  }
+
+  /**
+   * Elimina un usuario de la organización (DELETE /api/v1/users/{id})
+   */
+  async deleteUser(userId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/users/${userId}`, {
+        method: 'DELETE',
+        signal: AbortSignal.timeout(5000),
+      });
+      return res.ok || res.status === 204;
+    } catch (err) {
+      console.error('[AgentGuard API] Error al eliminar usuario:', err);
+      return false;
+    }
+  }
 }
 
 export const api = new AgentGuardApiClient();
 export default api;
+

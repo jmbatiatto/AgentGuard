@@ -128,3 +128,33 @@ export interface ExecutionTrace {
   approvalResolvedAt?: string | null;
   resolutionReason?: string | null;
 }
+
+export type UserRole = 'ADMIN' | 'APPROVER' | 'OPERATOR' | 'AUDITOR';
+
+export interface UserMember {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: UserRole;
+  createdAt: string;
+}
+
+export interface GatewayApiKey {
+  id: string;
+  name: string;
+  prefix: string;
+  secretMasked: string;
+  rawKey?: string;
+  role: string;
+  createdAt: string;
+  lastUsedAt?: string;
+}
+
+export interface SecurityStanceSettings {
+  defaultDecision: 'DENY' | 'ALLOW';
+  strictMultiTenant: boolean;
+  maskSensitiveContext: boolean;
+  maxAutonomousRefund: number;
+  siemWebhookUrl: string;
+  siemFormat: 'SPLUNK' | 'DATADOG' | 'ELASTIC' | 'GENERIC_JSON';
+}
