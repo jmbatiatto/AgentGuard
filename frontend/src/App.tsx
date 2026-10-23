@@ -85,6 +85,12 @@ export const App: React.FC = () => {
         severity: alertData.severity,
       });
     },
+    onAlertUpdated: (data) => {
+      // Si la alerta visualmente activa en el banner fue resuelta, cerrarla reactivamente
+      if (data && data.alert_id) {
+        setSecurityAlert(prev => (prev && prev.id === data.alert_id ? null : prev));
+      }
+    },
   });
 
   const handleTriggerApprovalFromPlayground = () => {

@@ -12,7 +12,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { DEMO_IDS } from './api';
 
 export interface WebSocketEventMessage {
-  type: 'NEW_APPROVAL' | 'RESOLVED_APPROVAL' | 'NEW_ALERT' | 'NEW_EXECUTION' | 'PONG' | 'CONNECTED';
+  type: 'NEW_APPROVAL' | 'RESOLVED_APPROVAL' | 'NEW_ALERT' | 'ALERT_STATUS_UPDATED' | 'NEW_EXECUTION' | 'PONG' | 'CONNECTED';
   timestamp?: string;
   data?: any;
 }
@@ -23,6 +23,7 @@ export interface UseAgentGuardWebSocketOptions {
   onNewApproval?: (data: any) => void;
   onResolvedApproval?: (data: any) => void;
   onNewAlert?: (data: any) => void;
+  onAlertUpdated?: (data: any) => void;
   onNewExecution?: (data: any) => void;
   onMessage?: (message: WebSocketEventMessage) => void;
 }
@@ -33,6 +34,7 @@ export function useAgentGuardWebSocket({
   onNewApproval,
   onResolvedApproval,
   onNewAlert,
+  onAlertUpdated,
   onNewExecution,
   onMessage,
 }: UseAgentGuardWebSocketOptions = {}) {
@@ -47,6 +49,7 @@ export function useAgentGuardWebSocket({
   const onNewApprovalRef = useRef(onNewApproval);
   const onResolvedApprovalRef = useRef(onResolvedApproval);
   const onNewAlertRef = useRef(onNewAlert);
+  const onAlertUpdatedRef = useRef(onAlertUpdated);
   const onNewExecutionRef = useRef(onNewExecution);
   const onMessageRef = useRef(onMessage);
 
@@ -54,6 +57,7 @@ export function useAgentGuardWebSocket({
     onNewApprovalRef.current = onNewApproval;
     onResolvedApprovalRef.current = onResolvedApproval;
     onNewAlertRef.current = onNewAlert;
+    onAlertUpdatedRef.current = onAlertUpdated;
     onNewExecutionRef.current = onNewExecution;
     onMessageRef.current = onMessage;
   });
@@ -109,6 +113,8 @@ export function useAgentGuardWebSocket({
             onResolvedApprovalRef.current(eventData);
           } else if ((eventType === 'NEW_ALERT' || eventType === 'ALERT') && onNewAlertRef.current) {
             onNewAlertRef.current(eventData);
+          } else if (eventType === 'ALERT_STATUS_UPDATED' && onAlertUpdatedRef.current) {
+            onAlertUpdatedRef.current(eventData);
           }
         } catch {
           // Ignorar mensajes no JSON

@@ -666,9 +666,14 @@ class AgentGuardApiClient {
         }),
         signal: AbortSignal.timeout(3000),
       });
-      return res.ok;
-    } catch {
-      return true; // Éxito optimista en modo offline
+      if (!res.ok) {
+        console.warn(`Error del servidor al resolver aprobación (${res.status}):`, await res.text());
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Fallo de red o timeout al resolver aprobación en backend:', err);
+      return false;
     }
   }
 
