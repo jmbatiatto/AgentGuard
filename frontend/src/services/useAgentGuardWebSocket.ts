@@ -43,6 +43,21 @@ export function useAgentGuardWebSocket({
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
 
+  // Guardar referencias a callbacks para evitar reconexiones innecesarias ante re-renders
+  const onNewApprovalRef = useRef(onNewApproval);
+  const onResolvedApprovalRef = useRef(onResolvedApproval);
+  const onNewAlertRef = useRef(onNewAlert);
+  const onNewExecutionRef = useRef(onNewExecution);
+  const onMessageRef = useRef(onMessage);
+
+  useEffect(() => {
+    onNewApprovalRef.current = onNewApproval;
+    onResolvedApprovalRef.current = onResolvedApproval;
+    onNewAlertRef.current = onNewAlert;
+    onNewExecutionRef.current = onNewExecution;
+    onMessageRef.current = onMessage;
+  });
+
   const connect = useCallback(() => {
     if (!enabled) return;
 
@@ -72,19 +87,28 @@ export function useAgentGuardWebSocket({
 
       ws.onmessage = (event) => {
         try {
-          const parsed: WebSocketEventMessage = JSON.parse(event.data);
+          const raw = JSON.parse(event.data);
+          const eventType = raw.type || raw.event;
+          const eventData = raw.data || raw;
+
+          const parsed: WebSocketEventMessage = {
+            type: eventType,
+            data: eventData,
+            timestamp: raw.timestamp,
+          };
+
           setLastEvent(parsed);
 
-          if (onMessage) onMessage(parsed);
+          if (onMessageRef.current) onMessageRef.current(parsed);
 
-          if (parsed.type === 'NEW_EXECUTION' && onNewExecution) {
-            onNewExecution(parsed.data);
-          } else if (parsed.type === 'NEW_APPROVAL' && onNewApproval) {
-            onNewApproval(parsed.data);
-          } else if (parsed.type === 'RESOLVED_APPROVAL' && onResolvedApproval) {
-            onResolvedApproval(parsed.data);
-          } else if (parsed.type === 'NEW_ALERT' && onNewAlert) {
-            onNewAlert(parsed.data);
+          if (eventType === 'NEW_EXECUTION' && onNewExecutionRef.current) {
+            onNewExecutionRef.current(eventData);
+          } else if (eventType === 'NEW_APPROVAL' && onNewApprovalRef.current) {
+            onNewApprovalRef.current(eventData);
+          } else if (eventType === 'RESOLVED_APPROVAL' && onResolvedApprovalRef.current) {
+            onResolvedApprovalRef.current(eventData);
+          } else if ((eventType === 'NEW_ALERT' || eventType === 'ALERT') && onNewAlertRef.current) {
+            onNewAlertRef.current(eventData);
           }
         } catch {
           // Ignorar mensajes no JSON
@@ -111,7 +135,7 @@ export function useAgentGuardWebSocket({
     } catch {
       setIsConnected(false);
     }
-  }, [orgId, enabled, onNewApproval, onResolvedApproval, onNewAlert, onMessage]);
+  }, [orgId, enabled]);
 
   useEffect(() => {
     connect();

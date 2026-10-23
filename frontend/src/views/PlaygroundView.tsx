@@ -13,6 +13,7 @@ import { api, DEMO_IDS } from '../services/api';
 
 interface PlaygroundViewProps {
   onTriggerApproval?: () => void;
+  onTriggerAlert?: (alert: { id?: string; title: string; description?: string; severity?: string }) => void;
   onNavigate?: (view: NavView) => void;
 }
 
@@ -34,7 +35,11 @@ interface SimulationResult {
   isProtected: boolean;
 }
 
-export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ onTriggerApproval, onNavigate }) => {
+export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ 
+  onTriggerApproval, 
+  onTriggerAlert, 
+  onNavigate 
+}) => {
   const [isAgentGuardActive, setIsAgentGuardActive] = useState<boolean>(true);
   const [activeResult, setActiveResult] = useState<SimulationResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -227,6 +232,15 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ onTriggerApprova
       });
       setIsLoading(false);
 
+      if (onTriggerAlert) {
+        onTriggerAlert({
+          id: res.alert_id || undefined,
+          title: "Alerta de Seguridad: Bloqueo en acción crítica 'export_customers'",
+          description: "Intento de exfiltración hacia servidor no autorizado (attacker.io) detectado por PEP Gateway (OWASP LLM06).",
+          severity: "CRITICAL",
+        });
+      }
+
       setActiveResult({
         scenario: 4,
         title: 'Escenario 4: Prompt Injection y Exfiltración Detectada',
@@ -285,6 +299,15 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ onTriggerApprova
         resource: 'postgres://prod-db:5432/main',
       });
       setIsLoading(false);
+
+      if (onTriggerAlert) {
+        onTriggerAlert({
+          id: res.alert_id || undefined,
+          title: "Alerta de Seguridad: Intento destructivo 'database.drop'",
+          description: "Intento de ejecución de DROP DATABASE bloqueado inmediatamente por el Gateway PEP.",
+          severity: "CRITICAL",
+        });
+      }
 
       setActiveResult({
         scenario: 5,

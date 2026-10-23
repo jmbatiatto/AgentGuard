@@ -63,6 +63,7 @@ export interface GatewayExecutionResult {
   result?: Record<string, any> | null;
   error_message?: string | null;
   approval_id?: string | null;
+  alert_id?: string | null;
   timestamp: string;
   evaluation_latency_ms?: number;
   isLiveBackend?: boolean;
@@ -281,11 +282,13 @@ class AgentGuardApiClient {
       let decision: PolicyDecision = 'ALLOW';
       let error_message: string | null = null;
       let approval_id: string | null = null;
+      let alert_id: string | null = null;
       let result: any = null;
 
       if (payload.action_name === 'export_customers' || payload.action_name === 'database.drop') {
         decision = 'DENY';
         error_message = `Operación crítica denegada por política de seguridad AgentGuard (${payload.action_name})`;
+        alert_id = `alert_${Date.now()}`;
       } else if (payload.action_name === 'update_price') {
         decision = 'DENY';
         error_message = 'PolicyViolation: Agent does not possess role:PRICING_MANAGER';
@@ -313,6 +316,7 @@ class AgentGuardApiClient {
         status: decision === 'ALLOW' ? 'EXECUTED' : decision === 'REQUIRE_APPROVAL' ? 'PENDING_APPROVAL' : 'REJECTED',
         error_message,
         approval_id,
+        alert_id,
         result,
         timestamp: new Date().toISOString(),
         evaluation_latency_ms: latencyMs,

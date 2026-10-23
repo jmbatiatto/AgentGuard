@@ -1,7 +1,7 @@
-# Graph Report - AgentGuard  (2026-10-22)
+# Graph Report - AgentGuard  (2026-10-23)
 
 ## Corpus Check
-- 130 files · ~72,020 words
+- 130 files · ~72,248 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 19 file(s) not represented in the graph (top: .drawio 6, .bat 5, (none) 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1e0d0cce`
+- Built from commit: `4be6e1b3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

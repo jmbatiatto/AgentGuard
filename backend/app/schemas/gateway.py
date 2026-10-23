@@ -92,6 +92,10 @@ class GatewayExecuteResponse(BaseSchema):
         default=None,
         description="ID del ticket de aprobación generado en caso de REQUIRE_APPROVAL",
     )
+    alert_id: Optional[UUID] = Field(
+        default=None,
+        description="ID de la alerta de seguridad generada en caso de bloqueo crítico (Escenario 4)",
+    )
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Marca temporal inmutable de la evaluación",

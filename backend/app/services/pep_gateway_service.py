@@ -366,6 +366,7 @@ class PEPGatewayService:
             result=result_data,
             error_message=pdp_result.reason if pdp_result.decision == PolicyDecision.DENY else None,
             approval_id=approval_id,
+            alert_id=alert.id if alert else None,
             timestamp=now,
         )
 

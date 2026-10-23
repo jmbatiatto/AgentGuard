@@ -57,6 +57,16 @@ export const App: React.FC = () => {
     return () => { isMounted = false; };
   }, []);
 
+  const handleTriggerAlert = (alert: { id?: string; title: string; description?: string; severity?: string }) => {
+    setSecurityAlert({
+      id: alert.id,
+      title: alert.title || '🚨 SIEM: Bloqueo en acción crítica detectado',
+      description: alert.description || 'Intento de violación de política o anomalía de seguridad interceptada en tiempo real.',
+      severity: alert.severity || 'CRITICAL',
+    });
+    setTimeout(() => setSecurityAlert(null), 9000);
+  };
+
   // Suscripción WebSocket global para mantener sincronizado el badge de la Sidebar y Alertas SIEM
   useAgentGuardWebSocket({
     onNewApproval: () => {
@@ -66,13 +76,12 @@ export const App: React.FC = () => {
       setPendingApprovalsCount(prev => Math.max(0, prev - 1));
     },
     onNewAlert: (alertData) => {
-      setSecurityAlert({
+      handleTriggerAlert({
         id: alertData.alert_id,
-        title: alertData.title || '🚨 SIEM: Bloqueo en acción crítica detectado',
-        description: alertData.description || 'Intento de violación de política o anomalía de seguridad interceptada en tiempo real.',
-        severity: alertData.severity || 'CRITICAL',
+        title: alertData.title,
+        description: alertData.description,
+        severity: alertData.severity,
       });
-      setTimeout(() => setSecurityAlert(null), 9000);
     },
   });
 
@@ -90,7 +99,7 @@ export const App: React.FC = () => {
             top: '20px',
             left: '50%',
             transform: 'translateX(-50%)',
-            zIndex: 9999,
+            zIndex: 99999,
             backgroundColor: '#1E1218',
             border: '1px solid #EF4444',
             boxShadow: '0 12px 36px rgba(239, 68, 68, 0.45), 0 0 20px rgba(239, 68, 68, 0.25)',
@@ -118,7 +127,7 @@ export const App: React.FC = () => {
               <div style={{ fontSize: '11px', fontWeight: 800, color: '#F87171', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.5px' }}>
                 <span>🚨 SIEM SECURITY INCIDENT</span>
                 <span style={{ fontSize: '10px', backgroundColor: '#EF4444', color: '#fff', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                  {securityAlert.severity}
+                  {securityAlert.severity || 'CRITICAL'}
                 </span>
               </div>
               <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -171,6 +180,7 @@ export const App: React.FC = () => {
           {currentView === 'playground' && (
             <PlaygroundView 
               onTriggerApproval={handleTriggerApprovalFromPlayground} 
+              onTriggerAlert={handleTriggerAlert}
               onNavigate={handleNavigate}
             />
           )}

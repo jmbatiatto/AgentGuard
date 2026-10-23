@@ -75,6 +75,7 @@ class WebSocketConnectionManager:
         """Emite un evento a todas las conexiones del tenant y a las globales."""
         payload = {
             "event": event_type,
+            "type": event_type,
             "organization_id": str(organization_id) if organization_id else None,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": data,
