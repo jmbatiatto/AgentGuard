@@ -18,9 +18,9 @@
     "semantic_hash": "c195556ef1467d5a3bcd117e807adfd3"
   },
   "backend/app/api/__init__.py": {
-    "mtime": 1792723058.2281659,
-    "seen": 1792723735.809632,
-    "ast_hash": "6f430744da86aea0917327ecc2bad34f",
+    "mtime": 1792773862.107433,
+    "seen": 1792776190.641839,
+    "ast_hash": "ce23ea14028e38c169b80206794cec4b",
     "semantic_hash": ""
   },
   "backend/app/api/agents.py": {
@@ -420,9 +420,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Header.tsx": {
-    "mtime": 1792773084.7188542,
-    "seen": 1792773237.153073,
-    "ast_hash": "393694fdea7f854315f6134f4af243c9",
+    "mtime": 1792774838.2483304,
+    "seen": 1792776190.641839,
+    "ast_hash": "2f0550fc53032f23083dc853e651702c",
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.tsx": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_seed_demo.py": {
-    "mtime": 1792682608.7619631,
-    "seen": 1792682881.677834,
-    "ast_hash": "cdd6b18b5c661c64c2785493abb0e3ba",
+    "mtime": 1792773917.080245,
+    "seen": 1792776190.641839,
+    "ast_hash": "16a3a4f18c08b7762c8891b7f64ab3c5",
     "semantic_hash": ""
   },
   "scripts/seed_demo.py": {
@@ -792,9 +792,9 @@
     "semantic_hash": ""
   },
   "frontend/src/services/api.ts": {
-    "mtime": 1792769188.451334,
-    "seen": 1792770798.1600192,
-    "ast_hash": "29d1426343c514d64c0d1197999a68f8",
+    "mtime": 1792774516.4176226,
+    "seen": 1792776190.641839,
+    "ast_hash": "1b75e00a15ef0afa5c092e2922e1de8e",
     "semantic_hash": ""
   },
   "frontend/src/services/useAgentGuardWebSocket.ts": {
@@ -852,15 +852,21 @@
     "semantic_hash": ""
   },
   "frontend/src/views/SettingsView.tsx": {
-    "mtime": 1792769616.5592902,
-    "seen": 1792770798.1605859,
-    "ast_hash": "456d1dcfcc160aa1b6d4434b98699080",
+    "mtime": 1792774773.6929255,
+    "seen": 1792776190.641839,
+    "ast_hash": "283068cf3f8cd89fc9e04ee9d863411e",
     "semantic_hash": ""
   },
   "frontend/src/context/AuthContext.tsx": {
     "mtime": 1792773100.3093088,
     "seen": 1792773237.153073,
     "ast_hash": "5e7fd8228867fc0a2c76d2d985a10dbe",
+    "semantic_hash": ""
+  },
+  "backend/app/api/demo.py": {
+    "mtime": 1792773824.1983876,
+    "seen": 1792776190.641839,
+    "ast_hash": "a4fa288ff392cb4ccb9a87e89967fa8a",
     "semantic_hash": ""
   }
 }

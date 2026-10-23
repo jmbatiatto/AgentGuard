@@ -18,7 +18,8 @@ import {
   Code2,
   Sliders,
   Database,
-  Radio
+  Radio,
+  RotateCcw
 } from 'lucide-react';
 import { Header } from '../components/Header';
 
@@ -44,6 +45,30 @@ export const SettingsView: React.FC = () => {
     setCopiedTenantId(true);
     showToast('Tenant UUID copiado al portapapeles');
     setTimeout(() => setCopiedTenantId(false), 2000);
+  };
+
+  const [isResettingDemo, setIsResettingDemo] = useState(false);
+
+  const handleFactoryResetDemo = async () => {
+    if (!window.confirm('¿Confirmas el restablecimiento de la base de datos de PostgreSQL 16 al estado inicial de la demo académica? Se re-sembrarán los agentes, herramientas y políticas base de Acme Corp.')) {
+      return;
+    }
+    setIsResettingDemo(true);
+    try {
+      const res = await api.resetDemoData();
+      if (res.success) {
+        showToast('¡Base de datos demo restablecida con éxito! Actualizando...', 'success');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else {
+        showToast(`Error al restablecer: ${res.message}`, 'error');
+      }
+    } catch {
+      showToast('Error de red al conectar con el endpoint de reset demo', 'error');
+    } finally {
+      setIsResettingDemo(false);
+    }
   };
 
   // -------------------------------------------------------------
@@ -524,6 +549,77 @@ export const SettingsView: React.FC = () => {
                   Los registros de la tabla <code>audit_events</code> están sellados criptográficamente y no admiten operaciones de edición ni borrado (Append-Only WORM).
                 </p>
               </div>
+            </div>
+
+            {/* Factory Reset Demo Card */}
+            <div style={{
+              gridColumn: '1 / -1',
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '12px',
+              padding: '24px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '20px',
+              background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.04) 100%)',
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <RotateCcw size={18} color="#F59E0B" />
+                  <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                    Restablecer Entorno de Demostración (Factory Reset)
+                  </h3>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                    color: '#F59E0B',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                  }}>
+                    Ambiente Académico / Demo
+                  </span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', maxWidth: '750px', lineHeight: 1.5 }}>
+                  Limpia y re-siembra automáticamente las 12 tablas de PostgreSQL 16 para el tenant Acme Corp: restaura los 3 agentes (<code className="code-pill">sales-agent</code>, <code className="code-pill">customer-support-agent</code>, <code className="code-pill">financial-agent</code>), las 4 herramientas empresariales, las políticas Zero-Trust y la cola de aprobaciones para repetir los 4 escenarios de la demo en vivo cuantas veces sea necesario.
+                </p>
+              </div>
+
+              <button
+                id="btn-settings-factory-reset"
+                onClick={handleFactoryResetDemo}
+                disabled={isResettingDemo}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 18px',
+                  backgroundColor: isResettingDemo ? 'var(--bg-card-hover)' : 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid #F59E0B',
+                  borderRadius: '8px',
+                  color: '#F59E0B',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: isResettingDemo ? 'not-allowed' : 'pointer',
+                  opacity: isResettingDemo ? 0.7 : 1,
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isResettingDemo) {
+                    e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.22)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isResettingDemo ? 'var(--bg-card-hover)' : 'rgba(245, 158, 11, 0.12)';
+                }}
+              >
+                <RotateCcw size={15} className={isResettingDemo ? 'animate-spin' : ''} />
+                <span>{isResettingDemo ? 'Restableciendo base de datos...' : 'Re-sembrar Estado Demo'}</span>
+              </button>
             </div>
           </div>
         )}

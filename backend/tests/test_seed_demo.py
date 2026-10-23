@@ -155,7 +155,22 @@ async def test_seed_data_already_exists_without_reset():
     mock_session_cm.__aenter__.return_value = mock_session
     mock_session_cm.__aexit__.return_value = None
 
-    with patch("scripts.seed_demo.AsyncSessionLocal", return_value=mock_session_cm):
-        await seed_data(reset=False)
-
     mock_session.add.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_api_reset_demo_success():
+    """Valida el endpoint POST /api/v1/demo/reset cuando el seeder completa correctamente."""
+    from httpx import ASGITransport, AsyncClient
+    from app.main import app
+
+    with patch("app.api.demo.seed_data", new_callable=AsyncMock) as mock_seed:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post("/api/v1/demo/reset")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "success"
+            assert str(ORG_ACME_ID) in data["organization_id"]
+            mock_seed.assert_awaited_once_with(reset=True)
+

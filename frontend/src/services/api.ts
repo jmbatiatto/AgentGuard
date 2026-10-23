@@ -973,8 +973,30 @@ class AgentGuardApiClient {
       return false;
     }
   }
+
+  /**
+   * Restablece los datos de PostgreSQL y Redis al estado inicial de la demo
+   */
+  async resetDemoData(): Promise<{ success: boolean; message: string }> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/demo/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { success: true, message: data.message || 'Entorno demo restablecido con éxito' };
+      }
+      return { success: false, message: 'El servidor respondió con error al resetear la demo' };
+    } catch (err) {
+      console.warn('[AgentGuard API] Error invocando reset de demo:', err);
+      return { success: false, message: 'No se pudo conectar con el endpoint de reset' };
+    }
+  }
 }
 
 export const api = new AgentGuardApiClient();
 export default api;
+
 
