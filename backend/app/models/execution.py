@@ -114,5 +114,5 @@ class Execution(Base):
     @property
     def action_name(self) -> Optional[str]:
         """Nombre de la acción atómica ejecutada."""
-        return self.tool_action.name if self.tool_action else None
+        return self.tool_action.action_name if self.tool_action else None
 
