@@ -35,6 +35,7 @@ from app.models.user import User
 from app.schemas.gateway import GatewayExecuteRequest, GatewayExecuteResponse
 from app.services.pdp_engine import pdp_engine
 from app.services.sanitizer_service import sanitizer_service
+from app.services.threat_detector import threat_detector
 from app.core.websocket_manager import ws_manager
 
 logger = logging.getLogger("agentguard.pep")
@@ -89,6 +90,13 @@ class PEPGatewayService:
 
         # 1. Sanitizar parámetros de entrada de inmediato
         sanitized_params = sanitizer_service.sanitize(request.parameters)
+
+        # 1.1. Inspección heurística de vectores de ataque hostiles (OWASP Top 10 for Agentic Applications 2026)
+        threat = threat_detector.analyze(
+            parameters=request.parameters,
+            resource=request.resource,
+            action_name=request.action_name,
+        )
 
         # 2. Validar Agente (Tenant y Estado)
         agent_stmt = select(Agent).where(
@@ -226,7 +234,7 @@ class PEPGatewayService:
                 timestamp=now,
             )
 
-        # 5. Invocar al Motor de Políticas (PDP)
+        # 5. Invocar al Motor de Políticas (PDP) y Evaluar Amenazas Hostiles
         pdp_result = await pdp_engine.evaluate(
             db=db,
             organization_id=request.organization_id,
@@ -237,45 +245,98 @@ class PEPGatewayService:
             parameters=request.parameters,
         )
 
-        # 6. Procesar Veredicto
         approval_id: Optional[UUID] = None
         result_data: Optional[Dict[str, Any]] = None
         exec_status: ExecutionStatus
-
         alert: Optional[Alert] = None
-        match pdp_result.decision:
-            case PolicyDecision.ALLOW:
-                exec_status = ExecutionStatus.EXECUTED
-                # Despachar llamada hacia la API de destino
-                result_data = await cls._dispatch_to_tool(tool, request.action_name, request.parameters)
+        security_telemetry: Dict[str, Any]
+        final_decision: PolicyDecision
+        evaluated_rule_id: Optional[UUID] = pdp_result.evaluated_policy_rule_id
+        rejection_reason: Optional[str] = pdp_result.reason
 
-            case PolicyDecision.REQUIRE_APPROVAL:
-                exec_status = ExecutionStatus.PENDING_APPROVAL
-                approval_id = uuid.uuid4()
-                # Crear ticket en cola de intervención humana
-                approval = Approval(
-                    id=approval_id,
-                    execution_id=execution_id,
-                    status=ApprovalStatus.PENDING,
-                    created_at=now,
-                )
-                db.add(approval)
+        if threat.is_threat:
+            logger.warning(
+                "¡Vector hostil detectado por Gateway PEP! Tipo: %s, Vector: %s, Categoría OWASP: %s",
+                threat.threat_type, threat.attack_vector, threat.owasp_category
+            )
+            # Fail-Closed: Bloqueo innegociable e inmediato ante inyección hostil o exfiltración
+            final_decision = PolicyDecision.DENY
+            exec_status = ExecutionStatus.REJECTED
+            if rejection_reason:
+                rejection_reason = f"{rejection_reason} [Gateway PEP: {threat.details}]"
+            else:
+                rejection_reason = f"Bloqueo Gateway PEP: {threat.details}"
 
-            case PolicyDecision.DENY | _:
-                exec_status = ExecutionStatus.REJECTED
-                # Si es riesgo crítico o detecta anomalía, disparar Alerta de Seguridad (Escenario 4)
-                if tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
-                    alert = Alert(
-                        id=uuid.uuid4(),
-                        organization_id=request.organization_id,
+            # Disparar Alerta de Seguridad Crítica inmediata
+            alert = Alert(
+                id=uuid.uuid4(),
+                organization_id=request.organization_id,
+                execution_id=execution_id,
+                title=f"Alerta de Seguridad: Bloqueo en acción crítica '{request.action_name}' - [{threat.owasp_category.split(':')[0]}]",
+                description=(
+                    f"El agente {agent.name} intentó ejecutar '{request.action_name}'. "
+                    f"Veredicto Gateway: Bloqueado por vector de ataque hostil ({threat.owasp_category}). "
+                    f"Detalle: {threat.details}"
+                ),
+                severity=AlertSeverity.CRITICAL,
+                status=AlertStatus.OPEN,
+                created_at=now,
+            )
+            db.add(alert)
+
+            security_telemetry = {
+                "is_threat": True,
+                "threat_type": threat.threat_type,
+                "owasp_category": threat.owasp_category,
+                "attack_vector": threat.attack_vector,
+                "confidence": threat.confidence,
+                "matched_pattern": threat.matched_pattern,
+                "details": threat.details,
+                "decoded_payload": threat.decoded_payload,
+            }
+            sanitized_params["_security_threat"] = security_telemetry
+
+        else:
+            final_decision = pdp_result.decision
+            security_telemetry = {
+                "is_threat": False,
+                "status": "CLEAN",
+                "owasp_compliance": "OWASP GenAI LLM06 Sanitized",
+            }
+
+            match final_decision:
+                case PolicyDecision.ALLOW:
+                    exec_status = ExecutionStatus.EXECUTED
+                    # Despachar llamada hacia la API de destino
+                    result_data = await cls._dispatch_to_tool(tool, request.action_name, request.parameters)
+
+                case PolicyDecision.REQUIRE_APPROVAL:
+                    exec_status = ExecutionStatus.PENDING_APPROVAL
+                    approval_id = uuid.uuid4()
+                    # Crear ticket en cola de intervención humana
+                    approval = Approval(
+                        id=approval_id,
                         execution_id=execution_id,
-                        title=f"Alerta de Seguridad: Bloqueo en acción crítica '{request.action_name}'",
-                        description=f"El agente {agent.name} intentó ejecutar '{request.action_name}' pero fue bloqueado por política. Razón: {pdp_result.reason}",
-                        severity=AlertSeverity.CRITICAL if tool_action.risk_level == RiskLevel.CRITICAL else AlertSeverity.HIGH,
-                        status=AlertStatus.OPEN,
+                        status=ApprovalStatus.PENDING,
                         created_at=now,
                     )
-                    db.add(alert)
+                    db.add(approval)
+
+                case PolicyDecision.DENY | _:
+                    exec_status = ExecutionStatus.REJECTED
+                    # Si es riesgo crítico o detecta anomalía, disparar Alerta de Seguridad (Escenario 4)
+                    if tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
+                        alert = Alert(
+                            id=uuid.uuid4(),
+                            organization_id=request.organization_id,
+                            execution_id=execution_id,
+                            title=f"Alerta de Seguridad: Bloqueo en acción crítica '{request.action_name}'",
+                            description=f"El agente {agent.name} intentó ejecutar '{request.action_name}' pero fue bloqueado por política. Razón: {pdp_result.reason}",
+                            severity=AlertSeverity.CRITICAL if tool_action.risk_level == RiskLevel.CRITICAL else AlertSeverity.HIGH,
+                            status=AlertStatus.OPEN,
+                            created_at=now,
+                        )
+                        db.add(alert)
 
         # 7. Persistir Traza Forense Inmutable en Execution
         execution = Execution(
@@ -287,9 +348,9 @@ class PEPGatewayService:
             tool_action_id=tool_action.id,
             resource=request.resource,
             request_context=sanitized_params,
-            decision=pdp_result.decision,
+            decision=final_decision,
             status=exec_status,
-            evaluated_policy_rule_id=pdp_result.evaluated_policy_rule_id,
+            evaluated_policy_rule_id=evaluated_rule_id,
             timestamp=now,
         )
         db.add(execution)
@@ -345,9 +406,9 @@ class PEPGatewayService:
                 "action_name": request.action_name,
                 "resource": request.resource or "global",
                 "request_context": sanitized_params,
-                "decision": pdp_result.decision.value,
+                "decision": final_decision.value,
                 "status": exec_status.value,
-                "evaluated_policy_rule_id": str(pdp_result.evaluated_policy_rule_id) if pdp_result.evaluated_policy_rule_id else None,
+                "evaluated_policy_rule_id": str(evaluated_rule_id) if evaluated_rule_id else None,
                 "timestamp": now.isoformat(),
                 "latency_ms": 22.0,
             },
@@ -360,13 +421,14 @@ class PEPGatewayService:
             agent_id=request.agent_id,
             tool_id=request.tool_id,
             action_name=request.action_name,
-            decision=pdp_result.decision,
+            decision=final_decision,
             status=exec_status,
-            evaluated_policy_rule_id=pdp_result.evaluated_policy_rule_id,
+            evaluated_policy_rule_id=evaluated_rule_id,
             result=result_data,
-            error_message=pdp_result.reason if pdp_result.decision == PolicyDecision.DENY else None,
+            error_message=rejection_reason if final_decision == PolicyDecision.DENY else None,
             approval_id=approval_id,
             alert_id=alert.id if alert else None,
+            security_analysis=security_telemetry,
             timestamp=now,
         )
 

@@ -96,6 +96,10 @@ class GatewayExecuteResponse(BaseSchema):
         default=None,
         description="ID de la alerta de seguridad generada en caso de bloqueo crítico (Escenario 4)",
     )
+    security_analysis: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Telemetría heurística de análisis de amenazas OWASP Top 10 for Agentic Applications 2026",
+    )
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Marca temporal inmutable de la evaluación",
