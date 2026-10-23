@@ -1,9 +1,17 @@
 """Router de Operaciones de Demostración y Re-seeding de AgentGuard."""
 
 import logging
+import sys
+from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime, timezone
 from fastapi import APIRouter, status, HTTPException
+
+# Garantizar resolución confiable de scripts.seed_demo independientemente del CWD de ejecución
+_backend_root = Path(__file__).resolve().parent.parent.parent
+if str(_backend_root) not in sys.path:
+    sys.path.insert(0, str(_backend_root))
+
 from scripts.seed_demo import seed_data, ORG_ACME_ID
 
 logger = logging.getLogger("agentguard.api.demo")

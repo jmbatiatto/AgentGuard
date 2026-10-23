@@ -45,3 +45,22 @@ async def test_health_endpoint():
         assert "services" in data
         assert "database" in data["services"]
         assert "redis" in data["services"]
+
+
+def test_settings_secret_key_production_fail_fast():
+    """Valida que Settings rechace arranques en entorno production con SECRET_KEY por defecto o insegura."""
+    from app.core.config import Settings
+
+    with pytest.raises(ValueError, match="FATAL: SECRET_KEY insegura"):
+        Settings(
+            ENVIRONMENT="production",
+            SECRET_KEY="agentguard-insecure-dev-secret-key-change-in-production-min-32-chars",
+        )
+
+    # Debe ser aceptado si cumple con el estándar productivo
+    valid_prod_settings = Settings(
+        ENVIRONMENT="production",
+        SECRET_KEY="c1f8b49e8a7d6e5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0",
+    )
+    assert valid_prod_settings.ENVIRONMENT == "production"
+

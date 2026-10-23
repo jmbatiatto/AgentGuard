@@ -50,6 +50,8 @@ DESTRUCTIVE_INJECTION_PATTERNS = [
 
 # Regex para detección de Base64 potencial (mínimo 24 caracteres)
 BASE64_CANDIDATE_REGEX = re.compile(r"^[A-Za-z0-9+/]{24,}={0,2}$")
+BASE64_TOKEN_REGEX = re.compile(r"(?<![A-Za-z0-9+/])[A-Za-z0-9+/]{24,}={0,2}(?![A-Za-z0-9+/=])")
+
 
 
 @dataclass
@@ -115,9 +117,16 @@ class ThreatDetectorService:
 
         # 4. Chequeo de Ofuscación Base64 (ASI04)
         clean_text = text.strip()
+        candidates: List[str] = []
         if BASE64_CANDIDATE_REGEX.match(clean_text):
+            candidates.append(clean_text)
+        else:
+            for match in BASE64_TOKEN_REGEX.finditer(clean_text):
+                candidates.append(match.group(0))
+
+        for cand in candidates:
             try:
-                decoded_bytes = base64.b64decode(clean_text, validate=True)
+                decoded_bytes = base64.b64decode(cand, validate=True)
                 decoded_str = decoded_bytes.decode("utf-8", errors="ignore")
                 if len(decoded_str) > 8:
                     # Recursivamente evaluar el texto decodificado

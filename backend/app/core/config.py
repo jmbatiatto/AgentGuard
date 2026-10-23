@@ -32,6 +32,18 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "agentguard-insecure-dev-secret-key-change-in-production-min-32-chars"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 días
 
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def validate_production_secret_key(cls, v: str, info) -> str:
+        env = info.data.get("ENVIRONMENT", "development")
+        if env == "production" and ("insecure" in v.lower() or len(v) < 32):
+            raise ValueError(
+                "FATAL: SECRET_KEY insegura o demasiado corta para entorno 'production'. "
+                "Configure una clave criptográfica aleatoria de al menos 32 caracteres en .env."
+            )
+        return v
+
+
     # Orígenes Permitidos para CORS
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
