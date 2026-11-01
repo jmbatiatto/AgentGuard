@@ -1,18 +1,11 @@
 /**
  * Capa de Integración HTTP / REST para AgentGuard Frontend.
  * 
- * Conecta con la API FastAPI (/api/v1) con resiliencia: si el backend no está
- * disponible o está offline, retorna graceful fallbacks desde mockData sin romper
- * la interfaz de usuario ni los estilos de la aplicación.
+ * Conecta con la API FastAPI (/api/v1). Si el backend responde con listas vacías
+ * o errores, retorna colecciones vacías legítimas ([]), evitando fallbacks a mockData
+ * que enmascaren el estado real de la base de datos PostgreSQL ante auditorías.
  */
 
-import {
-  mockAgents,
-  mockTools,
-  mockPolicies,
-  mockApprovals,
-  mockAlerts,
-} from '../data/mockData';
 import type {
   Agent,
   Tool,
@@ -32,6 +25,7 @@ export const DEMO_IDS = {
   USER_ADMIN_ID: '22222222-2222-2222-2222-222222222201',
   USER_APPROVER_ID: '22222222-2222-2222-2222-222222222202',
   USER_OPERATOR_ID: '22222222-2222-2222-2222-222222222203',
+  USER_AUDITOR_ID: '22222222-2222-2222-2222-222222222204',
   AGENT_SALES_ID: '33333333-3333-3333-3333-333333333301',
   AGENT_FINANCE_ID: '33333333-3333-3333-3333-333333333302',
   AGENT_SUPPORT_ID: '33333333-3333-3333-3333-333333333303',
@@ -103,16 +97,16 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Obtiene la lista de agentes registrados (con fallback a mockAgents)
+   * Obtiene la lista de agentes registrados desde /api/v1/agents
    */
   async getAgents(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Agent[]> {
     try {
       const res = await fetch(`${this.baseUrl}/api/v1/agents?organization_id=${orgId}`, {
-        signal: AbortSignal.timeout(2000),
+        signal: AbortSignal.timeout(3000),
       });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           return data.map((item: any) => ({
             id: item.id,
             name: item.name,
@@ -125,11 +119,13 @@ class AgentGuardApiClient {
             initials: item.name.split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase(),
           }));
         }
+      } else {
+        console.warn(`[AgentGuard API] getAgents respondió con código HTTP ${res.status}`);
       }
-    } catch {
-      // Graceful fallback a mocks
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al conectar con /api/v1/agents:', err);
     }
-    return mockAgents;
+    return [];
   }
 
   /**
@@ -243,16 +239,16 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Obtiene la lista de herramientas (con fallback a mockTools)
+   * Obtiene la lista de herramientas desde /api/v1/tools
    */
   async getTools(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Tool[]> {
     try {
       const res = await fetch(`${this.baseUrl}/api/v1/tools?organization_id=${orgId}`, {
-        signal: AbortSignal.timeout(2000),
+        signal: AbortSignal.timeout(3000),
       });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           return data.map((t: any) => {
             const rawActions: Array<any> = t.actions || [];
             const actionNames = rawActions.map((a: any) => a.action_name);
@@ -280,11 +276,13 @@ class AgentGuardApiClient {
             };
           });
         }
+      } else {
+        console.warn(`[AgentGuard API] getTools respondió con código HTTP ${res.status}`);
       }
-    } catch {
-      // Graceful fallback
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al conectar con /api/v1/tools:', err);
     }
-    return mockTools;
+    return [];
   }
 
   /**
@@ -328,7 +326,6 @@ class AgentGuardApiClient {
       return { success: false, error: err.message || 'Error de conexión' };
     }
   }
-
 
   /**
    * Da de alta una nueva herramienta externa y sus acciones atómicas
@@ -406,19 +403,16 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Obtiene la lista de políticas (con fallback a mockPolicies)
-   */
-  /**
-   * Obtiene la lista de políticas (con reglas desglosadas o fallback a mockPolicies)
+   * Obtiene la lista de políticas desde /api/v1/policies
    */
   async getPolicies(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Policy[]> {
     try {
       const res = await fetch(`${this.baseUrl}/api/v1/policies?organization_id=${orgId}`, {
-        signal: AbortSignal.timeout(2000),
+        signal: AbortSignal.timeout(3000),
       });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const result: Policy[] = [];
 
           for (const p of data) {
@@ -464,13 +458,15 @@ class AgentGuardApiClient {
             }
           }
 
-          if (result.length > 0) return result;
+          return result;
         }
+      } else {
+        console.warn(`[AgentGuard API] getPolicies respondió con código HTTP ${res.status}`);
       }
-    } catch {
-      // Graceful fallback
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al conectar con /api/v1/policies:', err);
     }
-    return mockPolicies;
+    return [];
   }
 
   /**
@@ -520,7 +516,6 @@ class AgentGuardApiClient {
     }
     return [];
   }
-
 
   /**
    * Da de alta una nueva Política y su regla determinista
@@ -598,7 +593,7 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Obtiene la lista de aprobaciones humanas (con fallback a mockApprovals)
+   * Obtiene la lista de aprobaciones humanas desde /api/v1/approvals
    */
   async getApprovals(
     status?: ApprovalStatus,
@@ -609,12 +604,12 @@ class AgentGuardApiClient {
       if (status) query.append('status', status);
 
       const res = await fetch(`${this.baseUrl}/api/v1/approvals?${query.toString()}`, {
-        signal: AbortSignal.timeout(2500),
+        signal: AbortSignal.timeout(3000),
       });
 
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           return data.map((item: any) => {
             const exec = item.execution || {};
             const params = exec.request_context || {};
@@ -639,11 +634,13 @@ class AgentGuardApiClient {
             };
           });
         }
+      } else {
+        console.warn(`[AgentGuard API] getApprovals respondió con código HTTP ${res.status}`);
       }
-    } catch {
-      // Fallback si el backend está desconectado
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al conectar con /api/v1/approvals:', err);
     }
-    return mockApprovals;
+    return [];
   }
 
   /**
@@ -818,10 +815,6 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Obtiene alertas de seguridad (con fallback a mockAlerts)
-   */
-
-  /**
    * Obtiene la lista forense de ejecuciones (/api/v1/executions)
    */
   async getExecutions(
@@ -838,7 +831,7 @@ class AgentGuardApiClient {
 
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           return data.map((item: any) => ({
             id: item.id,
             organizationId: item.organization_id,
@@ -859,17 +852,18 @@ class AgentGuardApiClient {
             resolutionReason: item.resolution_reason || null,
           }));
         }
+      } else {
+        console.warn(`[AgentGuard API] getExecutions respondió con código HTTP ${res.status}`);
       }
     } catch (err) {
       console.warn('[AgentGuard API] No se pudo obtener ejecuciones del backend:', err);
     }
 
-    // Retorna arreglo vacío o datos iniciales si no hay backend
     return [];
   }
 
   /**
-   * Obtiene alertas de seguridad desde /api/v1/alerts (con fallback a mockAlerts)
+   * Obtiene alertas de seguridad desde /api/v1/alerts
    */
   async getAlerts(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<SecurityAlert[]> {
     try {
@@ -879,7 +873,7 @@ class AgentGuardApiClient {
 
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           return data.map((item: any) => {
             const rawSev = (item.severity || '').toLowerCase();
             let sev: 'critical' | 'warning' | 'info' = 'warning';
@@ -905,11 +899,13 @@ class AgentGuardApiClient {
             };
           });
         }
+      } else {
+        console.warn(`[AgentGuard API] getAlerts respondió con código HTTP ${res.status}`);
       }
     } catch (err) {
       console.warn('[AgentGuard API] No se pudo obtener alertas del backend:', err);
     }
-    return mockAlerts;
+    return [];
   }
 
   /**
@@ -934,7 +930,7 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Obtiene la lista de usuarios y roles RBAC de la organización
+   * Obtiene la lista de usuarios y roles RBAC de la organización (/api/v1/users)
    */
   async getUsers(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<UserMember[]> {
     try {
@@ -952,33 +948,13 @@ class AgentGuardApiClient {
             createdAt: item.created_at,
           }));
         }
+      } else {
+        console.warn(`[AgentGuard API] getUsers respondió con código HTTP ${res.status}`);
       }
     } catch (err) {
       console.warn('[AgentGuard API] No se pudo obtener usuarios del backend:', err);
     }
-    return [
-      {
-        id: DEMO_IDS.USER_ADMIN_ID,
-        organizationId: orgId,
-        email: 'admin@acmecorp.com',
-        role: 'ADMIN',
-        createdAt: '2026-03-01T10:00:00Z',
-      },
-      {
-        id: DEMO_IDS.USER_APPROVER_ID,
-        organizationId: orgId,
-        email: 'compliance.lead@acmecorp.com',
-        role: 'APPROVER',
-        createdAt: '2026-03-05T14:30:00Z',
-      },
-      {
-        id: DEMO_IDS.USER_OPERATOR_ID,
-        organizationId: orgId,
-        email: 'ops.engineer@acmecorp.com',
-        role: 'OPERATOR',
-        createdAt: '2026-03-10T09:15:00Z',
-      },
-    ];
+    return [];
   }
 
   /**
@@ -1079,5 +1055,3 @@ class AgentGuardApiClient {
 
 export const api = new AgentGuardApiClient();
 export default api;
-
-

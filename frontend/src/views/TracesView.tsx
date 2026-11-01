@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, CheckCircle, XCircle, AlertCircle, Eye, X, Terminal, RefreshCw, Clock, UserCheck } from 'lucide-react';
 import { Header } from '../components/Header';
-import { api } from '../services/api';
+import { api, DEMO_IDS } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import type { ExecutionTrace, PolicyDecision } from '../types/domain';
 
@@ -29,22 +29,25 @@ export const TracesView: React.FC = () => {
   // Suscripción WebSocket a nuevas ejecuciones en vivo
   useAgentGuardWebSocket({
     onNewExecution: (newTraceData) => {
+      const traceId = newTraceData.id || newTraceData.execution_id || crypto.randomUUID();
       const formattedTrace: ExecutionTrace = {
-        id: newTraceData.id,
-        organizationId: newTraceData.organization_id,
-        agentId: newTraceData.agent_id,
-        agentName: newTraceData.agent_name || 'AI Agent',
-        toolId: newTraceData.tool_id,
-        toolName: newTraceData.tool_name || 'External Tool',
-        actionName: newTraceData.action_name || 'execute',
+        id: traceId,
+        organizationId: newTraceData.organization_id || newTraceData.organizationId || DEMO_IDS.ORG_ACME_ID,
+        agentId: newTraceData.agent_id || newTraceData.agentId || '',
+        agentName: newTraceData.agent_name || newTraceData.agentName || 'AI Agent',
+        toolId: newTraceData.tool_id || newTraceData.toolId || '',
+        toolName: newTraceData.tool_name || newTraceData.toolName || 'External Tool',
+        actionName: newTraceData.action_name || newTraceData.actionName || 'execute',
         resource: newTraceData.resource || 'global/resource',
-        requestContext: newTraceData.request_context || {},
-        decision: newTraceData.decision as PolicyDecision,
-        status: newTraceData.status || 'EXECUTED',
-        evaluatedPolicyRuleId: newTraceData.evaluated_policy_rule_id,
-        timestamp: newTraceData.timestamp,
-        latencyMs: newTraceData.latency_ms || 22.0,
-        approvalStatus: newTraceData.status === 'PENDING_APPROVAL' ? 'PENDING' : null,
+        requestContext: newTraceData.request_context || newTraceData.requestContext || {},
+        decision: (newTraceData.decision || 'DENY') as PolicyDecision,
+        status: newTraceData.status || (newTraceData.decision === 'ALLOW' ? 'EXECUTED' : newTraceData.decision === 'REQUIRE_APPROVAL' ? 'PENDING_APPROVAL' : 'BLOCKED'),
+        evaluatedPolicyRuleId: newTraceData.evaluated_policy_rule_id || newTraceData.evaluatedPolicyRuleId,
+        timestamp: newTraceData.timestamp || new Date().toISOString(),
+        latencyMs: newTraceData.latency_ms || newTraceData.latencyMs || 22.0,
+        approvalStatus: newTraceData.approval_status || (newTraceData.status === 'PENDING_APPROVAL' ? 'PENDING' : null),
+        approvalResolvedAt: newTraceData.approval_resolved_at || null,
+        resolutionReason: newTraceData.resolution_reason || null,
       };
 
       setTraces(prev => [formattedTrace, ...prev]);
@@ -53,9 +56,10 @@ export const TracesView: React.FC = () => {
       setTraces(prev => prev.map(t => {
         if (t.id === data.execution_id) {
           const isApproved = data.status === 'APPROVED';
+          const newStatus = isApproved ? 'EXECUTED' : data.status === 'EXPIRED' ? 'EXPIRED' : 'REJECTED';
           return {
             ...t,
-            status: isApproved ? 'EXECUTED' : 'REJECTED',
+            status: newStatus,
             approvalStatus: data.status,
             resolutionReason: data.resolution_reason,
             approvalResolvedAt: data.resolved_at,
@@ -67,9 +71,10 @@ export const TracesView: React.FC = () => {
       setSelectedTrace(prev => {
         if (prev && prev.id === data.execution_id) {
           const isApproved = data.status === 'APPROVED';
+          const newStatus = isApproved ? 'EXECUTED' : data.status === 'EXPIRED' ? 'EXPIRED' : 'REJECTED';
           return {
             ...prev,
-            status: isApproved ? 'EXECUTED' : 'REJECTED',
+            status: newStatus,
             approvalStatus: data.status,
             resolutionReason: data.resolution_reason,
             approvalResolvedAt: data.resolved_at,
@@ -80,12 +85,138 @@ export const TracesView: React.FC = () => {
     },
   });
 
+  const renderExecutionStatusBadge = (status: string, approvalStatus?: string | null) => {
+    const s = (status || '').toUpperCase();
+    const a = (approvalStatus || '').toUpperCase();
+
+    if (s === 'EXECUTED' || a === 'APPROVED') {
+      return (
+        <span className="badge" style={{
+          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+          color: '#34D399',
+          border: '1px solid rgba(16, 185, 129, 0.35)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontWeight: 600,
+        }}>
+          <CheckCircle size={11} />
+          <span>EXECUTED</span>
+        </span>
+      );
+    }
+
+    if (s === 'ALLOWED') {
+      return (
+        <span className="badge" style={{
+          backgroundColor: 'rgba(16, 185, 129, 0.12)',
+          color: '#10B981',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontWeight: 600,
+        }}>
+          <CheckCircle size={11} />
+          <span>ALLOWED</span>
+        </span>
+      );
+    }
+
+    if (s === 'PENDING_APPROVAL' || s === 'PENDING' || a === 'PENDING') {
+      return (
+        <span className="badge" style={{
+          backgroundColor: 'rgba(245, 158, 11, 0.15)',
+          color: '#FBBF24',
+          border: '1px solid rgba(245, 158, 11, 0.35)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontWeight: 600,
+        }}>
+          <Clock size={11} />
+          <span>PENDING_APPROVAL</span>
+        </span>
+      );
+    }
+
+    if (s === 'REJECTED' || a === 'REJECTED') {
+      return (
+        <span className="badge" style={{
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          color: '#F87171',
+          border: '1px solid rgba(239, 68, 68, 0.35)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontWeight: 600,
+        }}>
+          <XCircle size={11} />
+          <span>REJECTED</span>
+        </span>
+      );
+    }
+
+    if (s === 'EXPIRED' || a === 'EXPIRED') {
+      return (
+        <span className="badge" style={{
+          backgroundColor: 'rgba(249, 115, 22, 0.15)',
+          color: '#FB923C',
+          border: '1px solid rgba(249, 115, 22, 0.35)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontWeight: 600,
+        }}>
+          <Clock size={11} />
+          <span>EXPIRED</span>
+        </span>
+      );
+    }
+
+    if (s === 'FAILED') {
+      return (
+        <span className="badge" style={{
+          backgroundColor: 'rgba(220, 38, 38, 0.18)',
+          color: '#FCA5A5',
+          border: '1px solid rgba(220, 38, 38, 0.4)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontWeight: 600,
+        }}>
+          <AlertCircle size={11} />
+          <span>FAILED</span>
+        </span>
+      );
+    }
+
+    return (
+      <span className="badge" style={{
+        backgroundColor: 'rgba(239, 68, 68, 0.12)',
+        color: '#EF4444',
+        border: '1px solid rgba(239, 68, 68, 0.3)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        fontWeight: 600,
+      }}>
+        <XCircle size={11} />
+        <span>{s || 'BLOCKED'}</span>
+      </span>
+    );
+  };
+
   const filteredTraces = traces.filter(trace => {
+    const traceId = trace.id || '';
+    const agentName = trace.agentName || '';
+    const actionName = trace.actionName || '';
+    const resource = trace.resource || '';
     const matchesSearch = 
-      trace.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trace.agentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trace.actionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trace.resource.toLowerCase().includes(searchTerm.toLowerCase());
+      traceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      agentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      actionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resource.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesDecision = 
       decisionFilter === 'ALL' || trace.decision === decisionFilter;
@@ -212,7 +343,7 @@ export const TracesView: React.FC = () => {
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       <td style={{ padding: '14px 18px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#38BDF8' }}>
-                        {trace.id.substring(0, 8)}...
+                        {(trace.id || '').substring(0, 8)}...
                       </td>
                       <td style={{ padding: '14px 18px', color: 'var(--text-muted)', fontSize: '12px' }}>
                         {formattedTime}
@@ -238,7 +369,13 @@ export const TracesView: React.FC = () => {
                             <span style={{
                               fontSize: '10px',
                               fontWeight: 500,
-                              color: trace.status === 'EXECUTED' || trace.approvalStatus === 'APPROVED' ? '#34D399' : trace.status === 'PENDING_APPROVAL' || trace.approvalStatus === 'PENDING' ? '#FBBF24' : '#F87171',
+                              color: trace.status === 'EXECUTED' || trace.approvalStatus === 'APPROVED' 
+                                ? '#34D399' 
+                                : trace.status === 'PENDING_APPROVAL' || trace.approvalStatus === 'PENDING' 
+                                ? '#FBBF24' 
+                                : trace.status === 'EXPIRED' || trace.approvalStatus === 'EXPIRED'
+                                ? '#FB923C'
+                                : '#F87171',
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '3px',
@@ -247,6 +384,8 @@ export const TracesView: React.FC = () => {
                                 ? '✓ Autorizada por humano'
                                 : trace.status === 'PENDING_APPROVAL' || trace.approvalStatus === 'PENDING'
                                 ? '⏳ Esperando aprobación'
+                                : trace.status === 'EXPIRED' || trace.approvalStatus === 'EXPIRED'
+                                ? '⏱ Expirada'
                                 : '✕ Rechazada por humano'}
                             </span>
                           )}
@@ -256,86 +395,7 @@ export const TracesView: React.FC = () => {
                         {trace.latencyMs.toFixed(1)}ms
                       </td>
                       <td style={{ padding: '14px 18px' }}>
-                        {(() => {
-                          if (trace.decision === 'REQUIRE_APPROVAL') {
-                            if (trace.status === 'EXECUTED' || trace.approvalStatus === 'APPROVED') {
-                              return (
-                                <span className="badge" style={{
-                                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                                  color: '#34D399',
-                                  border: '1px solid rgba(16, 185, 129, 0.35)',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  fontWeight: 600,
-                                }}>
-                                  <CheckCircle size={12} />
-                                  <span>APPROVED</span>
-                                </span>
-                              );
-                            }
-                            if (trace.status === 'PENDING_APPROVAL' || trace.approvalStatus === 'PENDING') {
-                              return (
-                                <span className="badge" style={{
-                                  backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                                  color: '#FBBF24',
-                                  border: '1px solid rgba(245, 158, 11, 0.35)',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  fontWeight: 600,
-                                }}>
-                                  <Clock size={12} />
-                                  <span>PENDING</span>
-                                </span>
-                              );
-                            }
-                            return (
-                              <span className="badge" style={{
-                                backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                                color: '#F87171',
-                                border: '1px solid rgba(239, 68, 68, 0.35)',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                fontWeight: 600,
-                              }}>
-                                <XCircle size={12} />
-                                <span>REJECTED</span>
-                              </span>
-                            );
-                          }
-
-                          if (trace.status === 'EXECUTED') {
-                            return (
-                              <span className="badge" style={{
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                color: '#10B981',
-                                border: '1px solid rgba(16, 185, 129, 0.2)',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                              }}>
-                                <CheckCircle size={11} />
-                                <span>EXECUTED</span>
-                              </span>
-                            );
-                          }
-
-                          return (
-                            <span className="badge" style={{
-                              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                              color: '#EF4444',
-                              border: '1px solid rgba(239, 68, 68, 0.2)',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                            }}>
-                              <XCircle size={11} />
-                              <span>BLOCKED</span>
-                            </span>
-                          );
-                        })()}
+                        {renderExecutionStatusBadge(trace.status, trace.approvalStatus)}
                       </td>
                       <td style={{ padding: '14px 18px', textAlign: 'center' }}>
                         <button
@@ -408,10 +468,10 @@ export const TracesView: React.FC = () => {
 
             {/* Modal Content */}
             <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                 <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Trace ID</div>
-                  <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', marginTop: '2px' }}>{selectedTrace.id}</div>
+                  <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', marginTop: '2px', wordBreak: 'break-all' }}>{selectedTrace.id}</div>
                 </div>
                 <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Timestamp</div>
@@ -427,33 +487,45 @@ export const TracesView: React.FC = () => {
                     {selectedTrace.decision} ({selectedTrace.latencyMs.toFixed(1)}ms)
                   </div>
                 </div>
+                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Execution Status</div>
+                  <div>
+                    {renderExecutionStatusBadge(selectedTrace.status, selectedTrace.approvalStatus)}
+                  </div>
+                </div>
+                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Evaluated Policy Rule</div>
+                  <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#38BDF8', marginTop: '2px' }}>
+                    {selectedTrace.evaluatedPolicyRuleId ? selectedTrace.evaluatedPolicyRuleId.substring(0, 14) + '...' : 'Default / Base'}
+                  </div>
+                </div>
               </div>
 
               {/* Human-in-the-Loop Governance Card */}
               {selectedTrace.decision === 'REQUIRE_APPROVAL' && (
                 <div style={{
                   padding: '12px 16px',
-                  backgroundColor: selectedTrace.status === 'EXECUTED' ? 'rgba(16, 185, 129, 0.08)' : selectedTrace.status === 'PENDING_APPROVAL' ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                  backgroundColor: selectedTrace.status === 'EXECUTED' ? 'rgba(16, 185, 129, 0.08)' : selectedTrace.status === 'PENDING_APPROVAL' ? 'rgba(245, 158, 11, 0.08)' : selectedTrace.status === 'EXPIRED' ? 'rgba(249, 115, 22, 0.08)' : 'rgba(239, 68, 68, 0.08)',
                   borderRadius: '8px',
-                  border: selectedTrace.status === 'EXECUTED' ? '1px solid rgba(16, 185, 129, 0.25)' : selectedTrace.status === 'PENDING_APPROVAL' ? '1px solid rgba(245, 158, 11, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)',
+                  border: selectedTrace.status === 'EXECUTED' ? '1px solid rgba(16, 185, 129, 0.25)' : selectedTrace.status === 'PENDING_APPROVAL' ? '1px solid rgba(245, 158, 11, 0.25)' : selectedTrace.status === 'EXPIRED' ? '1px solid rgba(249, 115, 22, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '6px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: selectedTrace.status === 'EXECUTED' ? '#34D399' : selectedTrace.status === 'PENDING_APPROVAL' ? '#FBBF24' : '#F87171' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: selectedTrace.status === 'EXECUTED' ? '#34D399' : selectedTrace.status === 'PENDING_APPROVAL' ? '#FBBF24' : selectedTrace.status === 'EXPIRED' ? '#FB923C' : '#F87171' }}>
                       <UserCheck size={15} />
                       <span>Gobernanza Human-in-the-Loop (HITL)</span>
                     </div>
-                    <span className={`badge ${selectedTrace.status === 'EXECUTED' ? 'badge-success' : selectedTrace.status === 'PENDING_APPROVAL' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: '10px' }}>
-                      {selectedTrace.status === 'EXECUTED' ? 'AUTORIZADO POR HUMANO' : selectedTrace.status === 'PENDING_APPROVAL' ? 'ESPERANDO APPROVER' : 'DENEGADO POR HUMANO'}
-                    </span>
+                    {renderExecutionStatusBadge(selectedTrace.status, selectedTrace.approvalStatus)}
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
                     {selectedTrace.status === 'EXECUTED'
                       ? 'La acción autónoma fue suspendida por el Gateway PEP al exceder el umbral de política. Un operador con rol APPROVER autorizó la solicitud desde la bandeja HITL, desbloqueando el despacho hacia la herramienta.'
                       : selectedTrace.status === 'PENDING_APPROVAL'
                       ? 'La acción sensible está suspendida en la Bandeja de Aprobaciones a la espera de confirmación por un operador autorizado.'
+                      : selectedTrace.status === 'EXPIRED'
+                      ? 'El ticket de aprobación expiró sin resolución por parte de un operador humano (timeout).'
                       : 'La acción sensible fue evaluada y rechazada explícitamente por el operador humano.'}
                   </p>
                   {selectedTrace.resolutionReason && (

@@ -14,7 +14,6 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Header } from '../components/Header';
-import { mockAlerts } from '../data/mockData';
 import { api, DEMO_IDS } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import type { NavView, SecurityAlert, ExecutionTrace } from '../types/domain';
@@ -25,20 +24,20 @@ interface OverviewViewProps {
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingApprovalsCount }) => {
-  const [alerts, setAlerts] = useState<SecurityAlert[]>(mockAlerts);
+  const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
   const [recentExecutions, setRecentExecutions] = useState<ExecutionTrace[]>([]);
   const [backendHealth, setBackendHealth] = useState<{ isOnline: boolean; status: string }>({ isOnline: true, status: 'healthy' });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Live Metrics State
+  // Live Metrics State (initializes to 0, does not fake mock metrics)
   const [stats, setStats] = useState({
-    activeAgents: 3,
-    totalTools: 4,
-    activePolicies: 4,
-    totalExecutions: 8429,
-    blockedActions: 147,
-    allowedActions: 8282,
-    avgLatencyMs: 18.4,
+    activeAgents: 0,
+    totalTools: 0,
+    activePolicies: 0,
+    totalExecutions: 0,
+    blockedActions: 0,
+    allowedActions: 0,
+    avgLatencyMs: 0,
   });
 
   const loadOverviewData = async () => {
@@ -54,36 +53,30 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
       ]);
 
       setBackendHealth(health);
-
-      if (alertsData && alertsData.length > 0) {
-        setAlerts(alertsData);
-      }
-
-      if (executionsData && executionsData.length > 0) {
-        setRecentExecutions(executionsData.slice(0, 5));
-      }
+      setAlerts(alertsData || []);
+      setRecentExecutions((executionsData || []).slice(0, 5));
 
       const realExecCount = executionsData ? executionsData.length : 0;
       const realBlockedCount = executionsData ? executionsData.filter(e => e.decision === 'DENY').length : 0;
       const realAllowedCount = executionsData ? executionsData.filter(e => e.decision === 'ALLOW').length : 0;
-      const realActiveAgents = agentsData ? agentsData.filter(a => a.status === 'Active').length : 3;
-      const realTotalTools = toolsData ? toolsData.length : 4;
-      const realActivePolicies = policiesData ? policiesData.filter(p => p.status === 'Active').length : 4;
+      const realActiveAgents = agentsData ? agentsData.filter(a => a.status === 'Active').length : 0;
+      const realTotalTools = toolsData ? toolsData.length : 0;
+      const realActivePolicies = policiesData ? policiesData.filter(p => p.status === 'Active').length : 0;
 
       const totalLatency = executionsData && executionsData.length > 0 
-        ? executionsData.reduce((acc, curr) => acc + (curr.latencyMs || 15), 0)
+        ? executionsData.reduce((acc, curr) => acc + (curr.latencyMs || 0), 0)
         : 0;
       const calculatedAvgLatency = realExecCount > 0 
         ? Number((totalLatency / realExecCount).toFixed(1))
-        : 18.4;
+        : 0;
 
       setStats({
-        activeAgents: realActiveAgents > 0 ? realActiveAgents : 3,
-        totalTools: realTotalTools > 0 ? realTotalTools : 4,
-        activePolicies: realActivePolicies > 0 ? realActivePolicies : 4,
-        totalExecutions: realExecCount > 0 ? realExecCount : 8429,
-        blockedActions: realBlockedCount > 0 ? realBlockedCount : 147,
-        allowedActions: realAllowedCount > 0 ? realAllowedCount : 8282,
+        activeAgents: realActiveAgents,
+        totalTools: realTotalTools,
+        activePolicies: realActivePolicies,
+        totalExecutions: realExecCount,
+        blockedActions: realBlockedCount,
+        allowedActions: realAllowedCount,
         avgLatencyMs: calculatedAvgLatency,
       });
     } catch (err) {
@@ -110,25 +103,23 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
       };
 
       setAlerts(prev => [newAlert, ...prev]);
-      setStats(prev => ({
-        ...prev,
-        blockedActions: prev.blockedActions + 1,
-      }));
+      // Nota: no se incrementa blockedActions aquí para evitar conteo duplicado,
+      // dado que onNewExecution ya registra la ejecución con decisión DENY.
     },
     onNewExecution: (execData) => {
       const newExec: ExecutionTrace = {
         id: execData.execution_id || `exec_${Date.now()}`,
         organizationId: execData.organization_id || DEMO_IDS.ORG_ACME_ID,
         agentId: execData.agent_id,
-        agentName: execData.agent_id?.includes('sales') ? 'Sales Quoting Bot' : 'AI Agent',
+        agentName: execData.agent_name || (execData.agent_id?.includes('sales') ? 'Sales Quoting Bot' : 'AI Agent'),
         toolId: execData.tool_id,
-        toolName: 'Tool Integration',
+        toolName: execData.tool_name || 'Tool Integration',
         actionName: execData.action_name,
-        resource: 'runtime/execution',
-        requestContext: {},
+        resource: execData.resource || 'runtime/execution',
+        requestContext: execData.request_context || {},
         decision: execData.decision,
         status: execData.status || 'EXECUTED',
-        timestamp: new Date().toISOString(),
+        timestamp: execData.timestamp || new Date().toISOString(),
         latencyMs: execData.evaluation_latency_ms || 14.5,
       };
 
@@ -170,7 +161,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
               fontWeight: 500,
             }}
           >
-            <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
             <span>Sincronizar</span>
           </button>
         }
@@ -393,7 +384,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                 <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                   <ShieldCheck size={28} color="#10B981" style={{ margin: '0 auto 8px' }} />
                   <div>No hay incidentes de seguridad abiertos.</div>
-                  <div style={{ fontSize: '11px', marginTop: '4px' }}>El Gateway está bloqueando amenazas en tiempo de ejecución.</div>
+                  <div style={{ fontSize: '11px', marginTop: '4px' }}>El Gateway está monitoreando en tiempo de ejecución.</div>
                 </div>
               ) : (
                 alerts.slice(0, 5).map(alert => {

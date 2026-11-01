@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Play, 
   ArrowRight, 
@@ -111,6 +111,119 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const [activeResult, setActiveResult] = useState<SimulationResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedAttackVector, setSelectedAttackVector] = useState<string>('ASI03');
+
+  // Estado para el probador de políticas / custom payload
+  const [customAction, setCustomAction] = useState<string>('create_quote');
+  const [customContext, setCustomContext] = useState<string>('{\n  "amount": 2500,\n  "customer_id": "cus_991"\n}');
+  const [customAgentId, setCustomAgentId] = useState<string>(DEMO_IDS.AGENT_SALES_ID);
+  const [customToolId, setCustomToolId] = useState<string>(DEMO_IDS.TOOL_CRM_ID);
+
+  // Leer y poblar payload desde sessionStorage si fue enviado desde PoliciesView
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('agentguard_test_payload');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const actionToSet = parsed.action || 'create_quote';
+        const contextToSet = parsed.context || {};
+        
+        setCustomAction(actionToSet);
+        setCustomContext(typeof contextToSet === 'string' ? contextToSet : JSON.stringify(contextToSet, null, 2));
+
+        if (parsed.agent_id) setCustomAgentId(parsed.agent_id);
+        if (parsed.tool_id) setCustomToolId(parsed.tool_id);
+
+        sessionStorage.removeItem('agentguard_test_payload');
+
+        // Ejecutar inmediatamente la simulación para feedback reactivo
+        runCustomSimulation(actionToSet, typeof contextToSet === 'object' ? contextToSet : undefined);
+      }
+    } catch (err) {
+      console.warn('Error leyendo agentguard_test_payload de sessionStorage:', err);
+      sessionStorage.removeItem('agentguard_test_payload');
+    }
+  }, []);
+
+  const runCustomSimulation = async (actionToRun?: string, contextToRun?: any) => {
+    const act = actionToRun || customAction;
+    let params = contextToRun;
+    if (!params) {
+      try {
+        params = JSON.parse(customContext);
+      } catch {
+        alert('El JSON de contexto no es válido. Revisa la sintaxis.');
+        return;
+      }
+    }
+
+    if (isAgentGuardActive) {
+      setIsLoading(true);
+      const res = await api.executeGateway({
+        organization_id: DEMO_IDS.ORG_ACME_ID,
+        agent_id: customAgentId,
+        tool_id: customToolId,
+        action_name: act,
+        parameters: params,
+        resource: `runtime/${act}`,
+      });
+      setIsLoading(false);
+
+      if (res.decision === 'REQUIRE_APPROVAL' && onTriggerApproval && !res.isLiveBackend) {
+        onTriggerApproval();
+      }
+
+      if (res.decision === 'DENY' && onTriggerAlert) {
+        onTriggerAlert({
+          id: res.alert_id || undefined,
+          title: `Alerta de Seguridad: Acción '${act}' denegada por política`,
+          description: res.error_message || 'Violación de política detectada por el Gateway PEP.',
+          severity: 'HIGH',
+        });
+      }
+
+      setActiveResult({
+        scenario: 0,
+        title: `Prueba de Política: ${act}`,
+        decision: res.decision,
+        statusText: res.isLiveBackend
+          ? `Evaluado por PDP en ${res.evaluation_latency_ms}ms (LIVE GATEWAY)`
+          : `Decisión del Gateway: ${res.decision}`,
+        details: res.error_message
+          ? `El PDP evaluó los parámetros y emitió veredicto ${res.decision}: ${res.error_message}`
+          : `El PDP evaluó los parámetros contra las reglas activas y emitió veredicto: ${res.decision}`,
+        isProtected: true,
+        payload: {
+          action: act,
+          parameters: params,
+          decision: res.decision,
+          status: res.status,
+          evaluated_policy_rule_id: res.evaluated_policy_rule_id,
+          execution_id: res.execution_id,
+          live_backend_connected: res.isLiveBackend,
+          evaluation_latency_ms: res.evaluation_latency_ms,
+          result: res.result,
+          error_message: res.error_message,
+        },
+      });
+    } else {
+      setActiveResult({
+        scenario: 0,
+        title: `Prueba Sin Gobernanza: ${act}`,
+        decision: 'DIRECT_EXECUTION',
+        statusText: '200 OK (UNMONITORED) — Ejecución directa a herramienta',
+        details: 'SIN AGENTGUARD: La acción se ejecutó directamente sin pasar por el interceptor PEP ni el evaluador PDP.',
+        isProtected: false,
+        payload: {
+          action: act,
+          parameters: params,
+          agentguard_protection: 'DISABLED',
+          decision: 'ALLOW',
+          status: 'UNMONITORED_EXECUTION',
+          risk_assessment: 'DIRECT_DISPATCH_NO_GOVERNANCE',
+        },
+      });
+    }
+  };
 
   const runScenario1 = async () => {
     if (isAgentGuardActive) {
@@ -567,6 +680,92 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             </div>
           </div>
 
+          {/* Probador Libre / Custom Test Payload (Integración con PoliciesView) */}
+          <div className="card" style={{ padding: '16px 18px', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ 
+                  backgroundColor: 'rgba(59, 130, 246, 0.15)', 
+                  color: '#38BDF8', 
+                  borderRadius: '6px', 
+                  fontSize: '11px', 
+                  fontWeight: 700, 
+                  padding: '3px 8px' 
+                }}>
+                  SIMULADOR LIBRE
+                </span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Prueba de Políticas & Reglas
+                </span>
+              </div>
+              <span className="badge badge-secondary" style={{ fontSize: '10px' }}>CUSTOM</span>
+            </div>
+
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4', marginBottom: '12px' }}>
+              Evalúa cualquier acción y contexto contra el motor PDP en tiempo de ejecución.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  ACCIÓN A EVALUAR:
+                </label>
+                <input
+                  type="text"
+                  value={customAction}
+                  onChange={(e) => setCustomAction(e.target.value)}
+                  placeholder="Ej: create_quote, refund, update_price..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--bg-input)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: '12px',
+                    fontFamily: 'var(--font-mono)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  PARÁMETROS / CONTEXTO (JSON):
+                </label>
+                <textarea
+                  rows={4}
+                  value={customContext}
+                  onChange={(e) => setCustomContext(e.target.value)}
+                  placeholder='{"amount": 2500}'
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--bg-canvas)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    outline: 'none',
+                    resize: 'vertical',
+                  }}
+                />
+              </div>
+            </div>
+
+            <button 
+              id="btn-simulate-custom"
+              onClick={() => runCustomSimulation()}
+              disabled={isLoading}
+              className="btn btn-primary" 
+              style={{ width: '100%', justifyContent: 'center', gap: '8px' }}
+            >
+              <Play size={14} fill="currentColor" />
+              <span>Evaluar Regla en Gateway PEP</span>
+            </button>
+          </div>
+
           {/* Scenario 1 Button Card */}
           <div className="card" style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -765,7 +964,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                 width: '100%', 
                 justifyContent: 'center', 
                 gap: '8px',
-                borderColor: 'rgba(239, 68, 68, 0.4)',
+                borderColor: 'rgba(239, 68, 68, 0.4)', 
                 color: '#EF4444' 
               }}
             >
@@ -1001,7 +1200,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                 Selecciona un escenario de prueba
               </div>
               <p style={{ fontSize: '13px', maxWidth: '420px', lineHeight: '1.5' }}>
-                Ejecuta cualquiera de los 5 casos de simulación en la columna izquierda para inspeccionar cómo el motor PEP/PDP gobierna las acciones de los Agentes de IA en tiempo real.
+                Ejecuta cualquiera de los 5 casos de simulación en la columna izquierda o utiliza el Probador de Políticas para inspeccionar cómo el motor PEP/PDP gobierna las acciones de los Agentes de IA en tiempo real.
               </p>
             </div>
           )}

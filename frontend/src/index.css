@@ -6,6 +6,7 @@
   --bg-card-hover: #171F32;
   --bg-surface: #151D2F;
   --bg-input: #0F1523;
+  --bg-canvas: #070A0F;
 
   /* Component specifics */
   --workspace-box-bg: #121826;
@@ -77,6 +78,10 @@
   --header-height: 64px;
 }
 
+.dark {
+  --bg-canvas: #070A0F;
+}
+
 [data-theme="light"] {
   /* Color Palette - White background with Celeste/Sky blue tones */
   --bg-app: #F8FAFC;
@@ -85,6 +90,7 @@
   --bg-card-hover: #F0F9FF;
   --bg-surface: #F0F9FF;
   --bg-input: #FFFFFF;
+  --bg-canvas: #F1F5F9;
 
   /* Component specifics */
   --workspace-box-bg: #F8FAFC;
@@ -383,4 +389,3 @@ code, pre {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
-
