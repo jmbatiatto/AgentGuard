@@ -871,12 +871,12 @@ export const PoliciesView: React.FC = () => {
       )}
 
       <Header 
-        title="Policies" 
-        subtitle="Define and enforce authorization rules across your workspace."
+        title="Políticas" 
+        subtitle="Define y aplica reglas de autorización en todo tu espacio de trabajo."
         actionButton={
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             <Plus size={16} strokeWidth={2.5} />
-            <span>Create policy</span>
+            <span>Crear política</span>
           </button>
         }
       />
@@ -1033,12 +1033,12 @@ export const PoliciesView: React.FC = () => {
                 borderBottom: '1px solid var(--border-subtle)',
                 backgroundColor: 'var(--table-header-bg)',
               }}>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>POLICY</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>AGENT</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ACTION</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>CONDITION</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>DECISION</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>STATUS</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>POLÍTICA</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>AGENTE</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ACCIÓN</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>CONDICIÓN</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>DECISIÓN</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ESTADO</th>
                 <th style={{ padding: '12px 18px', textAlign: 'right' }}>ACCIONES</th>
               </tr>
             </thead>

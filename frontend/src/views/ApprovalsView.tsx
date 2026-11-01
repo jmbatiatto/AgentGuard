@@ -158,8 +158,8 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Header 
-        title="Approvals" 
-        subtitle="Review actions that require human authorization."
+        title="Aprobaciones" 
+        subtitle="Revisa las acciones que requieren autorización humana."
       />
 
       {/* Resolution Toast Notification */}
@@ -405,7 +405,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
             {/* Requested Amount Hero Box */}
             <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                REQUESTED AMOUNT
+                MONTO SOLICITADO
               </div>
               <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>
                 {selectedRequest.amount}
@@ -418,27 +418,27 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
             {/* Request Details Grid */}
             <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
-                REQUEST DETAILS
+                DETALLES DE LA SOLICITUD
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Agent</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Agente</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{selectedRequest.agentName}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Action</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Acción</span>
                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{selectedRequest.action}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Resource</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Recurso</span>
                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{selectedRequest.resource}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Delegated by</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Delegado por</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{selectedRequest.delegatedBy}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Risk level</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Nivel de riesgo</span>
                   <span style={{ color: selectedRequest.riskLevel === 'Critical' ? '#EF4444' : '#F59E0B', fontWeight: 600 }}>
                     {selectedRequest.riskLevel}
                   </span>
@@ -449,7 +449,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
             {/* Agent Justification Box */}
             <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-                AGENT JUSTIFICATION
+                JUSTIFICACIÓN DEL AGENTE
               </div>
               <div style={{
                 backgroundColor: 'var(--bg-surface)',
@@ -533,7 +533,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                           style={{ padding: '9px 16px', opacity: 0.35, cursor: 'not-allowed' }}
                         >
                           <X size={15} />
-                          <span>Reject</span>
+                          <span>Rechazar</span>
                         </button>
                         <button 
                           disabled
@@ -542,7 +542,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                           style={{ padding: '9px 18px', opacity: 0.35, cursor: 'not-allowed' }}
                         >
                           <Check size={16} />
-                          <span>Approve</span>
+                          <span>Aprobar</span>
                         </button>
                       </div>
                     </div>
@@ -560,7 +560,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                         style={{ padding: '9px 18px', opacity: isResolving ? 0.5 : 1, cursor: isResolving ? 'not-allowed' : 'pointer' }}
                       >
                         <X size={15} />
-                        <span>Reject request</span>
+                        <span>Rechazar solicitud</span>
                       </button>
 
                       <button 
@@ -571,7 +571,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                         style={{ padding: '9px 20px', fontWeight: 600, opacity: isResolving ? 0.5 : 1, cursor: isResolving ? 'not-allowed' : 'pointer' }}
                       >
                         <Check size={16} strokeWidth={2.5} />
-                        <span>{isResolving ? 'Procesando...' : 'Approve request'}</span>
+                        <span>{isResolving ? 'Procesando...' : 'Aprobar solicitud'}</span>
                       </button>
                     </>
                   )}

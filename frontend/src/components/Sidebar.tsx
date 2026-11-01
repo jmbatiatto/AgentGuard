@@ -25,17 +25,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingApprovalsCount 
 }) => {
   const navItems = [
-    { id: 'overview' as NavView, label: 'Overview', icon: LayoutGrid },
-    { id: 'agents' as NavView, label: 'Agents', icon: Bot },
-    { id: 'tools' as NavView, label: 'Tools', icon: Wrench },
-    { id: 'policies' as NavView, label: 'Policies', icon: ShieldCheck },
+    { id: 'overview' as NavView, label: 'Vista General', icon: LayoutGrid },
+    { id: 'agents' as NavView, label: 'Agentes', icon: Bot },
+    { id: 'tools' as NavView, label: 'Herramientas', icon: Wrench },
+    { id: 'policies' as NavView, label: 'Políticas', icon: ShieldCheck },
     { 
       id: 'approvals' as NavView, 
-      label: 'Approvals', 
+      label: 'Aprobaciones', 
       icon: CheckCircle2, 
       badge: pendingApprovalsCount 
     },
-    { id: 'traces' as NavView, label: 'Execution Traces', icon: GitBranch },
+    { id: 'traces' as NavView, label: 'Trazas de Ejecución', icon: GitBranch },
     { id: 'playground' as NavView, label: 'Playground', icon: PlayCircle },
   ];
 

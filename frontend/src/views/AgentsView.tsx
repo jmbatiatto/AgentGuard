@@ -549,12 +549,12 @@ export const AgentsView: React.FC = () => {
       )}
 
       <Header 
-        title="Agents" 
-        subtitle="Manage registered AI agents and their capabilities."
+        title="Agentes" 
+        subtitle="Gestiona los agentes de IA registrados y sus capacidades."
         actionButton={
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             <Plus size={16} strokeWidth={2.5} />
-            <span>Register agent</span>
+            <span>Registrar agente</span>
           </button>
         }
       />
@@ -641,12 +641,12 @@ export const AgentsView: React.FC = () => {
                 borderBottom: '1px solid var(--border-subtle)',
                 backgroundColor: 'var(--table-header-bg)',
               }}>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>AGENT</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>IDENTIFIER</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>OWNER</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ASSIGNED TOOLS</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>STATUS</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>LAST ACTIVITY</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>AGENTE</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>IDENTIFICADOR</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>PROPIETARIO</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>HERRAMIENTAS ASIGNADAS</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ESTADO</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ÚLTIMA ACTIVIDAD</th>
                 <th style={{ padding: '12px 18px', textAlign: 'right' }}>ACCIONES</th>
               </tr>
             </thead>

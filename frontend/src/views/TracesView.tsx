@@ -96,8 +96,8 @@ export const TracesView: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Header 
-        title="Execution Traces" 
-        subtitle="Immutable forensic audit log of all agent tool calls and authorization decisions."
+        title="Trazas de Ejecución" 
+        subtitle="Registro de auditoría forense inmutable de todas las llamadas a herramientas y decisiones de autorización de agentes."
         actionButton={
           <button 
             className="btn btn-secondary" 
@@ -106,7 +106,7 @@ export const TracesView: React.FC = () => {
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-            <span>Refresh</span>
+            <span>Actualizar</span>
           </button>
         }
       />
@@ -166,14 +166,14 @@ export const TracesView: React.FC = () => {
                 borderBottom: '1px solid var(--border-subtle)',
                 backgroundColor: 'var(--table-header-bg)',
               }}>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>TRACE ID</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>TIMESTAMP</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>AGENT</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>ACTION & RESOURCE</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>DECISION</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>LATENCY</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>STATUS</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textAlign: 'center' }}>INSPECT</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>ID DE TRAZA</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>FECHA Y HORA</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>AGENTE</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>ACCIÓN Y RECURSO</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>DECISIÓN</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>LATENCIA</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>ESTADO</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textAlign: 'center' }}>INSPECCIONAR</th>
               </tr>
             </thead>
             <tbody>

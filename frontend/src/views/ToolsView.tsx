@@ -898,12 +898,12 @@ export const ToolsView: React.FC = () => {
       )}
 
       <Header 
-        title="Tools" 
-        subtitle="Control the tools and resources available to your agents."
+        title="Herramientas" 
+        subtitle="Controla las herramientas y recursos disponibles para tus agentes."
         actionButton={
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             <Plus size={16} strokeWidth={2.5} />
-            <span>Connect tool</span>
+            <span>Conectar herramienta</span>
           </button>
         }
       />
@@ -993,11 +993,11 @@ export const ToolsView: React.FC = () => {
                 borderBottom: '1px solid var(--border-subtle)',
                 backgroundColor: 'var(--table-header-bg)',
               }}>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>TOOL</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>DESCRIPTION</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>AVAILABLE ACTIONS</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ASSIGNED AGENT</th>
-                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>STATUS</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>HERRAMIENTA</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>DESCRIPCIÓN</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ACCIONES DISPONIBLES</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>AGENTE ASIGNADO</th>
+                <th style={{ padding: '12px 18px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>ESTADO</th>
                 <th style={{ padding: '12px 18px', textAlign: 'right' }}>ACCIONES</th>
               </tr>
             </thead>
