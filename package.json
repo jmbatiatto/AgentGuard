@@ -2,7 +2,7 @@
   "name": "agentguard",
   "version": "1.0.0",
   "private": true,
-  "description": "AgentGuard \u2014 Runtime Authorization & Governance for AI Agents",
+  "description": "AgentGuard — Runtime Authorization & Governance for AI Agents",
   "scripts": {
     "dev:frontend": "pnpm --filter frontend dev",
     "build:frontend": "pnpm --filter frontend build",
@@ -12,9 +12,7 @@
     "test:backend": "cd backend && pytest",
     "start:backend": "powershell -ExecutionPolicy Bypass -File scripts/start-backend.ps1",
     "start": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1",
-    "stop": "powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1",
-    "start:all": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1",
-    "stop:all": "powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1"
+    "stop": "powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1"
   },
   "packageManager": "pnpm@12.10.1",
   "engines": {

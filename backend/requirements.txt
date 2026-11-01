@@ -10,7 +10,6 @@ uvicorn[standard]>=0.30.0,<0.31.0
 # Capa de Persistencia & Base de Datos Relacional (PostgreSQL 16)
 sqlalchemy[asyncio]>=2.0.30,<2.1.0
 asyncpg>=0.29.0
-psycopg2-binary>=2.9.9,<3.0.0
 
 # Versionado y Migraciones DDL
 alembic>=1.13.0,<1.14.0
@@ -26,8 +25,8 @@ redis>=5.0.0,<5.1.0
 httpx>=0.27.0,<0.28.0
 
 # Seguridad, Criptografía & Tokens
-python-jose[cryptography]>=3.3.0,<3.4.0
-passlib[bcrypt]>=1.7.4,<1.8.0
+PyJWT[crypto]>=2.9.0,<3.0.0
+cryptography>=42.0.0
 
 # Testing & Validación Automatizada
 pytest>=8.2.0,<8.3.0
