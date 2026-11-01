@@ -12,6 +12,7 @@ from app.core.database import get_db
 from app.core.websocket_manager import ws_manager
 from app.models.alert import Alert
 from app.models.enums import AlertSeverity, AlertStatus
+from app.models.user import User
 from app.schemas.alert import AlertRead, AlertUpdateRequest
 
 logger = logging.getLogger("agentguard.api.alerts")
@@ -100,9 +101,18 @@ async def update_alert_status(
             detail=f"Alerta de seguridad con ID '{alert_id}' no encontrada.",
         )
 
-    alert.status = update_data.status
     if update_data.resolved_by_user_id:
+        user_stmt = select(User).where(User.id == update_data.resolved_by_user_id)
+        user_res = await db.execute(user_stmt)
+        user = user_res.scalar_one_or_none()
+        if not user or user.organization_id != alert.organization_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"El usuario resolutor '{update_data.resolved_by_user_id}' no existe o no pertenece a la misma organización tenant.",
+            )
         alert.resolved_by_user_id = update_data.resolved_by_user_id
+
+    alert.status = update_data.status
 
     await db.commit()
     await db.refresh(alert)

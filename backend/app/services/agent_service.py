@@ -1,20 +1,22 @@
-"""Servicio de lógica de negocio y persistencia para Agentes de IA y asignación de Herramientas."""
+"""Servicio de lógica de negocio y persistencia para Agentes de IA (Agents) y AgentTool."""
 
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.agent import Agent, AgentTool
-from app.schemas.agent import AgentCreate, AgentToolCreate, AgentUpdate
+from app.models.tool import Tool
+from app.schemas.agent import AgentCreate, AgentUpdate, AgentToolCreate
 
 
 class AgentService:
-    """Gestiona operaciones CRUD sobre Agent y la relación N:N AgentTool."""
+    """Gestiona operaciones CRUD sobre la entidad Agent y sus asignaciones en AgentTool."""
 
     @staticmethod
     async def create(db: AsyncSession, agent_in: AgentCreate) -> Agent:
-        """Crea una nueva identidad de IA en la base de datos."""
+        """Crea un nuevo agente de IA persistido en la base de datos."""
         agent = Agent(
             organization_id=agent_in.organization_id,
             owner_user_id=agent_in.owner_user_id,
@@ -29,8 +31,15 @@ class AgentService:
 
     @staticmethod
     async def get_by_id(db: AsyncSession, agent_id: UUID) -> Optional[Agent]:
-        """Obtiene un agente por su UUID primario."""
-        stmt = select(Agent).where(Agent.id == agent_id)
+        """Obtiene un agente por su UUID primario cargando sus herramientas asociadas."""
+        stmt = (
+            select(Agent)
+            .options(
+                selectinload(Agent.agent_tools).selectinload(AgentTool.tool),
+                selectinload(Agent.owner_user),
+            )
+            .where(Agent.id == agent_id)
+        )
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -41,9 +50,13 @@ class AgentService:
         skip: int = 0,
         limit: int = 100,
     ) -> List[Agent]:
-        """Lista agentes con paginación y filtro opcional por tenant."""
+        """Lista agentes con soporte para filtrado por organización y paginación."""
         stmt = (
             select(Agent)
+            .options(
+                selectinload(Agent.agent_tools).selectinload(AgentTool.tool),
+                selectinload(Agent.owner_user),
+            )
             .order_by(Agent.created_at.desc())
             .offset(skip)
             .limit(limit)
@@ -56,7 +69,7 @@ class AgentService:
 
     @staticmethod
     async def update(db: AsyncSession, agent_id: UUID, agent_in: AgentUpdate) -> Optional[Agent]:
-        """Actualiza atributos o estado de un agente."""
+        """Actualiza atributos de un agente existente."""
         agent = await AgentService.get_by_id(db=db, agent_id=agent_id)
         if not agent:
             return None
@@ -123,6 +136,20 @@ class AgentService:
         return agent_tool
 
     @staticmethod
+    async def remove_tool(
+        db: AsyncSession,
+        agent_id: UUID,
+        tool_id: UUID,
+    ) -> bool:
+        """Desvincula una herramienta de un agente."""
+        record = await AgentService.get_agent_tool(db, agent_id, tool_id)
+        if not record:
+            return False
+        await db.delete(record)
+        await db.commit()
+        return True
+
+    @staticmethod
     async def list_agent_tools(
         db: AsyncSession,
         agent_id: UUID,
@@ -130,6 +157,7 @@ class AgentService:
         """Lista todas las herramientas asociadas al agente."""
         stmt = (
             select(AgentTool)
+            .options(selectinload(AgentTool.tool))
             .where(AgentTool.agent_id == agent_id)
             .order_by(AgentTool.created_at.desc())
         )

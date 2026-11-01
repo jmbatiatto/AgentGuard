@@ -59,6 +59,7 @@ ORG_ACME_ID = uuid.UUID("11111111-1111-1111-1111-111111111111")
 USER_ADMIN_ID = uuid.UUID("22222222-2222-2222-2222-222222222201")
 USER_APPROVER_ID = uuid.UUID("22222222-2222-2222-2222-222222222202")
 USER_OPERATOR_ID = uuid.UUID("22222222-2222-2222-2222-222222222203")
+USER_AUDITOR_ID = uuid.UUID("22222222-2222-2222-2222-222222222204")
 
 AGENT_SALES_ID = uuid.UUID("33333333-3333-3333-3333-333333333301")
 AGENT_FINANCE_ID = uuid.UUID("33333333-3333-3333-3333-333333333302")
@@ -153,25 +154,32 @@ async def seed_data(reset: bool = False) -> None:
         user_admin = User(
             id=USER_ADMIN_ID,
             organization_id=ORG_ACME_ID,
-            email="admin@acme.corp",
+            email="admin@acmecorp.com",
             role=UserRole.ADMIN,
             created_at=now,
         )
         user_approver = User(
             id=USER_APPROVER_ID,
             organization_id=ORG_ACME_ID,
-            email="approver@acme.corp",
+            email="approver@acmecorp.com",
             role=UserRole.APPROVER,
             created_at=now,
         )
         user_operator = User(
             id=USER_OPERATOR_ID,
             organization_id=ORG_ACME_ID,
-            email="operator@acme.corp",
+            email="operator@acmecorp.com",
             role=UserRole.OPERATOR,
             created_at=now,
         )
-        session.add_all([user_admin, user_approver, user_operator])
+        user_auditor = User(
+            id=USER_AUDITOR_ID,
+            organization_id=ORG_ACME_ID,
+            email="sec.auditor@acmecorp.com",
+            role=UserRole.AUDITOR,
+            created_at=now,
+        )
+        session.add_all([user_admin, user_approver, user_operator, user_auditor])
 
         # 3. Agentes de IA
         agent_sales = Agent(

@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.policy_cache import policy_cache
 from app.models.policy import Policy, PolicyRule
 from app.models.tool import ToolAction
 from app.schemas.policy import PolicyCreate, PolicyUpdate
@@ -16,7 +17,7 @@ class PolicyService:
 
     @staticmethod
     async def create(db: AsyncSession, policy_in: PolicyCreate) -> Policy:
-        """Crea un nuevo contenedor de políticas en la base de datos."""
+        """Crea un nuevo contenedor de políticas en la base de datos y recarga sus relaciones."""
         policy = Policy(
             organization_id=policy_in.organization_id,
             name=policy_in.name,
@@ -26,8 +27,9 @@ class PolicyService:
         )
         db.add(policy)
         await db.commit()
-        await db.refresh(policy)
-        return policy
+        await policy_cache.invalidate(policy_in.organization_id)
+        reloaded = await PolicyService.get_by_id(db=db, policy_id=policy.id)
+        return reloaded or policy
 
     @staticmethod
     async def get_by_id(db: AsyncSession, policy_id: UUID) -> Optional[Policy]:
@@ -69,7 +71,7 @@ class PolicyService:
 
     @staticmethod
     async def update(db: AsyncSession, policy_id: UUID, policy_in: PolicyUpdate) -> Optional[Policy]:
-        """Actualiza atributos de una política (ej. toggle de activación o prioridad)."""
+        """Actualiza atributos de una política y recarga relaciones eager."""
         policy = await PolicyService.get_by_id(db=db, policy_id=policy_id)
         if not policy:
             return None
@@ -84,8 +86,9 @@ class PolicyService:
             policy.is_active = policy_in.is_active
 
         await db.commit()
-        await db.refresh(policy)
-        return policy
+        await policy_cache.invalidate(policy.organization_id)
+        reloaded = await PolicyService.get_by_id(db=db, policy_id=policy.id)
+        return reloaded or policy
 
     @staticmethod
     async def delete(db: AsyncSession, policy_id: UUID) -> bool:
@@ -96,8 +99,8 @@ class PolicyService:
 
         await db.delete(policy)
         await db.commit()
+        await policy_cache.invalidate(policy.organization_id)
         return True
 
 
 policy_service = PolicyService()
-

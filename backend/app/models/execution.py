@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, TYPE_CHECKING
-from sqlalchemy import String, DateTime, ForeignKey, Enum as SQLEnum, Index
+from sqlalchemy import String, Float, DateTime, ForeignKey, Enum as SQLEnum, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,6 +26,7 @@ class Execution(Base):
     __table_args__ = (
         Index("idx_executions_request_context_gin", "request_context", postgresql_using="gin"),
         Index("idx_executions_org_timestamp", "organization_id", "timestamp"),
+        Index("ix_executions_org_decision_ts", "organization_id", "decision", "timestamp"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -86,6 +87,15 @@ class Execution(Base):
         nullable=False,
         index=True,
     )
+    latency_ms: Mapped[float] = mapped_column(
+        Float,
+        default=0.0,
+        nullable=False,
+    )
+    response_payload: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
 
     # Relaciones
     organization: Mapped["Organization"] = relationship("Organization", back_populates="executions")
@@ -95,9 +105,6 @@ class Execution(Base):
     tool_action: Mapped["ToolAction"] = relationship("ToolAction", back_populates="executions")
     evaluated_policy_rule: Mapped[Optional["PolicyRule"]] = relationship("PolicyRule", back_populates="executions")
     approval: Mapped[Optional["Approval"]] = relationship("Approval", back_populates="execution", uselist=False, cascade="all, delete-orphan")
-    # Nota de Arquitectura Forense: 'approval' posee cascade="all, delete-orphan", pero 'alert'
-    # no lo tiene intencionalmente, ya que los incidentes de seguridad constituyen evidencia SIEM inmutable
-    # con ciclo de vida independiente del registro de ejecución.
     alert: Mapped[Optional["Alert"]] = relationship("Alert", back_populates="execution", uselist=False)
 
     # Propiedades calculadas para serialización en DTOs y lectura enriquecida
@@ -115,4 +122,3 @@ class Execution(Base):
     def action_name(self) -> Optional[str]:
         """Nombre de la acción atómica ejecutada."""
         return self.tool_action.action_name if self.tool_action else None
-

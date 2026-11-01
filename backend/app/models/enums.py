@@ -17,6 +17,12 @@ class AgentStatus(StrEnum):
     REVOKED = "REVOKED"
 
 
+class ToolStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    PAUSED = "PAUSED"
+    INACTIVE = "INACTIVE"
+
+
 class RiskLevel(StrEnum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
@@ -37,9 +43,12 @@ class PolicyDecision(StrEnum):
 
 
 class ExecutionStatus(StrEnum):
+    BLOCKED = "BLOCKED"
     PENDING_APPROVAL = "PENDING_APPROVAL"
     REJECTED = "REJECTED"
     EXECUTED = "EXECUTED"
+    EXPIRED = "EXPIRED"
+    FAILED = "FAILED"
 
 
 class ApprovalStatus(StrEnum):

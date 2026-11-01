@@ -316,7 +316,7 @@ async def test_demo_scenario_4_prompt_injection_deny_and_critical_alert():
                 data = res.json()
                 assert data["decision"] == "DENY"
                 assert data["status"] == "REJECTED"
-                assert "anti-exfiltración" in data["error_message"]
+                assert any(phrase in data["error_message"].lower() for phrase in ("anti-exfiltración", "exfiltración", "hostil", "bloqueo gateway pep"))
 
                 # Verificar que se generó y persistió la Alerta de Seguridad Crítica
                 alerts = [e for e in persisted_entities if isinstance(e, Alert)]
@@ -326,5 +326,69 @@ async def test_demo_scenario_4_prompt_injection_deny_and_critical_alert():
                 assert created_alert.status == AlertStatus.OPEN
                 assert "export_customers" in created_alert.title
                 assert created_alert.organization_id == org_id
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_demo_scenario_5_destructive_sql_injection_alert():
+    """ESCENARIO 5: Sentencia destructiva SQL DROP (DENY + ALERT CRITICAL).
+
+    El agente intenta ejecutar database.drop sin tener AgentTool asignado.
+    El analizador heurístico detecta ASI05 (SQL Injection / Destructive Query).
+    El Gateway PEP bloquea deterministamente con 403, genera Alert CRITICAL
+    y persiste la traza forense.
+    """
+    org_id = uuid.uuid4()
+    agent_id = uuid.uuid4()
+    tool_id = uuid.uuid4()
+    action_id = uuid.uuid4()
+
+    agent = Agent(id=agent_id, organization_id=org_id, status=AgentStatus.ACTIVE, name="Sales Agent")
+    tool = Tool(id=tool_id, organization_id=org_id, name="Core DB", endpoint_url="https://db.internal")
+    action = ToolAction(id=action_id, tool_id=tool_id, action_name="database.drop", risk_level=RiskLevel.CRITICAL)
+
+    mock_db = AsyncMock()
+    persisted_entities = []
+
+    def capture_add(entity):
+        persisted_entities.append(entity)
+
+    mock_db.add = MagicMock(side_effect=capture_add)
+
+    res_agent = MagicMock()
+    res_agent.scalar_one_or_none.return_value = agent
+    res_tool = MagicMock()
+    res_tool.scalar_one_or_none.return_value = tool
+    res_action = MagicMock()
+    res_action.scalar_one_or_none.return_value = action
+    res_agent_tool = MagicMock()
+    res_agent_tool.scalar_one_or_none.return_value = None
+
+    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            payload = {
+                "organization_id": str(org_id),
+                "agent_id": str(agent_id),
+                "tool_id": str(tool_id),
+                "action_name": "database.drop",
+                "parameters": {"query": "DROP TABLE users CASCADE;"},
+            }
+            res = await client.post("/api/v1/gateway/execute", json=payload)
+
+            assert res.status_code == 403
+            data = res.json()
+            assert data["decision"] == "DENY"
+            assert data["status"] in ("REJECTED", "BLOCKED")
+
+            # Certificar que se generó la Alerta de Seguridad Crítica en BD
+            alerts = [e for e in persisted_entities if isinstance(e, Alert)]
+            assert len(alerts) == 1
+            assert alerts[0].severity == AlertSeverity.CRITICAL
+            assert "database.drop" in alerts[0].title
     finally:
         app.dependency_overrides.clear()

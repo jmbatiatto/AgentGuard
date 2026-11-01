@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.agent import AgentTool
+from app.models.enums import ToolStatus
 from app.models.tool import Tool
 from app.schemas.tool import ToolCreate, ToolUpdate
 
@@ -16,18 +17,19 @@ class ToolService:
 
     @staticmethod
     async def create(db: AsyncSession, tool_in: ToolCreate) -> Tool:
-        """Crea una nueva herramienta externa en la base de datos."""
+        """Crea una nueva herramienta externa en la base de datos y la recarga con relaciones."""
         tool = Tool(
             organization_id=tool_in.organization_id,
             name=tool_in.name,
             protocol=tool_in.protocol,
             endpoint_url=tool_in.endpoint_url,
             description=tool_in.description,
+            status=ToolStatus.ACTIVE,
         )
         db.add(tool)
         await db.commit()
-        await db.refresh(tool)
-        return tool
+        reloaded = await ToolService.get_by_id(db=db, tool_id=tool.id)
+        return reloaded or tool
 
     @staticmethod
     async def get_by_id(db: AsyncSession, tool_id: UUID) -> Optional[Tool]:
@@ -69,7 +71,7 @@ class ToolService:
 
     @staticmethod
     async def update(db: AsyncSession, tool_id: UUID, tool_in: ToolUpdate) -> Optional[Tool]:
-        """Actualiza atributos de una herramienta externa existente."""
+        """Actualiza atributos de una herramienta externa existente y recarga relaciones."""
         tool = await ToolService.get_by_id(db=db, tool_id=tool_id)
         if not tool:
             return None
@@ -84,8 +86,8 @@ class ToolService:
             tool.description = tool_in.description
 
         await db.commit()
-        await db.refresh(tool)
-        return tool
+        reloaded = await ToolService.get_by_id(db=db, tool_id=tool.id)
+        return reloaded or tool
 
     @staticmethod
     async def delete(db: AsyncSession, tool_id: UUID) -> bool:
@@ -100,4 +102,3 @@ class ToolService:
 
 
 tool_service = ToolService()
-

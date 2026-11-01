@@ -1,9 +1,9 @@
 """Schemas Pydantic v2 para Herramientas Externas (Tools)."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Any
 from uuid import UUID
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.schemas.base import BaseSchema
 from app.schemas.tool_action import ToolActionRead
@@ -25,7 +25,7 @@ class ToolCreate(BaseSchema):
     protocol: str = Field(
         default="REST",
         max_length=50,
-        description="Protocolo de comunicación (REST, gRPC, MCP, etc.)",
+        description="Protocolo de comunicación (REST HTTP)",
     )
     endpoint_url: str = Field(
         ...,
@@ -36,6 +36,14 @@ class ToolCreate(BaseSchema):
     description: Optional[str] = Field(
         default=None,
         description="Descripción funcional de la herramienta",
+    )
+    status: Optional[str] = Field(
+        default="ACTIVE",
+        description="Estado operativo de la herramienta (ACTIVE, PAUSED, INACTIVE)",
+    )
+    execution_mode: Optional[str] = Field(
+        default="SANDBOX",
+        description="Modo de ejecución: SANDBOX (simulado seguro) o LIVE_REST (despacho real)",
     )
 
 
@@ -63,6 +71,14 @@ class ToolUpdate(BaseSchema):
         default=None,
         description="Nueva descripción funcional de la herramienta",
     )
+    status: Optional[str] = Field(
+        default=None,
+        description="Nuevo estado operativo (ACTIVE, PAUSED, INACTIVE)",
+    )
+    execution_mode: Optional[str] = Field(
+        default=None,
+        description="Nuevo modo de ejecución (SANDBOX o LIVE_REST)",
+    )
 
 
 class ToolRead(BaseSchema):
@@ -74,7 +90,22 @@ class ToolRead(BaseSchema):
     protocol: str
     endpoint_url: str
     description: Optional[str] = None
+    status: Optional[str] = Field(default="ACTIVE")
+    execution_mode: Optional[str] = Field(default="SANDBOX")
     created_at: datetime
-    actions: list[ToolActionRead] = Field(default_factory=list)
-    assigned_agents: list[str] = Field(default_factory=list)
+    actions: List[ToolActionRead] = Field(default_factory=list)
+    assigned_agents: List[str] = Field(default_factory=list)
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def validate_status(cls, v: Any) -> str:
+        if v is None:
+            return "ACTIVE"
+        if hasattr(v, "value"):
+            return str(v.value)
+        return str(v)
+
+    @field_validator("execution_mode", mode="before")
+    @classmethod
+    def validate_execution_mode(cls, v: Any) -> str:
+        return str(v) if v is not None else "SANDBOX"

@@ -3,6 +3,7 @@
 from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -143,8 +144,15 @@ async def delete_agent(
     agent_id: UUID,
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Elimina el agente de la base de datos."""
-    deleted = await agent_service.delete(db=db, agent_id=agent_id)
+    """Elimina el agente de la base de datos o retorna 409 si posee trazas forenses."""
+    try:
+        deleted = await agent_service.delete(db=db, agent_id=agent_id)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"No se puede eliminar el agente '{agent_id}' porque posee trazas forenses inmutables de ejecución asociadas (ON DELETE RESTRICT). Considere cambiar su estado a REVOKED o SUSPENDED.",
+        )
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -186,6 +194,26 @@ async def assign_tool_to_agent(
         )
 
     return await agent_service.assign_tool(db=db, agent_id=agent_id, tool_in=tool_in)
+
+
+@router.delete(
+    "/{agent_id}/tools/{tool_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Desvincular Herramienta de Agente",
+    description="Revoca la capacidad de un agente para invocar una herramienta específica.",
+)
+async def remove_agent_tool(
+    agent_id: UUID,
+    tool_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Elimina la asignación AgentTool entre el agente y la herramienta."""
+    deleted = await agent_service.remove_tool(db=db, agent_id=agent_id, tool_id=tool_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Asignación de herramienta para el agente no encontrada",
+        )
 
 
 @router.get(

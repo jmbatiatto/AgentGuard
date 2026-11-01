@@ -77,9 +77,9 @@ async def test_seed_data_fresh_creation():
 
     # Validar Users
     users = [e for e in added_entities if isinstance(e, User)]
-    assert len(users) == 3
+    assert len(users) == 4
     user_roles = {u.role for u in users}
-    assert user_roles == {UserRole.ADMIN, UserRole.APPROVER, UserRole.OPERATOR}
+    assert user_roles == {UserRole.ADMIN, UserRole.APPROVER, UserRole.OPERATOR, UserRole.AUDITOR}
 
     # Validar Agents
     agents = [e for e in added_entities if isinstance(e, Agent)]
@@ -154,6 +154,10 @@ async def test_seed_data_already_exists_without_reset():
     mock_session_cm = AsyncMock()
     mock_session_cm.__aenter__.return_value = mock_session
     mock_session_cm.__aexit__.return_value = None
+
+    from scripts.seed_demo import seed_data
+    with patch("scripts.seed_demo.AsyncSessionLocal", return_value=mock_session_cm):
+        await seed_data(reset=False)
 
     mock_session.add.assert_not_called()
 

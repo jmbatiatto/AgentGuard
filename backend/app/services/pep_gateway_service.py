@@ -13,11 +13,14 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
+from fastapi import HTTPException, status
 import httpx
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.redis_vault import redis_vault
+from app.core.websocket_manager import ws_manager
 from app.models.agent import Agent, AgentTool
 from app.models.alert import Alert
 from app.models.approval import Approval
@@ -38,7 +41,6 @@ from app.schemas.gateway import GatewayExecuteRequest, GatewayExecuteResponse
 from app.services.pdp_engine import pdp_engine
 from app.services.sanitizer_service import sanitizer_service
 from app.services.threat_detector import threat_detector
-from app.core.websocket_manager import ws_manager
 
 logger = logging.getLogger("agentguard.pep")
 
@@ -52,27 +54,39 @@ class PEPGatewayService:
         action_name: str,
         parameters: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Despacha la llamada HTTP a la API externa de destino o simula respuesta de éxito."""
+        """Despacha la llamada HTTP a la API externa de destino o retorna simulación si es SANDBOX."""
         endpoint = f"{tool.endpoint_url.rstrip('/')}/{action_name}"
 
-        # Si el endpoint es real y accesible por HTTP/HTTPS
-        if tool.endpoint_url.startswith(("http://", "https://")) and not (
-            "test" in tool.endpoint_url or "api.corp" in tool.endpoint_url or ".internal" in tool.endpoint_url
-        ):
-            try:
-                async with httpx.AsyncClient(timeout=3.0) as client:
-                    resp = await client.post(endpoint, json=parameters)
-                    if resp.status_code < 400:
-                        try:
-                            return resp.json()
-                        except Exception:
-                            return {"raw": resp.text, "status_code": resp.status_code}
-            except Exception as exc:
-                logger.warning("Fallo llamada física a %s: %s. Aplicando simulación segura.", endpoint, exc)
+        is_live = getattr(tool, "execution_mode", "SANDBOX") == "LIVE_REST" and not any(
+            domain in tool.endpoint_url for domain in ("acmecorp.internal", "localhost", "127.0.0.1", "test", "api.corp", "internal")
+        )
 
-        # Simulación estándar de respuesta para pruebas locales y demos offline
+        if is_live:
+            try:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    resp = await client.post(endpoint, json=parameters)
+                    if resp.status_code >= 400:
+                        raise HTTPException(
+                            status_code=status.HTTP_502_BAD_GATEWAY,
+                            detail=f"Herramienta externa '{tool.name}' retornó error HTTP {resp.status_code}: {resp.text[:200]}",
+                        )
+                    try:
+                        return resp.json()
+                    except Exception:
+                        return {"raw": resp.text, "status_code": resp.status_code}
+            except HTTPException:
+                raise
+            except Exception as exc:
+                logger.error("Error al conectar con la herramienta externa %s: %s", endpoint, exc)
+                raise HTTPException(
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                    detail=f"Fallo de conexión o timeout con la herramienta externa '{tool.name}': {str(exc)}",
+                )
+
+        # Modo SANDBOX determinista de demostración
         return {
             "status": "success",
+            "simulated": True,
             "dispatched_to": endpoint,
             "action": action_name,
             "received_params": parameters,
@@ -91,7 +105,7 @@ class PEPGatewayService:
         execution_id = uuid.uuid4()
         now = datetime.now(timezone.utc)
 
-        # 1. Sanitizar parámetros de entrada de inmediato
+        # 1. Sanitizar parámetros de entrada de inmediato (OWASP LLM06)
         sanitized_params = sanitizer_service.sanitize(request.parameters)
 
         # 1.1. Inspección heurística de vectores de ataque hostiles (OWASP Top 10 for Agentic Applications 2026)
@@ -100,6 +114,17 @@ class PEPGatewayService:
             resource=request.resource,
             action_name=request.action_name,
         )
+
+        # 1.2. Validar usuario delegador si está presente (evita ForeignKeyViolationError)
+        if request.delegator_user_id:
+            user_stmt = select(User).where(User.id == request.delegator_user_id)
+            user_res = await db.execute(user_stmt)
+            delegator = user_res.scalar_one_or_none()
+            if not delegator or delegator.organization_id != request.organization_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"El usuario delegador '{request.delegator_user_id}' no existe o no pertenece a la organización tenant",
+                )
 
         # 2. Validar Agente (Tenant y Estado)
         agent_stmt = select(Agent).where(
@@ -112,6 +137,7 @@ class PEPGatewayService:
         agent = agent_res.scalar_one_or_none()
 
         if not agent:
+            latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -119,12 +145,34 @@ class PEPGatewayService:
                 tool_id=request.tool_id,
                 action_name=request.action_name,
                 decision=PolicyDecision.DENY,
-                status=ExecutionStatus.REJECTED,
+                status=ExecutionStatus.BLOCKED,
                 error_message="El agente no existe o no pertenece a esta organización",
                 timestamp=now,
             )
 
         if agent.status != AgentStatus.ACTIVE:
+            latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+            # Regla 7: Registrar traza forense inmutable ante intento de agente inactivo
+            execution = Execution(
+                id=execution_id,
+                organization_id=request.organization_id,
+                agent_id=agent.id,
+                delegator_user_id=request.delegator_user_id,
+                tool_id=request.tool_id,
+                tool_action_id=uuid.uuid4(),  # placeholder si no se resuelve acción
+                resource=request.resource,
+                request_context=sanitized_params,
+                decision=PolicyDecision.DENY,
+                status=ExecutionStatus.BLOCKED,
+                timestamp=now,
+                latency_ms=latency_ms,
+            )
+            try:
+                db.add(execution)
+                await db.commit()
+            except Exception as exc:
+                logger.warning("No se pudo persistir traza de agente suspendido: %s", exc)
+
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -132,7 +180,7 @@ class PEPGatewayService:
                 tool_id=request.tool_id,
                 action_name=request.action_name,
                 decision=PolicyDecision.DENY,
-                status=ExecutionStatus.REJECTED,
+                status=ExecutionStatus.BLOCKED,
                 error_message=f"El agente se encuentra en estado '{agent.status}' y no puede operar",
                 timestamp=now,
             )
@@ -182,7 +230,7 @@ class PEPGatewayService:
                 timestamp=now,
             )
 
-        # 4. Validar Capacidad Asignada en AgentTool (N:N) - Escenario 2
+        # 4. Validar Capacidad Asignada en AgentTool (N:N)
         agent_tool_stmt = select(AgentTool).where(
             and_(
                 AgentTool.agent_id == request.agent_id,
@@ -193,71 +241,23 @@ class PEPGatewayService:
         agent_tool_res = await db.execute(agent_tool_stmt)
         agent_tool = agent_tool_res.scalar_one_or_none()
 
-        if not agent_tool:
-            # Denegación por falta de capacidad asignada
-            execution = Execution(
-                id=execution_id,
-                organization_id=request.organization_id,
-                agent_id=request.agent_id,
-                delegator_user_id=request.delegator_user_id,
-                tool_id=request.tool_id,
-                tool_action_id=tool_action.id,
-                resource=request.resource,
-                request_context=sanitized_params,
-                decision=PolicyDecision.DENY,
-                status=ExecutionStatus.REJECTED,
-                timestamp=now,
-            )
-            db.add(execution)
-            await db.commit()
-
-            return GatewayExecuteResponse(
-                execution_id=execution_id,
-                organization_id=request.organization_id,
-                agent_id=request.agent_id,
-                tool_id=request.tool_id,
-                action_name=request.action_name,
-                decision=PolicyDecision.DENY,
-                status=ExecutionStatus.REJECTED,
-                error_message=f"El agente no tiene autorizada la herramienta '{tool.name}' (Agent lacks capability)",
-                timestamp=now,
-            )
-
-        # 5. Invocar al Motor de Políticas (PDP) y Evaluar Amenazas Hostiles
-        pdp_result = await pdp_engine.evaluate(
-            db=db,
-            organization_id=request.organization_id,
-            agent_id=request.agent_id,
-            tool_action_id=tool_action.id,
-            delegator_user_id=request.delegator_user_id,
-            resource=request.resource,
-            parameters=request.parameters,
-        )
-
         approval_id: Optional[UUID] = None
         result_data: Optional[Dict[str, Any]] = None
-        exec_status: ExecutionStatus
         alert: Optional[Alert] = None
         approval: Optional[Approval] = None
-        security_telemetry: Dict[str, Any]
-        final_decision: PolicyDecision
-        evaluated_rule_id: Optional[UUID] = pdp_result.evaluated_policy_rule_id
-        rejection_reason: Optional[str] = pdp_result.reason
+        evaluated_rule_id: Optional[UUID] = None
+        rejection_reason: Optional[str] = None
 
+        # 5. Si se detectó amenaza hostil (OWASP 2026), SIEMPRE genera alerta crítica, incluso si falta AgentTool
         if threat.is_threat:
             logger.warning(
                 "¡Vector hostil detectado por Gateway PEP! Tipo: %s, Vector: %s, Categoría OWASP: %s",
                 threat.threat_type, threat.attack_vector, threat.owasp_category
             )
-            # Fail-Closed: Bloqueo innegociable e inmediato ante inyección hostil o exfiltración
             final_decision = PolicyDecision.DENY
             exec_status = ExecutionStatus.REJECTED
-            if rejection_reason:
-                rejection_reason = f"{rejection_reason} [Gateway PEP: {threat.details}]"
-            else:
-                rejection_reason = f"Bloqueo Gateway PEP: {threat.details}"
+            rejection_reason = f"Bloqueo Gateway PEP: {threat.details}"
 
-            # Disparar Alerta de Seguridad Crítica inmediata
             alert = Alert(
                 id=uuid.uuid4(),
                 organization_id=request.organization_id,
@@ -285,8 +285,31 @@ class PEPGatewayService:
             }
             sanitized_params["_security_threat"] = security_telemetry
 
+        elif not agent_tool:
+            # Denegación determinista por falta de capacidad asignada en AgentTool (Escenario 2)
+            final_decision = PolicyDecision.DENY
+            exec_status = ExecutionStatus.REJECTED
+            rejection_reason = f"El agente no tiene autorizada la herramienta '{tool.name}' (Agent lacks capability)"
+            security_telemetry = {
+                "is_threat": False,
+                "status": "CAPABILITY_DENIED",
+                "owasp_compliance": "OWASP GenAI LLM06 Sanitized",
+            }
+
         else:
+            # 6. Invocar al Motor de Políticas (PDP)
+            pdp_result = await pdp_engine.evaluate(
+                db=db,
+                organization_id=request.organization_id,
+                agent_id=request.agent_id,
+                tool_action_id=tool_action.id,
+                delegator_user_id=request.delegator_user_id,
+                resource=request.resource,
+                parameters=request.parameters,
+            )
             final_decision = pdp_result.decision
+            evaluated_rule_id = pdp_result.evaluated_policy_rule_id
+            rejection_reason = pdp_result.reason
             security_telemetry = {
                 "is_threat": False,
                 "status": "CLEAN",
@@ -296,23 +319,22 @@ class PEPGatewayService:
             match final_decision:
                 case PolicyDecision.ALLOW:
                     exec_status = ExecutionStatus.EXECUTED
-                    # Despachar llamada hacia la API de destino
                     result_data = await cls._dispatch_to_tool(tool, request.action_name, request.parameters)
 
                 case PolicyDecision.REQUIRE_APPROVAL:
                     exec_status = ExecutionStatus.PENDING_APPROVAL
                     approval_id = uuid.uuid4()
-                    # Crear ticket en cola de intervención humana
                     approval = Approval(
                         id=approval_id,
                         execution_id=execution_id,
                         status=ApprovalStatus.PENDING,
                         created_at=now,
                     )
+                    # Custodiar parámetros originales en Redis Hitl Vault para el re-despacho
+                    await redis_vault.store_payload(approval_id, request.parameters, ttl_seconds=900)
 
                 case PolicyDecision.DENY:
                     exec_status = ExecutionStatus.REJECTED
-                    # Si es riesgo crítico o detecta anomalía, disparar Alerta de Seguridad (Escenario 4)
                     if tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
                         alert = Alert(
                             id=uuid.uuid4(),
@@ -326,21 +348,11 @@ class PEPGatewayService:
                         )
 
                 case _:
-                    # Fail-Closed por defecto ante cualquier veredicto desconocido o no tipificado
                     exec_status = ExecutionStatus.REJECTED
-                    if tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
-                        alert = Alert(
-                            id=uuid.uuid4(),
-                            organization_id=request.organization_id,
-                            execution_id=execution_id,
-                            title=f"Alerta de Seguridad: Bloqueo por veredicto desconocido en acción '{request.action_name}'",
-                            description=f"El agente {agent.name} intentó ejecutar '{request.action_name}' pero fue bloqueado por Fail-Closed estricto.",
-                            severity=AlertSeverity.HIGH,
-                            status=AlertStatus.OPEN,
-                            created_at=now,
-                        )
+                    rejection_reason = "Veredicto no reconocido. Aplicando Fail-Closed."
 
-        # 7. Persistir Traza Forense Inmutable en Execution (Orden FK estricto: Execution antes que hijos)
+        # 7. Persistir Traza Forense Inmutable en Execution con latencia real y resultado
+        latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
         execution = Execution(
             id=execution_id,
             organization_id=request.organization_id,
@@ -354,6 +366,8 @@ class PEPGatewayService:
             status=exec_status,
             evaluated_policy_rule_id=evaluated_rule_id,
             timestamp=now,
+            latency_ms=latency_ms,
+            response_payload=result_data,
         )
         db.add(execution)
 
@@ -403,14 +417,12 @@ class PEPGatewayService:
                 organization_id=request.organization_id,
             )
 
-        # Calcular latencia real de ejecución con alta precisión
-        latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
-
-        # Emitir traza forense de ejecución en tiempo real vía WebSocket
+        # Emitir traza forense de ejecución en tiempo real vía WebSocket (con id y execution_id)
         await ws_manager.broadcast(
             event_type="NEW_EXECUTION",
             data={
                 "id": str(execution_id),
+                "execution_id": str(execution_id),
                 "organization_id": str(request.organization_id),
                 "agent_id": str(request.agent_id),
                 "agent_name": agent.name,
@@ -455,7 +467,7 @@ class PEPGatewayService:
         decision: ApprovalStatus,
         resolution_reason: str,
     ) -> Optional[Approval]:
-        """Resuelve un ticket de aprobación humana, validando rol APPROVER/ADMIN, TTL de 15 min y reanudando despacho."""
+        """Resuelve un ticket de aprobación humana con bloqueo pesimista, TTL de 15 min y reanudación desde vault."""
         stmt = (
             select(Approval)
             .options(
@@ -463,6 +475,7 @@ class PEPGatewayService:
                 selectinload(Approval.execution).selectinload(Execution.tool_action),
             )
             .where(Approval.id == approval_id)
+            .with_for_update()
         )
         result = await db.execute(stmt)
         approval = result.scalar_one_or_none()
@@ -470,14 +483,23 @@ class PEPGatewayService:
         if not approval or approval.status != ApprovalStatus.PENDING:
             return None
 
-        # 1. Validar rol del usuario aprobador (Regla 6 AGENTS.md: APPROVER o ADMIN)
+        # 1. Validar existencia y rol del usuario aprobador (Regla 6 AGENTS.md: APPROVER o ADMIN)
         if approver_user_id:
             approver_res = await db.execute(select(User).where(User.id == approver_user_id))
             approver = approver_res.scalar_one_or_none()
-            if approver and approver.role not in (UserRole.APPROVER, UserRole.ADMIN):
+            if not approver:
+                logger.warning("Usuario aprobador %s no encontrado.", approver_user_id)
+                return None
+            if approver.role not in (UserRole.APPROVER, UserRole.ADMIN):
                 logger.warning(
                     "Usuario %s (rol %s) no tiene privilegios de APPROVER o ADMIN para resolver aprobaciones.",
                     approver_user_id, approver.role
+                )
+                return None
+            if approval.execution and approver.organization_id != approval.execution.organization_id:
+                logger.warning(
+                    "Fuga multi-tenant: Usuario %s intentó resolver aprobación de org ajena",
+                    approver_user_id
                 )
                 return None
 
@@ -491,7 +513,7 @@ class PEPGatewayService:
                 approval.status = ApprovalStatus.EXPIRED
                 approval.resolution_reason = "Expirado por timeout de seguridad (TTL de 15 minutos superado sin intervención)"
                 if approval.execution:
-                    approval.execution.status = ExecutionStatus.REJECTED
+                    approval.execution.status = ExecutionStatus.EXPIRED
                 await db.commit()
                 await db.refresh(approval)
                 return approval
@@ -506,16 +528,21 @@ class PEPGatewayService:
         if approval.execution:
             if decision == ApprovalStatus.APPROVED:
                 approval.execution.status = ExecutionStatus.EXECUTED
-                # Reanudar llamada hacia la herramienta externa (Escenario 3)
+                # Recuperar parámetros originales no sanitizados de la bóveda Redis Hitl Vault
+                raw_params = await redis_vault.retrieve_and_purge_payload(approval.id)
+                dispatch_params = raw_params or approval.execution.request_context or {}
+
                 if approval.execution.tool and approval.execution.tool_action:
                     try:
-                        await cls._dispatch_to_tool(
+                        dispatch_res = await cls._dispatch_to_tool(
                             tool=approval.execution.tool,
                             action_name=approval.execution.tool_action.action_name,
-                            parameters=approval.execution.request_context or {},
+                            parameters=dispatch_params,
                         )
+                        approval.execution.response_payload = dispatch_res
                     except Exception as exc:
                         logger.warning("Fallo al re-despachar a herramienta tras aprobación: %s", exc)
+                        approval.execution.response_payload = {"error": str(exc)}
             else:
                 approval.execution.status = ExecutionStatus.REJECTED
 
@@ -537,55 +564,6 @@ class PEPGatewayService:
         )
 
         return approval
-
-    @classmethod
-    async def list_approvals(
-        cls,
-        db: AsyncSession,
-        organization_id: Optional[UUID] = None,
-        status: Optional[ApprovalStatus] = None,
-        skip: int = 0,
-        limit: int = 50,
-    ) -> List[Approval]:
-        """Lista solicitudes de aprobación ordenadas por fecha reciente con filtros y relaciones cargadas."""
-        stmt = (
-            select(Approval)
-            .join(Execution, Approval.execution_id == Execution.id)
-            .options(
-                selectinload(Approval.execution).selectinload(Execution.agent),
-                selectinload(Approval.execution).selectinload(Execution.tool),
-                selectinload(Approval.execution).selectinload(Execution.tool_action),
-            )
-            .order_by(Approval.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
-        if organization_id:
-            stmt = stmt.where(Execution.organization_id == organization_id)
-        if status:
-            stmt = stmt.where(Approval.status == status)
-
-        result = await db.execute(stmt)
-        return list(result.scalars().all())
-
-    @classmethod
-    async def get_approval_by_id(
-        cls,
-        db: AsyncSession,
-        approval_id: UUID,
-    ) -> Optional[Approval]:
-        """Obtiene un ticket de aprobación con su ejecución asociada y entidades relacionadas."""
-        stmt = (
-            select(Approval)
-            .options(
-                selectinload(Approval.execution).selectinload(Execution.agent),
-                selectinload(Approval.execution).selectinload(Execution.tool),
-                selectinload(Approval.execution).selectinload(Execution.tool_action),
-            )
-            .where(Approval.id == approval_id)
-        )
-        result = await db.execute(stmt)
-        return result.scalar_one_or_none()
 
 
 pep_gateway_service = PEPGatewayService()

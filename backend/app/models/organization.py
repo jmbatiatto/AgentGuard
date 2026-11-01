@@ -2,9 +2,9 @@
 
 import uuid
 from datetime import datetime, timezone
-from typing import List, TYPE_CHECKING
+from typing import List, Dict, Any, TYPE_CHECKING
 from sqlalchemy import String, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.models.execution import Execution
     from app.models.alert import Alert
     from app.models.audit import AuditEvent
+    from app.models.api_key import ApiKey
 
 
 class Organization(Base):
@@ -29,6 +30,11 @@ class Organization(Base):
         default=uuid.uuid4,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    settings: Mapped[Dict[str, Any]] = mapped_column(
+        JSONB,
+        default=dict,
+        nullable=False,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -43,3 +49,4 @@ class Organization(Base):
     executions: Mapped[List["Execution"]] = relationship("Execution", back_populates="organization", cascade="all, delete-orphan")
     alerts: Mapped[List["Alert"]] = relationship("Alert", back_populates="organization", cascade="all, delete-orphan")
     audit_events: Mapped[List["AuditEvent"]] = relationship("AuditEvent", back_populates="organization", cascade="all, delete-orphan")
+    api_keys: Mapped[List["ApiKey"]] = relationship("ApiKey", back_populates="organization", cascade="all, delete-orphan")

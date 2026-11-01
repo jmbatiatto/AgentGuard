@@ -3,6 +3,7 @@
 from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -33,7 +34,7 @@ async def create_user(
             detail=f"Organización con ID {user_in.organization_id} no encontrada",
         )
 
-    # Validación de unicidad de email corporativo
+    # Validación de unicidad de email
     existing_user = await user_service.get_by_email(db=db, email=user_in.email)
     if existing_user:
         raise HTTPException(
@@ -41,8 +42,7 @@ async def create_user(
             detail=f"Ya existe un usuario registrado con el email {user_in.email}",
         )
 
-    user = await user_service.create(db=db, user_in=user_in)
-    return user
+    return await user_service.create(db=db, user_in=user_in)
 
 
 @router.get(
@@ -50,12 +50,12 @@ async def create_user(
     response_model=List[UserRead],
     status_code=status.HTTP_200_OK,
     summary="Listar Usuarios",
-    description="Lista usuarios con paginación, permitiendo filtrar por organización (tenant).",
+    description="Obtiene todos los usuarios con soporte para filtro por organización y paginación.",
 )
 async def list_users(
     organization_id: Optional[UUID] = Query(
         default=None,
-        description="Filtro opcional por ID de organización para respetar aislamiento multi-tenant",
+        description="Filtro opcional por ID de organización",
     ),
     skip: int = Query(
         default=0,
@@ -70,7 +70,7 @@ async def list_users(
     ),
     db: AsyncSession = Depends(get_db),
 ) -> List[UserRead]:
-    """Retorna el listado de usuarios según los filtros aplicados."""
+    """Retorna los usuarios según los filtros aplicados."""
     return await user_service.list_by_org(
         db=db,
         organization_id=organization_id,
@@ -84,7 +84,7 @@ async def list_users(
     response_model=UserRead,
     status_code=status.HTTP_200_OK,
     summary="Obtener Usuario por ID",
-    description="Busca y retorna los detalles de un usuario específico mediante su UUID.",
+    description="Busca y retorna los datos de un usuario mediante su UUID.",
 )
 async def get_user(
     user_id: UUID,
@@ -105,7 +105,7 @@ async def get_user(
     response_model=UserRead,
     status_code=status.HTTP_200_OK,
     summary="Actualizar Rol de Usuario",
-    description="Modifica el rol asignado a un usuario corporativo dentro de la organización.",
+    description="Modifica el rol de autorización de un usuario existente (ADMIN, OPERATOR, APPROVER, AUDITOR, VIEWER).",
 )
 async def update_user(
     user_id: UUID,
@@ -138,11 +138,17 @@ async def delete_user(
     user_id: UUID,
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Elimina el usuario o retorna 404 si no existe."""
-    deleted = await user_service.delete(db=db, user_id=user_id)
+    """Elimina el usuario o retorna 409 si es propietario de agentes u otros recursos."""
+    try:
+        deleted = await user_service.delete(db=db, user_id=user_id)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"No se puede eliminar el usuario '{user_id}' porque es propietario de agentes de IA registrados o tiene registros vinculados (ON DELETE RESTRICT).",
+        )
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Usuario con ID {user_id} no encontrado",
         )
-

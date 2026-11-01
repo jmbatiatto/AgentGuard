@@ -1,8 +1,9 @@
-"""Exportación central de los 12 Modelos Declarativos de AgentGuard."""
+"""Exportación central de los Modelos Declarativos de AgentGuard."""
 
 from app.models.enums import (
     UserRole,
     AgentStatus,
+    ToolStatus,
     RiskLevel,
     RuleEffect,
     PolicyDecision,
@@ -21,11 +22,13 @@ from app.models.execution import Execution
 from app.models.approval import Approval
 from app.models.alert import Alert
 from app.models.audit import AuditEvent
+from app.models.api_key import ApiKey
 
 __all__ = [
     # Enums
     "UserRole",
     "AgentStatus",
+    "ToolStatus",
     "RiskLevel",
     "RuleEffect",
     "PolicyDecision",
@@ -34,7 +37,7 @@ __all__ = [
     "AlertSeverity",
     "AlertStatus",
     "ActorType",
-    # Entidades (12 tablas del MER)
+    # Entidades
     "Organization",
     "User",
     "Agent",
@@ -47,4 +50,5 @@ __all__ = [
     "Approval",
     "Alert",
     "AuditEvent",
+    "ApiKey",
 ]

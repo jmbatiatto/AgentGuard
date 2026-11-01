@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.enums import RiskLevel
+from app.models.enums import RiskLevel, ToolStatus
 
 if TYPE_CHECKING:
     from app.models.organization import Organization
@@ -36,6 +36,12 @@ class Tool(Base):
     protocol: Mapped[str] = mapped_column(String(50), default="REST", nullable=False)
     endpoint_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[ToolStatus] = mapped_column(
+        SQLEnum(ToolStatus, name="tool_status_enum", native_enum=True),
+        default=ToolStatus.ACTIVE,
+        nullable=False,
+    )
+    execution_mode: Mapped[str] = mapped_column(String(50), default="SANDBOX", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -50,18 +56,17 @@ class Tool(Base):
 
     @property
     def assigned_agents(self) -> List[str]:
-        """Lista los nombres de agentes autorizados a invocar esta herramienta."""
+        """Lista los nombres de agentes autorizados y activos a invocar esta herramienta."""
         if not self.agent_tools:
             return []
-        return [at.agent.name for at in self.agent_tools if at.agent]
-
+        return [at.agent.name for at in self.agent_tools if at.agent and at.enabled]
 
 
 class ToolAction(Base):
-    """Acción atómica expuesta por una herramienta con nivel de riesgo tipificado."""
+    """Acción atómica granular expuesta por una herramienta."""
     __tablename__ = "tool_actions"
     __table_args__ = (
-        UniqueConstraint("tool_id", "action_name", name="uq_tool_action_name"),
+        UniqueConstraint("tool_id", "action_name", name="uq_tool_actions_tool_id_action_name"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -75,13 +80,13 @@ class ToolAction(Base):
         nullable=False,
         index=True,
     )
-    action_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    action_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     risk_level: Mapped[RiskLevel] = mapped_column(
         SQLEnum(RiskLevel, name="risk_level_enum", native_enum=True),
         nullable=False,
-        default=RiskLevel.LOW,
+        default=RiskLevel.MEDIUM,
     )
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

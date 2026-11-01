@@ -1,12 +1,14 @@
 """Servicio de lógica de negocio y persistencia para Reglas Deterministas de Políticas (PolicyRules)."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.policy import PolicyRule
+from app.core.policy_cache import policy_cache
+from app.models.enums import RuleEffect
+from app.models.policy import Policy, PolicyRule
 from app.models.tool import ToolAction
 from app.schemas.policy_rule import PolicyRuleCreate
 
@@ -27,8 +29,11 @@ class PolicyRuleService:
         )
         db.add(rule)
         await db.commit()
-        await db.refresh(rule)
-        return rule
+        pol = await db.get(Policy, rule_in.policy_id)
+        if pol:
+            await policy_cache.invalidate(pol.organization_id, rule_in.tool_action_id)
+        reloaded = await cls.get_by_id(db=db, rule_id=rule.id)
+        return reloaded or rule
 
     @staticmethod
     async def get_by_id(db: AsyncSession, rule_id: UUID) -> Optional[PolicyRule]:
@@ -67,6 +72,20 @@ class PolicyRuleService:
 
         result = await db.execute(stmt)
         return list(result.scalars().all())
+
+    @classmethod
+    async def delete(cls, db: AsyncSession, rule_id: UUID) -> bool:
+        """Elimina una regla de política por su UUID."""
+        rule = await cls.get_by_id(db=db, rule_id=rule_id)
+        if not rule:
+            return False
+        pol = await db.get(Policy, rule.policy_id)
+        action_id = rule.tool_action_id
+        await db.delete(rule)
+        await db.commit()
+        if pol:
+            await policy_cache.invalidate(pol.organization_id, action_id)
+        return True
 
 
 policy_rule_service = PolicyRuleService()

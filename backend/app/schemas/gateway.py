@@ -74,7 +74,7 @@ class GatewayExecuteResponse(BaseSchema):
     )
     status: ExecutionStatus = Field(
         ...,
-        description="Estado del ciclo de vida: EXECUTED, REJECTED o PENDING_APPROVAL",
+        description="Estado del ciclo de vida: EXECUTED, REJECTED, PENDING_APPROVAL, BLOCKED, EXPIRED, FAILED",
     )
     evaluated_policy_rule_id: Optional[UUID] = Field(
         default=None,
@@ -124,4 +124,5 @@ class ExecutionRead(BaseSchema):
     status: ExecutionStatus
     evaluated_policy_rule_id: Optional[UUID] = None
     timestamp: datetime
-
+    latency_ms: Optional[float] = 0.0
+    response_payload: Optional[Dict[str, Any]] = None

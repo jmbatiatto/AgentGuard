@@ -24,6 +24,9 @@ async def test_tool_service_create():
     """Valida la creación y persistencia de una herramienta."""
     mock_db = AsyncMock()
     mock_db.add = MagicMock()
+    mock_res = MagicMock()
+    mock_res.scalar_one_or_none.return_value = None
+    mock_db.execute.return_value = mock_res
     org_id = uuid.uuid4()
     tool_in = ToolCreate(
         organization_id=org_id,
@@ -43,7 +46,7 @@ async def test_tool_service_create():
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_awaited_once()
-    mock_db.refresh.assert_awaited_once()
+    assert result is not None
     assert result.name == "CRM Gateway"
     assert result.protocol == "REST"
     assert result.endpoint_url == "https://crm.internal.corp/api"
