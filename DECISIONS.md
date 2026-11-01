@@ -12,6 +12,9 @@ Cualquier desarrollador o agente de inteligencia artificial (Antigravity, Cursor
 * [ADR-003: Supresión de MCP y Estandarización en Protocolo HTTP REST Puro](#adr-003-supresión-de-mcp-y-estandarización-en-protocolo-http-rest-puro)
 * [ADR-004: Modelo Relacional Multi-Tenant con Identificadores UUID v4 e Índices JSONB en PostgreSQL](#adr-004-modelo-relacional-multi-tenant-con-identificadores-uuid-v4-e-índices-jsonb-en-postgresql)
 * [ADR-005: Control de Versiones y Migraciones de Base de Datos con Alembic](#adr-005-control-de-versiones-y-migraciones-de-base-de-datos-con-alembic)
+* [ADR-006: Protocolo HITL Asíncrono con Bóveda Cifrada en Redis Vault (Fernet TTL 15m)](#adr-006-protocolo-hitl-asíncrono-con-bóveda-cifrada-en-redis-vault-fernet-ttl-15m)
+* [ADR-007: Pipeline PEP con Inspección Heurística Temprana OWASP 2026 y Latencia Forense Real](#adr-007-pipeline-pep-con-inspección-heurística-temprana-owasp-2026-y-latencia-forense-real)
+* [ADR-008: Trazabilidad Administrativa Inmutable WORM con AuditService y Consulta Multi-Tenant](#adr-008-trazabilidad-administrativa-inmutable-worm-con-auditservice-y-consulta-multi-tenant)
 
 ---
 
@@ -122,3 +125,54 @@ Se adoptó **Alembic** como la tecnología oficial de **versionado y migraciones
 3. **Reversibilidad y Determinismo:** Toda migración cuenta con métodos bidireccionales obligatorios: `upgrade()` (aplica cambios) y `downgrade()` (revierte cambios de forma segura).
 4. **Tabla de Control `alembic_version`:** PostgreSQL mantiene una tabla interna que registra con exactitud la última versión de esquema aplicada, garantizando que todo el equipo trabaje sobre la misma base de datos.
 5. **Autogeneración:** Permite detectar discrepancias entre los modelos declarativos de Python y el estado real de la base de datos mediante `alembic revision --autogenerate`.
+
+---
+
+## ADR-006: Protocolo HITL Asíncrono con Bóveda Cifrada en Redis Vault (Fernet TTL 15m)
+
+* **Estado:** ✅ Aceptado / En vigor
+* **Fecha:** Noviembre 2026
+* **Decisores:** Equipo de Desarrollo (Jonathan Araujo / Agustín Belardinelli)
+
+### 1. Contexto y Problema
+El flujo de aprobación humana (HITL) bajo la decisión `REQUIRE_APPROVAL` no puede suspender indefinidamente la corrutina HTTP del agente sin provocar bloqueos de hilos, timeouts en balanceadores de carga y consumo excesivo de sockets. A su vez, para cumplir con el estándar OWASP GenAI (LLM06 - Sensitive Information Disclosure), el contexto almacenado en PostgreSQL debe estar ofuscado (`***REDACTED***`). Sin embargo, al momento de que un aprobador humano autorice la acción, el Gateway necesita los parámetros originales íntegros para despachar la llamada a la herramienta externa.
+
+### 2. Decisión Tomada
+1. Responder `HTTP 202 Accepted` de forma asíncrona, creando el registro de ejecución y el ticket en la tabla `approvals` con estado `PENDING`.
+2. Custodiar los parámetros originales sin rediseñar en una **bóveda volátil cifrada en Redis (`RedisVault`)** utilizando clave simétrica AES-128-CBC (`Fernet`) bajo la clave `hitl:payload:{approval_id}` con tiempo de vida estricto (**TTL de 900 segundos / 15 minutos**).
+3. En la resolución (`POST /api/v1/approvals/{id}/resolve`):
+   - Adquirir bloqueo pesimista `with_for_update()` sobre la fila del ticket.
+   - Si se aprueba, recuperar y consumir atómicamente el payload original desde Redis (`GETDEL`).
+   - Despachar a la herramienta y persistir la respuesta real en la columna `response_payload JSONB` de `executions`.
+
+---
+
+## ADR-007: Pipeline PEP con Inspección Heurística Temprana OWASP 2026 y Latencia Forense Real
+
+* **Estado:** ✅ Aceptado / En vigor
+* **Fecha:** Noviembre 2026
+* **Decisores:** Jonathan Araujo (Backend Architecture & Gateway)
+
+### 1. Contexto y Problema
+Si un atacante invoca el Gateway PEP con un vector malicioso (ej. SQL Injection destructivo o Prompt Injection) hacia una herramienta no asociada al agente (`AgentTool`), un descarte temprano por falta de capacidad ocultaba el intento de ataque, evitando que el SIEM y el centro de operaciones registraran la alerta crítica. Asimismo, la latencia de las ejecuciones se reportaba con un valor estático simulado.
+
+### 2. Decisión Tomada
+1. Evaluar el motor heurístico `ThreatDetector` (estándar OWASP Top 10 for Agentic Applications 2026) **antes** de verificar el acoplamiento agente-herramienta.
+2. Si se detecta un vector hostil (`threat.is_threat == True`), el Gateway **SIEMPRE emite `DENY`**, persiste la traza forense y genera de forma obligatoria una `Alert` con severidad `CRITICAL`.
+3. Medir la latencia real de ejecución mediante reloj monotónico de precisión (`time.perf_counter()`) y persistirla formalmente en la columna `executions.latency_ms` (FLOAT).
+
+---
+
+## ADR-008: Trazabilidad Administrativa Inmutable WORM con AuditService y Consulta Multi-Tenant
+
+* **Estado:** ✅ Aceptado / En vigor
+* **Fecha:** Noviembre 2026
+* **Decisores:** Jonathan Araujo / Agustín Belardinelli
+
+### 1. Contexto y Problema
+La Regla 7 de `AGENTS.md` exige trazabilidad inmutable WORM (*Write Once, Read Many*) tanto para operaciones de runtime (`executions`) como para cambios de configuración administrativa (creación de políticas, resolución de aprobaciones, actualización de estados de alerta, etc.). La tabla `audit_events` existía en PostgreSQL pero carecía de servicio y endpoints de consumo.
+
+### 2. Decisión Tomada
+1. Implementar `AuditService` (`backend/app/services/audit_service.py`) con método `record_event()` para el sellado inmutable de eventos con metadatos JSONB (`idx_audit_events_metadata_gin`).
+2. Exponer `GET /api/v1/audit-events` (`backend/app/api/audit_events.py`) acotado estrictamente por `organization_id` con paginación (`skip`, `limit`) y filtro por `event_type`.
+3. Prohibir mutaciones o eliminaciones (`UPDATE`/`DELETE`) sobre `audit_events` para preservar la validez probatoria forense.

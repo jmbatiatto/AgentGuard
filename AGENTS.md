@@ -15,7 +15,7 @@
 - **Backend:** **Python 3.12+ con FastAPI**, servidor ASGI **Uvicorn**, validación **Pydantic v2** y ORM **SQLAlchemy 2.0 asíncrono** (`asyncpg`).
 - **Control de Versiones y Migraciones de Base de Datos:** **Alembic** (gestión formal de versiones de esquema DDL con `upgrade`/`downgrade` y tabla `alembic_version`).
 - **Persistencia:** **PostgreSQL 16** (12 tablas relacionales, multi-tenant con discriminador `organization_id`, claves UUID v4 e índices GIN sobre `JSONB`) + **Redis 7** (caché volátil de políticas y WebSockets).
-- **Decisiones Formales:** Ver [`DECISIONS.md`](./DECISIONS.md) (ADR-001 a ADR-005).
+- **Decisiones Formales:** Ver [`DECISIONS.md`](./DECISIONS.md) (ADR-001 a ADR-008).
 
 ---
 

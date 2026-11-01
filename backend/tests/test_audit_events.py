@@ -84,3 +84,4 @@ async def test_api_list_audit_events():
             assert data[1]["event_type"] == "ALERT_RESOLVED"
 
     app.dependency_overrides.clear()
+

@@ -71,3 +71,4 @@ def downgrade() -> None:
     op.drop_column("tools", "status")
     op.drop_column("organizations", "settings")
     sa.Enum(name="tool_status_enum").drop(op.get_bind(), checkfirst=True)
+
