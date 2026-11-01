@@ -14,6 +14,7 @@ from app.api.websocket import router as websocket_router
 from app.api.executions import router as executions_router
 from app.api.alerts import router as alerts_router
 from app.api.demo import router as demo_router
+from app.api.audit_events import router as audit_events_router
 
 api_router = APIRouter()
 api_router.include_router(organizations_router)
@@ -29,5 +30,6 @@ api_router.include_router(websocket_router)
 api_router.include_router(executions_router)
 api_router.include_router(alerts_router)
 api_router.include_router(demo_router)
+api_router.include_router(audit_events_router)
 
 __all__ = ["api_router"]
