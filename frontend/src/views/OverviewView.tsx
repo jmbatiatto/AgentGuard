@@ -2,44 +2,206 @@ import React, { useState, useEffect } from 'react';
 import {
   Bot,
   Activity,
-  Ban,
-  Clock,
-  AlertTriangle,
   ShieldCheck,
   ArrowRight,
   CheckCircle2,
   ShieldAlert,
-  Zap,
-  Server,
-  RefreshCw
+  AlertTriangle,
+  RefreshCw,
+  Sparkles,
+  Lock,
+  Clock,
+  ShieldAlert as AlertIcon
 } from 'lucide-react';
 import { Header } from '../components/Header';
-import { mockAlerts } from '../data/mockData';
 import { api, DEMO_IDS } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import type { NavView, SecurityAlert, ExecutionTrace } from '../types/domain';
+
+export interface OverviewStats {
+  activeAgents: number;
+  totalTools: number;
+  activePolicies: number;
+  totalExecutions: number;
+  blockedActions: number;
+  allowedActions: number;
+  avgLatencyMs: number;
+}
+
+export interface BackendHealthState {
+  isOnline: boolean;
+  status: string;
+}
 
 interface OverviewViewProps {
   onNavigate: (view: NavView) => void;
   pendingApprovalsCount: number;
 }
 
-export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingApprovalsCount }) => {
-  const [alerts, setAlerts] = useState<SecurityAlert[]>(mockAlerts);
-  const [recentExecutions, setRecentExecutions] = useState<ExecutionTrace[]>([]);
-  const [backendHealth, setBackendHealth] = useState<{ isOnline: boolean; status: string }>({ isOnline: true, status: 'healthy' });
-  const [isRefreshing, setIsRefreshing] = useState(false);
+/**
+ * Traduce comandos técnicos de herramientas a lenguaje conversacional y humano
+ */
+function formatActionHuman(actionName: string): string {
+  const normalized = (actionName || '').toLowerCase().trim();
 
-  // Live Metrics State
-  const [stats, setStats] = useState({
-    activeAgents: 3,
-    totalTools: 4,
-    activePolicies: 4,
-    totalExecutions: 8429,
-    blockedActions: 147,
-    allowedActions: 8282,
-    avgLatencyMs: 18.4,
-  });
+  const translations: Record<string, string> = {
+    export_customers: 'Intentó descargar la base de clientes',
+    update_price: 'Intentó modificar precios de catálogo',
+    create_quote: 'Creó una cotización para cliente',
+    refund: 'Solicitó procesar un reembolso',
+    process_refund: 'Solicitó procesar un reembolso',
+    query_clients: 'Consultó datos de clientes',
+    read_customer: 'Consultó ficha de cliente',
+    send_email: 'Envió un correo a cliente',
+    query_database: 'Consultó registros internos',
+    execute_payment: 'Solicitó procesar un pago',
+  };
+
+  if (translations[normalized]) {
+    return translations[normalized];
+  }
+
+  // Fallback amigable si la acción viene en snake_case
+  const readable = normalized.replace(/_/g, ' ');
+  return readable.charAt(0).toUpperCase() + readable.slice(1);
+}
+
+/**
+ * Skeleton Loader que replica con precisión la estructura del Dashboard
+ * para erradicar el Flash of Initial State (FOUC) y Cumulative Layout Shift (CLS).
+ */
+const OverviewSkeleton: React.FC = () => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <Header
+        title="¿Qué están haciendo tus agentes?"
+        subtitle="Un vistazo a las tareas de tus asistentes y los bloqueos de seguridad del día."
+        actionButton={
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 12px',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
+            fontSize: '12px',
+            color: 'var(--text-muted)',
+            fontWeight: 500,
+          }}>
+            <RefreshCw size={14} className="spin" />
+            <span>Actualizando...</span>
+          </div>
+        }
+      />
+
+      <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>
+        {/* Banner de Estado Skeleton */}
+        <div style={{
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '10px',
+          padding: '14px 18px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '120px', height: '16px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+          </div>
+          <div style={{ width: '140px', height: '16px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+        </div>
+
+        {/* Grid de 4 Cards KPI Skeleton */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+          marginBottom: '20px',
+        }}>
+          {[1, 2, 3, 4].map(idx => (
+            <div key={idx} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '108px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ width: '110px', height: '12px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+                <div style={{ width: '26px', height: '26px', borderRadius: '6px', backgroundColor: 'var(--border-subtle)' }} />
+              </div>
+              <div style={{ width: '54px', height: '26px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+              <div style={{ width: '130px', height: '10px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Sección Central Skeleton (Gráfico + Alertas) */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr',
+          gap: '20px',
+          marginBottom: '20px',
+        }}>
+          <div className="card" style={{ height: '330px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ width: '230px', height: '16px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+            <div style={{ width: '160px', height: '12px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+            <div style={{
+              flex: 1,
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255,255,255,0.02)',
+              border: '1px dashed var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-muted)',
+              fontSize: '12px',
+            }}>
+              Cargando actividad...
+            </div>
+          </div>
+
+          <div className="card" style={{ height: '330px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '130px', height: '16px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+              <div style={{ width: '50px', height: '12px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{ height: '64px', borderRadius: '8px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-subtle)' }} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabla Inferior Skeleton */}
+        <div style={{
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '10px',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+        }}>
+          <div style={{ width: '200px', height: '16px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+          <div style={{ width: '240px', height: '12px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+            {[1, 2, 3, 4].map(row => (
+              <div key={row} style={{ height: '34px', borderRadius: '4px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-subtle)' }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingApprovalsCount }) => {
+  const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
+  const [recentExecutions, setRecentExecutions] = useState<ExecutionTrace[]>([]);
+  const [backendHealth, setBackendHealth] = useState<BackendHealthState | null>(null);
+  const [stats, setStats] = useState<OverviewStats | null>(null);
+  const [isBackendReady, setIsBackendReady] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadOverviewData = async () => {
     setIsRefreshing(true);
@@ -53,42 +215,47 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         api.getPolicies(),
       ]);
 
-      setBackendHealth(health);
-
-      if (alertsData && alertsData.length > 0) {
-        setAlerts(alertsData);
-      }
-
-      if (executionsData && executionsData.length > 0) {
-        setRecentExecutions(executionsData.slice(0, 5));
-      }
+      setBackendHealth(health ?? { isOnline: false, status: 'offline' });
+      setAlerts(alertsData ?? []);
+      setRecentExecutions(executionsData ? executionsData.slice(0, 5) : []);
 
       const realExecCount = executionsData ? executionsData.length : 0;
       const realBlockedCount = executionsData ? executionsData.filter(e => e.decision === 'DENY').length : 0;
       const realAllowedCount = executionsData ? executionsData.filter(e => e.decision === 'ALLOW').length : 0;
-      const realActiveAgents = agentsData ? agentsData.filter(a => a.status === 'Active').length : 3;
-      const realTotalTools = toolsData ? toolsData.length : 4;
-      const realActivePolicies = policiesData ? policiesData.filter(p => p.status === 'Active').length : 4;
+      const realActiveAgents = agentsData ? agentsData.filter(a => a.status === 'Active').length : 0;
+      const realTotalTools = toolsData ? toolsData.length : 0;
+      const realActivePolicies = policiesData ? policiesData.filter(p => p.status === 'Active').length : 0;
 
-      const totalLatency = executionsData && executionsData.length > 0 
-        ? executionsData.reduce((acc, curr) => acc + (curr.latencyMs || 15), 0)
+      const totalLatency = executionsData && executionsData.length > 0
+        ? executionsData.reduce((acc, curr) => acc + (curr.latencyMs || 0), 0)
         : 0;
-      const calculatedAvgLatency = realExecCount > 0 
+      const calculatedAvgLatency = realExecCount > 0
         ? Number((totalLatency / realExecCount).toFixed(1))
-        : 18.4;
+        : 0;
 
       setStats({
-        activeAgents: realActiveAgents > 0 ? realActiveAgents : 3,
-        totalTools: realTotalTools > 0 ? realTotalTools : 4,
-        activePolicies: realActivePolicies > 0 ? realActivePolicies : 4,
-        totalExecutions: realExecCount > 0 ? realExecCount : 8429,
-        blockedActions: realBlockedCount > 0 ? realBlockedCount : 147,
-        allowedActions: realAllowedCount > 0 ? realAllowedCount : 8282,
+        activeAgents: realActiveAgents,
+        totalTools: realTotalTools,
+        activePolicies: realActivePolicies,
+        totalExecutions: realExecCount,
+        blockedActions: realBlockedCount,
+        allowedActions: realAllowedCount,
         avgLatencyMs: calculatedAvgLatency,
       });
     } catch (err) {
       console.warn('[OverviewView] Error sincronizando métricas del backend:', err);
+      setBackendHealth({ isOnline: false, status: 'error' });
+      setStats({
+        activeAgents: 0,
+        totalTools: 0,
+        activePolicies: 0,
+        totalExecutions: 0,
+        blockedActions: 0,
+        allowedActions: 0,
+        avgLatencyMs: 0,
+      });
     } finally {
+      setIsBackendReady(true);
       setIsRefreshing(false);
     }
   };
@@ -103,26 +270,26 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
       const newAlert: SecurityAlert = {
         id: alertData.alert_id || `alert_${Date.now()}`,
         title: alertData.title || 'Alerta de Seguridad: Acción crítica bloqueada',
-        description: alertData.description || 'Intento de violación de política detectado por el Gateway PEP',
+        description: alertData.description || 'Intento de violación de política detectado automáticamente',
         timeAgo: 'Recién ⚡',
-        severity: (alertData.severity || 'CRITICAL').toLowerCase() as any,
-        status: (alertData.status || 'OPEN') as any,
+        severity: (alertData.severity || 'CRITICAL').toLowerCase() as 'critical' | 'warning' | 'info',
+        status: (alertData.status || 'OPEN') as 'OPEN' | 'RESOLVED',
       };
 
       setAlerts(prev => [newAlert, ...prev]);
-      setStats(prev => ({
+      setStats(prev => prev ? {
         ...prev,
         blockedActions: prev.blockedActions + 1,
-      }));
+      } : null);
     },
     onNewExecution: (execData) => {
       const newExec: ExecutionTrace = {
         id: execData.execution_id || `exec_${Date.now()}`,
         organizationId: execData.organization_id || DEMO_IDS.ORG_ACME_ID,
         agentId: execData.agent_id,
-        agentName: execData.agent_id?.includes('sales') ? 'Sales Quoting Bot' : 'AI Agent',
+        agentName: execData.agent_id?.includes('sales') ? 'Agente de Ventas' : 'Agente IA',
         toolId: execData.tool_id,
-        toolName: 'Tool Integration',
+        toolName: 'Integración de Herramienta',
         actionName: execData.action_name,
         resource: 'runtime/execution',
         requestContext: {},
@@ -133,12 +300,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
       };
 
       setRecentExecutions(prev => [newExec, ...prev.slice(0, 4)]);
-      setStats(prev => ({
+      setStats(prev => prev ? {
         ...prev,
         totalExecutions: prev.totalExecutions + 1,
         allowedActions: execData.decision === 'ALLOW' ? prev.allowedActions + 1 : prev.allowedActions,
         blockedActions: execData.decision === 'DENY' ? prev.blockedActions + 1 : prev.blockedActions,
-      }));
+      } : null);
     },
   });
 
@@ -147,15 +314,27 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
     await api.updateAlertStatus(alertId, 'RESOLVED');
   };
 
+  // Validación global de carga: backend + ciclo i18n
+  const isI18nReady = typeof window !== 'undefined'
+    ? Boolean((window as unknown as { i18n?: { isInitialized?: boolean } }).i18n ? (window as unknown as { i18n?: { isInitialized?: boolean } }).i18n?.isInitialized : true)
+    : true;
+
+  const isLoading = !isBackendReady || stats === null || backendHealth === null || !isI18nReady;
+
+  if (isLoading) {
+    return <OverviewSkeleton />;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <Header 
-        title="Overview & Gobernanza en Tiempo Real" 
-        subtitle="Monitoreo centralizado de agentes autónomos, decisiones PEP del PDP y salud del sistema."
+      {/* 1. Header con Copywriting Humano y Cercano */}
+      <Header
+        title="Vista general"
+        subtitle="Un vistazo a las tareas de tus asistentes y los bloqueos de seguridad del día."
         actionButton={
           <button
             onClick={loadOverviewData}
-            title="Sincronizar métricas desde PostgreSQL y Redis"
+            title="Actualizar datos en tiempo real"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -171,13 +350,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             }}
           >
             <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
-            <span>Sincronizar</span>
+            <span>Actualizar</span>
           </button>
         }
       />
 
       <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>
-        {/* Top System Health Banner */}
+        {/* 2. Banner de Estado Natural (Zero jerga técnica) */}
         <div style={{
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
@@ -190,50 +369,34 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
           flexWrap: 'wrap',
           gap: '12px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              backgroundColor: backendHealth.isOnline ? '#10B981' : '#F59E0B',
-              boxShadow: backendHealth.isOnline ? '0 0 8px rgba(16, 185, 129, 0.6)' : 'none',
-            }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Sparkles size={16} color="#10B981" />
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-              AgentGuard PEP / PDP Gateway: {backendHealth.isOnline ? 'Conectado y Protegido (200 OK)' : 'Modo Seguro Local (Resiliente)'}
+              {backendHealth.isOnline ? ' Todo en orden' : ' Modo seguro local'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-              <Server size={14} color="var(--brand-primary)" />
-              <span>PostgreSQL 16 Multi-Tenant</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-              <Zap size={14} color="#FBBF24" />
-              <span>Latencia PDP: <strong style={{ color: 'var(--text-primary)' }}>{stats.avgLatencyMs} ms</strong></span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-              <ShieldCheck size={14} color="#10B981" />
-              <span>Fail-Closed: <strong style={{ color: '#10B981' }}>Enforced</strong></span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <Lock size={14} color="#10B981" />
+            <span style={{ color: '#10B981', fontWeight: 600 }}> Entorno protegido</span>
           </div>
         </div>
 
-        {/* KPI Top Cards Grid */}
+        {/* 3. Métricas y KPIs en Lenguaje Cotidiano */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: '16px',
           marginBottom: '20px',
         }}>
-          {/* Card 1: Active Agents */}
-          <div 
-            className="card" 
+          {/* Card 1: Asistentes Activos */}
+          <div
+            className="card"
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
             onClick={() => onNavigate('agents')}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Agentes Protegidos</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Asistentes activos</span>
               <div style={{ padding: '6px', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderRadius: '6px', color: '#38BDF8' }}>
                 <Bot size={16} />
               </div>
@@ -241,54 +404,54 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.activeAgents}</div>
             <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <ShieldCheck size={12} />
-              Gobernanza activa en runtime
+              Supervisión continua activa
             </div>
           </div>
 
-          {/* Card 2: Total Executions */}
-          <div 
-            className="card" 
+          {/* Card 2: Acciones Revisadas Hoy */}
+          <div
+            className="card"
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
             onClick={() => onNavigate('traces')}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Total Evaluaciones PEP</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Acciones revisadas hoy</span>
               <div style={{ padding: '6px', backgroundColor: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', color: '#818CF8' }}>
                 <Activity size={16} />
               </div>
             </div>
             <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalExecutions.toLocaleString()}</div>
             <div style={{ fontSize: '11px', color: '#818CF8', fontWeight: 500 }}>
-              {stats.allowedActions.toLocaleString()} Permitidas ({stats.totalExecutions > 0 ? Math.round((stats.allowedActions / stats.totalExecutions) * 100) : 100}%)
+              {stats.allowedActions.toLocaleString()} permitidas sin problemas
             </div>
           </div>
 
-          {/* Card 3: Blocked Actions */}
-          <div 
-            className="card" 
+          {/* Card 3: Intentos Detenidos */}
+          <div
+            className="card"
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
             onClick={() => onNavigate('traces')}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Acciones Bloqueadas (DENY)</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Intentos detenidos</span>
               <div style={{ padding: '6px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', color: '#EF4444' }}>
-                <Ban size={16} />
+                <AlertIcon size={16} />
               </div>
             </div>
             <div style={{ fontSize: '26px', fontWeight: 800, color: '#EF4444' }}>{stats.blockedActions}</div>
             <div style={{ fontSize: '11px', color: 'var(--danger-text)', fontWeight: 500 }}>
-              Veredictos de bloqueo determinista
+              Peligros o abusos prevenidos
             </div>
           </div>
 
-          {/* Card 4: Pending Approvals */}
-          <div 
-            className="card" 
+          {/* Card 4: Esperando tu Permiso */}
+          <div
+            className="card"
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
             onClick={() => onNavigate('approvals')}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Aprobaciones HITL</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Esperando tu permiso</span>
               <div style={{ padding: '6px', backgroundColor: 'rgba(245, 158, 11, 0.1)', borderRadius: '6px', color: '#F59E0B' }}>
                 <Clock size={16} />
               </div>
@@ -297,25 +460,27 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
               {pendingApprovalsCount}
             </div>
             <div style={{ fontSize: '11px', color: '#F59E0B', fontWeight: 500 }}>
-              {pendingApprovalsCount > 0 ? 'Esperando resolución humana' : 'Bandeja al día'}
+              {pendingApprovalsCount > 0 ? 'Solicitudes pendientes de revisión' : 'Bandeja al día'}
             </div>
           </div>
         </div>
 
-        {/* Middle Section: Chart + Recent Alerts */}
+        {/* Sección Central: Gráfico + Alertas */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1fr',
           gap: '20px',
           marginBottom: '20px',
         }}>
-          {/* Left Chart: Execution Activity */}
+          {/* Gráfico: Actividad en las últimas 24 horas */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Actividad de Autorizaciones en Runtime</h3>
+                <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Actividad en las últimas 24 horas
+                </h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Decisiones del Motor PDP (Allow vs Deny) en tiempo real
+                  Acciones cotidianas comparadas con intentos bloqueados
                 </p>
               </div>
 
@@ -326,7 +491,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#EF4444' }} />
-                  <span>Bloqueadas ({stats.blockedActions})</span>
+                  <span>Detenidas ({stats.blockedActions})</span>
                 </div>
               </div>
             </div>
@@ -334,19 +499,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             {/* SVG Interactive Spline Graph */}
             <div style={{ flex: 1, height: '220px', position: 'relative', marginTop: '10px' }}>
               <svg viewBox="0 0 700 200" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-                {/* Horizontal Grid lines */}
                 <line x1="40" y1="20" x2="680" y2="20" stroke="var(--border-subtle)" strokeDasharray="3 3" />
                 <line x1="40" y1="80" x2="680" y2="80" stroke="var(--border-subtle)" strokeDasharray="3 3" />
                 <line x1="40" y1="140" x2="680" y2="140" stroke="var(--border-subtle)" strokeDasharray="3 3" />
                 <line x1="40" y1="190" x2="680" y2="190" stroke="var(--border-subtle)" />
 
-                {/* Y Axis Labels */}
                 <text x="10" y="24" fill="#64748B" fontSize="10">1.5k</text>
                 <text x="10" y="84" fill="#64748B" fontSize="10">1k</text>
                 <text x="10" y="144" fill="#64748B" fontSize="10">500</text>
                 <text x="25" y="194" fill="#64748B" fontSize="10">0</text>
 
-                {/* Spline 1 (Allowed - Blue) */}
                 <path
                   d="M 50 160 Q 150 140 250 110 T 450 70 T 650 60"
                   fill="none"
@@ -355,7 +517,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                   strokeLinecap="round"
                 />
 
-                {/* Spline 2 (Blocked - Red) */}
                 <path
                   d="M 50 180 Q 150 175 250 170 T 450 165 T 650 175"
                   fill="none"
@@ -364,7 +525,6 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                   strokeLinecap="round"
                 />
 
-                {/* X Axis Dates */}
                 <text x="45" y="208" fill="#64748B" fontSize="11">00:00</text>
                 <text x="145" y="208" fill="#64748B" fontSize="11">04:00</text>
                 <text x="245" y="208" fill="#64748B" fontSize="11">08:00</text>
@@ -376,11 +536,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             </div>
           </div>
 
-          {/* Right Panel: Recent Alerts */}
+          {/* Panel Derecho: Alertas de Seguridad */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Alertas de Seguridad</h3>
-              <button 
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Alertas de seguridad</h3>
+              <button
                 onClick={() => onNavigate('traces')}
                 style={{ background: 'none', border: 'none', color: '#38BDF8', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}
               >
@@ -389,11 +549,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1, maxHeight: '380px', overflowY: 'auto' }}>
+              {/* 5. Estado Vacío Amigable para Alertas */}
               {alerts.length === 0 ? (
-                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                  <ShieldCheck size={28} color="#10B981" style={{ margin: '0 auto 8px' }} />
-                  <div>No hay incidentes de seguridad abiertos.</div>
-                  <div style={{ fontSize: '11px', marginTop: '4px' }}>El Gateway está bloqueando amenazas en tiempo de ejecución.</div>
+                <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  <ShieldCheck size={32} color="#10B981" style={{ margin: '0 auto 10px' }} />
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                    Todo tranquilo por ahora. No hay alertas recientes.
+                  </div>
+                  <div style={{ fontSize: '12px' }}>
+                    Tus asistentes están trabajando dentro de las reglas establecidas.
+                  </div>
                 </div>
               ) : (
                 alerts.slice(0, 5).map(alert => {
@@ -409,7 +574,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                   }
 
                   return (
-                    <div 
+                    <div
                       key={alert.id}
                       style={{
                         padding: '12px 14px',
@@ -431,7 +596,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                             {alert.title}
                           </div>
                           <span className={`badge ${isResolved ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '10px' }}>
-                            {isResolved ? 'RESOLVED' : 'OPEN'}
+                            {isResolved ? 'Resuelto' : 'Abierto'}
                           </span>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>
@@ -448,7 +613,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                               style={{ padding: '3px 8px', fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                             >
                               <CheckCircle2 size={11} />
-                              <span>Resolver</span>
+                              <span>Marcar resuelto</span>
                             </button>
                           )}
                         </div>
@@ -461,7 +626,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
           </div>
         </div>
 
-        {/* Live Recent Executions Stream */}
+        {/* 4. Tabla de Actividad Reciente (Microcopy humano sin latencia técnica) */}
         <div style={{
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
@@ -472,19 +637,19 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div>
               <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Últimas Decisiones de Autorización del Gateway PEP
+                Actividad reciente
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Trazas registradas en PostgreSQL e interceptadas en runtime
+                Últimos movimientos registrados de tus asistentes
               </div>
             </div>
 
-            <button 
+            <button
               onClick={() => onNavigate('traces')}
-              className="btn btn-secondary" 
+              className="btn btn-secondary"
               style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
             >
-              <span>Ver todas las trazas</span>
+              <span>Ver historial completo</span>
               <ArrowRight size={14} />
             </button>
           </div>
@@ -494,10 +659,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-                    <th style={{ padding: '8px 12px' }}>AGENTE</th>
-                    <th style={{ padding: '8px 12px' }}>HERRAMIENTA & ACCIÓN</th>
+                    <th style={{ padding: '8px 12px' }}>ASISTENTE</th>
+                    <th style={{ padding: '8px 12px' }}>ACCIÓN REALIZADA</th>
                     <th style={{ padding: '8px 12px' }}>DECISIÓN</th>
-                    <th style={{ padding: '8px 12px' }}>LATENCIA</th>
                     <th style={{ padding: '8px 12px' }}>ESTADO</th>
                   </tr>
                 </thead>
@@ -505,9 +669,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                   {recentExecutions.map(exec => {
                     const isAllow = exec.decision === 'ALLOW';
                     const isDeny = exec.decision === 'DENY';
+
+                    // Microcopy humano para decisiones
+                    const decisionLabel = isAllow
+                      ? 'Aprobado'
+                      : isDeny
+                        ? 'Rechazado'
+                        : 'Requiere tu permiso';
+
+                    // Microcopy humano para el estado de ejecución
+                    const statusLabel = exec.status === 'EXECUTED'
+                      ? 'Completado'
+                      : exec.status === 'PENDING_APPROVAL' || exec.status === 'PENDING'
+                        ? 'En espera'
+                        : 'Bloqueado';
+
                     return (
-                      <tr 
-                        key={exec.id} 
+                      <tr
+                        key={exec.id}
                         style={{ borderBottom: '1px solid var(--border-subtle)', cursor: 'pointer' }}
                         onClick={() => onNavigate('traces')}
                       >
@@ -515,26 +694,23 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                           {exec.agentName}
                         </td>
                         <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>
-                          <code>{exec.actionName}</code>
+                          <span>{formatActionHuman(exec.actionName)}</span>
                         </td>
                         <td style={{ padding: '10px 12px' }}>
                           <span style={{
                             padding: '3px 8px',
                             borderRadius: '12px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             fontSize: '11px',
                             backgroundColor: isAllow ? 'rgba(16, 185, 129, 0.15)' : isDeny ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
                             color: isAllow ? '#34D399' : isDeny ? '#F87171' : '#FBBF24',
                             border: `1px solid ${isAllow ? 'rgba(16, 185, 129, 0.3)' : isDeny ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
                           }}>
-                            {exec.decision}
+                            {decisionLabel}
                           </span>
                         </td>
                         <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
-                          {exec.latencyMs} ms
-                        </td>
-                        <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>
-                          {exec.status}
+                          {statusLabel}
                         </td>
                       </tr>
                     );
@@ -543,8 +719,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
               </table>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '18px', color: 'var(--text-muted)', fontSize: '13px' }}>
-              No hay ejecuciones recientes en la base de datos. Dispara una acción en el Playground para verla en vivo.
+            /* 5. Estado Vacío Amigable para Tabla */
+            <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', fontSize: '13px' }}>
+              <CheckCircle2 size={30} color="#10B981" style={{ margin: '0 auto 8px' }} />
+              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                Todo tranquilo por ahora. Aún no hay actividad reciente registrada.
+              </div>
+              <div style={{ fontSize: '12px' }}>
+                En cuanto tus asistentes comiencen a realizar tareas, verás cada paso aquí en tiempo real.
+              </div>
             </div>
           )}
         </div>

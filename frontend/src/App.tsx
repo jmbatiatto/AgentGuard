@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ShieldAlert } from 'lucide-react';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AuthProvider } from './context/AuthContext';
+import { AuthView } from './views/AuthView';
 import { Sidebar } from './components/Sidebar';
 import { OverviewView } from './views/OverviewView';
 import { AgentsView } from './views/AgentsView';
@@ -22,6 +23,7 @@ const getInitialView = (): NavView => {
 };
 
 export const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
   const [currentView, setCurrentView] = useState<NavView>(getInitialView);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
   const [securityAlert, setSecurityAlert] = useState<{
@@ -50,6 +52,7 @@ export const App: React.FC = () => {
 
   // Inicializar contador real desde backend (con fallback automático)
   useEffect(() => {
+    if (!isAuthenticated) return;
     let isMounted = true;
     api.getApprovals('PENDING').then((list) => {
       if (isMounted && list) {
@@ -57,7 +60,7 @@ export const App: React.FC = () => {
       }
     });
     return () => { isMounted = false; };
-  }, []);
+  }, [isAuthenticated]);
 
   const handleTriggerAlert = (alert: { id?: string; title: string; description?: string; severity?: string }) => {
     setSecurityAlert({
@@ -97,109 +100,126 @@ export const App: React.FC = () => {
     setPendingApprovalsCount(prev => prev + 1);
   };
 
+  // ── Pantalla de autenticación ──────────────────────────────────────────────
+  if (!isAuthenticated) {
+    return (
+      <ThemeProvider>
+        <AuthView onAuthenticated={() => {
+          setIsAuthenticated(true);
+          setCurrentView('overview');
+          window.location.hash = '#overview';
+        }} />
+      </ThemeProvider>
+    );
+  }
+
+  // ── Dashboard principal (post-login) ──────────────────────────────────────
   return (
     <ThemeProvider>
       <AuthProvider>
         <div className="app-container">
-        {/* Global SIEM Incident Banner */}
-        {securityAlert && (
-          <div style={{
-            position: 'fixed',
-            top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 99999,
-            backgroundColor: '#1E1218',
-            border: '1px solid #EF4444',
-            boxShadow: '0 12px 36px rgba(239, 68, 68, 0.45), 0 0 20px rgba(239, 68, 68, 0.25)',
-            borderRadius: '10px',
-            padding: '14px 20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '14px',
-            maxWidth: '640px',
-            width: '90%',
-          }}>
+          {/* Global SIEM Incident Banner */}
+          {securityAlert && (
             <div style={{
-              padding: '8px',
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              borderRadius: '8px',
-              color: '#EF4444',
+              position: 'fixed',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 99999,
+              backgroundColor: '#1E1218',
+              border: '1px solid #EF4444',
+              boxShadow: '0 12px 36px rgba(239, 68, 68, 0.45), 0 0 20px rgba(239, 68, 68, 0.25)',
+              borderRadius: '10px',
+              padding: '14px 20px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
+              gap: '14px',
+              maxWidth: '640px',
+              width: '90%',
             }}>
-              <ShieldAlert size={22} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '11px', fontWeight: 800, color: '#F87171', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.5px' }}>
-                <span>🚨 SIEM SECURITY INCIDENT</span>
-                <span style={{ fontSize: '10px', backgroundColor: '#EF4444', color: '#fff', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                  {securityAlert.severity || 'CRITICAL'}
-                </span>
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {securityAlert.title}
-              </div>
-              {securityAlert.description && (
-                <div style={{ fontSize: '11px', color: '#CBD5E1', marginTop: '3px', lineHeight: 1.3 }}>
-                  {securityAlert.description}
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => setSecurityAlert(null)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#94A3B8',
-                cursor: 'pointer',
-                padding: '4px',
+              <div style={{
+                padding: '8px',
+                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                borderRadius: '8px',
+                color: '#EF4444',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 flexShrink: 0,
-              }}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
+              }}>
+                <ShieldAlert size={22} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#F87171', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.5px' }}>
+                  <span>🚨 SIEM SECURITY INCIDENT</span>
+                  <span style={{ fontSize: '10px', backgroundColor: '#EF4444', color: '#fff', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                    {securityAlert.severity || 'CRITICAL'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {securityAlert.title}
+                </div>
+                {securityAlert.description && (
+                  <div style={{ fontSize: '11px', color: '#CBD5E1', marginTop: '3px', lineHeight: 1.3 }}>
+                    {securityAlert.description}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setSecurityAlert(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94A3B8',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  flexShrink: 0,
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
-        {/* Fixed Left Navigation Bar */}
-        <Sidebar 
-          currentView={currentView} 
-          onNavigate={handleNavigate} 
-          pendingApprovalsCount={pendingApprovalsCount}
-        />
+          {/* Fixed Left Navigation Bar */}
+          <Sidebar
+            currentView={currentView}
+            onNavigate={handleNavigate}
+            pendingApprovalsCount={pendingApprovalsCount}
+            onLogout={() => {
+              setIsAuthenticated(false);
+              window.location.hash = '';
+            }}
+          />
 
-        {/* Main Content Area */}
-        <main className="main-content">
-          {currentView === 'overview' && (
-            <OverviewView 
-              onNavigate={handleNavigate} 
-              pendingApprovalsCount={pendingApprovalsCount} 
-            />
-          )}
-          {currentView === 'agents' && <AgentsView />}
-          {currentView === 'tools' && <ToolsView />}
-          {currentView === 'policies' && <PoliciesView />}
-          {currentView === 'approvals' && (
-            <ApprovalsView onUpdatePendingCount={setPendingApprovalsCount} />
-          )}
-          {currentView === 'traces' && <TracesView />}
-          {currentView === 'playground' && (
-            <PlaygroundView 
-              onTriggerApproval={handleTriggerApprovalFromPlayground} 
-              onTriggerAlert={handleTriggerAlert}
-              onNavigate={handleNavigate}
-            />
-          )}
-          {currentView === 'settings' && <SettingsView />}
-        </main>
-      </div>
+          {/* Main Content Area */}
+          <main className="main-content">
+            {currentView === 'overview' && (
+              <OverviewView
+                onNavigate={handleNavigate}
+                pendingApprovalsCount={pendingApprovalsCount}
+              />
+            )}
+            {currentView === 'agents' && <AgentsView />}
+            {currentView === 'tools' && <ToolsView />}
+            {currentView === 'policies' && <PoliciesView />}
+            {currentView === 'approvals' && (
+              <ApprovalsView onUpdatePendingCount={setPendingApprovalsCount} />
+            )}
+            {currentView === 'traces' && <TracesView />}
+            {currentView === 'playground' && (
+              <PlaygroundView
+                onTriggerApproval={handleTriggerApprovalFromPlayground}
+                onTriggerAlert={handleTriggerAlert}
+                onNavigate={handleNavigate}
+              />
+            )}
+            {currentView === 'settings' && <SettingsView />}
+          </main>
+        </div>
       </AuthProvider>
     </ThemeProvider>
   );
 };
 
 export default App;
-

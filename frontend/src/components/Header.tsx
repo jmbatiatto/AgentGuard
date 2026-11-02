@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
   return (
     <header style={{
       height: 'var(--header-height)',
-      padding: '0 28px',
+      padding: '12px 28px 8px 28px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -161,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             backgroundColor: '#10B981',
             boxShadow: '0 0 6px #10B981',
           }} />
-          <span>All systems operational</span>
+          <span>Todos los sistemas operativos</span>
         </div>
 
         {/* User Profile Pill with RBAC Selector Dropdown */}
