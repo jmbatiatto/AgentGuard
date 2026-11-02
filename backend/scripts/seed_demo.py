@@ -423,6 +423,7 @@ async def seed_data(reset: bool = False) -> None:
             status=ExecutionStatus.EXECUTED,
             evaluated_policy_rule_id=RULE_QUOTE_ALLOW_ID,
             timestamp=now,
+            latency_ms=18.4,
         )
         session.add(exec_allow)
 
@@ -440,6 +441,7 @@ async def seed_data(reset: bool = False) -> None:
             status=ExecutionStatus.PENDING_APPROVAL,
             evaluated_policy_rule_id=RULE_REFUND_APPROVAL_ID,
             timestamp=now,
+            latency_ms=23.7,
         )
         session.add(exec_approval)
 
@@ -466,6 +468,7 @@ async def seed_data(reset: bool = False) -> None:
             status=ExecutionStatus.REJECTED,
             evaluated_policy_rule_id=RULE_EXPORT_DENY_ID,
             timestamp=now,
+            latency_ms=14.2,
         )
         session.add(exec_alert)
 

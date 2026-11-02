@@ -112,6 +112,7 @@ class PEPGatewayService:
         agent = agent_res.scalar_one_or_none()
 
         if not agent:
+            latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -122,9 +123,11 @@ class PEPGatewayService:
                 status=ExecutionStatus.REJECTED,
                 error_message="El agente no existe o no pertenece a esta organización",
                 timestamp=now,
+                latency_ms=latency_ms,
             )
 
         if agent.status != AgentStatus.ACTIVE:
+            latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -135,6 +138,7 @@ class PEPGatewayService:
                 status=ExecutionStatus.REJECTED,
                 error_message=f"El agente se encuentra en estado '{agent.status}' y no puede operar",
                 timestamp=now,
+                latency_ms=latency_ms,
             )
 
         # 3. Validar Herramienta y Acción Atómica
@@ -148,6 +152,7 @@ class PEPGatewayService:
         tool = tool_res.scalar_one_or_none()
 
         if not tool:
+            latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -158,6 +163,7 @@ class PEPGatewayService:
                 status=ExecutionStatus.REJECTED,
                 error_message="Herramienta no encontrada en la organización",
                 timestamp=now,
+                latency_ms=latency_ms,
             )
 
         action_stmt = select(ToolAction).where(
@@ -170,6 +176,7 @@ class PEPGatewayService:
         tool_action = action_res.scalar_one_or_none()
 
         if not tool_action:
+            latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -180,6 +187,7 @@ class PEPGatewayService:
                 status=ExecutionStatus.REJECTED,
                 error_message=f"La acción '{request.action_name}' no existe en la herramienta registrada",
                 timestamp=now,
+                latency_ms=latency_ms,
             )
 
         # 4. Validar Capacidad Asignada en AgentTool (N:N) - Escenario 2
@@ -195,6 +203,7 @@ class PEPGatewayService:
 
         if not agent_tool:
             # Denegación por falta de capacidad asignada
+            latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
             execution = Execution(
                 id=execution_id,
                 organization_id=request.organization_id,
@@ -207,6 +216,7 @@ class PEPGatewayService:
                 decision=PolicyDecision.DENY,
                 status=ExecutionStatus.REJECTED,
                 timestamp=now,
+                latency_ms=latency_ms,
             )
             db.add(execution)
             await db.commit()
@@ -221,6 +231,7 @@ class PEPGatewayService:
                 status=ExecutionStatus.REJECTED,
                 error_message=f"El agente no tiene autorizada la herramienta '{tool.name}' (Agent lacks capability)",
                 timestamp=now,
+                latency_ms=latency_ms,
             )
 
         # 5. Invocar al Motor de Políticas (PDP) y Evaluar Amenazas Hostiles
@@ -340,7 +351,9 @@ class PEPGatewayService:
                             created_at=now,
                         )
 
-        # 7. Persistir Traza Forense Inmutable en Execution (Orden FK estricto: Execution antes que hijos)
+        # 7. Medir latencia física acumulada y persistir Traza Forense Inmutable en Execution
+        latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+
         execution = Execution(
             id=execution_id,
             organization_id=request.organization_id,
@@ -354,6 +367,7 @@ class PEPGatewayService:
             status=exec_status,
             evaluated_policy_rule_id=evaluated_rule_id,
             timestamp=now,
+            latency_ms=latency_ms,
         )
         db.add(execution)
 
@@ -403,9 +417,6 @@ class PEPGatewayService:
                 organization_id=request.organization_id,
             )
 
-        # Calcular latencia real de ejecución con alta precisión
-        latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
-
         # Emitir traza forense de ejecución en tiempo real vía WebSocket
         await ws_manager.broadcast(
             event_type="NEW_EXECUTION",
@@ -444,6 +455,7 @@ class PEPGatewayService:
             alert_id=alert.id if alert else None,
             security_analysis=security_telemetry,
             timestamp=now,
+            latency_ms=latency_ms,
         )
 
     @classmethod

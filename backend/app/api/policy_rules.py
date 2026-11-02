@@ -5,8 +5,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import require_admin_user
 from app.core.database import get_db
-from app.schemas.policy_rule import PolicyRuleCreate, PolicyRuleRead
+from app.models.user import User
+from app.schemas.policy_rule import PolicyRuleCreate, PolicyRuleRead, PolicyRuleUpdate
 from app.services.agent_service import agent_service
 from app.services.policy_rule_service import policy_rule_service
 from app.services.policy_service import policy_service
@@ -122,3 +124,58 @@ async def get_policy_rule(
             detail=f"Regla de política con ID {rule_id} no encontrada",
         )
     return rule
+
+
+@router.patch(
+    "/{rule_id}",
+    response_model=PolicyRuleRead,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar Regla de Política",
+    description="Actualiza propiedades de una regla determinista (condiciones, efecto, prioridad o agente objetivo).",
+)
+async def update_policy_rule(
+    rule_id: UUID,
+    rule_in: PolicyRuleUpdate,
+    current_admin: Optional[User] = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> PolicyRuleRead:
+    """Actualiza una regla determinista existente respetando aislamiento de tenant y blindaje anti-IA."""
+    org_id = current_admin.organization_id if current_admin else None
+    updated = await policy_rule_service.update_rule(
+        db=db,
+        rule_id=rule_id,
+        rule_in=rule_in,
+        organization_id=org_id,
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Regla de política con ID {rule_id} no encontrada",
+        )
+    return updated
+
+
+@router.delete(
+    "/{rule_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar Regla Individual",
+    description="Elimina una regla determinista sin afectar la política contenedora.",
+)
+async def delete_policy_rule(
+    rule_id: UUID,
+    current_admin: Optional[User] = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Elimina una regla determinista atómica sin destruir la política contenedora."""
+    org_id = current_admin.organization_id if current_admin else None
+    deleted = await policy_rule_service.delete_rule(
+        db=db,
+        rule_id=rule_id,
+        organization_id=org_id,
+    )
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Regla de política con ID {rule_id} no encontrada",
+        )
+

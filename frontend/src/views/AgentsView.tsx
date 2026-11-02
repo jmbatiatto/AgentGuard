@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import type { Agent, Tool } from '../types/domain';
+import type { Agent, AgentStatus, Tool } from '../types/domain';
+import { AGENT_STATUS_LABELS } from '../constants/labels';
 import { 
   Plus, 
   Search, 
@@ -20,7 +21,7 @@ import { mockAgents } from '../data/mockData';
 export const AgentsView: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>(mockAgents);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [ownerFilter, setOwnerFilter] = useState('All');
   const [toolFilter, setToolFilter] = useState('All');
 
@@ -97,12 +98,12 @@ export const AgentsView: React.FC = () => {
 
   const handleToggleAgentStatus = async (agent: Agent) => {
     setIsUpdatingStatus(true);
-    const newStatus = agent.status === 'Active' ? 'Suspended' : 'Active';
+    const newStatus: AgentStatus = agent.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     try {
       await api.updateAgentStatus(agent.id, newStatus);
       setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: newStatus } : a));
       setSelectedAgent(prev => prev && prev.id === agent.id ? { ...prev, status: newStatus } : prev);
-      setToastMessage(`Estado de "${agent.name}" actualizado a ${newStatus}`);
+      setToastMessage(`Estado de "${agent.name}" actualizado a ${AGENT_STATUS_LABELS[newStatus]}`);
       setTimeout(() => setToastMessage(null), 4000);
     } finally {
       setIsUpdatingStatus(false);
@@ -130,7 +131,7 @@ export const AgentsView: React.FC = () => {
   const filteredAgents = agents.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           agent.identifier.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || agent.status === statusFilter;
+    const matchesStatus = statusFilter === 'ALL' || agent.status === statusFilter;
     const matchesOwner = ownerFilter === 'All' || agent.owner === ownerFilter;
     const matchesTool = toolFilter === 'All' || agent.assignedTools.includes(toolFilter);
     return matchesSearch && matchesStatus && matchesOwner && matchesTool;
@@ -267,9 +268,9 @@ export const AgentsView: React.FC = () => {
                 Estado de Gobernanza
               </label>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1E293B', padding: '10px 14px', borderRadius: '8px', border: '1px solid #334155' }}>
-                <span className={selectedAgent.status === 'Active' ? 'badge badge-success' : 'badge badge-secondary'}>
+                <span className={selectedAgent.status === 'ACTIVE' ? 'badge badge-success' : selectedAgent.status === 'SUSPENDED' ? 'badge badge-danger' : 'badge badge-secondary'}>
                   <span className="badge-dot" />
-                  <span>{selectedAgent.status}</span>
+                  <span>{AGENT_STATUS_LABELS[selectedAgent.status] || selectedAgent.status}</span>
                 </span>
                 <button
                   onClick={() => handleToggleAgentStatus(selectedAgent)}
@@ -277,8 +278,8 @@ export const AgentsView: React.FC = () => {
                   className="btn btn-secondary"
                   style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <Power size={12} color={selectedAgent.status === 'Active' ? '#EF4444' : '#10B981'} />
-                  <span>{selectedAgent.status === 'Active' ? 'Suspender Agente' : 'Activar Agente'}</span>
+                  <Power size={12} color={selectedAgent.status === 'ACTIVE' ? '#EF4444' : '#10B981'} />
+                  <span>{selectedAgent.status === 'ACTIVE' ? 'Suspender Agente' : 'Activar Agente'}</span>
                 </button>
               </div>
             </div>
@@ -606,9 +607,10 @@ export const AgentsView: React.FC = () => {
               className="btn btn-secondary"
               style={{ cursor: 'pointer', outline: 'none', padding: '7px 12px', fontSize: '12px' }}
             >
-              <option value="All" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>Todos los estados</option>
-              <option value="Active" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>Activos</option>
-              <option value="Suspended" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>Suspendidos</option>
+              <option value="ALL" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>Todos los estados</option>
+              <option value="ACTIVE" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>{AGENT_STATUS_LABELS.ACTIVE}s</option>
+              <option value="SUSPENDED" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>{AGENT_STATUS_LABELS.SUSPENDED}s</option>
+              <option value="REVOKED" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>{AGENT_STATUS_LABELS.REVOKED}s</option>
             </select>
 
             {/* Filter by Tool */}
@@ -725,9 +727,9 @@ export const AgentsView: React.FC = () => {
 
                     {/* Status Badge */}
                     <td style={{ padding: '14px 18px' }}>
-                      <span className={agent.status === 'Active' ? 'badge badge-success' : 'badge badge-secondary'}>
+                      <span className={agent.status === 'ACTIVE' ? 'badge badge-success' : agent.status === 'SUSPENDED' ? 'badge badge-danger' : 'badge badge-secondary'}>
                         <span className="badge-dot" />
-                        <span>{agent.status}</span>
+                        <span>{AGENT_STATUS_LABELS[agent.status] || agent.status}</span>
                       </span>
                     </td>
 

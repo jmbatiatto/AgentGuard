@@ -5,9 +5,13 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import require_admin_user
 from app.core.database import get_db
+from app.models.user import User
 from app.schemas.policy import PolicyCreate, PolicyRead, PolicyUpdate
+from app.schemas.policy_rule import PolicyRuleCreateInPolicy, PolicyRuleRead, PolicyRuleUpdate
 from app.services.organization_service import organization_service
+from app.services.policy_rule_service import policy_rule_service
 from app.services.policy_service import policy_service
 
 router = APIRouter(prefix="/policies", tags=["Policies"])
@@ -129,4 +133,35 @@ async def delete_policy(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Política con ID {policy_id} no encontrada",
         )
+
+
+@router.post(
+    "/{policy_id}/rules",
+    response_model=PolicyRuleRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear Regla en Política",
+    description="Da de alta una nueva regla determinista dentro del contexto jerárquico de una política existente del tenant.",
+)
+async def create_policy_rule_in_policy(
+    policy_id: UUID,
+    rule_in: PolicyRuleCreateInPolicy,
+    current_admin: Optional[User] = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> PolicyRuleRead:
+    """Crea una regla determinista dentro de una política existente con blindaje anti-IA y aislamiento de tenant."""
+    org_id = current_admin.organization_id if current_admin else None
+    return await policy_rule_service.create_rule_in_policy(
+        db=db,
+        policy_id=policy_id,
+        rule_in=rule_in,
+        organization_id=org_id,
+    )
+
+
+from app.api.policy_rules import (
+    update_policy_rule as update_policy_rule,
+    delete_policy_rule as delete_policy_rule,
+)
+
+
 

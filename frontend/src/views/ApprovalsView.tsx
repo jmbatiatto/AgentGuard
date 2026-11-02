@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Clock, Check, X, MoreHorizontal, Radio, Lock } from 'lucide-react';
 import { Header } from '../components/Header';
 import { mockApprovals } from '../data/mockData';
-import type { ApprovalRequest } from '../types/domain';
+import type { ApprovalRequest, RiskLevel } from '../types/domain';
+import { APPROVAL_STATUS_LABELS, RISK_LABELS, RISK_STYLES } from '../constants/labels';
 import { api } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import { useAuth } from '../context/AuthContext';
@@ -56,7 +57,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
         requestedAt: 'Recién (En Vivo ⚡)',
         status: 'PENDING',
         delegatedBy: 'Automated Gateway Trigger',
-        riskLevel: (data.risk_level === 'CRITICAL' ? 'Critical' : 'High') as any,
+        riskLevel: (data.risk_level || 'HIGH') as RiskLevel,
         justification: data.parameters?.reason || 'Operación sensible interceptada por AgentGuard PEP que superó el umbral autónomo.',
         appliedPolicy: {
           name: 'Real-time HITL Interception Policy',
@@ -321,13 +322,13 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                         {item.amount}
                       </div>
                       <div style={{ marginTop: '4px' }}>
-                        {item.status === 'PENDING' ? (
-                          <span style={{ fontSize: '10px', color: '#F59E0B', fontWeight: 600 }}>PENDIENTE</span>
-                        ) : item.status === 'APPROVED' ? (
-                          <span style={{ fontSize: '10px', color: '#10B981', fontWeight: 600 }}>APROBADA</span>
-                        ) : (
-                          <span style={{ fontSize: '10px', color: '#EF4444', fontWeight: 600 }}>RECHAZADA</span>
-                        )}
+                        <span style={{
+                          fontSize: '10px',
+                          color: item.status === 'PENDING' ? '#F59E0B' : item.status === 'APPROVED' ? '#10B981' : '#EF4444',
+                          fontWeight: 600,
+                        }}>
+                          {APPROVAL_STATUS_LABELS[item.status]?.toUpperCase() || item.status}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -363,7 +364,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                       <Clock size={15} color="#F59E0B" />
                       <span className="badge badge-warning">
                         <span className="badge-dot" />
-                        <span>PENDING REVIEW</span>
+                        <span>REVISIÓN PENDIENTE</span>
                       </span>
                     </>
                   ) : selectedRequest.status === 'APPROVED' ? (
@@ -371,7 +372,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                       <Check size={15} color="#10B981" />
                       <span className="badge badge-success">
                         <span className="badge-dot" />
-                        <span>APPROVED</span>
+                        <span>APROBADA</span>
                       </span>
                     </>
                   ) : (
@@ -379,7 +380,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                       <X size={15} color="#EF4444" />
                       <span className="badge badge-danger">
                         <span className="badge-dot" />
-                        <span>REJECTED</span>
+                        <span>RECHAZADA</span>
                       </span>
                     </>
                   )}
@@ -388,7 +389,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                   {selectedRequest.action}
                 </h2>
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
-                  Requested by {selectedRequest.agentName} · {selectedRequest.requestedAt}
+                  Solicitada por {selectedRequest.agentName} · {selectedRequest.requestedAt}
                 </p>
               </div>
 
@@ -411,7 +412,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                 {selectedRequest.amount}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Full refund to original payment method
+                Reembolso al método de pago original del cliente
               </div>
             </div>
 
@@ -439,8 +440,11 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Nivel de riesgo</span>
-                  <span style={{ color: selectedRequest.riskLevel === 'Critical' ? '#EF4444' : '#F59E0B', fontWeight: 600 }}>
-                    {selectedRequest.riskLevel}
+                  <span style={{
+                    color: RISK_STYLES[selectedRequest.riskLevel]?.color || '#F59E0B',
+                    fontWeight: 600,
+                  }}>
+                    {RISK_LABELS[selectedRequest.riskLevel] || selectedRequest.riskLevel}
                   </span>
                 </div>
               </div>

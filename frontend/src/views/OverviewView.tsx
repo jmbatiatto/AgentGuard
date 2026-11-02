@@ -16,7 +16,8 @@ import {
 import { Header } from '../components/Header';
 import { api, DEMO_IDS } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
-import type { NavView, SecurityAlert, ExecutionTrace } from '../types/domain';
+import type { NavView, SecurityAlert, ExecutionTrace, AlertSeverity } from '../types/domain';
+import { DECISION_LABELS } from '../constants/labels';
 
 export interface OverviewStats {
   activeAgents: number;
@@ -222,7 +223,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
       const realExecCount = executionsData ? executionsData.length : 0;
       const realBlockedCount = executionsData ? executionsData.filter(e => e.decision === 'DENY').length : 0;
       const realAllowedCount = executionsData ? executionsData.filter(e => e.decision === 'ALLOW').length : 0;
-      const realActiveAgents = agentsData ? agentsData.filter(a => a.status === 'Active').length : 0;
+      const realActiveAgents = agentsData ? agentsData.filter(a => a.status === 'ACTIVE').length : 0;
       const realTotalTools = toolsData ? toolsData.length : 0;
       const realActivePolicies = policiesData ? policiesData.filter(p => p.status === 'Active').length : 0;
 
@@ -272,7 +273,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         title: alertData.title || 'Alerta de Seguridad: Acción crítica bloqueada',
         description: alertData.description || 'Intento de violación de política detectado automáticamente',
         timeAgo: 'Recién ⚡',
-        severity: (alertData.severity || 'CRITICAL').toLowerCase() as 'critical' | 'warning' | 'info',
+        severity: ((alertData.severity || 'CRITICAL').toUpperCase() as AlertSeverity),
         status: (alertData.status || 'OPEN') as 'OPEN' | 'RESOLVED',
       };
 
@@ -565,10 +566,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                   const isResolved = alert.status === 'RESOLVED';
                   let iconColor = '#F59E0B';
                   let Icon = AlertTriangle;
-                  if (alert.severity === 'critical') {
+                  const sev = (alert.severity || '').toUpperCase();
+                  if (sev === 'CRITICAL' || sev === 'HIGH') {
                     iconColor = '#EF4444';
                     Icon = ShieldAlert;
-                  } else if (alert.severity === 'info') {
+                  } else if (sev === 'LOW') {
                     iconColor = '#38BDF8';
                     Icon = ShieldCheck;
                   }
@@ -671,11 +673,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                     const isDeny = exec.decision === 'DENY';
 
                     // Microcopy humano para decisiones
-                    const decisionLabel = isAllow
-                      ? 'Aprobado'
+                    const decisionLabel = DECISION_LABELS[exec.decision] || (isAllow
+                      ? 'Permitido'
                       : isDeny
-                        ? 'Rechazado'
-                        : 'Requiere tu permiso';
+                        ? 'Denegado'
+                        : 'Requiere tu permiso');
 
                     // Microcopy humano para el estado de ejecución
                     const statusLabel = exec.status === 'EXECUTED'

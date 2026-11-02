@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Sun, Moon, Check, Shield, Lock, RotateCcw } from 'lucide-react';
 import { useTheme } from '../context/useTheme';
 import { useAuth } from '../context/AuthContext';
+import { ROLE_LABELS } from '../constants/labels';
 import { ResetDemoModal } from './ResetDemoModal';
 
 interface HeaderProps {
@@ -212,7 +213,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
                   textTransform: 'uppercase',
                   letterSpacing: '0.4px',
                 }}>
-                  {currentUser.role}
+                  {ROLE_LABELS[currentUser.role] || currentUser.role}
                 </span>
                 {currentUser.canApproveHITL && (
                   <span style={{ fontSize: '8px', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#FBBF24', padding: '0 4px', borderRadius: '4px' }}>
@@ -329,7 +330,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
                             color: profile.badgeColor,
                             border: `1px solid ${profile.badgeColor}`,
                           }}>
-                            {profile.role}
+                            {ROLE_LABELS[profile.role] || profile.role}
                           </span>
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>

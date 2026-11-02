@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { api } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import type { ExecutionTrace, PolicyDecision } from '../types/domain';
+import { DECISION_LABELS } from '../constants/labels';
 
 export const TracesView: React.FC = () => {
   const [traces, setTraces] = useState<ExecutionTrace[]>([]);
@@ -127,7 +128,7 @@ export const TracesView: React.FC = () => {
             <Search size={15} color="var(--text-muted)" />
             <input 
               type="text" 
-              placeholder="Search traces by agent, action or ID..."
+              placeholder="Buscar trazas por agente, acción o ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -140,14 +141,14 @@ export const TracesView: React.FC = () => {
               className="btn btn-secondary"
               style={{ padding: '8px 12px', cursor: 'pointer', outline: 'none' }}
             >
-              <option value="ALL">All decisions</option>
-              <option value="ALLOW">ALLOW (Authorized)</option>
-              <option value="DENY">DENY (Blocked)</option>
-              <option value="REQUIRE_APPROVAL">REQUIRE_APPROVAL (HITL)</option>
+              <option value="ALL">Todas las decisiones</option>
+              <option value="ALLOW">Permitido (ALLOW)</option>
+              <option value="DENY">Denegado (DENY)</option>
+              <option value="REQUIRE_APPROVAL">Requiere Aprobación (HITL)</option>
             </select>
             
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
-              {filteredTraces.length} {filteredTraces.length === 1 ? 'trace' : 'traces'}
+              {filteredTraces.length} {filteredTraces.length === 1 ? 'traza' : 'trazas'}
             </div>
           </div>
         </div>
@@ -232,7 +233,7 @@ export const TracesView: React.FC = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           <span className={badgeClass}>
                             <Icon size={12} />
-                            <span>{trace.decision}</span>
+                            <span>{DECISION_LABELS[trace.decision] || trace.decision}</span>
                           </span>
                           {trace.decision === 'REQUIRE_APPROVAL' && (
                             <span style={{
@@ -270,7 +271,7 @@ export const TracesView: React.FC = () => {
                                   fontWeight: 600,
                                 }}>
                                   <CheckCircle size={12} />
-                                  <span>APPROVED</span>
+                                  <span>APROBADO</span>
                                 </span>
                               );
                             }
@@ -286,7 +287,7 @@ export const TracesView: React.FC = () => {
                                   fontWeight: 600,
                                 }}>
                                   <Clock size={12} />
-                                  <span>PENDING</span>
+                                  <span>PENDIENTE</span>
                                 </span>
                               );
                             }
@@ -301,7 +302,7 @@ export const TracesView: React.FC = () => {
                                 fontWeight: 600,
                               }}>
                                 <XCircle size={12} />
-                                <span>REJECTED</span>
+                                <span>RECHAZADO</span>
                               </span>
                             );
                           }
@@ -317,7 +318,7 @@ export const TracesView: React.FC = () => {
                                 gap: '4px',
                               }}>
                                 <CheckCircle size={11} />
-                                <span>EXECUTED</span>
+                                <span>EJECUTADO</span>
                               </span>
                             );
                           }
@@ -332,7 +333,7 @@ export const TracesView: React.FC = () => {
                               gap: '4px',
                             }}>
                               <XCircle size={11} />
-                              <span>BLOCKED</span>
+                              <span>BLOQUEADO</span>
                             </span>
                           );
                         })()}
@@ -422,9 +423,9 @@ export const TracesView: React.FC = () => {
                   <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>{selectedTrace.agentName}</div>
                 </div>
                 <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Decision & Latency</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Decisión y Latencia</div>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: selectedTrace.decision === 'ALLOW' ? '#10B981' : selectedTrace.decision === 'DENY' ? '#EF4444' : '#F59E0B', marginTop: '2px' }}>
-                    {selectedTrace.decision} ({selectedTrace.latencyMs.toFixed(1)}ms)
+                    {DECISION_LABELS[selectedTrace.decision] || selectedTrace.decision} ({selectedTrace.latencyMs.toFixed(1)}ms)
                   </div>
                 </div>
               </div>
@@ -471,7 +472,7 @@ export const TracesView: React.FC = () => {
 
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                  Action & Targeted Resource
+                  Acción y Recurso Destino
                 </div>
                 <div style={{ padding: '10px', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#38BDF8' }}>
                   {selectedTrace.actionName} &rarr; {selectedTrace.resource}

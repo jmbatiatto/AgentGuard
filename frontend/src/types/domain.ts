@@ -8,11 +8,13 @@ export type NavView =
   | 'playground' 
   | 'settings';
 
-export type AgentStatus = 'Active' | 'Inactive' | 'Suspended';
+export type AgentStatus = 'ACTIVE' | 'SUSPENDED' | 'REVOKED';
 export type ToolStatus = 'Active' | 'Paused' | 'Inactive';
-export type PolicyDecision = 'ALLOW' | 'DENY' | 'REQUIRE_APPROVAL';
-export type RiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
+export type Decision = 'ALLOW' | 'DENY' | 'REQUIRE_APPROVAL';
+export type PolicyDecision = Decision;
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
+export type AlertSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
 export interface Agent {
   id: string;
@@ -29,7 +31,7 @@ export interface Agent {
 export interface ToolActionItem {
   id: string;
   action_name: string;
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | string;
+  risk_level: RiskLevel;
   description?: string;
 }
 
@@ -103,7 +105,7 @@ export interface SecurityAlert {
   title: string;
   description: string;
   timeAgo: string;
-  severity: 'critical' | 'warning' | 'info';
+  severity: AlertSeverity;
   status?: 'OPEN' | 'INVESTIGATING' | 'RESOLVED' | 'DISMISSED';
   createdAt?: string;
   executionId?: string;
@@ -119,7 +121,7 @@ export interface ExecutionTrace {
   actionName: string;
   resource: string;
   requestContext: Record<string, any>;
-  decision: PolicyDecision;
+  decision: Decision;
   status: string;
   evaluatedPolicyRuleId?: string | null;
   timestamp: string;
@@ -129,7 +131,7 @@ export interface ExecutionTrace {
   resolutionReason?: string | null;
 }
 
-export type UserRole = 'ADMIN' | 'APPROVER' | 'OPERATOR' | 'AUDITOR';
+export type UserRole = 'ADMIN' | 'APPROVER' | 'OPERATOR' | 'AUDITOR' | 'VIEWER';
 
 export interface UserMember {
   id: string;

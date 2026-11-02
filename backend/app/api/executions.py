@@ -44,7 +44,7 @@ def _to_execution_response(execution: Execution) -> ExecutionResponse:
         status=execution.status,
         evaluated_policy_rule_id=execution.evaluated_policy_rule_id,
         timestamp=execution.timestamp,
-        latency_ms=21.5,
+        latency_ms=execution.latency_ms,
         approval_status=approval_status,
         approval_resolved_at=approval_resolved_at,
         resolution_reason=resolution_reason,

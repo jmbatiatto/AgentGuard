@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import type { NavView } from '../types/domain';
+import { DECISION_LABELS } from '../constants/labels';
 import { api, DEMO_IDS } from '../services/api';
 
 interface PlaygroundViewProps {
@@ -663,21 +664,21 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
         return (
           <span className="badge badge-success" style={{ fontSize: '12px', padding: '4px 10px' }}>
             <span className="badge-dot" />
-            <span>ALLOW</span>
+            <span>{DECISION_LABELS.ALLOW.toUpperCase()}</span>
           </span>
         );
       case 'DENY':
         return (
           <span className="badge badge-danger" style={{ fontSize: '12px', padding: '4px 10px' }}>
             <span className="badge-dot" />
-            <span>DENY</span>
+            <span>{DECISION_LABELS.DENY.toUpperCase()}</span>
           </span>
         );
       case 'REQUIRE_APPROVAL':
         return (
           <span className="badge badge-warning" style={{ fontSize: '12px', padding: '4px 10px' }}>
             <span className="badge-dot" />
-            <span>REQUIRE_APPROVAL</span>
+            <span>{DECISION_LABELS.REQUIRE_APPROVAL.toUpperCase()}</span>
           </span>
         );
       case 'UNPROTECTED_EXECUTION':

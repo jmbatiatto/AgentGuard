@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, TYPE_CHECKING
-from sqlalchemy import String, DateTime, ForeignKey, Enum as SQLEnum, Index
+from sqlalchemy import String, DateTime, ForeignKey, Enum as SQLEnum, Index, Float
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -85,6 +85,11 @@ class Execution(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
         index=True,
+    )
+    latency_ms: Mapped[Optional[float]] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Latencia real transcurrida de evaluación PEP/PDP en ms",
     )
 
     # Relaciones

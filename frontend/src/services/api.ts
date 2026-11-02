@@ -15,13 +15,18 @@ import {
 } from '../data/mockData';
 import type {
   Agent,
+  AgentStatus,
   Tool,
   Policy,
+  PolicyRuleItem,
+  Decision,
   ApprovalRequest,
   SecurityAlert,
+  AlertSeverity,
   ExecutionTrace,
   ApprovalStatus,
   PolicyDecision,
+  RiskLevel,
   UserMember,
   UserRole,
 } from '../types/domain';
@@ -120,7 +125,7 @@ class AgentGuardApiClient {
             type: item.agent_type || 'AI agent',
             owner: item.owner_team || 'Core Team',
             assignedTools: item.assigned_tools || ['CRM', 'Catalog'],
-            status: (item.status === 'ACTIVE' ? 'Active' : item.status === 'SUSPENDED' ? 'Suspended' : 'Inactive') as any,
+            status: (item.status || 'ACTIVE') as AgentStatus,
             lastActivity: 'Reciente',
             initials: item.name.split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase(),
           }));
@@ -138,7 +143,7 @@ class AgentGuardApiClient {
   async createAgent(payload: {
     name: string;
     purpose?: string;
-    status?: 'ACTIVE' | 'SUSPENDED' | 'INACTIVE';
+    status?: AgentStatus;
     tool_ids?: string[];
     orgId?: string;
     ownerUserId?: string;
@@ -188,7 +193,7 @@ class AgentGuardApiClient {
           type: 'AI agent',
           owner: 'Acme Admin',
           assignedTools: payload.tool_ids && payload.tool_ids.length > 0 ? ['Herramientas Asignadas'] : ['Sin herramientas'],
-          status: (data.status === 'ACTIVE' ? 'Active' : data.status === 'SUSPENDED' ? 'Suspended' : 'Inactive') as any,
+          status: (data.status || 'ACTIVE') as AgentStatus,
           lastActivity: 'Recién creado ⚡',
           initials: data.name.split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase(),
         };
@@ -205,7 +210,7 @@ class AgentGuardApiClient {
       type: 'AI agent',
       owner: 'Acme Admin',
       assignedTools: payload.tool_ids && payload.tool_ids.length > 0 ? ['Herramientas Asignadas'] : ['Sin herramientas'],
-      status: (payload.status === 'ACTIVE' ? 'Active' : 'Inactive') as any,
+      status: (payload.status || 'ACTIVE') as AgentStatus,
       lastActivity: 'Recién creado ⚡',
       initials: payload.name.split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase(),
     };
@@ -214,13 +219,12 @@ class AgentGuardApiClient {
   /**
    * Actualiza el estado operativo de un agente (ACTIVE <-> SUSPENDED)
    */
-  async updateAgentStatus(agentId: string, status: 'Active' | 'Suspended' | 'Inactive'): Promise<boolean> {
-    const backendStatus = status === 'Active' ? 'ACTIVE' : status === 'Suspended' ? 'SUSPENDED' : 'INACTIVE';
+  async updateAgentStatus(agentId: string, status: AgentStatus): Promise<boolean> {
     try {
       const res = await fetch(`${this.baseUrl}/api/v1/agents/${agentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: backendStatus }),
+        body: JSON.stringify({ status }),
       });
       return res.ok;
     } catch {
@@ -406,10 +410,7 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Obtiene la lista de políticas (con fallback a mockPolicies)
-   */
-  /**
-   * Obtiene la lista de políticas (con reglas desglosadas o fallback a mockPolicies)
+   * Obtiene la lista de políticas jerárquicas con su colección de reglas hijas (.rules)
    */
   async getPolicies(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Policy[]> {
     try {
@@ -419,58 +420,65 @@ class AgentGuardApiClient {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-          const result: Policy[] = [];
+          return data.map((p: any) => {
+            const rules: PolicyRuleItem[] = (p.rules || []).map((r: any) => ({
+              id: r.id,
+              policy_id: r.policy_id || p.id,
+              priority: r.priority ?? p.priority ?? 100,
+              effect: (r.effect || 'ALLOW') as PolicyDecision,
+              tool_action_id: r.tool_action_id,
+              target_agent_id: r.target_agent_id || null,
+              conditions: r.conditions || {},
+              action_name: r.action_name || '*',
+              tool_name: r.tool_name || null,
+              agent_name: r.agent_name || 'Global / Multi-agente',
+              created_at: r.created_at || p.created_at,
+            }));
 
-          for (const p of data) {
-            const rules: any[] = p.rules || [];
-            if (rules.length > 0) {
-              for (const r of rules) {
-                const condStr = r.conditions && Object.keys(r.conditions).length > 0
-                  ? JSON.stringify(r.conditions)
-                  : 'Sin restricciones';
-
-                result.push({
-                  id: r.id,
-                  policyId: p.id,
-                  name: p.name,
-                  description: p.description || 'Política de gobernanza AgentGuard',
-                  agent: r.agent_name || 'Global / Multi-agent',
-                  action: r.action_name || '*',
-                  condition: condStr,
-                  decision: (r.effect || 'ALLOW') as PolicyDecision,
-                  status: p.is_active ? 'Active' : 'Inactive',
-                  priority: r.priority || p.priority || 100,
-                  created_at: r.created_at || p.created_at,
-                  rules: [r],
-                  rawConditions: r.conditions || {},
-                });
-              }
-            } else {
-              result.push({
-                id: p.id,
-                policyId: p.id,
-                name: p.name,
-                description: p.description || 'Política de gobernanza AgentGuard',
-                agent: 'Global / Multi-agent',
-                action: 'Todas (*)',
-                condition: 'Base Policy',
-                decision: 'ALLOW',
-                status: p.is_active ? 'Active' : 'Inactive',
-                priority: p.priority || 100,
-                created_at: p.created_at,
-                rules: [],
-                rawConditions: {},
-              });
-            }
-          }
-
-          if (result.length > 0) return result;
+            const primaryRule = rules[0];
+            return {
+              id: p.id,
+              policyId: p.id,
+              name: p.name,
+              description: p.description || 'Política de gobernanza AgentGuard',
+              priority: p.priority ?? 100,
+              status: (p.is_active ? 'Active' : 'Inactive') as 'Active' | 'Inactive',
+              created_at: p.created_at,
+              rules: rules,
+              // Campos de resumen y compatibilidad
+              agent: primaryRule ? primaryRule.agent_name : 'Global / Multi-agente',
+              action: primaryRule ? (primaryRule.action_name || '*') : 'Todas (*)',
+              condition: primaryRule && Object.keys(primaryRule.conditions).length > 0
+                ? JSON.stringify(primaryRule.conditions)
+                : 'Sin restricciones',
+              decision: primaryRule ? primaryRule.effect : 'ALLOW',
+              rawConditions: primaryRule ? primaryRule.conditions : {},
+            };
+          });
         }
       }
     } catch {
       // Graceful fallback
     }
-    return mockPolicies;
+
+    return mockPolicies.map((p, idx) => ({
+      ...p,
+      policyId: p.id,
+      rules: p.rules || [
+        {
+          id: `rule_mock_${idx + 1}`,
+          policy_id: p.id,
+          priority: p.priority || 100,
+          effect: p.decision,
+          tool_action_id: `act_${idx + 1}`,
+          target_agent_id: null,
+          conditions: p.rawConditions || {},
+          action_name: p.action,
+          agent_name: p.agent,
+          created_at: p.created_at || new Date().toISOString(),
+        },
+      ],
+    }));
   }
 
   /**
@@ -504,6 +512,117 @@ class AgentGuardApiClient {
   }
 
   /**
+   * Registra una regla determinista dentro de una política existente.
+   * Endpoint: POST /api/v1/policies/${policyId}/rules
+   */
+  async createPolicyRule(
+    policyId: string,
+    rule: {
+      toolActionId?: string;
+      tool_action_id?: string;
+      conditions?: any;
+      effect?: Decision;
+      priority?: number;
+      targetAgentId?: string;
+      target_agent_id?: string;
+    }
+  ): Promise<any> {
+    const actionId = rule.toolActionId || rule.tool_action_id;
+    const agentId = rule.targetAgentId || rule.target_agent_id || null;
+    const payload = {
+      tool_action_id: actionId,
+      target_agent_id: agentId,
+      priority: rule.priority ?? 100,
+      effect: rule.effect || 'ALLOW',
+      conditions: rule.conditions || {},
+    };
+
+    try {
+      let res = await fetch(`${this.baseUrl}/api/v1/policies/${policyId}/rules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      // Fallback de compatibilidad si el endpoint anidado no responde
+      if (!res.ok && res.status === 404) {
+        res = await fetch(`${this.baseUrl}/api/v1/policy-rules`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            policy_id: policyId,
+            ...payload,
+          }),
+        });
+      }
+
+      if (res.ok) {
+        return await res.json();
+      }
+      const err = await res.json().catch(() => ({ detail: 'Error registrando regla en el motor PDP' }));
+      throw new Error(err.detail || 'Error en registro de regla');
+    } catch (err: any) {
+      console.warn('Error en createPolicyRule:', err);
+      throw err;
+    }
+  }
+
+  /**
+   * Actualiza propiedades de una regla determinista.
+   * Endpoint: PATCH /api/v1/policy-rules/${ruleId}
+   */
+  async updatePolicyRule(
+    ruleId: string,
+    update: {
+      conditions?: any;
+      effect?: Decision;
+      priority?: number;
+      targetAgentId?: string;
+      target_agent_id?: string;
+    }
+  ): Promise<any> {
+    const payload: Record<string, any> = {};
+    if (update.conditions !== undefined) payload.conditions = update.conditions;
+    if (update.effect !== undefined) payload.effect = update.effect;
+    if (update.priority !== undefined) payload.priority = update.priority;
+    const targetAgentId = update.targetAgentId !== undefined ? update.targetAgentId : update.target_agent_id;
+    if (targetAgentId !== undefined) payload.target_agent_id = targetAgentId || null;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/policy-rules/${ruleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+      const err = await res.json().catch(() => ({ detail: 'Error actualizando regla en el motor PDP' }));
+      throw new Error(err.detail || 'No se pudo actualizar la regla');
+    } catch (err: any) {
+      console.warn('Error en updatePolicyRule:', err);
+      throw err;
+    }
+  }
+
+  /**
+   * Elimina una regla individual sin destruir la política contenedora ni reglas hermanas.
+   * Endpoint: DELETE /api/v1/policy-rules/${ruleId}
+   */
+  async deletePolicyRule(ruleId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/policy-rules/${ruleId}`, {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch (err) {
+      console.warn('Error en deletePolicyRule:', err);
+      return false;
+    }
+  }
+
+  /**
    * Obtiene todas las acciones atómicas del tenant para cálculo de cobertura
    */
   async getToolActions(): Promise<any[]> {
@@ -523,7 +642,7 @@ class AgentGuardApiClient {
 
 
   /**
-   * Da de alta una nueva Política y su regla determinista
+   * Da de alta una nueva Política y su regla determinista inicial si corresponde
    */
   async createPolicy(payload: {
     name: string;
@@ -544,41 +663,55 @@ class AgentGuardApiClient {
           organization_id: orgId,
           name: payload.name,
           description: payload.description || 'Política de gobernanza AgentGuard',
-          priority: payload.priority || 50,
+          priority: payload.priority || 100,
           is_active: true,
         }),
       });
 
       if (res.ok) {
         const polData = await res.json();
+        let rules: PolicyRuleItem[] = [];
 
         if (payload.tool_action_id) {
           try {
-            await fetch(`${this.baseUrl}/api/v1/policy-rules`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                policy_id: polData.id,
-                tool_action_id: payload.tool_action_id,
-                effect: payload.effect || 'ALLOW',
-                priority: payload.priority || 50,
-                conditions: payload.conditions || {},
-                is_active: true,
-              }),
+            const ruleRes = await this.createPolicyRule(polData.id, {
+              toolActionId: payload.tool_action_id,
+              effect: payload.effect || 'ALLOW',
+              priority: payload.priority || 100,
+              conditions: payload.conditions || {},
             });
+            if (ruleRes && ruleRes.id) {
+              rules = [{
+                id: ruleRes.id,
+                policy_id: polData.id,
+                priority: ruleRes.priority || payload.priority || 100,
+                effect: (ruleRes.effect || payload.effect || 'ALLOW') as PolicyDecision,
+                tool_action_id: payload.tool_action_id,
+                target_agent_id: ruleRes.target_agent_id || null,
+                conditions: ruleRes.conditions || payload.conditions || {},
+                action_name: ruleRes.action_name || 'Configured Action',
+                agent_name: ruleRes.agent_name || 'Global / Multi-agent',
+                created_at: ruleRes.created_at || polData.created_at || new Date().toISOString(),
+              }];
+            }
           } catch (err) {
-            console.warn('Error creando policy rule:', err);
+            console.warn('Error creando policy rule inicial:', err);
           }
         }
 
         return {
           id: polData.id,
+          policyId: polData.id,
           name: polData.name,
-          agent: 'Global / Multi-agent',
-          action: 'Configured Action',
-          condition: payload.conditions ? JSON.stringify(payload.conditions) : 'contextual',
+          description: polData.description || 'Política de gobernanza AgentGuard',
+          priority: polData.priority || 100,
+          agent: rules[0]?.agent_name || 'Global / Multi-agent',
+          action: rules[0]?.action_name || 'Configured Action',
+          condition: payload.conditions && Object.keys(payload.conditions).length > 0 ? JSON.stringify(payload.conditions) : 'Sin restricciones',
           decision: payload.effect || 'ALLOW',
           status: 'Active',
+          rules: rules,
+          rawConditions: payload.conditions || {},
         };
       }
     } catch (err) {
@@ -588,12 +721,17 @@ class AgentGuardApiClient {
     const fallbackId = `pol_local_${Date.now()}`;
     return {
       id: fallbackId,
+      policyId: fallbackId,
       name: payload.name,
+      description: payload.description || 'Política de gobernanza AgentGuard',
+      priority: payload.priority || 100,
       agent: 'Global / Multi-agent',
       action: 'Custom Action',
-      condition: payload.conditions ? JSON.stringify(payload.conditions) : 'contextual',
+      condition: payload.conditions && Object.keys(payload.conditions).length > 0 ? JSON.stringify(payload.conditions) : 'Sin restricciones',
       decision: payload.effect || 'ALLOW',
       status: 'Active',
+      rules: [],
+      rawConditions: payload.conditions || {},
     };
   }
 
@@ -630,7 +768,7 @@ class AgentGuardApiClient {
               requestedAt: item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recién',
               status: item.status as ApprovalStatus,
               delegatedBy: 'Supervisor Humano',
-              riskLevel: 'High',
+              riskLevel: (item.risk_level || 'HIGH') as RiskLevel,
               justification: params.reason || params.justification || 'Solicitud generada durante ejecución que requiere autorización humana.',
               appliedPolicy: {
                 name: 'High-value threshold authorization',
@@ -881,13 +1019,8 @@ class AgentGuardApiClient {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           return data.map((item: any) => {
-            const rawSev = (item.severity || '').toLowerCase();
-            let sev: 'critical' | 'warning' | 'info' = 'warning';
-            if (rawSev === 'critical' || rawSev === 'high') {
-              sev = 'critical';
-            } else if (rawSev === 'low') {
-              sev = 'info';
-            }
+            const rawSev = (item.severity || 'LOW').toUpperCase();
+            const sev: AlertSeverity = (['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(rawSev) ? rawSev : 'MEDIUM') as AlertSeverity;
 
             const timeStr = item.created_at
               ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

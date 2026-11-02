@@ -104,6 +104,10 @@ class GatewayExecuteResponse(BaseSchema):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Marca temporal inmutable de la evaluación",
     )
+    latency_ms: Optional[float] = Field(
+        default=None,
+        description="Latencia real de procesamiento del Gateway PEP en milisegundos",
+    )
 
 
 class ExecutionRead(BaseSchema):
@@ -124,4 +128,5 @@ class ExecutionRead(BaseSchema):
     status: ExecutionStatus
     evaluated_policy_rule_id: Optional[UUID] = None
     timestamp: datetime
+    latency_ms: Optional[float] = None
 

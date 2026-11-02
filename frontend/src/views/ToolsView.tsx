@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import type { Tool } from '../types/domain';
+import type { Tool, RiskLevel } from '../types/domain';
+import { RISK_LABELS } from '../constants/labels';
 import {
   Plus,
   Search,
@@ -475,7 +476,7 @@ export const ToolsView: React.FC = () => {
                           textTransform: 'uppercase',
                           flexShrink: 0,
                         }}>
-                          {act.risk_level}
+                          {RISK_LABELS[act.risk_level as RiskLevel] || act.risk_level}
                         </span>
                       </div>
                     );
@@ -858,10 +859,10 @@ export const ToolsView: React.FC = () => {
                       outline: 'none',
                     }}
                   >
-                    <option value="LOW">LOW</option>
-                    <option value="MEDIUM">MEDIUM</option>
-                    <option value="HIGH">HIGH</option>
-                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="LOW">{RISK_LABELS.LOW}</option>
+                    <option value="MEDIUM">{RISK_LABELS.MEDIUM}</option>
+                    <option value="HIGH">{RISK_LABELS.HIGH}</option>
+                    <option value="CRITICAL">{RISK_LABELS.CRITICAL}</option>
                   </select>
                 </div>
               </div>

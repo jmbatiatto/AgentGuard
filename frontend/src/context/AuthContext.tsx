@@ -69,6 +69,19 @@ export const DEMO_PROFILES: AuthUser[] = [
     canConfigurePolicies: false,
     canManageTeam: false,
   },
+  {
+    id: '22222222-2222-2222-2222-222222222205',
+    name: 'Sofía Valenzuela',
+    email: 'guest.viewer@acmecorp.com',
+    role: 'VIEWER',
+    avatarInitials: 'SV',
+    avatarBg: 'rgba(148, 163, 184, 0.2)',
+    badgeColor: '#94A3B8',
+    description: 'Acceso de solo lectura al dashboard y métricas ejecutivas',
+    canApproveHITL: false,
+    canConfigurePolicies: false,
+    canManageTeam: false,
+  },
 ];
 
 interface AuthContextType {

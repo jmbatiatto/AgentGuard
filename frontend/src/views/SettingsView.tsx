@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, DEMO_IDS } from '../services/api';
 import type { UserMember, UserRole, GatewayApiKey } from '../types/domain';
+import { ROLE_LABELS, ROLE_DESCRIPTIONS } from '../constants/labels';
 import {
   Shield,
   Key,
@@ -958,18 +959,16 @@ def execute_guarded_tool(action_name: str, **kwargs):
                               cursor: 'pointer',
                             }}
                           >
-                            <option value="ADMIN">ADMIN</option>
-                            <option value="APPROVER">APPROVER (HITL)</option>
-                            <option value="OPERATOR">OPERATOR</option>
-                            <option value="AUDITOR">AUDITOR</option>
+                            <option value="ADMIN">{ROLE_LABELS.ADMIN}</option>
+                            <option value="APPROVER">{ROLE_LABELS.APPROVER}</option>
+                            <option value="OPERATOR">{ROLE_LABELS.OPERATOR}</option>
+                            <option value="AUDITOR">{ROLE_LABELS.AUDITOR}</option>
+                            <option value="VIEWER">{ROLE_LABELS.VIEWER}</option>
                           </select>
                         </td>
 
                         <td style={{ padding: '14px 18px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          {u.role === 'ADMIN' && 'Control total, edición de políticas, revocación de API keys'}
-                          {u.role === 'APPROVER' && 'Aprobar/rechazar solicitudes HITL y transacciones sensibles'}
-                          {u.role === 'OPERATOR' && 'Monitoreo de agentes y disparo de simulaciones'}
-                          {u.role === 'AUDITOR' && 'Solo lectura para trazas de auditoría e incidentes SIEM'}
+                          {ROLE_DESCRIPTIONS[u.role] || 'Rol asignado'}
                         </td>
 
                         <td style={{ padding: '14px 18px', fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -1553,10 +1552,11 @@ def execute_guarded_tool(action_name: str, **kwargs):
                     fontSize: '13px',
                   }}
                 >
-                  <option value="ADMIN">ADMIN — Acceso administrativo integral</option>
-                  <option value="APPROVER">APPROVER — Aprobador en bucle humano (HITL)</option>
-                  <option value="OPERATOR">OPERATOR — Operador de agentes y simulaciones</option>
-                  <option value="AUDITOR">AUDITOR — Auditor de seguridad (Solo lectura)</option>
+                  <option value="ADMIN">{ROLE_LABELS.ADMIN} — {ROLE_DESCRIPTIONS.ADMIN}</option>
+                  <option value="APPROVER">{ROLE_LABELS.APPROVER} — {ROLE_DESCRIPTIONS.APPROVER}</option>
+                  <option value="OPERATOR">{ROLE_LABELS.OPERATOR} — {ROLE_DESCRIPTIONS.OPERATOR}</option>
+                  <option value="AUDITOR">{ROLE_LABELS.AUDITOR} — {ROLE_DESCRIPTIONS.AUDITOR}</option>
+                  <option value="VIEWER">{ROLE_LABELS.VIEWER} — {ROLE_DESCRIPTIONS.VIEWER}</option>
                 </select>
               </div>
 

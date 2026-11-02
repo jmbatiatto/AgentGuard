@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.models.policy import Policy, PolicyRule
 from app.models.tool import ToolAction
 from app.schemas.policy import PolicyCreate, PolicyUpdate
+from app.schemas.policy_rule import PolicyRuleCreateInPolicy, PolicyRuleUpdate
 
 
 class PolicyService:
@@ -97,6 +98,52 @@ class PolicyService:
         await db.delete(policy)
         await db.commit()
         return True
+
+    @staticmethod
+    async def create_rule_for_policy(
+        db: AsyncSession,
+        policy_id: UUID,
+        rule_in: PolicyRuleCreateInPolicy,
+        organization_id: Optional[UUID] = None,
+    ) -> PolicyRule:
+        """Crea una regla determinista dentro de una política existente del tenant."""
+        from app.services.policy_rule_service import policy_rule_service
+        return await policy_rule_service.create_rule_in_policy(
+            db=db,
+            policy_id=policy_id,
+            rule_in=rule_in,
+            organization_id=organization_id,
+        )
+
+    @staticmethod
+    async def update_rule(
+        db: AsyncSession,
+        rule_id: UUID,
+        rule_in: PolicyRuleUpdate,
+        organization_id: Optional[UUID] = None,
+    ) -> Optional[PolicyRule]:
+        """Modifica conditions, effect o priority de una regla determinista."""
+        from app.services.policy_rule_service import policy_rule_service
+        return await policy_rule_service.update_rule(
+            db=db,
+            rule_id=rule_id,
+            rule_in=rule_in,
+            organization_id=organization_id,
+        )
+
+    @staticmethod
+    async def delete_rule(
+        db: AsyncSession,
+        rule_id: UUID,
+        organization_id: Optional[UUID] = None,
+    ) -> bool:
+        """Elimina una regla individual sin destruir la política contenedora."""
+        from app.services.policy_rule_service import policy_rule_service
+        return await policy_rule_service.delete_rule(
+            db=db,
+            rule_id=rule_id,
+            organization_id=organization_id,
+        )
 
 
 policy_service = PolicyService()

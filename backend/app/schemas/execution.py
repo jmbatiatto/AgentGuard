@@ -26,7 +26,7 @@ class ExecutionResponse(BaseSchema):
     status: ExecutionStatus = Field(..., description="Estado de la ejecución: EXECUTED, REJECTED o PENDING_APPROVAL")
     evaluated_policy_rule_id: Optional[UUID] = Field(default=None, description="Regla de política evaluada")
     timestamp: datetime = Field(..., description="Marca temporal inmutable de la ejecución")
-    latency_ms: Optional[float] = Field(default=24.0, description="Latencia estimada o medida de evaluación en ms")
+    latency_ms: Optional[float] = Field(default=None, description="Latencia real de evaluación en ms")
     approval_status: Optional[str] = Field(default=None, description="Estado de la aprobación HITL asociada si la hubo")
     approval_resolved_at: Optional[datetime] = Field(default=None, description="Fecha de resolución de la aprobación")
     resolution_reason: Optional[str] = Field(default=None, description="Motivo de la resolución humana emitido por el Approver")
