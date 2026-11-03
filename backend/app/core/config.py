@@ -54,7 +54,7 @@ class Settings(BaseSettings):
 
     # Conexión a PostgreSQL 16
     POSTGRES_SERVER: str = "localhost"
-    POSTGRES_PORT: int = 5432
+    POSTGRES_PORT: int = 5433
     POSTGRES_USER: str = "agentguard"
     POSTGRES_PASSWORD: str = "agentguard_secret"
     POSTGRES_DB: str = "agentguard_db"
