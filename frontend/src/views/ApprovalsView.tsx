@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Clock, Check, X, MoreHorizontal, Radio, Lock } from 'lucide-react';
 import { Header } from '../components/Header';
-import { mockApprovals } from '../data/mockData';
 import type { ApprovalRequest, RiskLevel } from '../types/domain';
 import { APPROVAL_STATUS_LABELS, RISK_LABELS, RISK_STYLES } from '../constants/labels';
 import { api } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { SkeletonCard } from '../components/common/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 interface ApprovalsViewProps {
   onUpdatePendingCount?: (count: number) => void;
@@ -14,29 +16,39 @@ interface ApprovalsViewProps {
 
 export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCount }) => {
   const { currentUser } = useAuth();
-  const [requests, setRequests] = useState<ApprovalRequest[]>(mockApprovals);
-  const [selectedId, setSelectedId] = useState<string>(mockApprovals[0]?.id || '');
+  const { toast } = useToast();
+  const [requests, setRequests] = useState<ApprovalRequest[]>([]);
+  const [selectedId, setSelectedId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [resolutionNotice, setResolutionNotice] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState<boolean>(false);
   const [filterTab, setFilterTab] = useState<'PENDING' | 'ALL'>('PENDING');
 
-  // Cargar aprobaciones iniciales desde el backend (con fallback a mockData)
+  // Cargar aprobaciones iniciales desde el backend
   useEffect(() => {
     let isMounted = true;
-    api.getApprovals().then((data) => {
-      if (isMounted && data && data.length > 0) {
-        setRequests(data);
-        const firstPending = data.find(d => d.status === 'PENDING');
-        if (firstPending) {
+    setIsLoading(true);
+    api.getApprovals()
+      .then((data) => {
+        if (!isMounted) return;
+        const list = data || [];
+        setRequests(list);
+        if (list.length > 0) {
+          const firstPending = list.find(d => d.status === 'PENDING') || list[0];
           setSelectedId(firstPending.id);
-        } else {
-          setSelectedId(data[0].id);
         }
         if (onUpdatePendingCount) {
-          onUpdatePendingCount(data.filter(d => d.status === 'PENDING').length);
+          onUpdatePendingCount(list.filter(d => d.status === 'PENDING').length);
         }
-      }
-    });
+      })
+      .catch((err: any) => {
+        if (!isMounted) return;
+        toast.error(err?.detail || err?.message || 'Error al cargar aprobaciones desde el servidor');
+        setRequests([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
     return () => { isMounted = false; };
   }, [onUpdatePendingCount]);
 
@@ -256,10 +268,19 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
 
           {/* List items */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            {displayedRequests.length === 0 ? (
-              <div style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                <Check size={28} color="#10B981" style={{ margin: '0 auto 10px auto', display: 'block' }} />
-                No hay solicitudes en esta sección.
+            {isLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px' }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <SkeletonCard key={i} lines={2} />
+                ))}
+              </div>
+            ) : displayedRequests.length === 0 ? (
+              <div style={{ padding: '32px 16px' }}>
+                <EmptyState
+                  icon={<Clock size={28} />}
+                  title={filterTab === 'PENDING' ? 'No hay aprobaciones pendientes' : 'No hay solicitudes registradas'}
+                  description={filterTab === 'PENDING' ? 'Todas las operaciones sensibles han sido resueltas o no requieren intervención humana.' : 'Aún no se han emitido solicitudes de aprobación en el sistema.'}
+                />
               </div>
             ) : (
               displayedRequests.map((item) => {
@@ -339,7 +360,19 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
         </div>
 
         {/* Right Column: Request Details Pane */}
-        {selectedRequest ? (
+        {isLoading ? (
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '10px',
+            padding: '24px',
+          }}>
+            <SkeletonCard lines={6} height="100%" />
+          </div>
+        ) : selectedRequest ? (
           <div style={{
             flex: 1,
             display: 'flex',
@@ -600,8 +633,21 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
             </div>
           </div>
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-            Selecciona una solicitud para revisar los detalles
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '10px',
+            padding: '32px',
+          }}>
+            <EmptyState
+              icon={<Shield size={32} />}
+              title="Ninguna solicitud seleccionada"
+              description="Selecciona una solicitud del panel lateral para inspeccionar sus parámetros, contexto y emitir una decisión."
+            />
           </div>
         )}
       </div>

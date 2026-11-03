@@ -432,6 +432,19 @@ pre {
   animation: spin 1s linear infinite;
 }
 
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* ─── Tailwind CSS v4 + shadcn tokens (auth-ui) ─────────────────── */
 @import "tailwindcss";
 @import "tw-animate-css";

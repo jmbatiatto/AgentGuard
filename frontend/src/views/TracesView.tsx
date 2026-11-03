@@ -5,8 +5,12 @@ import { api } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import type { ExecutionTrace, PolicyDecision } from '../types/domain';
 import { DECISION_LABELS } from '../constants/labels';
+import { useToast } from '../context/ToastContext';
+import { SkeletonRow } from '../components/common/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const TracesView: React.FC = () => {
+  const { toast } = useToast();
   const [traces, setTraces] = useState<ExecutionTrace[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [decisionFilter, setDecisionFilter] = useState<string>('ALL');
@@ -17,7 +21,10 @@ export const TracesView: React.FC = () => {
     setIsLoading(true);
     try {
       const data = await api.getExecutions();
-      setTraces(data);
+      setTraces(data || []);
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al cargar trazas de ejecución desde el servidor');
+      setTraces([]);
     } finally {
       setIsLoading(false);
     }
@@ -178,10 +185,28 @@ export const TracesView: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredTraces.length === 0 ? (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <SkeletonRow key={i} cols={8} />
+                ))
+              ) : traces.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    {isLoading ? 'Loading execution traces from PostgreSQL...' : 'No execution traces found. Execute actions from the Playground to see them recorded in real time.'}
+                  <td colSpan={8} style={{ padding: '24px' }}>
+                    <EmptyState
+                      icon={<Terminal size={32} />}
+                      title="No hay ejecuciones registradas"
+                      description="Ejecuta acciones desde el Playground para registrar y monitorear las trazas en tiempo real."
+                    />
+                  </td>
+                </tr>
+              ) : filteredTraces.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ padding: '24px' }}>
+                    <EmptyState
+                      icon={<Search size={28} />}
+                      title="Sin coincidencias"
+                      description="No se encontraron trazas que coincidan con los filtros de búsqueda."
+                    />
                   </td>
                 </tr>
               ) : (
@@ -345,7 +370,7 @@ export const TracesView: React.FC = () => {
                           style={{ padding: '5px 10px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                         >
                           <Eye size={12} />
-                          <span>Inspect</span>
+                          <span>Inspeccionar</span>
                         </button>
                       </td>
                     </tr>
@@ -396,7 +421,7 @@ export const TracesView: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Terminal size={18} color="#38BDF8" />
                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  Forensic Trace Audit
+                  Auditoría Forense de Traza
                 </h3>
               </div>
               <button
@@ -411,15 +436,15 @@ export const TracesView: React.FC = () => {
             <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                 <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Trace ID</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>ID de Traza</div>
                   <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', marginTop: '2px' }}>{selectedTrace.id}</div>
                 </div>
                 <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Timestamp</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fecha y Hora</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '2px' }}>{new Date(selectedTrace.timestamp).toISOString()}</div>
                 </div>
                 <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Agent</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Agente</div>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>{selectedTrace.agentName}</div>
                 </div>
                 <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
@@ -482,7 +507,7 @@ export const TracesView: React.FC = () => {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    Sanitized Request Context (OWASP LLM06 Masked)
+                    Contexto de Solicitud Sanitizado (Enmascaramiento OWASP LLM06)
                   </span>
                 </div>
                 <pre style={{
@@ -502,7 +527,7 @@ export const TracesView: React.FC = () => {
 
               {selectedTrace.evaluatedPolicyRuleId && (
                 <div style={{ padding: '10px 14px', backgroundColor: 'rgba(2, 132, 199, 0.08)', borderRadius: '6px', border: '1px solid rgba(2, 132, 199, 0.2)', fontSize: '12px', color: '#38BDF8' }}>
-                  Evaluated Policy Rule ID: <span style={{ fontFamily: 'var(--font-mono)' }}>{selectedTrace.evaluatedPolicyRuleId}</span>
+                  ID de Regla de Política Evaluada: <span style={{ fontFamily: 'var(--font-mono)' }}>{selectedTrace.evaluatedPolicyRuleId}</span>
                 </div>
               )}
             </div>
@@ -515,7 +540,7 @@ export const TracesView: React.FC = () => {
               justifyContent: 'flex-end',
             }}>
               <button className="btn btn-secondary" onClick={() => setSelectedTrace(null)}>
-                Close
+                Cerrar
               </button>
             </div>
           </div>

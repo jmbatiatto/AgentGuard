@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   X,
   Shield,
-  CheckCircle,
   AlertTriangle,
   Play,
   Copy,
@@ -22,10 +21,14 @@ import {
   Zap,
 } from 'lucide-react';
 import { Header } from '../components/Header';
-import { mockPolicies } from '../data/mockData';
+import { useToast } from '../context/ToastContext';
+import { SkeletonCard } from '../components/common/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const PoliciesView: React.FC = () => {
-  const [policies, setPolicies] = useState<Policy[]>(mockPolicies);
+  const { toast } = useToast();
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [toolActions, setToolActions] = useState<any[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [expandedPolicies, setExpandedPolicies] = useState<Set<string>>(new Set());
@@ -68,45 +71,51 @@ export const PoliciesView: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  // Notificación Toast
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
   const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
+    toast.success(msg);
   };
 
   const loadData = async () => {
-    const [pols, actions, ags] = await Promise.all([
-      api.getPolicies(),
-      api.getToolActions(),
-      api.getAgents(),
-    ]);
+    setIsLoading(true);
+    try {
+      const [pols, actions, ags] = await Promise.all([
+        api.getPolicies(),
+        api.getToolActions(),
+        api.getAgents(),
+      ]);
 
-    if (pols && pols.length > 0) {
-      setPolicies(pols);
-      setExpandedPolicies(prev => {
-        if (prev.size === 0) {
-          return new Set(pols.map(p => p.id));
+      const policiesList = pols || [];
+      setPolicies(policiesList);
+      if (policiesList.length > 0) {
+        setExpandedPolicies(prev => {
+          if (prev.size === 0) {
+            return new Set(policiesList.map(p => p.id));
+          }
+          return prev;
+        });
+        if (selectedPolicy) {
+          const updated = policiesList.find(p => p.id === selectedPolicy.id || p.policyId === selectedPolicy.id);
+          if (updated) setSelectedPolicy(updated);
         }
-        return prev;
-      });
-      if (selectedPolicy) {
-        const updated = pols.find(p => p.id === selectedPolicy.id || p.policyId === selectedPolicy.id);
-        if (updated) setSelectedPolicy(updated);
       }
-    }
-    if (actions && actions.length > 0) {
-      setToolActions(actions);
-      if (!selectedActionId && actions[0]) {
-        setSelectedActionId(actions[0].id);
+
+      if (actions && actions.length > 0) {
+        setToolActions(actions);
+        if (!selectedActionId && actions[0]) {
+          setSelectedActionId(actions[0].id);
+        }
+        if (!newRuleActionId && actions[0]) {
+          setNewRuleActionId(actions[0].id);
+        }
       }
-      if (!newRuleActionId && actions[0]) {
-        setNewRuleActionId(actions[0].id);
+      if (ags && ags.length > 0) {
+        setAgents(ags);
       }
-    }
-    if (ags && ags.length > 0) {
-      setAgents(ags);
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al cargar políticas desde el servidor');
+      setPolicies([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -145,7 +154,7 @@ export const PoliciesView: React.FC = () => {
         parsedConditions = JSON.parse(conditionStr);
       }
     } catch {
-      alert('Las condiciones deben ser un formato JSON válido (ej: {"amount": {"lte": 5000}})');
+      toast.error('Las condiciones deben ser un formato JSON válido (ej: {"amount": {"lte": 5000}})');
       return;
     }
 
@@ -171,6 +180,8 @@ export const PoliciesView: React.FC = () => {
       setIsModalOpen(false);
 
       await loadData();
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al registrar la política');
     } finally {
       setIsSubmitting(false);
     }
@@ -200,7 +211,7 @@ export const PoliciesView: React.FC = () => {
         parsedConditions = JSON.parse(newRuleConditions);
       }
     } catch {
-      alert('Las condiciones deben ser un formato JSON válido (ej: {"amount": {"lte": 1000}})');
+      toast.error('Las condiciones deben ser un formato JSON válido (ej: {"amount": {"lte": 1000}})');
       return;
     }
 
@@ -222,7 +233,7 @@ export const PoliciesView: React.FC = () => {
       setTargetPolicyForRule(null);
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Error registrando la regla en el motor PDP');
+      toast.error(err?.detail || err?.message || 'Error registrando la regla en el motor PDP');
     } finally {
       setIsSubmittingRule(false);
     }
@@ -458,30 +469,6 @@ export const PoliciesView: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
-      {/* Notificación Toast */}
-      {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '24px',
-          backgroundColor: '#064E3B',
-          border: '1px solid #10B981',
-          color: '#ECFDF5',
-          borderRadius: '8px',
-          padding: '12px 18px',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
-          fontSize: '13px',
-          fontWeight: 600,
-        }}>
-          <CheckCircle size={18} color="#34D399" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* Modal: Desglose de Cobertura */}
       {isCoverageModalOpen && (
         <div style={{
@@ -1522,9 +1509,32 @@ export const PoliciesView: React.FC = () => {
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
         }}>
-          {paginatedPolicies.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              No se encontraron políticas que coincidan con los filtros seleccionados.
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px' }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonCard key={i} lines={2} />
+              ))}
+            </div>
+          ) : policies.length === 0 ? (
+            <div style={{ padding: '32px 20px' }}>
+              <EmptyState
+                icon={<ShieldCheck size={32} />}
+                title="No hay políticas de seguridad registradas"
+                description="Crea tu primera política de autorización para regular las acciones de tus agentes."
+                action={{
+                  label: 'Crear primera política',
+                  icon: <Plus size={15} />,
+                  onClick: () => setIsModalOpen(true),
+                }}
+              />
+            </div>
+          ) : paginatedPolicies.length === 0 ? (
+            <div style={{ padding: '32px 20px' }}>
+              <EmptyState
+                icon={<Search size={28} />}
+                title="Sin coincidencias"
+                description="No se encontraron políticas que coincidan con los filtros seleccionados."
+              />
             </div>
           ) : (
             paginatedPolicies.map((policy) => {

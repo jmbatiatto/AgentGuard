@@ -8,7 +8,6 @@ import {
   ChevronRight, 
   X, 
   Bot, 
-  CheckCircle, 
   Copy, 
   Check, 
   Power, 
@@ -16,10 +15,14 @@ import {
   Clock 
 } from 'lucide-react';
 import { Header } from '../components/Header';
-import { mockAgents } from '../data/mockData';
+import { useToast } from '../context/ToastContext';
+import { SkeletonRow } from '../components/common/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const AgentsView: React.FC = () => {
-  const [agents, setAgents] = useState<Agent[]>(mockAgents);
+  const { toast } = useToast();
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [ownerFilter, setOwnerFilter] = useState('All');
@@ -33,7 +36,6 @@ export const AgentsView: React.FC = () => {
   const [statusVal, setStatusVal] = useState<'ACTIVE' | 'SUSPENDED'>('ACTIVE');
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Drawer Lateral State (Agent Details)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -45,13 +47,25 @@ export const AgentsView: React.FC = () => {
   const pageSize = 5;
 
   const loadAgents = async () => {
-    const data = await api.getAgents();
-    if (data && data.length > 0) setAgents(data);
+    setIsLoading(true);
+    try {
+      const data = await api.getAgents();
+      setAgents(data || []);
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al cargar agentes desde el servidor');
+      setAgents([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     loadAgents();
-    api.getTools().then(tools => setAvailableTools(tools));
+    api.getTools()
+      .then(tools => setAvailableTools(tools || []))
+      .catch((err: any) => {
+        toast.error(err?.detail || err?.message || 'Error al cargar herramientas disponibles');
+      });
   }, []);
 
   const handleRegisterAgent = async (e: React.FormEvent) => {
@@ -67,8 +81,7 @@ export const AgentsView: React.FC = () => {
         tool_ids: selectedTools,
       });
 
-      setToastMessage(`Agente "${name}" registrado exitosamente en PostgreSQL`);
-      setTimeout(() => setToastMessage(null), 4000);
+      toast.success(`Agente "${name}" registrado exitosamente en PostgreSQL`);
 
       // Reset form & close modal
       setName('');
@@ -78,6 +91,8 @@ export const AgentsView: React.FC = () => {
 
       // Refresh list
       await loadAgents();
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al registrar el agente');
     } finally {
       setIsSubmitting(false);
     }
@@ -103,8 +118,9 @@ export const AgentsView: React.FC = () => {
       await api.updateAgentStatus(agent.id, newStatus);
       setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: newStatus } : a));
       setSelectedAgent(prev => prev && prev.id === agent.id ? { ...prev, status: newStatus } : prev);
-      setToastMessage(`Estado de "${agent.name}" actualizado a ${AGENT_STATUS_LABELS[newStatus]}`);
-      setTimeout(() => setToastMessage(null), 4000);
+      toast.success(`Estado de "${agent.name}" actualizado a ${AGENT_STATUS_LABELS[newStatus]}`);
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al actualizar el estado del agente');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -116,10 +132,9 @@ export const AgentsView: React.FC = () => {
       await api.deleteAgent(agent.id);
       setAgents(prev => prev.filter(a => a.id !== agent.id));
       setSelectedAgent(null);
-      setToastMessage(`Agente "${agent.name}" eliminado correctamente`);
-      setTimeout(() => setToastMessage(null), 4000);
-    } catch {
-      alert("Error al eliminar el agente");
+      toast.success(`Agente "${agent.name}" eliminado correctamente`);
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al eliminar el agente');
     }
   };
 
@@ -147,30 +162,6 @@ export const AgentsView: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '24px',
-          backgroundColor: '#064E3B',
-          border: '1px solid #10B981',
-          color: '#ECFDF5',
-          borderRadius: '8px',
-          padding: '12px 18px',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
-          fontSize: '13px',
-          fontWeight: 600,
-        }}>
-          <CheckCircle size={18} color="#34D399" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* Drawer Lateral: Detalle del Agente */}
       {selectedAgent && (
         <div style={{
@@ -653,10 +644,33 @@ export const AgentsView: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedAgents.length === 0 ? (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <SkeletonRow key={i} cols={7} />
+                ))
+              ) : agents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No se encontraron agentes que coincidan con los filtros seleccionados.
+                  <td colSpan={7} style={{ padding: '24px' }}>
+                    <EmptyState
+                      icon={<Bot size={32} />}
+                      title="No hay agentes registrados"
+                      description="Aún no se han configurado identidades de agentes de IA en esta organización."
+                      action={{
+                        label: 'Registrar nuevo agente',
+                        icon: <Plus size={15} />,
+                        onClick: () => setIsModalOpen(true),
+                      }}
+                    />
+                  </td>
+                </tr>
+              ) : paginatedAgents.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ padding: '24px' }}>
+                    <EmptyState
+                      icon={<Search size={28} />}
+                      title="Sin coincidencias"
+                      description="No se encontraron agentes que coincidan con los filtros seleccionados."
+                    />
                   </td>
                 </tr>
               ) : (

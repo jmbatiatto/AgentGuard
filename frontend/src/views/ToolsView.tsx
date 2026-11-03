@@ -7,7 +7,6 @@ import {
   Search,
   X,
   Wrench,
-  CheckCircle,
   Copy,
   Trash2,
   ExternalLink,
@@ -20,10 +19,14 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Header } from '../components/Header';
-import { mockTools } from '../data/mockData';
+import { useToast } from '../context/ToastContext';
+import { SkeletonRow } from '../components/common/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const ToolsView: React.FC = () => {
-  const [tools, setTools] = useState<Tool[]>(mockTools);
+  const { toast } = useToast();
+  const [tools, setTools] = useState<Tool[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [agentFilter, setAgentFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -54,23 +57,25 @@ export const ToolsView: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  // Feedback Toast
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
   const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
+    toast.success(msg);
   };
 
   const loadTools = async () => {
-    const data = await api.getTools();
-    if (data && data.length > 0) {
-      setTools(data);
+    setIsLoading(true);
+    try {
+      const data = await api.getTools();
+      setTools(data || []);
       // Sync selected tool if open
-      if (selectedTool) {
+      if (selectedTool && data) {
         const updated = data.find(t => t.id === selectedTool.id);
         if (updated) setSelectedTool(updated);
       }
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al cargar herramientas desde el servidor');
+      setTools([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,6 +111,8 @@ export const ToolsView: React.FC = () => {
       setIsModalOpen(false);
 
       await loadTools();
+    } catch (err: any) {
+      toast.error(err?.detail || err?.message || 'Error al conectar la herramienta');
     } finally {
       setIsSubmitting(false);
     }
@@ -155,7 +162,7 @@ export const ToolsView: React.FC = () => {
       setSelectedTool(null);
       await loadTools();
     } else {
-      alert(`No se pudo eliminar: ${res.error}`);
+      toast.error(`No se pudo eliminar: ${res.error}`);
     }
   };
 
@@ -230,30 +237,6 @@ export const ToolsView: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '24px',
-          backgroundColor: '#064E3B',
-          border: '1px solid #10B981',
-          color: '#ECFDF5',
-          borderRadius: '8px',
-          padding: '12px 18px',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
-          fontSize: '13px',
-          fontWeight: 600,
-        }}>
-          <CheckCircle size={18} color="#34D399" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* Drawer Lateral: Detalle e Inspección de Herramienta */}
       {selectedTool && (
         <div 
@@ -1003,10 +986,33 @@ export const ToolsView: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedTools.length === 0 ? (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <SkeletonRow key={i} cols={6} />
+                ))
+              ) : tools.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No se encontraron herramientas con los filtros seleccionados.
+                  <td colSpan={6} style={{ padding: '24px' }}>
+                    <EmptyState
+                      icon={<Wrench size={32} />}
+                      title="No hay herramientas conectadas"
+                      description="Conecta APIs o herramientas externas para que tus agentes operen bajo políticas de seguridad."
+                      action={{
+                        label: 'Conectar herramienta',
+                        icon: <Plus size={15} />,
+                        onClick: () => setIsModalOpen(true),
+                      }}
+                    />
+                  </td>
+                </tr>
+              ) : paginatedTools.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: '24px' }}>
+                    <EmptyState
+                      icon={<Search size={28} />}
+                      title="Sin coincidencias"
+                      description="No se encontraron herramientas con los filtros seleccionados."
+                    />
                   </td>
                 </tr>
               ) : (

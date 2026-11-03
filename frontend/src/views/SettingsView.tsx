@@ -24,15 +24,23 @@ import {
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { ResetDemoModal } from '../components/ResetDemoModal';
+import { useToast } from '../context/ToastContext';
+import { SkeletonRow } from '../components/common/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const SettingsView: React.FC = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'general' | 'apikeys' | 'team' | 'security' | 'siem'>('general');
 
-  // Feedback Toast
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
+  // Feedback Toast delegado al ToastContext global
   const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
-    setToastMessage({ text, type });
-    setTimeout(() => setToastMessage(null), 4000);
+    if (type === 'error') {
+      toast.error(text);
+    } else if (type === 'info') {
+      toast.info(text);
+    } else {
+      toast.success(text);
+    }
   };
 
   // -------------------------------------------------------------
@@ -313,31 +321,6 @@ export const SettingsView: React.FC = () => {
 
       {/* Main Content Area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
-        {/* Toast Feedback */}
-        {toastMessage && (
-          <div style={{
-            position: 'fixed',
-            top: '24px',
-            right: '28px',
-            backgroundColor: toastMessage.type === 'error' ? 'var(--danger-bg)' : 'var(--bg-card)',
-            border: `1px solid ${toastMessage.type === 'error' ? 'var(--danger-border)' : 'var(--brand-primary)'}`,
-            color: toastMessage.type === 'error' ? 'var(--danger-text)' : 'var(--text-primary)',
-            padding: '12px 18px',
-            borderRadius: '8px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontSize: '13px',
-            fontWeight: 500,
-            backdropFilter: 'blur(8px)',
-          }}>
-            {toastMessage.type === 'error' ? <AlertTriangle size={16} /> : <CheckCircle size={16} color="var(--success-text)" />}
-            {toastMessage.text}
-          </div>
-        )}
-
         {/* Tenant Summary Banner */}
         <div style={{
           backgroundColor: 'var(--bg-card)',
@@ -766,10 +749,23 @@ export const SettingsView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {apiKeys.length === 0 ? (
+                  {isLoadingKeys ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <SkeletonRow key={i} cols={6} />
+                    ))
+                  ) : apiKeys.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                        {isLoadingKeys ? 'Cargando llaves de acceso desde PostgreSQL...' : 'No se encontraron llaves de acceso registradas para esta organización.'}
+                      <td colSpan={6} style={{ padding: '24px' }}>
+                        <EmptyState
+                          icon={<Key size={30} />}
+                          title="No hay llaves de acceso registradas"
+                          description="Genera una API Key para que tus agentes o pipelines puedan autenticar ante el Gateway PEP."
+                          action={{
+                            label: 'Generar nueva API Key',
+                            icon: <Plus size={15} />,
+                            onClick: () => setIsKeyModalOpen(true),
+                          }}
+                        />
                       </td>
                     </tr>
                   ) : (
@@ -1035,7 +1031,27 @@ def execute_guarded_tool(action_name: str, **kwargs):
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(u => {
+                  {isLoadingUsers ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <SkeletonRow key={i} cols={5} />
+                    ))
+                  ) : users.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ padding: '24px' }}>
+                        <EmptyState
+                          icon={<Users size={30} />}
+                          title="No hay miembros en el equipo"
+                          description="Aún no se han configurado usuarios adicionales en esta organización."
+                          action={{
+                            label: 'Invitar miembro',
+                            icon: <Plus size={15} />,
+                            onClick: () => setIsUserModalOpen(true),
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map(u => {
                     const initials = u.email.substring(0, 2).toUpperCase();
                     return (
                       <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
@@ -1116,7 +1132,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
                         </td>
                       </tr>
                     );
-                  })}
+                  }))}
                 </tbody>
               </table>
             </div>
