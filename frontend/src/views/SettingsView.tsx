@@ -27,9 +27,12 @@ import { ResetDemoModal } from '../components/ResetDemoModal';
 import { useToast } from '../context/ToastContext';
 import { SkeletonRow } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
+import { useAuth } from '../context/AuthContext';
 
 export const SettingsView: React.FC = () => {
   const { toast } = useToast();
+  const { currentOrganizationId } = useAuth();
+  const activeOrgId = currentOrganizationId || DEMO_IDS.ORG_ACME_ID;
   const [activeTab, setActiveTab] = useState<'general' | 'apikeys' | 'team' | 'security' | 'siem'>('general');
 
   // Feedback Toast delegado al ToastContext global
@@ -243,11 +246,14 @@ export const SettingsView: React.FC = () => {
   const fetchSettings = async () => {
     setIsLoadingSettings(true);
     try {
-      const data = await api.getOrganizationSettings(DEMO_IDS.ORG_ACME_ID);
+      const data = await api.getOrganizationSettings(activeOrgId);
       setFailClosed(data.fail_closed);
       setMaskSensitive(data.mask_sensitive);
       setMaxAutonomousAmount(data.max_autonomous_amount);
       setRetentionDays(data.retention_days);
+      if (data.siem_webhook_url) setWebhookUrl(data.siem_webhook_url);
+      if (data.siem_webhook_secret) setWebhookSecret(data.siem_webhook_secret);
+      if (typeof data.siem_webhook_enabled === 'boolean') setSiemEnabled(data.siem_webhook_enabled);
     } catch {
       showToast('Error al sincronizar configuración de gobernanza', 'error');
     } finally {
@@ -261,7 +267,7 @@ export const SettingsView: React.FC = () => {
   ) => {
     setIsUpdatingSettings(true);
     try {
-      const res = await api.updateOrganizationSettings(DEMO_IDS.ORG_ACME_ID, update);
+      const res = await api.updateOrganizationSettings(activeOrgId, update);
       if (res) {
         if (update.fail_closed !== undefined) setFailClosed(res.fail_closed);
         if (update.mask_sensitive !== undefined) setMaskSensitive(res.mask_sensitive);
@@ -280,18 +286,51 @@ export const SettingsView: React.FC = () => {
   // TAB 5: SIEM & Webhooks Egress
   // -------------------------------------------------------------
   const [webhookUrl, setWebhookUrl] = useState('https://siem-collector.acmecorp.internal/v1/security-events');
+  const [webhookSecret, setWebhookSecret] = useState('');
+  const [siemEnabled, setSiemEnabled] = useState(true);
   const [siemFormat, setSiemFormat] = useState<'splunk' | 'datadog' | 'elastic' | 'slack'>('splunk');
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [webhookTestStatus, setWebhookTestStatus] = useState<string | null>(null);
 
-  const handleTestWebhook = () => {
+  const handleTestWebhook = async () => {
     setIsTestingWebhook(true);
     setWebhookTestStatus(null);
-    setTimeout(() => {
+    try {
+      const res = await api.testSiemWebhook(activeOrgId, {
+        webhook_url: webhookUrl,
+        secret: webhookSecret || undefined,
+      });
+      if (res.status === 'success') {
+        setWebhookTestStatus(`${res.status_code || 200} OK — ${res.message}`);
+        showToast('Alerta de prueba despachada exitosamente al SIEM', 'success');
+      } else {
+        setWebhookTestStatus(`Fallo en entrega: ${res.message}`);
+        showToast(res.message, 'error');
+      }
+    } catch (err: any) {
+      const msg = err.detail || err.message || 'Error al conectar con el servidor SIEM';
+      setWebhookTestStatus(`Fallo de conexión: ${msg}`);
+      showToast(msg, 'error');
+    } finally {
       setIsTestingWebhook(false);
-      setWebhookTestStatus('HTTP 200 OK — Payload de incidente SIEM aceptado correctamente');
-      showToast('Alerta de prueba despachada exitosamente al SIEM');
-    }, 1200);
+    }
+  };
+
+  const handleSaveSiemSettings = async () => {
+    setIsUpdatingSettings(true);
+    try {
+      await api.updateOrganizationSettings(activeOrgId, {
+        siem_webhook_url: webhookUrl,
+        siem_webhook_enabled: siemEnabled,
+        siem_webhook_secret: webhookSecret,
+        siem_webhook_events: ['ALERT_CRITICAL', 'POLICY_VIOLATION'],
+      });
+      showToast('Configuración del SIEM guardada con éxito', 'success');
+    } catch (err: any) {
+      showToast(err.detail || 'Error al guardar la integración SIEM', 'error');
+    } finally {
+      setIsUpdatingSettings(false);
+    }
   };
 
   return (
@@ -1408,19 +1447,20 @@ def execute_guarded_tool(action_name: str, **kwargs):
                 </button>
 
                 <button
-                  onClick={() => showToast('Configuración del SIEM guardada con éxito')}
+                  onClick={handleSaveSiemSettings}
+                  disabled={isUpdatingSettings}
                   style={{
                     padding: '9px 18px',
-                    backgroundColor: 'var(--brand-primary)',
+                    backgroundColor: isUpdatingSettings ? 'var(--text-muted)' : 'var(--brand-primary)',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '8px',
                     fontWeight: 600,
                     fontSize: '13px',
-                    cursor: 'pointer',
+                    cursor: isUpdatingSettings ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  Guardar Conector
+                  {isUpdatingSettings ? 'Guardando...' : 'Guardar Conector'}
                 </button>
               </div>
 

@@ -190,6 +190,25 @@ export interface OrganizationSettings {
   mask_sensitive: boolean;
   max_autonomous_amount: number;
   retention_days: number;
+  siem_webhook_url?: string | null;
+  siem_webhook_enabled?: boolean;
+  siem_webhook_secret?: string | null;
+  siem_webhook_events?: string[];
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  created_at: string;
+  settings?: OrganizationSettings;
+}
+
+export interface SiemWebhookTestResult {
+  status: 'success' | 'failed';
+  message: string;
+  target_url: string;
+  status_code?: number | null;
+  timestamp: string;
 }
 
 

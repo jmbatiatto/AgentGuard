@@ -1,4 +1,4 @@
-"""Router de API REST para la gestión de Organizaciones (Tenants)."""
+"""Router de API REST para la gestión de Organizaciones (Tenants) y Webhooks SIEM."""
 
 from typing import List, Optional
 from uuid import UUID
@@ -14,8 +14,11 @@ from app.schemas.organization import (
     OrganizationRead,
     OrganizationSettings,
     OrganizationSettingsUpdate,
+    SiemWebhookTestRequest,
+    SiemWebhookTestResponse,
 )
 from app.services.organization_service import organization_service
+from app.services.webhook_service import webhook_service
 
 router = APIRouter(prefix="/organizations", tags=["Organizations"])
 
@@ -146,3 +149,46 @@ async def update_organization_settings(
         )
     return updated
 
+
+@router.post(
+    "/{org_id}/settings/webhooks/test",
+    response_model=SiemWebhookTestResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Probar Conectividad de Webhook SIEM",
+    description="Envía un evento de prueba ping firmado criptográficamente hacia el endpoint SIEM configurado.",
+)
+async def test_organization_siem_webhook(
+    org_id: UUID,
+    payload: Optional[SiemWebhookTestRequest] = None,
+    current_admin: Optional[User] = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> SiemWebhookTestResponse:
+    """Verifica la conectividad y recepción de eventos con el servidor SIEM."""
+    if current_admin and current_admin.organization_id != org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene autorización para probar la integración SIEM de otra organización",
+        )
+
+    current_settings = await organization_service.get_settings(db=db, org_id=org_id)
+    if current_settings is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Organización con ID {org_id} no encontrada",
+        )
+
+    target_url = (payload.webhook_url if payload and payload.webhook_url else current_settings.siem_webhook_url)
+    if not target_url:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se proporcionó una URL de webhook ni existe una configurada para esta organización",
+        )
+
+    secret = (payload.secret if payload and payload.secret is not None else current_settings.siem_webhook_secret)
+
+    result = await webhook_service.test_webhook(
+        organization_id=org_id,
+        url=target_url,
+        secret=secret,
+    )
+    return result

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import type { NavView } from '../../types/domain';
 import { ROLE_LABELS } from '../../constants/labels';
-import type { AuthUser } from '../../context/AuthContext';
+import { useAuth, type AuthUser } from '../../context/AuthContext';
 
 export type NavItemData = {
   id: string;
@@ -39,29 +39,27 @@ interface WorkspaceSwitcherProps {
 
 export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [internalSelected, setInternalSelected] = useState('Acme Corp');
+  const { currentOrganization, availableOrganizations, switchOrganization } = useAuth();
   
-  const current = selected || internalSelected;
-  const handleSelect = onSelect || setInternalSelected;
-
-  const workspaces = ['Acme Corp', 'Personal Workspace', 'Client Sandbox'];
+  const currentName = currentOrganization?.name || selected || 'Acme Corp';
 
   return (
     <div className="relative">
       <div 
+        id="sidebar-workspace-switcher"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-800/60 cursor-pointer transition-colors duration-200 select-none group"
       >
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[13px] shrink-0">
-            {current.charAt(0)}
+            {currentName.charAt(0).toUpperCase()}
           </div>
           <div className="flex flex-col overflow-hidden min-w-0">
             <span className="text-[13px] font-semibold leading-none mb-1 text-white truncate max-w-[120px]">
-              {current}
+              {currentName}
             </span>
             <span className="text-[11px] text-slate-500 leading-none">
-              Plan Pro
+              Tenant Activo
             </span>
           </div>
         </div>
@@ -72,26 +70,30 @@ export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div className="absolute top-[52px] left-0 w-full bg-[#111B2A] border border-slate-700/60 rounded-xl shadow-xl z-50 py-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
-            {workspaces.map(ws => (
-              <div 
-                key={ws}
-                onClick={() => { handleSelect(ws); setIsOpen(false); }}
-                className={`px-3 py-2 mx-1 text-[13px] rounded-lg cursor-pointer transition-colors duration-200 ${
-                  current === ws 
-                    ? 'bg-emerald-500/10 text-emerald-400 font-medium' 
-                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
-                }`}
-              >
-                {ws}
-              </div>
-            ))}
-            <div className="h-px bg-slate-700/60 my-1 mx-2" />
-            <div 
-              onClick={() => setIsOpen(false)}
-              className="px-3 py-2 mx-1 text-[13px] text-slate-500 hover:bg-slate-800/60 hover:text-white rounded-lg cursor-pointer flex items-center gap-2 transition-colors duration-200"
-            >
-              <span className="text-[16px] leading-none mb-0.5">+</span> Crear Espacio
+            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase border-b border-slate-800 mb-1">
+              Organizaciones (Tenants)
             </div>
+            {availableOrganizations.map(org => {
+              const isSelected = org.id === currentOrganization?.id;
+              return (
+                <div 
+                  key={org.id}
+                  onClick={() => { 
+                    switchOrganization(org.id); 
+                    if (onSelect) onSelect(org.name);
+                    setIsOpen(false); 
+                  }}
+                  className={`px-3 py-2 mx-1 text-[13px] rounded-lg cursor-pointer transition-colors duration-200 flex items-center justify-between ${
+                    isSelected 
+                      ? 'bg-emerald-500/10 text-emerald-400 font-medium' 
+                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
+                  }`}
+                >
+                  <span className="truncate">{org.name}</span>
+                  {isSelected && <span className="text-emerald-400 text-xs">✓</span>}
+                </div>
+              );
+            })}
           </div>
         </>
       )}

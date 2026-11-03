@@ -17,6 +17,7 @@ import { Header } from '../components/Header';
 import type { NavView } from '../types/domain';
 import { DECISION_LABELS } from '../constants/labels';
 import { api, DEMO_IDS } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface PlaygroundViewProps {
   onTriggerApproval?: () => void;
@@ -170,7 +171,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   onTriggerAlert, 
   onNavigate 
 }) => {
+  const { currentOrganizationId } = useAuth();
+  const activeOrgId = currentOrganizationId || DEMO_IDS.ORG_ACME_ID;
   const [isAgentGuardActive, setIsAgentGuardActive] = useState<boolean>(true);
+  const [isSandboxMode, setIsSandboxMode] = useState<boolean>(true);
   const [activeResult, setActiveResult] = useState<SimulationResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedAttackVector, setSelectedAttackVector] = useState<string>('ASI03');
@@ -180,15 +184,33 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const [activeTab, setActiveTab] = useState<'database' | 'inspector'>('database');
   const [activeDbTable, setActiveDbTable] = useState<'products' | 'customers' | 'transactions'>('products');
 
-  const handleResetDatabase = () => {
+  const handleResetDatabase = async () => {
     setDbState(INITIAL_DATABASE_STATE);
+    try {
+      await api.resetDemoData();
+    } catch (err) {
+      console.warn('Error al restablecer demo data en backend:', err);
+    }
+  };
+
+  const dispatchGatewayCall = async (payload: {
+    agent_id: string;
+    tool_id: string;
+    action_name: string;
+    parameters: Record<string, any>;
+    resource?: string;
+  }) => {
+    const fullPayload = {
+      ...payload,
+      organization_id: activeOrgId,
+    };
+    return isSandboxMode ? api.simulateGateway(fullPayload) : api.executeGateway(fullPayload);
   };
 
   const runScenario1 = async () => {
     if (isAgentGuardActive) {
       setIsLoading(true);
-      const res = await api.executeGateway({
-        organization_id: DEMO_IDS.ORG_ACME_ID,
+      const res = await dispatchGatewayCall({
         agent_id: DEMO_IDS.AGENT_SALES_ID,
         tool_id: DEMO_IDS.TOOL_CRM_ID,
         action_name: 'create_quote',
@@ -284,8 +306,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const runScenario2 = async () => {
     if (isAgentGuardActive) {
       setIsLoading(true);
-      const res = await api.executeGateway({
-        organization_id: DEMO_IDS.ORG_ACME_ID,
+      const res = await dispatchGatewayCall({
         agent_id: DEMO_IDS.AGENT_SALES_ID,
         tool_id: DEMO_IDS.TOOL_CATALOG_ID,
         action_name: 'update_price',
@@ -364,8 +385,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const runScenario3 = async () => {
     if (isAgentGuardActive) {
       setIsLoading(true);
-      const res = await api.executeGateway({
-        organization_id: DEMO_IDS.ORG_ACME_ID,
+      const res = await dispatchGatewayCall({
         agent_id: DEMO_IDS.AGENT_FINANCE_ID,
         tool_id: DEMO_IDS.TOOL_STRIPE_ID,
         action_name: 'refund',
@@ -472,8 +492,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
 
     if (isAgentGuardActive) {
       setIsLoading(true);
-      const res = await api.executeGateway({
-        organization_id: DEMO_IDS.ORG_ACME_ID,
+      const res = await dispatchGatewayCall({
         agent_id: DEMO_IDS.AGENT_SALES_ID,
         tool_id: vector.toolId,
         action_name: vector.actionName,
@@ -571,8 +590,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const runScenario5 = async () => {
     if (isAgentGuardActive) {
       setIsLoading(true);
-      const res = await api.executeGateway({
-        organization_id: DEMO_IDS.ORG_ACME_ID,
+      const res = await dispatchGatewayCall({
         agent_id: DEMO_IDS.AGENT_SALES_ID,
         tool_id: DEMO_IDS.TOOL_DB_ID,
         action_name: 'database.drop',
@@ -788,6 +806,45 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                 <span>{isAgentGuardActive ? 'Desactivar Protección' : 'Activar AgentGuard'}</span>
               </button>
             </div>
+          </div>
+
+          {/* Selector de Modo Sandbox DB / Producción */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 14px',
+            backgroundColor: 'var(--surface-primary)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
+            fontSize: '12px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Database size={16} style={{ color: isSandboxMode ? 'var(--brand-primary)' : 'var(--text-muted)' }} />
+              <div>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {isSandboxMode ? 'Simulación Sandbox (Dry Run)' : 'Ejecución Gateway Real'}
+                </span>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  {isSandboxMode ? 'Evalúa PDP y PEP sin efectos colaterales en herramientas' : 'Despacha llamadas reales al backend'}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsSandboxMode(!isSandboxMode)}
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 600,
+                borderRadius: '6px',
+                border: '1px solid var(--border-subtle)',
+                backgroundColor: isSandboxMode ? 'rgba(2, 132, 199, 0.15)' : 'var(--surface-secondary)',
+                color: isSandboxMode ? 'var(--brand-primary)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+              }}
+            >
+              {isSandboxMode ? 'Sandbox DB' : 'Producción'}
+            </button>
           </div>
 
           {/* Scenario 1 Button Card */}

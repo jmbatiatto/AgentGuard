@@ -1,4 +1,4 @@
-"""Schemas Pydantic v2 para el Agent Runtime Gateway (PEP)."""
+"""Schemas Pydantic v2 para el Agent Runtime Gateway (PEP) y Modo Simulación Sandbox."""
 
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
@@ -43,6 +43,10 @@ class GatewayExecuteRequest(BaseSchema):
         max_length=255,
         description="Identificador o URI del recurso sobre el que opera la acción",
     )
+    dry_run: bool = Field(
+        default=False,
+        description="Modo simulación (dry-run): evalúa PDP y amenazas sin invocar APIs externas reales",
+    )
 
 
 class GatewayExecuteResponse(BaseSchema):
@@ -82,7 +86,7 @@ class GatewayExecuteResponse(BaseSchema):
     )
     result: Optional[Dict[str, Any]] = Field(
         default=None,
-        description="Datos devueltos por la herramienta externa en caso de ALLOW",
+        description="Datos devueltos por la herramienta externa en caso de ALLOW o simulación",
     )
     error_message: Optional[str] = Field(
         default=None,
@@ -108,20 +112,24 @@ class GatewayExecuteResponse(BaseSchema):
         default=None,
         description="Latencia real de procesamiento del Gateway PEP en milisegundos",
     )
+    is_simulation: bool = Field(
+        default=False,
+        description="Indica si la ejecución fue procesada en modo simulación/sandbox",
+    )
+    simulation_explanation: Optional[str] = Field(
+        default=None,
+        description="Desglose explicativo del razonamiento del PDP y reglas aplicadas en modo sandbox",
+    )
 
 
-class ExecutionRead(BaseSchema):
-    """Lectura de una traza forense de ejecución persistida."""
+class GatewayExecutionTraceRead(BaseSchema):
+    """Lectura forense ampliada para el inspector de trazas del Data Plane."""
 
     id: UUID
     organization_id: UUID
     agent_id: UUID
-    agent_name: Optional[str] = None
-    delegator_user_id: Optional[UUID] = None
     tool_id: UUID
-    tool_name: Optional[str] = None
     tool_action_id: UUID
-    action_name: Optional[str] = None
     resource: Optional[str] = None
     request_context: Dict[str, Any]
     decision: PolicyDecision
@@ -130,3 +138,5 @@ class ExecutionRead(BaseSchema):
     timestamp: datetime
     latency_ms: Optional[float] = None
 
+
+ExecutionRead = GatewayExecutionTraceRead

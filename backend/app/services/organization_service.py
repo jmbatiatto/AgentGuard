@@ -18,6 +18,10 @@ DEFAULT_ORGANIZATION_SETTINGS: Dict[str, Any] = {
     "mask_sensitive": True,
     "max_autonomous_amount": 5000.0,
     "retention_days": 90,
+    "siem_webhook_url": None,
+    "siem_webhook_enabled": False,
+    "siem_webhook_secret": None,
+    "siem_webhook_events": ["ALERT_CRITICAL", "POLICY_VIOLATION"],
 }
 
 

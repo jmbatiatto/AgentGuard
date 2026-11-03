@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api, DEMO_IDS } from '../services/api';
-import type { User, UserRole, AuthCredentials, RegisterData } from '../types/domain';
+import type { User, UserRole, AuthCredentials, RegisterData, Organization } from '../types/domain';
 
 export interface AuthUser extends User {
   id: string;
@@ -130,6 +130,10 @@ export interface AuthContextType {
   currentUser: AuthUser;
   isAuthenticated: boolean;
   isLoading: boolean;
+  currentOrganizationId: string;
+  currentOrganization: Organization | null;
+  availableOrganizations: Organization[];
+  switchOrganization: (orgId: string) => void;
   switchUser: (userId: string) => void;
   availableUsers: AuthUser[];
   login: (emailOrCreds: string | AuthCredentials, password?: string) => Promise<void>;
@@ -142,6 +146,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const STORAGE_TOKEN_KEY = 'agentguard_token';
 const STORAGE_USER_KEY = 'agentguard_user';
 const STORAGE_ACTIVE_ID_KEY = 'agentguard_active_user_id';
+const STORAGE_ACTIVE_ORG_KEY = 'agentguard_active_org';
+
+const DEFAULT_DEMO_ORGS: Organization[] = [
+  {
+    id: DEMO_IDS.ORG_ACME_ID,
+    name: 'Acme Corp (Principal)',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -149,6 +162,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const [availableOrganizations, setAvailableOrganizations] = useState<Organization[]>(DEFAULT_DEMO_ORGS);
+
+  const [currentOrganizationId, setCurrentOrganizationId] = useState<string>(() => {
+    return (
+      (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_ACTIVE_ORG_KEY) : null) ||
+      DEMO_IDS.ORG_ACME_ID
+    );
+  });
 
   const [currentUser, setCurrentUser] = useState<AuthUser>(() => {
     const storedUser = localStorage.getItem(STORAGE_USER_KEY);
@@ -167,6 +189,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return DEMO_PROFILES[0];
   });
+
+  // Carga de organizaciones disponibles para el switcher multitenant
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .listOrganizations()
+      .then((orgs) => {
+        if (!isMounted || !orgs || orgs.length === 0) return;
+        setAvailableOrganizations(orgs);
+        const savedOrgId = localStorage.getItem(STORAGE_ACTIVE_ORG_KEY);
+        if (savedOrgId && orgs.some((o) => o.id === savedOrgId)) {
+          setCurrentOrganizationId(savedOrgId);
+        } else if (orgs[0]) {
+          setCurrentOrganizationId(orgs[0].id);
+          localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgs[0].id);
+        }
+      })
+      .catch((err) => {
+        console.warn('Uso de organizaciones predeterminadas para entorno local:', err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Hidratación y validación de sesión al inicializar
   useEffect(() => {
@@ -240,6 +286,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser(DEMO_PROFILES[0]);
   }, []);
 
+  const switchOrganization = useCallback((orgId: string) => {
+    setCurrentOrganizationId(orgId);
+    localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgId);
+    api.setActiveOrganizationId(orgId);
+    setCurrentUser((prev) => ({
+      ...prev,
+      organization_id: orgId,
+      organizationId: orgId,
+    }));
+  }, []);
+
   const switchUser = (userId: string) => {
     const target = DEMO_PROFILES.find((u) => u.id === userId);
     if (target) {
@@ -249,12 +306,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const currentOrganization =
+    availableOrganizations.find((o) => o.id === currentOrganizationId) || {
+      id: currentOrganizationId,
+      name: 'Acme Corp (Principal)',
+      created_at: new Date().toISOString(),
+    };
+
   return (
     <AuthContext.Provider
       value={{
         currentUser,
         isAuthenticated,
         isLoading,
+        currentOrganizationId,
+        currentOrganization,
+        availableOrganizations,
+        switchOrganization,
         switchUser,
         availableUsers: DEMO_PROFILES,
         login,

@@ -54,6 +54,25 @@ async def execute_gateway_action(
     return result
 
 
+@router.post(
+    "/simulate",
+    response_model=GatewayExecuteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Simulación de Ejecución en Entorno Sandbox (Dry-Run)",
+    description=(
+        "Evalúa deterministamente el motor de políticas PDP, sanitización contextual y detección de amenazas "
+        "en modo sandbox sin invocar APIs externas de destino ni alterar métricas productivas."
+    ),
+)
+async def simulate_gateway_action(
+    request: GatewayExecuteRequest,
+    db: AsyncSession = Depends(get_db),
+) -> GatewayExecuteResponse:
+    """Ejecuta una evaluación en modo simulación sandbox (dry_run=True)."""
+    sim_request = request.model_copy(update={"dry_run": True})
+    return await pep_gateway_service.execute(db=db, request=sim_request)
+
+
 @router.get(
     "/attacks",
     summary="Catálogo de Vectores de Ataque e Inyecciones de Prompt (OWASP 2026)",

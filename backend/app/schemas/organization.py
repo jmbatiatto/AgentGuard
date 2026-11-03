@@ -1,7 +1,7 @@
-"""Schemas Pydantic v2 para Organizaciones (Tenants)."""
+"""Schemas Pydantic v2 para Organizaciones (Tenants) y Gobernanza SIEM."""
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 from pydantic import Field
 
@@ -40,6 +40,22 @@ class OrganizationSettings(BaseSchema):
         ge=1,
         description="Período de retención en días para depuración de trazas forenses de ejecución",
     )
+    siem_webhook_url: Optional[str] = Field(
+        default=None,
+        description="URL del endpoint de recepción SIEM (Splunk, Elastic, Datadog, Slack, Microsoft Sentinel)",
+    )
+    siem_webhook_enabled: bool = Field(
+        default=False,
+        description="Habilita el despacho asíncrono de eventos de seguridad y alertas hacia el SIEM",
+    )
+    siem_webhook_secret: Optional[str] = Field(
+        default=None,
+        description="Clave secreta para firma criptográfica HMAC-SHA256 en cabecera X-AgentGuard-Signature",
+    )
+    siem_webhook_events: List[str] = Field(
+        default_factory=lambda: ["ALERT_CRITICAL", "POLICY_VIOLATION"],
+        description="Lista de eventos suscritos para notificación inmediata",
+    )
 
 
 class OrganizationSettingsUpdate(BaseSchema):
@@ -63,6 +79,45 @@ class OrganizationSettingsUpdate(BaseSchema):
         ge=1,
         description="Nuevo período de retención en días",
     )
+    siem_webhook_url: Optional[str] = Field(
+        default=None,
+        description="Nueva URL para webhooks SIEM",
+    )
+    siem_webhook_enabled: Optional[bool] = Field(
+        default=None,
+        description="Activar o pausar webhooks SIEM",
+    )
+    siem_webhook_secret: Optional[str] = Field(
+        default=None,
+        description="Nueva clave secreta HMAC-SHA256",
+    )
+    siem_webhook_events: Optional[List[str]] = Field(
+        default=None,
+        description="Lista de eventos para webhooks SIEM",
+    )
+
+
+class SiemWebhookTestRequest(BaseSchema):
+    """Payload opcional para probar conectividad de webhook SIEM."""
+
+    webhook_url: Optional[str] = Field(
+        default=None,
+        description="URL destino a probar. Si se omite, se usa la configurada en la organización",
+    )
+    secret: Optional[str] = Field(
+        default=None,
+        description="Clave secreta opcional para firmar el payload de prueba",
+    )
+
+
+class SiemWebhookTestResponse(BaseSchema):
+    """Resultado estructurado de prueba de entrega SIEM."""
+
+    status: str = Field(..., description="Estado: 'success' o 'failed'")
+    message: str = Field(..., description="Explicación detallada del resultado en español")
+    target_url: str = Field(..., description="URL a la que se envió la prueba")
+    status_code: Optional[int] = Field(default=None, description="Código HTTP recibido del servidor remoto")
+    timestamp: datetime = Field(..., description="Marca de tiempo UTC de la prueba")
 
 
 class OrganizationRead(BaseSchema):
@@ -72,4 +127,3 @@ class OrganizationRead(BaseSchema):
     name: str
     created_at: datetime
     settings: Optional[Dict[str, Any]] = None
-

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Sun, Moon, Check, Shield, Lock, RotateCcw, LogOut } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Check, Shield, Lock, RotateCcw, LogOut, Building2 } from 'lucide-react';
 import { useTheme } from '../context/useTheme';
 import { useAuth } from '../context/AuthContext';
 import { ROLE_LABELS } from '../constants/labels';
@@ -13,16 +13,29 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton }) => {
   const { theme, toggleTheme } = useTheme();
-  const { currentUser, switchUser, availableUsers, logout } = useAuth();
+  const {
+    currentUser,
+    switchUser,
+    availableUsers,
+    logout,
+    currentOrganization,
+    availableOrganizations,
+    switchOrganization,
+  } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const orgDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click or Escape key
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (orgDropdownRef.current && !orgDropdownRef.current.contains(e.target as Node)) {
+        setIsOrgDropdownOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -163,6 +176,95 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             boxShadow: '0 0 6px #10B981',
           }} />
           <span>Todos los sistemas operativos</span>
+        </div>
+
+        {/* Organization / Tenant Selector Dropdown (INC-17) */}
+        <div ref={orgDropdownRef} style={{ position: 'relative' }}>
+          <button
+            id="org-selector-button"
+            onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
+            title="Cambiar organización o tenant de trabajo"
+            aria-label="Selector de organización activa"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px',
+              height: '34px',
+              padding: '0 10px',
+              borderRadius: '8px',
+              backgroundColor: isOrgDropdownOpen ? 'var(--bg-card-hover)' : 'var(--bg-card)',
+              border: `1px solid ${isOrgDropdownOpen ? 'var(--brand-primary)' : 'var(--border-subtle)'}`,
+              color: 'var(--text-primary)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Building2 size={15} style={{ color: 'var(--brand-primary)', flexShrink: 0 }} />
+            <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {currentOrganization?.name || 'Acme Corp'}
+            </span>
+            <ChevronDown size={13} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          </button>
+
+          {isOrgDropdownOpen && (
+            <div style={{
+              position: 'absolute',
+              top: 'calc(100% + 6px)',
+              right: 0,
+              width: '240px',
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '10px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+              padding: '6px',
+              zIndex: 1000,
+            }}>
+              <div style={{ padding: '6px 8px', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', borderBottom: '1px solid var(--border-subtle)', marginBottom: '4px' }}>
+                ORGANIZACIONES DISPONIBLES
+              </div>
+              {availableOrganizations.map((org) => {
+                const isSelected = org.id === currentOrganization?.id;
+                return (
+                  <div
+                    key={org.id}
+                    onClick={() => {
+                      switchOrganization(org.id);
+                      setIsOrgDropdownOpen(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '7px 10px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      backgroundColor: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                      color: isSelected ? 'var(--brand-primary)' : 'var(--text-primary)',
+                      fontSize: '12px',
+                      fontWeight: isSelected ? 600 : 400,
+                      transition: 'background-color 0.1s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                      <Building2 size={14} style={{ color: isSelected ? 'var(--brand-primary)' : 'var(--text-muted)', flexShrink: 0 }} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {org.name}
+                      </span>
+                    </div>
+                    {isSelected && <Check size={14} style={{ color: 'var(--brand-primary)', flexShrink: 0 }} />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* User Profile Pill with RBAC Selector Dropdown */}

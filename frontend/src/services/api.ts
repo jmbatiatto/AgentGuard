@@ -26,6 +26,8 @@ import type {
   AnalyticsOverview,
   AnalyticsTimeseries,
   OrganizationSettings,
+  Organization,
+  SiemWebhookTestResult,
   User,
   AuthCredentials,
   RegisterData,
@@ -34,7 +36,7 @@ import type {
 
 export type { User, AuthCredentials, RegisterData, AuthResponse };
 
-export type { OrganizationSettings };
+export type { OrganizationSettings, Organization, SiemWebhookTestResult };
 
 /**
  * Clase canónica para propagación de excepciones en la capa de transporte API de AgentGuard.
@@ -161,6 +163,22 @@ class AgentGuardApiClient {
    * Interceptor de autenticacion HTTP: Inyecta Authorization: Bearer <token>
    * si existe una sesion activa en localStorage.
    */
+  /**
+   * Retorna el ID de organizacion activa persistida en la sesion
+   */
+  public getActiveOrganizationId(): string {
+    return (typeof window !== 'undefined' ? localStorage.getItem('agentguard_active_org') : null) || DEMO_IDS.ORG_ACME_ID;
+  }
+
+  /**
+   * Asigna y persiste el ID de organizacion activa para la sesion
+   */
+  public setActiveOrganizationId(orgId: string): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('agentguard_active_org', orgId);
+    }
+  }
+
   private async fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('agentguard_token') : null;
     const headers = new Headers(init?.headers);
@@ -892,6 +910,36 @@ class AgentGuardApiClient {
   }
 
   /**
+   * Simula la evaluación en tiempo real en entorno Sandbox (/api/v1/gateway/simulate)
+   */
+  async simulateGateway(payload: GatewayExecutionPayload): Promise<GatewayExecutionResult> {
+    const startTime = performance.now();
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/gateway/simulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, dry_run: true }),
+        signal: AbortSignal.timeout(6000),
+      });
+
+      const latencyMs = Math.round((performance.now() - startTime) * 10) / 10;
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+
+      const data = await res.json();
+
+      return {
+        ...data,
+        evaluation_latency_ms: latencyMs,
+        isLiveBackend: true,
+      };
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
+
+  /**
    * Obtiene el catálogo de vectores de ataque e inyecciones OWASP 2026 (/api/v1/gateway/attacks)
    */
   async getAttackVectors(): Promise<any[]> {
@@ -1361,6 +1409,10 @@ class AgentGuardApiClient {
         mask_sensitive: typeof data.mask_sensitive === 'boolean' ? data.mask_sensitive : true,
         max_autonomous_amount: typeof data.max_autonomous_amount === 'number' ? data.max_autonomous_amount : 5000,
         retention_days: typeof data.retention_days === 'number' ? data.retention_days : 90,
+        siem_webhook_url: data.siem_webhook_url || null,
+        siem_webhook_enabled: typeof data.siem_webhook_enabled === 'boolean' ? data.siem_webhook_enabled : false,
+        siem_webhook_secret: data.siem_webhook_secret || null,
+        siem_webhook_events: Array.isArray(data.siem_webhook_events) ? data.siem_webhook_events : ['ALERT_CRITICAL', 'POLICY_VIOLATION'],
       };
     } catch (err) {
       throw handleNetworkError(err);
@@ -1394,7 +1446,55 @@ class AgentGuardApiClient {
         mask_sensitive: typeof data.mask_sensitive === 'boolean' ? data.mask_sensitive : true,
         max_autonomous_amount: typeof data.max_autonomous_amount === 'number' ? data.max_autonomous_amount : 5000,
         retention_days: typeof data.retention_days === 'number' ? data.retention_days : 90,
+        siem_webhook_url: data.siem_webhook_url || null,
+        siem_webhook_enabled: typeof data.siem_webhook_enabled === 'boolean' ? data.siem_webhook_enabled : false,
+        siem_webhook_secret: data.siem_webhook_secret || null,
+        siem_webhook_events: Array.isArray(data.siem_webhook_events) ? data.siem_webhook_events : ['ALERT_CRITICAL', 'POLICY_VIOLATION'],
       };
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
+
+  /**
+   * Lista todas las organizaciones registradas (Tenants) para el switcher multitenant
+   */
+  async listOrganizations(): Promise<Organization[]> {
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/organizations`, {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+      return await res.json();
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
+
+  /**
+   * Realiza una prueba de emisión y firma con el endpoint Webhook SIEM
+   */
+  async testSiemWebhook(
+    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    payload?: { webhook_url?: string; secret?: string }
+  ): Promise<SiemWebhookTestResult> {
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/organizations/${orgId}/settings/webhooks/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
+          'X-Organization-Id': orgId,
+        },
+        body: JSON.stringify(payload || {}),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+      return await res.json();
     } catch (err) {
       throw handleNetworkError(err);
     }

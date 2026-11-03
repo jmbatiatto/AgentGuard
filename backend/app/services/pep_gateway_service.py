@@ -220,7 +220,6 @@ class PEPGatewayService:
             )
             db.add(execution)
             await db.commit()
-
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -232,6 +231,8 @@ class PEPGatewayService:
                 error_message=f"El agente no tiene autorizada la herramienta '{tool.name}' (Agent lacks capability)",
                 timestamp=now,
                 latency_ms=latency_ms,
+                is_simulation=request.dry_run,
+                simulation_explanation="El agente no tiene vinculada esta herramienta en su configuración (AgentTool)." if request.dry_run else None,
             )
 
         # 5. Invocar al Motor de Políticas (PDP) y Evaluar Amenazas Hostiles
@@ -268,21 +269,22 @@ class PEPGatewayService:
             else:
                 rejection_reason = f"Bloqueo Gateway PEP: {threat.details}"
 
-            # Disparar Alerta de Seguridad Crítica inmediata
-            alert = Alert(
-                id=uuid.uuid4(),
-                organization_id=request.organization_id,
-                execution_id=execution_id,
-                title=f"Alerta de Seguridad: Bloqueo en acción crítica '{request.action_name}' - [{threat.owasp_category.split(':')[0]}]",
-                description=(
-                    f"El agente {agent.name} intentó ejecutar '{request.action_name}'. "
-                    f"Veredicto Gateway: Bloqueado por vector de ataque hostil ({threat.owasp_category}). "
-                    f"Detalle: {threat.details}"
-                ),
-                severity=AlertSeverity.CRITICAL,
-                status=AlertStatus.OPEN,
-                created_at=now,
-            )
+            # Disparar Alerta de Seguridad Crítica inmediata (omitida en dry_run)
+            if not request.dry_run:
+                alert = Alert(
+                    id=uuid.uuid4(),
+                    organization_id=request.organization_id,
+                    execution_id=execution_id,
+                    title=f"Alerta de Seguridad: Bloqueo en acción crítica '{request.action_name}' - [{threat.owasp_category.split(':')[0]}]",
+                    description=(
+                        f"El agente {agent.name} intentó ejecutar '{request.action_name}'. "
+                        f"Veredicto Gateway: Bloqueado por vector de ataque hostil ({threat.owasp_category}). "
+                        f"Detalle: {threat.details}"
+                    ),
+                    severity=AlertSeverity.CRITICAL,
+                    status=AlertStatus.OPEN,
+                    created_at=now,
+                )
 
             security_telemetry = {
                 "is_threat": True,
@@ -307,24 +309,33 @@ class PEPGatewayService:
             match final_decision:
                 case PolicyDecision.ALLOW:
                     exec_status = ExecutionStatus.EXECUTED
-                    # Despachar llamada hacia la API de destino
-                    result_data = await cls._dispatch_to_tool(tool, request.action_name, request.parameters)
+                    if request.dry_run:
+                        result_data = {
+                            "simulated": True,
+                            "status": "authorized",
+                            "action": request.action_name,
+                            "message": f"Accion '{request.action_name}' autorizada por PDP en modo sandbox. No se despachó llamada externa.",
+                        }
+                    else:
+                        # Despachar llamada hacia la API de destino
+                        result_data = await cls._dispatch_to_tool(tool, request.action_name, request.parameters)
 
                 case PolicyDecision.REQUIRE_APPROVAL:
                     exec_status = ExecutionStatus.PENDING_APPROVAL
-                    approval_id = uuid.uuid4()
-                    # Crear ticket en cola de intervención humana
-                    approval = Approval(
-                        id=approval_id,
-                        execution_id=execution_id,
-                        status=ApprovalStatus.PENDING,
-                        created_at=now,
-                    )
+                    if not request.dry_run:
+                        approval_id = uuid.uuid4()
+                        # Crear ticket en cola de intervención humana
+                        approval = Approval(
+                            id=approval_id,
+                            execution_id=execution_id,
+                            status=ApprovalStatus.PENDING,
+                            created_at=now,
+                        )
 
                 case PolicyDecision.DENY:
                     exec_status = ExecutionStatus.REJECTED
                     # Si es riesgo crítico o detecta anomalía, disparar Alerta de Seguridad (Escenario 4)
-                    if tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
+                    if not request.dry_run and tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
                         alert = Alert(
                             id=uuid.uuid4(),
                             organization_id=request.organization_id,
@@ -380,6 +391,44 @@ class PEPGatewayService:
             db.add(approval)
 
         await db.commit()
+
+        # Despachar notificación asíncrona a SIEM si hubo alerta y no es simulación
+        if alert and not request.dry_run:
+            try:
+                from app.services.organization_service import organization_service
+                from app.services.webhook_service import webhook_service
+                org_settings = await organization_service.get_settings(db=db, org_id=request.organization_id)
+                if org_settings:
+                    await webhook_service.dispatch_security_alert_if_enabled(
+                        settings=org_settings,
+                        organization_id=request.organization_id,
+                        alert_title=alert.title,
+                        alert_description=alert.description,
+                        severity=alert.severity.value,
+                        execution_id=execution_id,
+                        threat_analysis=security_telemetry,
+                    )
+            except Exception as exc:
+                logger.warning("Fallo no bloqueante al notificar a SIEM: %s", exc)
+
+        simulation_explanation = None
+        if request.dry_run:
+            if threat:
+                simulation_explanation = (
+                    f"Vector hostil detectado ({threat.owasp_category}): {threat.details}. En producción genera alerta CRITICAL."
+                )
+            elif final_decision == PolicyDecision.ALLOW:
+                simulation_explanation = (
+                    f"Acción permitida por el motor PDP. Regla: {pdp_result.reason or 'ALLOW por política activa'}. Modo sandbox sin red."
+                )
+            elif final_decision == PolicyDecision.REQUIRE_APPROVAL:
+                simulation_explanation = (
+                    f"La política exige aprobación humana (HITL). Razón: {pdp_result.reason}. En producción genera ticket pendiente."
+                )
+            else:
+                simulation_explanation = (
+                    f"Acción denegada por política PDP. Razón: {pdp_result.reason or rejection_reason}."
+                )
 
         # Emitir notificaciones en tiempo real vía WebSocket
         if approval_id:
@@ -456,6 +505,8 @@ class PEPGatewayService:
             security_analysis=security_telemetry,
             timestamp=now,
             latency_ms=latency_ms,
+            is_simulation=request.dry_run,
+            simulation_explanation=simulation_explanation,
         )
 
     @classmethod
@@ -505,6 +556,44 @@ class PEPGatewayService:
                 if approval.execution:
                     approval.execution.status = ExecutionStatus.REJECTED
                 await db.commit()
+
+        # Despachar notificación asíncrona a SIEM si hubo alerta y no es simulación
+        if alert and not request.dry_run:
+            try:
+                from app.services.organization_service import organization_service
+                from app.services.webhook_service import webhook_service
+                org_settings = await organization_service.get_settings(db=db, org_id=request.organization_id)
+                if org_settings:
+                    await webhook_service.dispatch_security_alert_if_enabled(
+                        settings=org_settings,
+                        organization_id=request.organization_id,
+                        alert_title=alert.title,
+                        alert_description=alert.description,
+                        severity=alert.severity.value,
+                        execution_id=execution_id,
+                        threat_analysis=security_telemetry,
+                    )
+            except Exception as exc:
+                logger.warning("Fallo no bloqueante al notificar a SIEM: %s", exc)
+
+        simulation_explanation = None
+        if request.dry_run:
+            if threat:
+                simulation_explanation = (
+                    f"Vector hostil detectado ({threat.owasp_category}): {threat.details}. En producción genera alerta CRITICAL."
+                )
+            elif final_decision == PolicyDecision.ALLOW:
+                simulation_explanation = (
+                    f"Acción permitida por el motor PDP. Regla: {pdp_result.reason or 'ALLOW por política activa'}. Modo sandbox sin red."
+                )
+            elif final_decision == PolicyDecision.REQUIRE_APPROVAL:
+                simulation_explanation = (
+                    f"La política exige aprobación humana (HITL). Razón: {pdp_result.reason}. En producción genera ticket pendiente."
+                )
+            else:
+                simulation_explanation = (
+                    f"Acción denegada por política PDP. Razón: {pdp_result.reason or rejection_reason}."
+                )
                 await db.refresh(approval)
                 return approval
 
@@ -532,6 +621,44 @@ class PEPGatewayService:
                 approval.execution.status = ExecutionStatus.REJECTED
 
         await db.commit()
+
+        # Despachar notificación asíncrona a SIEM si hubo alerta y no es simulación
+        if alert and not request.dry_run:
+            try:
+                from app.services.organization_service import organization_service
+                from app.services.webhook_service import webhook_service
+                org_settings = await organization_service.get_settings(db=db, org_id=request.organization_id)
+                if org_settings:
+                    await webhook_service.dispatch_security_alert_if_enabled(
+                        settings=org_settings,
+                        organization_id=request.organization_id,
+                        alert_title=alert.title,
+                        alert_description=alert.description,
+                        severity=alert.severity.value,
+                        execution_id=execution_id,
+                        threat_analysis=security_telemetry,
+                    )
+            except Exception as exc:
+                logger.warning("Fallo no bloqueante al notificar a SIEM: %s", exc)
+
+        simulation_explanation = None
+        if request.dry_run:
+            if threat:
+                simulation_explanation = (
+                    f"Vector hostil detectado ({threat.owasp_category}): {threat.details}. En producción genera alerta CRITICAL."
+                )
+            elif final_decision == PolicyDecision.ALLOW:
+                simulation_explanation = (
+                    f"Acción permitida por el motor PDP. Regla: {pdp_result.reason or 'ALLOW por política activa'}. Modo sandbox sin red."
+                )
+            elif final_decision == PolicyDecision.REQUIRE_APPROVAL:
+                simulation_explanation = (
+                    f"La política exige aprobación humana (HITL). Razón: {pdp_result.reason}. En producción genera ticket pendiente."
+                )
+            else:
+                simulation_explanation = (
+                    f"Acción denegada por política PDP. Razón: {pdp_result.reason or rejection_reason}."
+                )
         await db.refresh(approval)
 
         org_id = approval.execution.organization_id if approval.execution else None
