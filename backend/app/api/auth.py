@@ -102,6 +102,7 @@ async def register(
 
     # 2. Asignar o crear la organización
     org_name = register_data.organization_name or f"Org {register_data.name}"
+    org = Organization(name=org_name)
     org = Organization(
         id=uuid.uuid4(),
         name=org_name,

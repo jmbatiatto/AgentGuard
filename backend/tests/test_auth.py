@@ -332,3 +332,4 @@ async def test_anti_ai_shielding_in_control_plane():
 
     assert response.status_code == 403
     assert "AI Agents are not permitted" in response.json()["detail"]
+
