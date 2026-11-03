@@ -21,6 +21,7 @@ from app.models.execution import Execution
 from app.models.approval import Approval
 from app.models.alert import Alert
 from app.models.audit import AuditEvent
+from app.models.api_key import ApiKey
 
 __all__ = [
     # Enums
@@ -34,7 +35,7 @@ __all__ = [
     "AlertSeverity",
     "AlertStatus",
     "ActorType",
-    # Entidades (12 tablas del MER)
+    # Entidades (12 tablas del MER + api_keys)
     "Organization",
     "User",
     "Agent",
@@ -47,4 +48,5 @@ __all__ = [
     "Approval",
     "Alert",
     "AuditEvent",
+    "ApiKey",
 ]

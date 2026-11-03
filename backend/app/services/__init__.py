@@ -41,6 +41,21 @@ from app.services.pep_gateway_service import (
     PEPGatewayService,
     pep_gateway_service,
 )
+from app.services.audit_service import (
+    AuditService,
+    audit_service,
+    log_audit_event,
+)
+from app.services.analytics_service import (
+    AnalyticsService,
+    analytics_service,
+    get_overview,
+    get_timeseries,
+)
+from app.services.api_key_service import (
+    ApiKeyService,
+    api_key_service,
+)
 
 __all__ = [
     "OrganizationService",
@@ -64,4 +79,13 @@ __all__ = [
     "sanitizer_service",
     "PEPGatewayService",
     "pep_gateway_service",
+    "AuditService",
+    "audit_service",
+    "log_audit_event",
+    "AnalyticsService",
+    "analytics_service",
+    "get_overview",
+    "get_timeseries",
+    "ApiKeyService",
+    "api_key_service",
 ]

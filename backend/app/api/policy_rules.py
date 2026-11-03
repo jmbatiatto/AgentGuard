@@ -7,9 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_admin_user
 from app.core.database import get_db
+from app.models.enums import ActorType
 from app.models.user import User
 from app.schemas.policy_rule import PolicyRuleCreate, PolicyRuleRead, PolicyRuleUpdate
 from app.services.agent_service import agent_service
+from app.services.audit_service import audit_service
 from app.services.policy_rule_service import policy_rule_service
 from app.services.policy_service import policy_service
 from app.services.tool_action_service import tool_action_service
@@ -27,6 +29,7 @@ router = APIRouter(prefix="/policy-rules", tags=["Policy Rules"])
 )
 async def create_policy_rule(
     rule_in: PolicyRuleCreate,
+    current_admin: Optional[User] = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRuleRead:
     """Registra una regla validando integridad de política, acción de herramienta y agente opcional."""
@@ -68,7 +71,26 @@ async def create_policy_rule(
                 detail="El agente objetivo no pertenece a la misma organización de la política",
             )
 
-    return await policy_rule_service.create(db=db, rule_in=rule_in)
+    rule = await policy_rule_service.create(db=db, rule_in=rule_in)
+    actor_id = current_admin.id if current_admin else policy.organization_id
+    actor_type = ActorType.USER if current_admin else ActorType.SYSTEM
+
+    await audit_service.log_audit_event(
+        db=db,
+        organization_id=policy.organization_id,
+        actor_type=actor_type,
+        actor_id=actor_id,
+        event_type="POLICY_RULE_CREATED",
+        metadata={
+            "rule_id": str(rule.id),
+            "policy_id": str(rule.policy_id),
+            "tool_action_id": str(rule.tool_action_id),
+            "effect": str(rule.effect),
+            "priority": rule.priority,
+        },
+        description=f"Regla de política {rule.id} creada para acción {rule.tool_action_id}",
+    )
+    return rule
 
 
 @router.get(
@@ -152,6 +174,27 @@ async def update_policy_rule(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Regla de política con ID {rule_id} no encontrada",
         )
+
+    effective_org_id = org_id or (updated.policy.organization_id if (hasattr(updated, "policy") and updated.policy) else None)
+    actor_id = current_admin.id if current_admin else (effective_org_id or rule_id)
+    actor_type = ActorType.USER if current_admin else ActorType.SYSTEM
+
+    if effective_org_id:
+        await audit_service.log_audit_event(
+            db=db,
+            organization_id=effective_org_id,
+            actor_type=actor_type,
+            actor_id=actor_id,
+            event_type="POLICY_RULE_UPDATED",
+            metadata={
+                "rule_id": str(updated.id),
+                "policy_id": str(updated.policy_id),
+                "priority": updated.priority,
+                "effect": str(updated.effect),
+            },
+            description=f"Regla de política {updated.id} actualizada",
+        )
+
     return updated
 
 
@@ -177,5 +220,20 @@ async def delete_policy_rule(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Regla de política con ID {rule_id} no encontrada",
+        )
+
+    if org_id:
+        actor_id = current_admin.id if current_admin else org_id
+        actor_type = ActorType.USER if current_admin else ActorType.SYSTEM
+        await audit_service.log_audit_event(
+            db=db,
+            organization_id=org_id,
+            actor_type=actor_type,
+            actor_id=actor_id,
+            event_type="POLICY_RULE_DELETED",
+            metadata={
+                "rule_id": str(rule_id),
+            },
+            description=f"Regla de política {rule_id} eliminada",
         )
 

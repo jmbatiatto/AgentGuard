@@ -45,6 +45,23 @@ from app.schemas.alert import (
     AlertRead,
     AlertUpdateRequest,
 )
+from app.schemas.audit_event import (
+    AuditEventBase,
+    AuditEventCreate,
+    AuditEventResponse,
+    AuditEventPagination,
+)
+from app.schemas.analytics import (
+    AnalyticsOverviewResponse,
+    TimeseriesPoint,
+    AnalyticsTimeseriesResponse,
+)
+from app.schemas.api_key import (
+    ApiKeyCreate,
+    ApiKeyResponse,
+    ApiKeyCreatedResponse,
+    ApiKeyRead,
+)
 
 __all__ = [
     "BaseSchema",
@@ -72,4 +89,15 @@ __all__ = [
     "ApprovalDetailRead",
     "AlertRead",
     "AlertUpdateRequest",
+    "AuditEventBase",
+    "AuditEventCreate",
+    "AuditEventResponse",
+    "AuditEventPagination",
+    "AnalyticsOverviewResponse",
+    "TimeseriesPoint",
+    "AnalyticsTimeseriesResponse",
+    "ApiKeyCreate",
+    "ApiKeyResponse",
+    "ApiKeyCreatedResponse",
+    "ApiKeyRead",
 ]

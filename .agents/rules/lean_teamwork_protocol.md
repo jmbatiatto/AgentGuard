@@ -26,3 +26,4 @@ Regla obligatoria para toda ejecución de `/teamwork`, sub-agentes o tareas mult
   ```
   Esto reduce la salida de 150 líneas verborrágicas a 2 líneas limpias en la ventana de contexto.
 - **Auditoría Quirúrgica sobre `git diff`:** El Auditor solo audita el `git diff` acumulado (verificando anti-hardcoding, multi-tenant y seguridad) y re-ejecuta en modo silencioso los 4 escenarios de la demo (`test_gateway_scenarios.py`) antes de emitir `VICTORY CONFIRMED`.
+

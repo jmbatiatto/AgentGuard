@@ -29,7 +29,14 @@ import type {
   RiskLevel,
   UserMember,
   UserRole,
+  GatewayApiKey,
+  AnalyticsOverview,
+  TimeseriesPoint,
+  AnalyticsTimeseries,
+  OrganizationSettings,
 } from '../types/domain';
+
+export type { OrganizationSettings };
 
 // Constantes Deterministas de la Demo Oficial (Acme Corp)
 export const DEMO_IDS = {
@@ -1189,6 +1196,254 @@ class AgentGuardApiClient {
   }
 
   /**
+   * Obtiene las credenciales de API Key de la organización para autenticación en el Gateway PEP
+   */
+  async getApiKeys(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<GatewayApiKey[]> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/api-keys?organization_id=${orgId}&skip=0&limit=100`, {
+        headers: {
+          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
+          'X-Organization-Id': orgId,
+        },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          return data.map((item: any) => ({
+            id: String(item.id),
+            name: item.name,
+            prefix: item.key_prefix,
+            secretMasked: `${item.key_prefix}••••••••••••••••••••••••`,
+            role: 'gateway_client',
+            createdAt: item.created_at,
+            lastUsedAt: 'Nunca',
+            isActive: item.is_active,
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] No se pudo obtener API Keys del backend:', err);
+    }
+    return [
+      {
+        id: 'key_prod_01',
+        name: 'PEP-Production-Agent-Interceptor',
+        prefix: 'ag_live_7a3d9b01',
+        secretMasked: 'ag_live_7a3d9b01••••••••••••••••••••••••',
+        role: 'gateway_client',
+        createdAt: '2026-03-01T12:00:00Z',
+        lastUsedAt: 'Hace 2 minutos',
+        isActive: true,
+      },
+      {
+        id: 'key_sandbox_02',
+        name: 'CI/CD-Integration-Test-Key',
+        prefix: 'ag_test_88f2a014',
+        secretMasked: 'ag_test_88f2a014••••••••••••••••••••••••',
+        role: 'gateway_client',
+        createdAt: '2026-03-10T09:30:00Z',
+        lastUsedAt: 'Hace 4 horas',
+        isActive: true,
+      },
+    ];
+  }
+
+  /**
+   * Genera una nueva API Key corporativa en el backend FastAPI y retorna el secreto en plano una única vez
+   */
+  async createApiKey(payload: {
+    name: string;
+    organization_id?: string;
+    expires_in_days?: number;
+  }): Promise<{ key: GatewayApiKey; rawKey: string }> {
+    const orgId = payload.organization_id || DEMO_IDS.ORG_ACME_ID;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/api-keys`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
+          'X-Organization-Id': orgId,
+        },
+        body: JSON.stringify({
+          name: payload.name,
+          organization_id: orgId,
+          expires_in_days: payload.expires_in_days ?? null,
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const key: GatewayApiKey = {
+          id: String(data.id),
+          name: data.name,
+          prefix: data.key_prefix,
+          secretMasked: `${data.key_prefix}••••••••••••••••••••••••`,
+          rawKey: data.api_key,
+          role: 'gateway_client',
+          createdAt: data.created_at,
+          lastUsedAt: 'Nunca',
+          isActive: data.is_active,
+        };
+        return { key, rawKey: data.api_key };
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al generar API Key en backend:', err);
+    }
+
+    // Fallback local resiliente si el backend está offline
+    const rawHex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    const fallbackRawKey = `ag_live_${rawHex}`;
+    const fallbackPrefix = fallbackRawKey.slice(0, 12);
+    const fallbackKey: GatewayApiKey = {
+      id: `key_${Date.now()}`,
+      name: payload.name,
+      prefix: fallbackPrefix,
+      secretMasked: `${fallbackPrefix}••••••••••••••••••••••••`,
+      rawKey: fallbackRawKey,
+      role: 'gateway_client',
+      createdAt: new Date().toISOString(),
+      lastUsedAt: 'Nunca',
+      isActive: true,
+    };
+    return { key: fallbackKey, rawKey: fallbackRawKey };
+  }
+
+  /**
+   * Revoca lógicamente una API Key de la organización (DELETE /api/v1/api-keys/{id})
+   */
+  async revokeApiKey(keyId: string, orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/api-keys/${keyId}?organization_id=${orgId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
+          'X-Organization-Id': orgId,
+        },
+        signal: AbortSignal.timeout(5000),
+      });
+      return res.ok || res.status === 200 || res.status === 204;
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al revocar API Key en backend:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Obtiene métricas agregadas globales y KPIs (/api/v1/analytics/overview)
+   */
+  async getAnalyticsOverview(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<AnalyticsOverview> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/analytics/overview?organization_id=${orgId}`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          total_executions: typeof data.total_executions === 'number' ? data.total_executions : 0,
+          allow_count: typeof data.allow_count === 'number' ? data.allow_count : 0,
+          deny_count: typeof data.deny_count === 'number' ? data.deny_count : 0,
+          require_approval_count: typeof data.require_approval_count === 'number' ? data.require_approval_count : 0,
+          avg_latency_ms: typeof data.avg_latency_ms === 'number' ? data.avg_latency_ms : 0,
+          active_incident_count: typeof data.active_incident_count === 'number' ? data.active_incident_count : 0,
+        };
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al obtener analítica general del backend:', err);
+    }
+
+    const fallbackActivity = [
+      { allowed: 1, denied: 0 }, { allowed: 0, denied: 0 }, { allowed: 0, denied: 0 },
+      { allowed: 0, denied: 0 }, { allowed: 1, denied: 0 }, { allowed: 2, denied: 0 },
+      { allowed: 3, denied: 0 }, { allowed: 5, denied: 1 }, { allowed: 7, denied: 1 },
+      { allowed: 9, denied: 0 }, { allowed: 12, denied: 1 }, { allowed: 15, denied: 2 },
+      { allowed: 14, denied: 1 }, { allowed: 16, denied: 1 }, { allowed: 18, denied: 2 },
+      { allowed: 15, denied: 1 }, { allowed: 11, denied: 0 }, { allowed: 8, denied: 1 },
+      { allowed: 5, denied: 0 }, { allowed: 4, denied: 0 }, { allowed: 6, denied: 1 },
+      { allowed: 7, denied: 0 }, { allowed: 4, denied: 0 }, { allowed: 3, denied: 0 },
+    ];
+    const totalAllowed = fallbackActivity.reduce((acc, curr) => acc + curr.allowed, 0);
+    const totalDenied = fallbackActivity.reduce((acc, curr) => acc + curr.denied, 0);
+
+    return {
+      total_executions: totalAllowed + totalDenied,
+      allow_count: totalAllowed,
+      deny_count: totalDenied,
+      require_approval_count: 1,
+      avg_latency_ms: 16.8,
+      active_incident_count: 1,
+    };
+  }
+
+  /**
+   * Obtiene la serie temporal de actividad horaria (/api/v1/analytics/timeseries)
+   */
+  async getAnalyticsTimeseries(
+    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    rangeStr: string = '24h'
+  ): Promise<AnalyticsTimeseries> {
+    try {
+      const res = await fetch(
+        `${this.baseUrl}/api/v1/analytics/timeseries?organization_id=${orgId}&range=${encodeURIComponent(rangeStr)}`,
+        {
+          signal: AbortSignal.timeout(5000),
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.points)) {
+          return {
+            range: data.range || rangeStr,
+            points: data.points.map((p: any) => ({
+              timestamp: p.timestamp,
+              executions: typeof p.executions === 'number' ? p.executions : 0,
+              allowed: typeof p.allowed === 'number' ? p.allowed : 0,
+              denied: typeof p.denied === 'number' ? p.denied : 0,
+              require_approval: typeof p.require_approval === 'number' ? p.require_approval : 0,
+              avg_latency_ms: typeof p.avg_latency_ms === 'number' ? p.avg_latency_ms : 0,
+            })),
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al obtener serie temporal del backend:', err);
+    }
+
+    const fallbackActivity = [
+      { allowed: 1, denied: 0 }, { allowed: 0, denied: 0 }, { allowed: 0, denied: 0 },
+      { allowed: 0, denied: 0 }, { allowed: 1, denied: 0 }, { allowed: 2, denied: 0 },
+      { allowed: 3, denied: 0 }, { allowed: 5, denied: 1 }, { allowed: 7, denied: 1 },
+      { allowed: 9, denied: 0 }, { allowed: 12, denied: 1 }, { allowed: 15, denied: 2 },
+      { allowed: 14, denied: 1 }, { allowed: 16, denied: 1 }, { allowed: 18, denied: 2 },
+      { allowed: 15, denied: 1 }, { allowed: 11, denied: 0 }, { allowed: 8, denied: 1 },
+      { allowed: 5, denied: 0 }, { allowed: 4, denied: 0 }, { allowed: 6, denied: 1 },
+      { allowed: 7, denied: 0 }, { allowed: 4, denied: 0 }, { allowed: 3, denied: 0 },
+    ];
+
+    const fallbackPoints: TimeseriesPoint[] = Array.from({ length: 24 }).map((_, i) => {
+      const d = new Date(Date.now() - (23 - i) * 3600000);
+      d.setMinutes(0, 0, 0);
+      const act = fallbackActivity[i] || { allowed: 0, denied: 0 };
+      return {
+        timestamp: d.toISOString(),
+        executions: act.allowed + act.denied,
+        allowed: act.allowed,
+        denied: act.denied,
+        require_approval: 0,
+        avg_latency_ms: act.allowed > 0 ? 16.8 : 0,
+      };
+    });
+
+    return {
+      range: rangeStr,
+      points: fallbackPoints,
+    };
+  }
+
+  /**
    * Restablece los datos de PostgreSQL y Redis al estado inicial de la demo
    */
   async resetDemoData(): Promise<{ success: boolean; message: string }> {
@@ -1207,6 +1462,78 @@ class AgentGuardApiClient {
       console.warn('[AgentGuard API] Error invocando reset de demo:', err);
       return { success: false, message: 'No se pudo conectar con el endpoint de reset' };
     }
+  }
+
+  /**
+   * Obtiene la configuración de gobernanza y postura Fail-Closed de la organización
+   */
+  async getOrganizationSettings(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<OrganizationSettings> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/organizations/${orgId}/settings`, {
+        headers: {
+          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
+          'X-Organization-Id': orgId,
+        },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          fail_closed: typeof data.fail_closed === 'boolean' ? data.fail_closed : true,
+          mask_sensitive: typeof data.mask_sensitive === 'boolean' ? data.mask_sensitive : true,
+          max_autonomous_amount: typeof data.max_autonomous_amount === 'number' ? data.max_autonomous_amount : 5000,
+          retention_days: typeof data.retention_days === 'number' ? data.retention_days : 90,
+        };
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] No se pudo obtener la configuración de gobernanza del backend:', err);
+    }
+
+    return {
+      fail_closed: true,
+      mask_sensitive: true,
+      max_autonomous_amount: 5000,
+      retention_days: 90,
+    };
+  }
+
+  /**
+   * Actualiza parcialmente la configuración de gobernanza de la organización
+   */
+  async updateOrganizationSettings(
+    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    update: Partial<OrganizationSettings>
+  ): Promise<OrganizationSettings> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/organizations/${orgId}/settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
+          'X-Organization-Id': orgId,
+        },
+        body: JSON.stringify(update),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          fail_closed: typeof data.fail_closed === 'boolean' ? data.fail_closed : true,
+          mask_sensitive: typeof data.mask_sensitive === 'boolean' ? data.mask_sensitive : true,
+          max_autonomous_amount: typeof data.max_autonomous_amount === 'number' ? data.max_autonomous_amount : 5000,
+          retention_days: typeof data.retention_days === 'number' ? data.retention_days : 90,
+        };
+      }
+    } catch (err) {
+      console.warn('[AgentGuard API] Error al actualizar la configuración de gobernanza en el backend:', err);
+    }
+
+    return {
+      fail_closed: update.fail_closed ?? true,
+      mask_sensitive: update.mask_sensitive ?? true,
+      max_autonomous_amount: update.max_autonomous_amount ?? 5000,
+      retention_days: update.retention_days ?? 90,
+    };
   }
 }
 

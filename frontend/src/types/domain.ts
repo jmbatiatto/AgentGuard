@@ -150,6 +150,7 @@ export interface GatewayApiKey {
   role: string;
   createdAt: string;
   lastUsedAt?: string;
+  isActive?: boolean;
 }
 
 export interface SecurityStanceSettings {
@@ -160,3 +161,34 @@ export interface SecurityStanceSettings {
   siemWebhookUrl: string;
   siemFormat: 'SPLUNK' | 'DATADOG' | 'ELASTIC' | 'GENERIC_JSON';
 }
+
+export interface AnalyticsOverview {
+  total_executions: number;
+  allow_count: number;
+  deny_count: number;
+  require_approval_count: number;
+  avg_latency_ms: number;
+  active_incident_count: number;
+}
+
+export interface TimeseriesPoint {
+  timestamp: string;
+  executions: number;
+  allowed: number;
+  denied: number;
+  require_approval: number;
+  avg_latency_ms: number;
+}
+
+export interface AnalyticsTimeseries {
+  range: string;
+  points: TimeseriesPoint[];
+}
+
+export interface OrganizationSettings {
+  fail_closed: boolean;
+  mask_sensitive: boolean;
+  max_autonomous_amount: number;
+  retention_days: number;
+}
+

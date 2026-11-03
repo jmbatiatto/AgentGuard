@@ -1,12 +1,20 @@
 """Router de API REST para la gestión de Organizaciones (Tenants)."""
 
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import require_admin_user
 from app.core.database import get_db
-from app.schemas.organization import OrganizationCreate, OrganizationRead
+from app.models.enums import ActorType
+from app.models.user import User
+from app.schemas.organization import (
+    OrganizationCreate,
+    OrganizationRead,
+    OrganizationSettings,
+    OrganizationSettingsUpdate,
+)
 from app.services.organization_service import organization_service
 
 router = APIRouter(prefix="/organizations", tags=["Organizations"])
@@ -72,3 +80,69 @@ async def get_organization(
             detail=f"Organización con ID {org_id} no encontrada",
         )
     return org
+
+
+@router.get(
+    "/{org_id}/settings",
+    response_model=OrganizationSettings,
+    status_code=status.HTTP_200_OK,
+    summary="Obtener Configuración de Gobernanza de la Organización",
+    description="Retorna la configuración de gobernanza, postura Fail-Closed y parámetros de retención del tenant.",
+)
+async def get_organization_settings(
+    org_id: UUID,
+    current_admin: Optional[User] = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> OrganizationSettings:
+    """Retorna la configuración de gobernanza o 404 si la organización no existe."""
+    if current_admin and current_admin.organization_id != org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene autorización para consultar la configuración de otra organización",
+        )
+    settings = await organization_service.get_settings(db=db, org_id=org_id)
+    if settings is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Organización con ID {org_id} no encontrada",
+        )
+    return settings
+
+
+@router.patch(
+    "/{org_id}/settings",
+    response_model=OrganizationSettings,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar Configuración de Gobernanza de la Organización",
+    description="Actualiza parcialmente la configuración de gobernanza y emite evento de auditoría forense.",
+)
+async def update_organization_settings(
+    org_id: UUID,
+    settings_in: OrganizationSettingsUpdate,
+    current_admin: Optional[User] = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> OrganizationSettings:
+    """Actualiza la configuración de gobernanza del tenant."""
+    if current_admin and current_admin.organization_id != org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene autorización para modificar la configuración de otra organización",
+        )
+
+    actor_id = current_admin.id if current_admin else None
+    actor_type = ActorType.USER if current_admin else None
+
+    updated = await organization_service.update_settings(
+        db=db,
+        org_id=org_id,
+        update_data=settings_in,
+        actor_id=actor_id,
+        actor_type=actor_type,
+    )
+    if updated is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Organización con ID {org_id} no encontrada",
+        )
+    return updated
+

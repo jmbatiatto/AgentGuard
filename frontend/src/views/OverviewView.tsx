@@ -16,8 +16,70 @@ import {
 import { Header } from '../components/Header';
 import { api, DEMO_IDS } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
-import type { NavView, SecurityAlert, ExecutionTrace, AlertSeverity } from '../types/domain';
+import type {
+  NavView,
+  SecurityAlert,
+  ExecutionTrace,
+  AlertSeverity,
+  AnalyticsTimeseries,
+} from '../types/domain';
 import { DECISION_LABELS } from '../constants/labels';
+
+/**
+ * Convierte un arreglo de puntos (x, y) en una curva Bezier cúbica suave (Catmull-Rom spline)
+ * acotada entre límites verticales para graficar sin oscilaciones anómalas.
+ */
+function generateSplinePath(
+  pts: { x: number; y: number }[],
+  minY: number = 20,
+  maxY: number = 190
+): string {
+  if (!pts || pts.length === 0) return '';
+  if (pts.length === 1) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  if (pts.length === 2) {
+    return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)} L ${pts[1].x.toFixed(1)} ${pts[1].y.toFixed(1)}`;
+  }
+
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i === 0 ? 0 : i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = Math.min(maxY, Math.max(minY, p1.y + (p2.y - p0.y) / 6));
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = Math.min(maxY, Math.max(minY, p2.y - (p3.y - p1.y) / 6));
+
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+/**
+ * Formatea valores numéricos para las marcas del eje Y (ej. 1500 -> '1.5k')
+ */
+function formatTick(val: number): string {
+  if (val >= 1000) {
+    const k = val / 1000;
+    return `${k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)}k`;
+  }
+  return `${val}`;
+}
+
+/**
+ * Extrae y formatea la hora en formato HH:00 en zona horaria local
+ */
+function formatHourLabel(isoStr?: string): string {
+  if (!isoStr) return '00:00';
+  try {
+    const d = new Date(isoStr);
+    return `${String(d.getHours()).padStart(2, '0')}:00`;
+  } catch {
+    return '00:00';
+  }
+}
 
 export interface OverviewStats {
   activeAgents: number;
@@ -201,38 +263,50 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
   const [recentExecutions, setRecentExecutions] = useState<ExecutionTrace[]>([]);
   const [backendHealth, setBackendHealth] = useState<BackendHealthState | null>(null);
   const [stats, setStats] = useState<OverviewStats | null>(null);
+  const [timeseries, setTimeseries] = useState<AnalyticsTimeseries | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isBackendReady, setIsBackendReady] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadOverviewData = async () => {
     setIsRefreshing(true);
     try {
-      const [health, alertsData, executionsData, agentsData, toolsData, policiesData] = await Promise.all([
+      const [
+        health,
+        alertsData,
+        executionsData,
+        agentsData,
+        toolsData,
+        policiesData,
+        analyticsOverview,
+        timeseriesData,
+      ] = await Promise.all([
         api.checkHealth(),
         api.getAlerts(),
         api.getExecutions(),
         api.getAgents(),
         api.getTools(),
         api.getPolicies(),
+        api.getAnalyticsOverview(),
+        api.getAnalyticsTimeseries(),
       ]);
 
       setBackendHealth(health ?? { isOnline: false, status: 'offline' });
       setAlerts(alertsData ?? []);
       setRecentExecutions(executionsData ? executionsData.slice(0, 5) : []);
+      setTimeseries(timeseriesData ?? null);
 
-      const realExecCount = executionsData ? executionsData.length : 0;
-      const realBlockedCount = executionsData ? executionsData.filter(e => e.decision === 'DENY').length : 0;
-      const realAllowedCount = executionsData ? executionsData.filter(e => e.decision === 'ALLOW').length : 0;
+      const realExecCount = analyticsOverview ? analyticsOverview.total_executions : (executionsData ? executionsData.length : 0);
+      const realBlockedCount = analyticsOverview ? analyticsOverview.deny_count : (executionsData ? executionsData.filter(e => e.decision === 'DENY').length : 0);
+      const realAllowedCount = analyticsOverview ? analyticsOverview.allow_count : (executionsData ? executionsData.filter(e => e.decision === 'ALLOW').length : 0);
       const realActiveAgents = agentsData ? agentsData.filter(a => a.status === 'ACTIVE').length : 0;
       const realTotalTools = toolsData ? toolsData.length : 0;
       const realActivePolicies = policiesData ? policiesData.filter(p => p.status === 'Active').length : 0;
-
-      const totalLatency = executionsData && executionsData.length > 0
-        ? executionsData.reduce((acc, curr) => acc + (curr.latencyMs || 0), 0)
-        : 0;
-      const calculatedAvgLatency = realExecCount > 0
-        ? Number((totalLatency / realExecCount).toFixed(1))
-        : 0;
+      const realAvgLatency = analyticsOverview && typeof analyticsOverview.avg_latency_ms === 'number'
+        ? Number(analyticsOverview.avg_latency_ms.toFixed(1))
+        : (executionsData && executionsData.length > 0
+          ? Number((executionsData.reduce((acc, curr) => acc + (curr.latencyMs || 0), 0) / executionsData.length).toFixed(1))
+          : 0);
 
       setStats({
         activeAgents: realActiveAgents,
@@ -241,7 +315,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         totalExecutions: realExecCount,
         blockedActions: realBlockedCount,
         allowedActions: realAllowedCount,
-        avgLatencyMs: calculatedAvgLatency,
+        avgLatencyMs: realAvgLatency,
       });
     } catch (err) {
       console.warn('[OverviewView] Error sincronizando métricas del backend:', err);
@@ -307,6 +381,19 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         allowedActions: execData.decision === 'ALLOW' ? prev.allowedActions + 1 : prev.allowedActions,
         blockedActions: execData.decision === 'DENY' ? prev.blockedActions + 1 : prev.blockedActions,
       } : null);
+
+      setTimeseries(prev => {
+        if (!prev || !prev.points || prev.points.length === 0) return prev;
+        const newPoints = [...prev.points];
+        const lastIdx = newPoints.length - 1;
+        const lastPoint = { ...newPoints[lastIdx] };
+        lastPoint.executions += 1;
+        if (execData.decision === 'ALLOW') lastPoint.allowed += 1;
+        if (execData.decision === 'DENY') lastPoint.denied += 1;
+        if (execData.decision === 'REQUIRE_APPROVAL') lastPoint.require_approval += 1;
+        newPoints[lastIdx] = lastPoint;
+        return { ...prev, points: newPoints };
+      });
     },
   });
 
@@ -423,7 +510,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             </div>
             <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalExecutions.toLocaleString()}</div>
             <div style={{ fontSize: '11px', color: '#818CF8', fontWeight: 500 }}>
-              {stats.allowedActions.toLocaleString()} permitidas sin problemas
+              {stats.allowedActions.toLocaleString()} permitidas ({stats.avgLatencyMs > 0 ? `${stats.avgLatencyMs} ms prom.` : 'tiempo real'})
             </div>
           </div>
 
@@ -498,43 +585,196 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             </div>
 
             {/* SVG Interactive Spline Graph */}
-            <div style={{ flex: 1, height: '220px', position: 'relative', marginTop: '10px' }}>
-              <svg viewBox="0 0 700 200" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-                <line x1="40" y1="20" x2="680" y2="20" stroke="var(--border-subtle)" strokeDasharray="3 3" />
-                <line x1="40" y1="80" x2="680" y2="80" stroke="var(--border-subtle)" strokeDasharray="3 3" />
-                <line x1="40" y1="140" x2="680" y2="140" stroke="var(--border-subtle)" strokeDasharray="3 3" />
-                <line x1="40" y1="190" x2="680" y2="190" stroke="var(--border-subtle)" />
+            {(() => {
+              const points = timeseries?.points && timeseries.points.length > 0 ? timeseries.points : [];
+              const numPoints = points.length;
 
-                <text x="10" y="24" fill="#64748B" fontSize="10">1.5k</text>
-                <text x="10" y="84" fill="#64748B" fontSize="10">1k</text>
-                <text x="10" y="144" fill="#64748B" fontSize="10">500</text>
-                <text x="25" y="194" fill="#64748B" fontSize="10">0</text>
+              const X_MIN = 40;
+              const X_MAX = 680;
+              const Y_TOP = 25;
+              const Y_BASELINE = 190;
+              const PLOT_HEIGHT = Y_BASELINE - Y_TOP; // 165px
 
-                <path
-                  d="M 50 160 Q 150 140 250 110 T 450 70 T 650 60"
-                  fill="none"
-                  stroke="#38BDF8"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
+              const maxAllowed = points.length > 0 ? Math.max(...points.map(p => p.allowed), 0) : 0;
+              const maxDenied = points.length > 0 ? Math.max(...points.map(p => p.denied), 0) : 0;
+              const maxObserved = Math.max(maxAllowed, maxDenied);
 
-                <path
-                  d="M 50 180 Q 150 175 250 170 T 450 165 T 650 175"
-                  fill="none"
-                  stroke="#EF4444"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
+              let yScaleMax = 10;
+              if (maxObserved > 1000) {
+                yScaleMax = Math.ceil(maxObserved / 500) * 500;
+              } else if (maxObserved > 500) {
+                yScaleMax = 1000;
+              } else if (maxObserved > 200) {
+                yScaleMax = 500;
+              } else if (maxObserved > 100) {
+                yScaleMax = 200;
+              } else if (maxObserved > 50) {
+                yScaleMax = 100;
+              } else if (maxObserved > 20) {
+                yScaleMax = 50;
+              } else if (maxObserved > 10) {
+                yScaleMax = 20;
+              } else if (maxObserved > 0) {
+                yScaleMax = Math.max(maxObserved + 2, 5);
+              }
 
-                <text x="45" y="208" fill="#64748B" fontSize="11">00:00</text>
-                <text x="145" y="208" fill="#64748B" fontSize="11">04:00</text>
-                <text x="245" y="208" fill="#64748B" fontSize="11">08:00</text>
-                <text x="345" y="208" fill="#64748B" fontSize="11">12:00</text>
-                <text x="445" y="208" fill="#64748B" fontSize="11">16:00</text>
-                <text x="545" y="208" fill="#64748B" fontSize="11">20:00</text>
-                <text x="635" y="208" fill="#64748B" fontSize="11">Ahora ⚡</text>
-              </svg>
-            </div>
+              const allowedPts = points.map((p, i) => {
+                const x = numPoints > 1 ? X_MIN + (i / (numPoints - 1)) * (X_MAX - X_MIN) : (X_MIN + X_MAX) / 2;
+                const ratio = yScaleMax > 0 ? Math.min(1, Math.max(0, p.allowed / yScaleMax)) : 0;
+                const y = Y_BASELINE - ratio * PLOT_HEIGHT;
+                return { x, y };
+              });
+
+              const deniedPts = points.map((p, i) => {
+                const x = numPoints > 1 ? X_MIN + (i / (numPoints - 1)) * (X_MAX - X_MIN) : (X_MIN + X_MAX) / 2;
+                const ratio = yScaleMax > 0 ? Math.min(1, Math.max(0, p.denied / yScaleMax)) : 0;
+                const y = Y_BASELINE - ratio * PLOT_HEIGHT;
+                return { x, y };
+              });
+
+              const allowedPath = generateSplinePath(allowedPts, Y_TOP, Y_BASELINE);
+              const deniedPath = generateSplinePath(deniedPts, Y_TOP, Y_BASELINE);
+
+              const allowedAreaPath = allowedPts.length > 1
+                ? `${allowedPath} L ${allowedPts[allowedPts.length - 1].x.toFixed(1)} ${Y_BASELINE} L ${allowedPts[0].x.toFixed(1)} ${Y_BASELINE} Z`
+                : '';
+
+              const xLabelIndices = [0, 4, 8, 12, 16, 20, numPoints > 0 ? numPoints - 1 : 23];
+
+              return (
+                <div style={{ flex: 1, height: '220px', position: 'relative', marginTop: '10px' }}>
+                  <svg
+                    viewBox="0 0 700 220"
+                    style={{ width: '100%', height: '100%', overflow: 'visible' }}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                  >
+                    <defs>
+                      <linearGradient id="allowedGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.22" />
+                        <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Líneas Guía Horizontales */}
+                    <line x1="40" y1="25" x2="680" y2="25" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                    <line x1="40" y1="80" x2="680" y2="80" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                    <line x1="40" y1="135" x2="680" y2="135" stroke="var(--border-subtle)" strokeDasharray="3 3" />
+                    <line x1="40" y1="190" x2="680" y2="190" stroke="var(--border-subtle)" />
+
+                    {/* Etiquetas Eje Y */}
+                    <text x="10" y="29" fill="#64748B" fontSize="10">{formatTick(yScaleMax)}</text>
+                    <text x="10" y="84" fill="#64748B" fontSize="10">{formatTick(Math.round((yScaleMax * 2) / 3))}</text>
+                    <text x="10" y="139" fill="#64748B" fontSize="10">{formatTick(Math.round(yScaleMax / 3))}</text>
+                    <text x="25" y="194" fill="#64748B" fontSize="10">0</text>
+
+                    {/* Área con gradiente bajo curva de acciones permitidas */}
+                    {allowedAreaPath && (
+                      <path d={allowedAreaPath} fill="url(#allowedGradient)" />
+                    )}
+
+                    {/* Curva de acciones permitidas (Cyan / Azul) */}
+                    {allowedPath && (
+                      <path
+                        d={allowedPath}
+                        fill="none"
+                        stroke="#38BDF8"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                      />
+                    )}
+
+                    {/* Curva de acciones bloqueadas / detenidas (Rojo) */}
+                    {deniedPath && (
+                      <path
+                        d={deniedPath}
+                        fill="none"
+                        stroke="#EF4444"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                    )}
+
+                    {/* Línea vertical y puntos en estado hover */}
+                    {hoveredIndex !== null && points[hoveredIndex] && (
+                      <>
+                        <line
+                          x1={allowedPts[hoveredIndex].x}
+                          y1="25"
+                          x2={allowedPts[hoveredIndex].x}
+                          y2="190"
+                          stroke="rgba(255, 255, 255, 0.25)"
+                          strokeDasharray="2 2"
+                        />
+                        <circle
+                          cx={allowedPts[hoveredIndex].x}
+                          cy={allowedPts[hoveredIndex].y}
+                          r="4"
+                          fill="#38BDF8"
+                          stroke="#0F172A"
+                          strokeWidth="2"
+                        />
+                        <circle
+                          cx={deniedPts[hoveredIndex].x}
+                          cy={deniedPts[hoveredIndex].y}
+                          r="4"
+                          fill="#EF4444"
+                          stroke="#0F172A"
+                          strokeWidth="2"
+                        />
+
+                        {/* Tooltip flotante con métricas del bucket */}
+                        <g transform={`translate(${Math.min(540, Math.max(60, allowedPts[hoveredIndex].x - 70))}, 6)`}>
+                          <rect width="140" height="24" rx="6" fill="#1E293B" stroke="var(--border-subtle)" />
+                          <text x="70" y="16" fill="var(--text-primary)" fontSize="10" textAnchor="middle" fontWeight="600">
+                            {formatHourLabel(points[hoveredIndex].timestamp)}: {points[hoveredIndex].allowed} aut. / {points[hoveredIndex].denied} bloq.
+                          </text>
+                        </g>
+                      </>
+                    )}
+
+                    {/* Zonas interactivas transparentes para cada bucket horario */}
+                    {points.map((_, idx) => {
+                      const x = numPoints > 1 ? X_MIN + (idx / (numPoints - 1)) * (X_MAX - X_MIN) : 360;
+                      const colWidth = numPoints > 1 ? (X_MAX - X_MIN) / (numPoints - 1) : 24;
+                      return (
+                        <rect
+                          key={idx}
+                          x={x - colWidth / 2}
+                          y="20"
+                          width={colWidth}
+                          height="175"
+                          fill="transparent"
+                          style={{ cursor: 'pointer' }}
+                          onMouseEnter={() => setHoveredIndex(idx)}
+                        />
+                      );
+                    })}
+
+                    {/* Etiquetas Eje X */}
+                    {xLabelIndices.map(idx => {
+                      if (idx >= numPoints) return null;
+                      const xPos = numPoints > 1 ? X_MIN + (idx / (numPoints - 1)) * (X_MAX - X_MIN) : 360;
+                      const isLast = idx === numPoints - 1;
+                      const label = isLast ? 'Ahora ⚡' : formatHourLabel(points[idx]?.timestamp);
+                      const anchor = idx === 0 ? 'start' : isLast ? 'end' : 'middle';
+
+                      return (
+                        <text
+                          key={idx}
+                          x={xPos}
+                          y="210"
+                          fill="#64748B"
+                          fontSize="11"
+                          textAnchor={anchor}
+                        >
+                          {label}
+                        </text>
+                      );
+                    })}
+                  </svg>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Panel Derecho: Alertas de Seguridad */}

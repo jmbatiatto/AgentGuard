@@ -7,9 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_admin_user
 from app.core.database import get_db
+from app.models.enums import ActorType
 from app.models.user import User
 from app.schemas.policy import PolicyCreate, PolicyRead, PolicyUpdate
 from app.schemas.policy_rule import PolicyRuleCreateInPolicy, PolicyRuleRead, PolicyRuleUpdate
+from app.services.audit_service import audit_service
 from app.services.organization_service import organization_service
 from app.services.policy_rule_service import policy_rule_service
 from app.services.policy_service import policy_service
@@ -26,6 +28,7 @@ router = APIRouter(prefix="/policies", tags=["Policies"])
 )
 async def create_policy(
     policy_in: PolicyCreate,
+    current_admin: Optional[User] = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRead:
     """Crea una política validando existencia de la organización propietaria."""
@@ -36,7 +39,25 @@ async def create_policy(
             detail=f"Organización con ID {policy_in.organization_id} no encontrada",
         )
 
-    return await policy_service.create(db=db, policy_in=policy_in)
+    policy = await policy_service.create(db=db, policy_in=policy_in)
+    actor_id = current_admin.id if current_admin else policy.organization_id
+    actor_type = ActorType.USER if current_admin else ActorType.SYSTEM
+
+    await audit_service.log_audit_event(
+        db=db,
+        organization_id=policy.organization_id,
+        actor_type=actor_type,
+        actor_id=actor_id,
+        event_type="POLICY_CREATED",
+        metadata={
+            "policy_id": str(policy.id),
+            "name": policy.name,
+            "priority": policy.priority,
+            "is_active": policy.is_active,
+        },
+        description=f"Política '{policy.name}' creada con prioridad {policy.priority}",
+    )
+    return policy
 
 
 @router.get(
@@ -104,6 +125,7 @@ async def get_policy(
 async def update_policy(
     policy_id: UUID,
     policy_in: PolicyUpdate,
+    current_admin: Optional[User] = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRead:
     """Actualiza una política existente o retorna 404 si no existe."""
@@ -113,6 +135,24 @@ async def update_policy(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Política con ID {policy_id} no encontrada",
         )
+
+    actor_id = current_admin.id if current_admin else updated.organization_id
+    actor_type = ActorType.USER if current_admin else ActorType.SYSTEM
+
+    await audit_service.log_audit_event(
+        db=db,
+        organization_id=updated.organization_id,
+        actor_type=actor_type,
+        actor_id=actor_id,
+        event_type="POLICY_UPDATED",
+        metadata={
+            "policy_id": str(updated.id),
+            "name": updated.name,
+            "priority": updated.priority,
+            "is_active": updated.is_active,
+        },
+        description=f"Política '{updated.name}' actualizada",
+    )
     return updated
 
 
@@ -124,15 +164,41 @@ async def update_policy(
 )
 async def delete_policy(
     policy_id: UUID,
+    current_admin: Optional[User] = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Elimina una política existente."""
+    policy = await policy_service.get_by_id(db=db, policy_id=policy_id)
+    if not policy:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Política con ID {policy_id} no encontrada",
+        )
+    org_id = policy.organization_id
+    policy_name = policy.name
+
     deleted = await policy_service.delete(db=db, policy_id=policy_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Política con ID {policy_id} no encontrada",
         )
+
+    actor_id = current_admin.id if current_admin else org_id
+    actor_type = ActorType.USER if current_admin else ActorType.SYSTEM
+
+    await audit_service.log_audit_event(
+        db=db,
+        organization_id=org_id,
+        actor_type=actor_type,
+        actor_id=actor_id,
+        event_type="POLICY_DELETED",
+        metadata={
+            "policy_id": str(policy_id),
+            "name": policy_name,
+        },
+        description=f"Política '{policy_name}' eliminada",
+    )
 
 
 @router.post(
@@ -150,12 +216,37 @@ async def create_policy_rule_in_policy(
 ) -> PolicyRuleRead:
     """Crea una regla determinista dentro de una política existente con blindaje anti-IA y aislamiento de tenant."""
     org_id = current_admin.organization_id if current_admin else None
-    return await policy_rule_service.create_rule_in_policy(
+    rule = await policy_rule_service.create_rule_in_policy(
         db=db,
         policy_id=policy_id,
         rule_in=rule_in,
         organization_id=org_id,
     )
+
+    effective_org_id = org_id
+    if not effective_org_id and hasattr(rule, "policy") and rule.policy:
+        effective_org_id = rule.policy.organization_id
+
+    if effective_org_id:
+        actor_id = current_admin.id if current_admin else effective_org_id
+        actor_type = ActorType.USER if current_admin else ActorType.SYSTEM
+
+        await audit_service.log_audit_event(
+            db=db,
+            organization_id=effective_org_id,
+            actor_type=actor_type,
+            actor_id=actor_id,
+            event_type="POLICY_RULE_CREATED",
+            metadata={
+                "rule_id": str(rule.id),
+                "policy_id": str(policy_id),
+                "tool_action_id": str(rule.tool_action_id),
+                "effect": str(rule.effect),
+                "priority": rule.priority,
+            },
+            description=f"Regla determinista creada en política {policy_id}",
+        )
+    return rule
 
 
 from app.api.policy_rules import (

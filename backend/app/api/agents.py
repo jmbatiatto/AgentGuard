@@ -13,7 +13,9 @@ from app.schemas.agent import (
     AgentToolCreate,
     AgentToolRead,
 )
+from app.models.enums import ActorType, AgentStatus
 from app.services.agent_service import agent_service
+from app.services.audit_service import audit_service
 from app.services.organization_service import organization_service
 from app.services.tool_service import tool_service
 from app.services.user_service import user_service
@@ -53,7 +55,21 @@ async def create_agent(
             detail="El usuario sponsor no pertenece a la organización especificada para el agente",
         )
 
-    return await agent_service.create(db=db, agent_in=agent_in)
+    agent = await agent_service.create(db=db, agent_in=agent_in)
+    await audit_service.log_audit_event(
+        db=db,
+        organization_id=agent.organization_id,
+        actor_type=ActorType.USER,
+        actor_id=agent.owner_user_id,
+        event_type="AGENT_CREATED",
+        metadata={
+            "agent_id": str(agent.id),
+            "name": agent.name,
+            "status": str(agent.status),
+        },
+        description=f"Agente de IA '{agent.name}' creado exitosamente",
+    )
+    return agent
 
 
 @router.get(
@@ -130,6 +146,29 @@ async def update_agent(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agente con ID {agent_id} no encontrado",
         )
+
+    event_type = "AGENT_UPDATED"
+    if agent_in.status is not None:
+        if agent_in.status == AgentStatus.SUSPENDED:
+            event_type = "AGENT_SUSPENDED"
+        elif agent_in.status == AgentStatus.REVOKED:
+            event_type = "AGENT_REVOKED"
+        elif agent_in.status == AgentStatus.ACTIVE:
+            event_type = "AGENT_ACTIVATED"
+
+    await audit_service.log_audit_event(
+        db=db,
+        organization_id=agent.organization_id,
+        actor_type=ActorType.USER,
+        actor_id=agent.owner_user_id,
+        event_type=event_type,
+        metadata={
+            "agent_id": str(agent.id),
+            "name": agent.name,
+            "status": str(agent.status),
+        },
+        description=f"Agente de IA '{agent.name}' actualizado ({event_type})",
+    )
     return agent
 
 
@@ -144,12 +183,35 @@ async def delete_agent(
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Elimina el agente de la base de datos."""
+    agent = await agent_service.get_by_id(db=db, agent_id=agent_id)
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agente con ID {agent_id} no encontrado",
+        )
+    org_id = agent.organization_id
+    owner_id = agent.owner_user_id
+    agent_name = agent.name
+
     deleted = await agent_service.delete(db=db, agent_id=agent_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agente con ID {agent_id} no encontrado",
         )
+
+    await audit_service.log_audit_event(
+        db=db,
+        organization_id=org_id,
+        actor_type=ActorType.USER,
+        actor_id=owner_id,
+        event_type="AGENT_DELETED",
+        metadata={
+            "agent_id": str(agent_id),
+            "name": agent_name,
+        },
+        description=f"Agente de IA '{agent_name}' eliminado permanentemente",
+    )
 
 
 @router.post(

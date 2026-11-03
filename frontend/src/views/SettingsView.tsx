@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api, DEMO_IDS } from '../services/api';
-import type { UserMember, UserRole, GatewayApiKey } from '../types/domain';
+import type { UserMember, UserRole, GatewayApiKey, OrganizationSettings } from '../types/domain';
 import { ROLE_LABELS, ROLE_DESCRIPTIONS } from '../constants/labels';
 import {
   Shield,
@@ -54,26 +54,10 @@ export const SettingsView: React.FC = () => {
   // -------------------------------------------------------------
   // TAB 2: Gateway API Keys (PEP)
   // -------------------------------------------------------------
-  const [apiKeys, setApiKeys] = useState<GatewayApiKey[]>([
-    {
-      id: 'key_prod_01',
-      name: 'PEP-Production-Agent-Interceptor',
-      prefix: 'ag_live_7a3d9b01',
-      secretMasked: 'ag_live_7a3d9b01••••••••••••••••••••••••e4c1',
-      role: 'gateway_client',
-      createdAt: '2026-03-01T12:00:00Z',
-      lastUsedAt: 'Hace 2 minutos',
-    },
-    {
-      id: 'key_sandbox_02',
-      name: 'CI/CD-Integration-Test-Key',
-      prefix: 'ag_test_88f2a014',
-      secretMasked: 'ag_test_88f2a014••••••••••••••••••••••••9b27',
-      role: 'gateway_client',
-      createdAt: '2026-03-10T09:30:00Z',
-      lastUsedAt: 'Hace 4 horas',
-    },
-  ]);
+  const [apiKeys, setApiKeys] = useState<GatewayApiKey[]>([]);
+  const [isLoadingKeys, setIsLoadingKeys] = useState(false);
+  const [isSubmittingKey, setIsSubmittingKey] = useState(false);
+  const [isRevokingKey, setIsRevokingKey] = useState(false);
 
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
@@ -82,27 +66,64 @@ export const SettingsView: React.FC = () => {
   const [copiedKey, setCopiedKey] = useState(false);
   const [codeSnippetLang, setCodeSnippetLang] = useState<'python' | 'langchain' | 'curl'>('python');
 
-  const handleGenerateKey = (e: React.FormEvent) => {
+  const fetchApiKeys = async () => {
+    setIsLoadingKeys(true);
+    try {
+      const data = await api.getApiKeys(DEMO_IDS.ORG_ACME_ID);
+      setApiKeys(data);
+    } catch {
+      showToast('Error al sincronizar API Keys del backend', 'error');
+    } finally {
+      setIsLoadingKeys(false);
+    }
+  };
+
+  const handleGenerateKey = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newKeyName.trim()) return;
 
-    const rawHex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-    const fullKey = `ag_live_${rawHex}`;
-    const newEntry: GatewayApiKey = {
-      id: `key_${Date.now()}`,
-      name: newKeyName.trim(),
-      prefix: fullKey.slice(0, 16),
-      secretMasked: `${fullKey.slice(0, 16)}••••••••••••••••••••••••${fullKey.slice(-4)}`,
-      rawKey: fullKey,
-      role: newKeyRole,
-      createdAt: new Date().toISOString(),
-      lastUsedAt: 'Nunca',
-    };
+    setIsSubmittingKey(true);
+    try {
+      const res = await api.createApiKey({
+        name: newKeyName.trim(),
+        organization_id: DEMO_IDS.ORG_ACME_ID,
+      });
 
-    setApiKeys([newEntry, ...apiKeys]);
-    setGeneratedKey(fullKey);
-    setNewKeyName('');
-    showToast('Nueva API Key de Gateway generada exitosamente');
+      setGeneratedKey(res.rawKey);
+      setNewKeyName('');
+      showToast('Nueva API Key de Gateway generada exitosamente');
+      await fetchApiKeys();
+    } catch {
+      showToast('Error al generar la API Key en el Gateway', 'error');
+    } finally {
+      setIsSubmittingKey(false);
+    }
+  };
+
+  const handleRevokeKey = async (key: GatewayApiKey) => {
+    const confirmationPrompt =
+      '¿Estás seguro de que deseas revocar esta llave de acceso? Esta acción deshabilitará inmediatamente cualquier agente que la utilice.';
+
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      const confirmed = window.confirm(confirmationPrompt);
+      if (!confirmed) return;
+    }
+
+    setIsRevokingKey(true);
+    try {
+      const ok = await api.revokeApiKey(key.id, DEMO_IDS.ORG_ACME_ID);
+      if (ok) {
+        setApiKeys(prev => prev.map(item => (item.id === key.id ? { ...item, isActive: false } : item)));
+        showToast('Llave de acceso revocada exitosamente');
+        await fetchApiKeys();
+      } else {
+        showToast('Error al revocar la llave de acceso en el backend', 'error');
+      }
+    } catch {
+      showToast('Error de red al revocar la llave de acceso', 'error');
+    } finally {
+      setIsRevokingKey(false);
+    }
   };
 
   // -------------------------------------------------------------
@@ -129,7 +150,17 @@ export const SettingsView: React.FC = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchApiKeys();
+    fetchSettings();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'apikeys') {
+      fetchApiKeys();
+    } else if (activeTab === 'security' || activeTab === 'general') {
+      fetchSettings();
+    }
+  }, [activeTab]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,8 +226,47 @@ export const SettingsView: React.FC = () => {
   // -------------------------------------------------------------
   // TAB 4: Security Stance & Policies
   // -------------------------------------------------------------
+  const [failClosed, setFailClosed] = useState(true);
   const [maskSensitive, setMaskSensitive] = useState(true);
   const [maxAutonomousAmount, setMaxAutonomousAmount] = useState(5000);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
+
+  const fetchSettings = async () => {
+    setIsLoadingSettings(true);
+    try {
+      const data = await api.getOrganizationSettings(DEMO_IDS.ORG_ACME_ID);
+      setFailClosed(data.fail_closed);
+      setMaskSensitive(data.mask_sensitive);
+      setMaxAutonomousAmount(data.max_autonomous_amount);
+      setRetentionDays(data.retention_days);
+    } catch {
+      showToast('Error al sincronizar configuración de gobernanza', 'error');
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+
+  const handleUpdateGovernance = async (
+    update: Partial<OrganizationSettings>,
+    successMessage: string
+  ) => {
+    setIsUpdatingSettings(true);
+    try {
+      const res = await api.updateOrganizationSettings(DEMO_IDS.ORG_ACME_ID, update);
+      if (res) {
+        if (update.fail_closed !== undefined) setFailClosed(res.fail_closed);
+        if (update.mask_sensitive !== undefined) setMaskSensitive(res.mask_sensitive);
+        if (update.max_autonomous_amount !== undefined) setMaxAutonomousAmount(res.max_autonomous_amount);
+        if (update.retention_days !== undefined) setRetentionDays(res.retention_days);
+        showToast(successMessage, 'success');
+      }
+    } catch {
+      showToast('Error al actualizar la configuración de gobernanza en el servidor', 'error');
+    } finally {
+      setIsUpdatingSettings(false);
+    }
+  };
 
   // -------------------------------------------------------------
   // TAB 5: SIEM & Webhooks Egress
@@ -459,7 +529,11 @@ export const SettingsView: React.FC = () => {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
                 <button
-                  onClick={() => showToast('Cambios del workspace guardados correctamente')}
+                  onClick={() => handleUpdateGovernance(
+                    { retention_days: retentionDays },
+                    'Configuración del workspace y retención guardados correctamente'
+                  )}
+                  disabled={isLoadingSettings || isUpdatingSettings}
                   style={{
                     padding: '9px 18px',
                     backgroundColor: 'var(--brand-primary)',
@@ -468,7 +542,7 @@ export const SettingsView: React.FC = () => {
                     borderRadius: '8px',
                     fontWeight: 600,
                     fontSize: '13px',
-                    cursor: 'pointer',
+                    cursor: (isLoadingSettings || isUpdatingSettings) ? 'not-allowed' : 'pointer',
                   }}
                 >
                   Guardar Cambios
@@ -492,7 +566,15 @@ export const SettingsView: React.FC = () => {
                 </label>
                 <select
                   value={retentionDays}
-                  onChange={e => setRetentionDays(Number(e.target.value))}
+                  disabled={isLoadingSettings || isUpdatingSettings}
+                  onChange={e => {
+                    const days = Number(e.target.value);
+                    setRetentionDays(days);
+                    handleUpdateGovernance(
+                      { retention_days: days },
+                      `Período de retención actualizado a ${days} días`
+                    );
+                  }}
                   style={{
                     width: '100%',
                     padding: '10px 14px',
@@ -619,28 +701,49 @@ export const SettingsView: React.FC = () => {
                   Utilizadas por los agentes autónomos de IA y librerías cliente (Python SDK / LangChain / CrewAI) para autenticar interceptaciones en el Gateway.
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setGeneratedKey(null);
-                  setIsKeyModalOpen(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '9px 16px',
-                  backgroundColor: 'var(--brand-primary)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                }}
-              >
-                <Plus size={16} />
-                Generar Nueva API Key
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={fetchApiKeys}
+                  title="Refrescar lista desde PostgreSQL"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    backgroundColor: 'var(--bg-card)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-secondary)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <RefreshCw size={14} className={isLoadingKeys ? 'spin' : ''} />
+                  Refrescar
+                </button>
+                <button
+                  onClick={() => {
+                    setGeneratedKey(null);
+                    setIsKeyModalOpen(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '9px 16px',
+                    backgroundColor: 'var(--brand-primary)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Plus size={16} />
+                  Generar Nueva API Key
+                </button>
+              </div>
             </div>
 
             {/* List of Active Keys */}
@@ -656,72 +759,93 @@ export const SettingsView: React.FC = () => {
                   <tr style={{ borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-app)' }}>
                     <th style={{ padding: '12px 18px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>NOMBRE / IDENTIFICADOR</th>
                     <th style={{ padding: '12px 18px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>SECRETO DE ACCESO</th>
-                    <th style={{ padding: '12px 18px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>PERMISO</th>
+                    <th style={{ padding: '12px 18px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>ESTADO / PERMISO</th>
                     <th style={{ padding: '12px 18px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>CREADO</th>
                     <th style={{ padding: '12px 18px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>ÚLTIMO USO</th>
                     <th style={{ padding: '12px 18px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>ACCIONES</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {apiKeys.map(k => (
-                    <tr key={k.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td style={{ padding: '14px 18px' }}>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{k.name}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{k.id}</div>
-                      </td>
-                      <td style={{ padding: '14px 18px' }}>
-                        <code style={{
-                          fontSize: '12px',
-                          backgroundColor: 'var(--bg-app)',
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          color: 'var(--text-secondary)',
-                          border: '1px solid var(--border-subtle)',
-                        }}>
-                          {k.secretMasked}
-                        </code>
-                      </td>
-                      <td style={{ padding: '14px 18px' }}>
-                        <span style={{
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          padding: '2px 8px',
-                          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                          border: '1px solid rgba(59, 130, 246, 0.25)',
-                          color: 'var(--brand-primary)',
-                          borderRadius: '12px',
-                        }}>
-                          {k.role}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 18px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                        {new Date(k.createdAt).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '14px 18px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {k.lastUsedAt}
-                      </td>
-                      <td style={{ padding: '14px 18px', textAlign: 'right' }}>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`¿Revocar la API Key "${k.name}"? Los agentes que la usen perderán acceso al Gateway.`)) {
-                              setApiKeys(apiKeys.filter(item => item.id !== k.id));
-                              showToast(`API Key "${k.name}" revocada`);
-                            }
-                          }}
-                          title="Revocar credencial"
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: 'var(--text-muted)',
-                            padding: '4px',
-                          }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                  {apiKeys.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                        {isLoadingKeys ? 'Cargando llaves de acceso desde PostgreSQL...' : 'No se encontraron llaves de acceso registradas para esta organización.'}
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    apiKeys.map(k => (
+                      <tr key={k.id} style={{ borderBottom: '1px solid var(--border-subtle)', opacity: k.isActive === false ? 0.6 : 1 }}>
+                        <td style={{ padding: '14px 18px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{k.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{k.id}</div>
+                        </td>
+                        <td style={{ padding: '14px 18px' }}>
+                          <code style={{
+                            fontSize: '12px',
+                            backgroundColor: 'var(--bg-app)',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            color: 'var(--text-secondary)',
+                            border: '1px solid var(--border-subtle)',
+                          }}>
+                            {k.secretMasked}
+                          </code>
+                        </td>
+                        <td style={{ padding: '14px 18px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              padding: '2px 8px',
+                              backgroundColor: k.isActive === false ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                              border: `1px solid ${k.isActive === false ? 'rgba(239, 68, 68, 0.25)' : 'rgba(16, 185, 129, 0.25)'}`,
+                              color: k.isActive === false ? '#ef4444' : '#10b981',
+                              borderRadius: '12px',
+                            }}>
+                              {k.isActive === false ? 'Revocada' : 'Activa'}
+                            </span>
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              padding: '2px 8px',
+                              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                              border: '1px solid rgba(59, 130, 246, 0.25)',
+                              color: 'var(--brand-primary)',
+                              borderRadius: '12px',
+                            }}>
+                              {k.role === 'gateway_client' ? 'Cliente Gateway' : k.role}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 18px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {new Date(k.createdAt).toLocaleDateString()}
+                        </td>
+                        <td style={{ padding: '14px 18px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          {k.lastUsedAt || 'Nunca'}
+                        </td>
+                        <td style={{ padding: '14px 18px', textAlign: 'right' }}>
+                          {k.isActive !== false ? (
+                            <button
+                              onClick={() => handleRevokeKey(k)}
+                              title="Revocar credencial"
+                              disabled={isRevokingKey}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: isRevokingKey ? 'not-allowed' : 'pointer',
+                                color: 'var(--danger-text, #ef4444)',
+                                padding: '4px',
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Revocada</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -779,7 +903,7 @@ export const SettingsView: React.FC = () => {
 # Inicializar interceptor de AgentGuard PEP
 AGENTGUARD_GATEWAY = "http://localhost:8000/api/v1/gateway/execute"
 HEADERS = {
-    "X-AgentGuard-Key": "${apiKeys[0]?.prefix || 'ag_live_7a3d9b01'}...",
+    "X-AgentGuard-Key": "${(apiKeys.find(k => k.isActive !== false) || apiKeys[0])?.prefix || 'ag_live_7a3d9b01'}...",
     "Content-Type": "application/json"
 }
 
@@ -803,7 +927,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
     """Ejecuta una herramienta empresarial protegida por la gobernanza de AgentGuard."""
     res = requests.post(
         "http://localhost:8000/api/v1/gateway/execute",
-        headers={"X-AgentGuard-Key": "${apiKeys[0]?.prefix || 'ag_live_...'}..."},
+        headers={"X-AgentGuard-Key": "${(apiKeys.find(k => k.isActive !== false) || apiKeys[0])?.prefix || 'ag_live_7a3d9b01'}..."},
         json={
             "organization_id": "${DEMO_IDS.ORG_ACME_ID}",
             "agent_id": "${DEMO_IDS.AGENT_SALES_ID}",
@@ -819,7 +943,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
 
                 {codeSnippetLang === 'curl' && `curl -X POST "http://localhost:8000/api/v1/gateway/execute" \\
   -H "Content-Type: application/json" \\
-  -H "X-AgentGuard-Key: ${apiKeys[0]?.prefix || 'ag_live_...'}..." \\
+  -H "X-AgentGuard-Key: ${(apiKeys.find(k => k.isActive !== false) || apiKeys[0])?.prefix || 'ag_live_7a3d9b01'}..." \\
   -d '{
     "organization_id": "${DEMO_IDS.ORG_ACME_ID}",
     "agent_id": "${DEMO_IDS.AGENT_SALES_ID}",
@@ -1035,20 +1159,36 @@ def execute_guarded_tool(action_name: str, **kwargs):
                     Denegación por Defecto (Fail-Closed)
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Bloqueo garantizado de accesos no especificados
+                    {failClosed ? 'Bloqueo garantizado de accesos no especificados (Postura Activa)' : 'Modo permisivo experimental (No recomendado)'}
                   </div>
                 </div>
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '4px 10px',
-                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: 'var(--danger-text)',
-                  borderRadius: '12px',
-                }}>
-                  BLOQUEADO POR REGLA
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    backgroundColor: failClosed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                    border: `1px solid ${failClosed ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                    color: failClosed ? 'var(--danger-text)' : '#F59E0B',
+                    borderRadius: '12px',
+                  }}>
+                    {failClosed ? 'BLOQUEADO POR REGLA' : 'MODO PERMISIVO'}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={failClosed}
+                    disabled={isLoadingSettings || isUpdatingSettings}
+                    onChange={e => {
+                      const val = e.target.checked;
+                      setFailClosed(val);
+                      handleUpdateGovernance(
+                        { fail_closed: val },
+                        `Postura Fail-Closed ${val ? 'activada' : 'desactivada'}`
+                      );
+                    }}
+                    style={{ width: '18px', height: '18px', cursor: (isLoadingSettings || isUpdatingSettings) ? 'not-allowed' : 'pointer' }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1088,11 +1228,16 @@ def execute_guarded_tool(action_name: str, **kwargs):
                 <input
                   type="checkbox"
                   checked={maskSensitive}
+                  disabled={isLoadingSettings || isUpdatingSettings}
                   onChange={e => {
-                    setMaskSensitive(e.target.checked);
-                    showToast(`Sanitización contextual ${e.target.checked ? 'activada' : 'desactivada'}`);
+                    const val = e.target.checked;
+                    setMaskSensitive(val);
+                    handleUpdateGovernance(
+                      { mask_sensitive: val },
+                      `Sanitización contextual ${val ? 'activada' : 'desactivada'}`
+                    );
                   }}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  style={{ width: '18px', height: '18px', cursor: (isLoadingSettings || isUpdatingSettings) ? 'not-allowed' : 'pointer' }}
                 />
               </div>
             </div>
@@ -1117,6 +1262,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
                 <input
                   type="number"
                   value={maxAutonomousAmount}
+                  disabled={isLoadingSettings || isUpdatingSettings}
                   onChange={e => setMaxAutonomousAmount(Number(e.target.value))}
                   style={{
                     width: '140px',
@@ -1131,7 +1277,11 @@ def execute_guarded_tool(action_name: str, **kwargs):
                 />
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>USD</span>
                 <button
-                  onClick={() => showToast(`Umbral autónomo actualizado a $${maxAutonomousAmount.toLocaleString()} USD`)}
+                  onClick={() => handleUpdateGovernance(
+                    { max_autonomous_amount: maxAutonomousAmount },
+                    `Umbral autónomo actualizado a $${maxAutonomousAmount.toLocaleString()} USD`
+                  )}
+                  disabled={isLoadingSettings || isUpdatingSettings}
                   style={{
                     padding: '8px 14px',
                     backgroundColor: 'var(--bg-card)',
@@ -1139,7 +1289,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
                     borderRadius: '8px',
                     color: 'var(--text-secondary)',
                     fontSize: '12px',
-                    cursor: 'pointer',
+                    cursor: (isLoadingSettings || isUpdatingSettings) ? 'not-allowed' : 'pointer',
                   }}
                 >
                   Actualizar
@@ -1325,10 +1475,10 @@ def execute_guarded_tool(action_name: str, **kwargs):
                 }}>
                   <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <AlertTriangle size={15} />
-                    Copia esta clave ahora
+                    Copia esta llave ahora. Por seguridad, no volverá a mostrarse en texto plano.
                   </div>
                   <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    Por motivos de seguridad, esta clave no volverá a mostrarse completa.
+                    Guárdala en una variable de entorno segura o gestor de secretos. Por motivos de seguridad, esta clave no volverá a mostrarse en texto plano.
                   </p>
                 </div>
 
@@ -1435,8 +1585,8 @@ def execute_guarded_tool(action_name: str, **kwargs):
                       fontSize: '13px',
                     }}
                   >
-                    <option value="gateway_client">Gateway Client (Ejecución de Acciones)</option>
-                    <option value="auditor_reader">Auditor Reader (Solo Trazas)</option>
+                    <option value="gateway_client">Cliente Gateway (Ejecución de Acciones)</option>
+                    <option value="auditor_reader">Lector de Auditoría (Solo Trazas)</option>
                   </select>
                 </div>
 
@@ -1458,6 +1608,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
                   </button>
                   <button
                     type="submit"
+                    disabled={isSubmittingKey}
                     style={{
                       padding: '9px 18px',
                       backgroundColor: 'var(--brand-primary)',
@@ -1466,10 +1617,10 @@ def execute_guarded_tool(action_name: str, **kwargs):
                       borderRadius: '8px',
                       fontWeight: 600,
                       fontSize: '13px',
-                      cursor: 'pointer',
+                      cursor: isSubmittingKey ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    Generar Credencial
+                    {isSubmittingKey ? 'Generando...' : 'Generar Credencial'}
                   </button>
                 </div>
               </form>
