@@ -115,6 +115,43 @@ async def test_login_seed_user_fallback():
 
 
 @pytest.mark.asyncio
+async def test_login_demo_credentials_and_alias():
+    """Validación específica para 'admin@acmecorp.com' con 'demo-password' y alias acme.corp."""
+    org_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+
+    user = User(
+        id=user_id,
+        organization_id=org_id,
+        email="admin@acmecorp.com",
+        hashed_password=None,
+        role=UserRole.ADMIN,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    mock_db = AsyncMock()
+    mock_result = MagicMock(spec=Result)
+    mock_result.scalar_one_or_none.return_value = user
+    mock_db.execute.return_value = mock_result
+    mock_db.commit = AsyncMock()
+    mock_db.refresh = AsyncMock()
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "admin@acmecorp.com", "password": "demo-password"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["user"]["email"] == "admin@acmecorp.com"
+
+
+@pytest.mark.asyncio
 async def test_login_invalid_password():
     """3. POST /api/v1/auth/login con contraseña incorrecta retorna 401 Unauthorized."""
     org_id = uuid.uuid4()

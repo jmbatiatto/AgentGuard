@@ -151,11 +151,11 @@ async def seed_data(reset: bool = False) -> None:
         session.add(org)
 
         # 2. Usuarios Corporativos
-        default_pwd_hash = get_password_hash("admin123")
+        default_pwd_hash = get_password_hash("demo-password")
         user_admin = User(
             id=USER_ADMIN_ID,
             organization_id=ORG_ACME_ID,
-            email="admin@acme.corp",
+            email="admin@acmecorp.com",
             hashed_password=default_pwd_hash,
             role=UserRole.ADMIN,
             created_at=now,
@@ -163,7 +163,7 @@ async def seed_data(reset: bool = False) -> None:
         user_approver = User(
             id=USER_APPROVER_ID,
             organization_id=ORG_ACME_ID,
-            email="approver@acme.corp",
+            email="approver@acmecorp.com",
             hashed_password=default_pwd_hash,
             role=UserRole.APPROVER,
             created_at=now,
@@ -171,7 +171,7 @@ async def seed_data(reset: bool = False) -> None:
         user_operator = User(
             id=USER_OPERATOR_ID,
             organization_id=ORG_ACME_ID,
-            email="operator@acme.corp",
+            email="operator@acmecorp.com",
             hashed_password=default_pwd_hash,
             role=UserRole.OPERATOR,
             created_at=now,
@@ -494,8 +494,8 @@ async def seed_data(reset: bool = False) -> None:
         logger.info("[OK] ¡Semillas de demostración de AgentGuard creadas con éxito!")
         logger.info("====================================================================")
         logger.info(f"  Organización: Acme Corp ({ORG_ACME_ID})")
-        logger.info(f"  Admin:        admin@acme.corp ({USER_ADMIN_ID})")
-        logger.info(f"  Approver:     approver@acme.corp ({USER_APPROVER_ID})")
+        logger.info(f"  Admin:        admin@acmecorp.com ({USER_ADMIN_ID})")
+        logger.info(f"  Approver:     approver@acmecorp.com ({USER_APPROVER_ID})")
         logger.info(f"  Agente Demo:  Agente de Ventas ({AGENT_SALES_ID})")
         logger.info("  Escenarios Disponibles:")
         logger.info("    - Escenario 1: create_quote < $10,000 -> ALLOW (200 OK)")
