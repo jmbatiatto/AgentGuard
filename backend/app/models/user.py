@@ -34,6 +34,7 @@ class User(Base):
         index=True,
     )
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
     role: Mapped[UserRole] = mapped_column(
         SQLEnum(UserRole, name="user_role_enum", native_enum=True),
         nullable=False,

@@ -196,11 +196,25 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
 PasswordInput.displayName = "PasswordInput";
 
 // ─── Formulario Iniciar Sesión ─────────────────────────────────────────────────
-function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
-  const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
+function SignInForm({
+  onSuccess,
+  onSignIn,
+  isLoading,
+}: {
+  onSuccess?: () => void;
+  onSignIn?: (credentials: { email: string; password: string }) => Promise<void>;
+  isLoading?: boolean;
+}) {
+  const [email, setEmail] = useState("admin@acmecorp.com");
+  const [password, setPassword] = useState("demo-password");
+
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Por ahora: simulamos un inicio de sesión exitoso
-    if (onSuccess) onSuccess();
+    if (onSignIn) {
+      await onSignIn({ email, password });
+    } else if (onSuccess) {
+      onSuccess();
+    }
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-8">
@@ -225,19 +239,25 @@ function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
             name="email"
             type="email"
             placeholder="usuario@empresa.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
+            disabled={isLoading}
           />
         </div>
         <PasswordInput
           name="password"
           label="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
           placeholder="Contraseña"
+          disabled={isLoading}
         />
-        <Button type="submit" variant="outline" className="mt-2">
-          Iniciar sesión
+        <Button type="submit" variant="outline" className="mt-2" disabled={isLoading}>
+          {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
         </Button>
       </div>
     </form>
@@ -245,10 +265,28 @@ function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
 }
 
 // ─── Formulario Registrarse ────────────────────────────────────────────────────
-function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
-  const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
+function SignUpForm({
+  onSuccess,
+  onSignUp,
+  isLoading,
+}: {
+  onSuccess?: () => void;
+  onSignUp?: (data: { email: string; password: string; name: string; organizationName?: string }) => Promise<void>;
+  isLoading?: boolean;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [orgSlug, setOrgSlug] = useState("");
+
+  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (onSuccess) onSuccess();
+    if (onSignUp) {
+      await onSignUp({ email, password, name, organizationName: orgName });
+    } else if (onSuccess) {
+      onSuccess();
+    }
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-8">
@@ -273,8 +311,11 @@ function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
             name="name"
             type="text"
             placeholder="Juan García"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
             autoComplete="name"
+            disabled={isLoading}
           />
         </div>
         <div className="grid gap-2">
@@ -284,16 +325,22 @@ function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
             name="email"
             type="email"
             placeholder="usuario@empresa.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
+            disabled={isLoading}
           />
         </div>
         <PasswordInput
           name="password"
           label="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="new-password"
           placeholder="Contraseña"
+          disabled={isLoading}
         />
 
         {/* Apartado para registrar a la Empresa / Organización */}
@@ -319,7 +366,10 @@ function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
                 name="org_name"
                 type="text"
                 placeholder="Acme Corp"
+                value={orgName}
+                onChange={(e) => setOrgName(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -329,14 +379,17 @@ function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
                 name="org_slug"
                 type="text"
                 placeholder="acme-corp"
+                value={orgSlug}
+                onChange={(e) => setOrgSlug(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
         </div>
 
-        <Button type="submit" variant="outline" className="mt-2">
-          Crear cuenta y Empresa
+        <Button type="submit" variant="outline" className="mt-2" disabled={isLoading}>
+          {isLoading ? "Creando cuenta..." : "Crear cuenta y Empresa"}
         </Button>
       </div>
     </form>
@@ -348,17 +401,23 @@ function AuthFormContainer({
   isSignIn,
   onToggle,
   onSuccess,
+  onSignIn,
+  onSignUp,
+  isLoading,
 }: {
   isSignIn: boolean;
   onToggle: () => void;
   onSuccess?: () => void;
+  onSignIn?: (credentials: { email: string; password: string }) => Promise<void>;
+  onSignUp?: (data: { email: string; password: string; name: string; organizationName?: string }) => Promise<void>;
+  isLoading?: boolean;
 }) {
   return (
     <div className="mx-auto grid w-[350px] gap-2">
       {isSignIn ? (
-        <SignInForm onSuccess={onSuccess} />
+        <SignInForm onSuccess={onSuccess} onSignIn={onSignIn} isLoading={isLoading} />
       ) : (
-        <SignUpForm onSuccess={onSuccess} />
+        <SignUpForm onSuccess={onSuccess} onSignUp={onSignUp} isLoading={isLoading} />
       )}
 
       <div className="text-center text-sm">
@@ -377,7 +436,14 @@ function AuthFormContainer({
       <Button
         variant="outline"
         type="button"
-        onClick={() => { if (onSuccess) onSuccess(); }}
+        disabled={isLoading}
+        onClick={async () => {
+          if (onSignIn) {
+            await onSignIn({ email: 'admin@acmecorp.com', password: 'demo-password' });
+          } else if (onSuccess) {
+            onSuccess();
+          }
+        }}
       >
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -413,6 +479,9 @@ export interface AuthUIProps {
   signInContent?: AuthContentProps;
   signUpContent?: AuthContentProps;
   onAuthenticated?: () => void;
+  onSignIn?: (credentials: { email: string; password: string }) => Promise<void>;
+  onSignUp?: (data: { email: string; password: string; name: string; organizationName?: string }) => Promise<void>;
+  isLoading?: boolean;
 }
 
 // ─── Contenido por defecto ─────────────────────────────────────────────────────
@@ -443,6 +512,9 @@ export function AuthUI({
   signInContent = {},
   signUpContent = {},
   onAuthenticated,
+  onSignIn,
+  onSignUp,
+  isLoading = false,
 }: AuthUIProps) {
   const [isSignIn, setIsSignIn] = useState(true);
   const toggleForm = () => setIsSignIn((prev) => !prev);
@@ -471,6 +543,9 @@ export function AuthUI({
           isSignIn={isSignIn}
           onToggle={toggleForm}
           onSuccess={onAuthenticated}
+          onSignIn={onSignIn}
+          onSignUp={onSignUp}
+          isLoading={isLoading}
         />
       </div>
 

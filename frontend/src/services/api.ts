@@ -26,7 +26,13 @@ import type {
   AnalyticsOverview,
   AnalyticsTimeseries,
   OrganizationSettings,
+  User,
+  AuthCredentials,
+  RegisterData,
+  AuthResponse,
 } from '../types/domain';
+
+export type { User, AuthCredentials, RegisterData, AuthResponse };
 
 export type { OrganizationSettings };
 
@@ -152,11 +158,27 @@ class AgentGuardApiClient {
   }
 
   /**
+   * Interceptor de autenticacion HTTP: Inyecta Authorization: Bearer <token>
+   * si existe una sesion activa en localStorage.
+   */
+  private async fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('agentguard_token') : null;
+    const headers = new Headers(init?.headers);
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    return fetch(url, {
+      ...init,
+      headers,
+    });
+  }
+
+  /**
    * Healthcheck básico del backend FastAPI
    */
   async checkHealth(): Promise<{ status: string; isOnline: boolean }> {
     try {
-      const res = await fetch(`${this.baseUrl}/health`, { method: 'GET', signal: AbortSignal.timeout(2000) });
+      const res = await this.fetchWithAuth(`${this.baseUrl}/health`, { method: 'GET', signal: AbortSignal.timeout(2000) });
       if (res.ok) {
         const data = await res.json();
         return { status: data.status || 'healthy', isOnline: true };
@@ -172,7 +194,7 @@ class AgentGuardApiClient {
    */
   async getAgents(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Agent[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/agents?organization_id=${orgId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/agents?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -211,7 +233,7 @@ class AgentGuardApiClient {
     const ownerUserId = payload.ownerUserId || DEMO_IDS.USER_ADMIN_ID;
 
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/agents`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/agents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -234,7 +256,7 @@ class AgentGuardApiClient {
       if (payload.tool_ids && payload.tool_ids.length > 0) {
         for (const toolId of payload.tool_ids) {
           try {
-            await fetch(`${this.baseUrl}/api/v1/agents/${data.id}/tools`, {
+            await this.fetchWithAuth(`${this.baseUrl}/api/v1/agents/${data.id}/tools`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -270,7 +292,7 @@ class AgentGuardApiClient {
    */
   async updateAgentStatus(agentId: string, status: AgentStatus): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/agents/${agentId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/agents/${agentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -290,7 +312,7 @@ class AgentGuardApiClient {
    */
   async deleteAgent(agentId: string): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/agents/${agentId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/agents/${agentId}`, {
         method: 'DELETE',
         signal: AbortSignal.timeout(4000),
       });
@@ -308,7 +330,7 @@ class AgentGuardApiClient {
    */
   async getTools(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Tool[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/tools?organization_id=${orgId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/tools?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -357,7 +379,7 @@ class AgentGuardApiClient {
     description?: string;
   }): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/tool-actions`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/tool-actions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -378,7 +400,7 @@ class AgentGuardApiClient {
    */
   async deleteTool(toolId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/tools/${toolId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/tools/${toolId}`, {
         method: 'DELETE',
         signal: AbortSignal.timeout(4000),
       });
@@ -405,7 +427,7 @@ class AgentGuardApiClient {
     const orgId = payload.orgId || DEMO_IDS.ORG_ACME_ID;
 
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/tools`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/tools`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -428,7 +450,7 @@ class AgentGuardApiClient {
       if (payload.actions && payload.actions.length > 0) {
         for (const act of payload.actions) {
           try {
-            await fetch(`${this.baseUrl}/api/v1/tool-actions`, {
+            await this.fetchWithAuth(`${this.baseUrl}/api/v1/tool-actions`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -463,7 +485,7 @@ class AgentGuardApiClient {
    */
   async getPolicies(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Policy[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/policies?organization_id=${orgId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policies?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -516,7 +538,7 @@ class AgentGuardApiClient {
    */
   async updatePolicyStatus(policyId: string, isActive: boolean): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/policies/${policyId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policies/${policyId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: isActive }),
@@ -536,7 +558,7 @@ class AgentGuardApiClient {
    */
   async deletePolicy(policyId: string): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/policies/${policyId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policies/${policyId}`, {
         method: 'DELETE',
         signal: AbortSignal.timeout(4000),
       });
@@ -576,7 +598,7 @@ class AgentGuardApiClient {
     };
 
     try {
-      let res = await fetch(`${this.baseUrl}/api/v1/policies/${policyId}/rules`, {
+      let res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policies/${policyId}/rules`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -585,7 +607,7 @@ class AgentGuardApiClient {
 
       // Fallback de compatibilidad si el endpoint anidado no responde
       if (!res.ok && res.status === 404) {
-        res = await fetch(`${this.baseUrl}/api/v1/policy-rules`, {
+        res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policy-rules`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -627,7 +649,7 @@ class AgentGuardApiClient {
     if (targetAgentId !== undefined) payload.target_agent_id = targetAgentId || null;
 
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/policy-rules/${ruleId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policy-rules/${ruleId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -649,7 +671,7 @@ class AgentGuardApiClient {
    */
   async deletePolicyRule(ruleId: string): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/policy-rules/${ruleId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policy-rules/${ruleId}`, {
         method: 'DELETE',
         signal: AbortSignal.timeout(5000),
       });
@@ -667,7 +689,7 @@ class AgentGuardApiClient {
    */
   async getToolActions(): Promise<any[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/tool-actions`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/tool-actions`, {
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -695,7 +717,7 @@ class AgentGuardApiClient {
     const orgId = payload.orgId || DEMO_IDS.ORG_ACME_ID;
 
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/policies`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -772,7 +794,7 @@ class AgentGuardApiClient {
       const query = new URLSearchParams({ organization_id: orgId });
       if (status) query.append('status', status);
 
-      const res = await fetch(`${this.baseUrl}/api/v1/approvals?${query.toString()}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/approvals?${query.toString()}`, {
         signal: AbortSignal.timeout(4000),
       });
 
@@ -820,7 +842,7 @@ class AgentGuardApiClient {
     approverUserId: string = DEMO_IDS.USER_APPROVER_ID
   ): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/approvals/${approvalId}/resolve`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/approvals/${approvalId}/resolve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -845,7 +867,7 @@ class AgentGuardApiClient {
   async executeGateway(payload: GatewayExecutionPayload): Promise<GatewayExecutionResult> {
     const startTime = performance.now();
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/gateway/execute`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/gateway/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -874,7 +896,7 @@ class AgentGuardApiClient {
    */
   async getAttackVectors(): Promise<any[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/gateway/attacks`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/gateway/attacks`, {
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -904,7 +926,7 @@ class AgentGuardApiClient {
       if (filters?.skip !== undefined) query.append('skip', String(filters.skip));
       if (filters?.limit !== undefined) query.append('limit', String(filters.limit));
 
-      const res = await fetch(`${this.baseUrl}/api/v1/audit-events?${query.toString()}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/audit-events?${query.toString()}`, {
         headers: {
           'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
           'X-Organization-Id': orgId,
@@ -933,7 +955,7 @@ class AgentGuardApiClient {
       const query = new URLSearchParams({ organization_id: orgId });
       if (decision) query.append('decision', decision);
 
-      const res = await fetch(`${this.baseUrl}/api/v1/executions?${query.toString()}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/executions?${query.toString()}`, {
         signal: AbortSignal.timeout(5000),
       });
 
@@ -972,7 +994,7 @@ class AgentGuardApiClient {
    */
   async getAlerts(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<SecurityAlert[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/alerts?organization_id=${orgId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/alerts?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(5000),
       });
 
@@ -1015,7 +1037,7 @@ class AgentGuardApiClient {
     userId: string = DEMO_IDS.USER_ADMIN_ID
   ): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/alerts/${alertId}/status`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/alerts/${alertId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, resolved_by_user_id: userId }),
@@ -1035,7 +1057,7 @@ class AgentGuardApiClient {
    */
   async getUsers(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<UserMember[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/users?organization_id=${orgId}&skip=0&limit=100`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/users?organization_id=${orgId}&skip=0&limit=100`, {
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -1060,7 +1082,7 @@ class AgentGuardApiClient {
    */
   async createUser(payload: { email: string; role: UserRole; organization_id?: string }): Promise<UserMember> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/users`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1091,7 +1113,7 @@ class AgentGuardApiClient {
    */
   async updateUserRole(userId: string, role: UserRole): Promise<UserMember> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/users/${userId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role }),
@@ -1118,7 +1140,7 @@ class AgentGuardApiClient {
    */
   async deleteUser(userId: string): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/users/${userId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/users/${userId}`, {
         method: 'DELETE',
         signal: AbortSignal.timeout(5000),
       });
@@ -1136,7 +1158,7 @@ class AgentGuardApiClient {
    */
   async getApiKeys(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<GatewayApiKey[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/api-keys?organization_id=${orgId}&skip=0&limit=100`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/api-keys?organization_id=${orgId}&skip=0&limit=100`, {
         headers: {
           'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
           'X-Organization-Id': orgId,
@@ -1174,7 +1196,7 @@ class AgentGuardApiClient {
     const orgId = payload.organization_id || DEMO_IDS.ORG_ACME_ID;
 
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/api-keys`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/api-keys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1216,7 +1238,7 @@ class AgentGuardApiClient {
    */
   async revokeApiKey(keyId: string, orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/api-keys/${keyId}?organization_id=${orgId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/api-keys/${keyId}?organization_id=${orgId}`, {
         method: 'DELETE',
         headers: {
           'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
@@ -1238,7 +1260,7 @@ class AgentGuardApiClient {
    */
   async getAnalyticsOverview(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<AnalyticsOverview> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/analytics/overview?organization_id=${orgId}`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/analytics/overview?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(5000),
       });
       if (!res.ok) {
@@ -1266,7 +1288,7 @@ class AgentGuardApiClient {
     rangeStr: string = '24h'
   ): Promise<AnalyticsTimeseries> {
     try {
-      const res = await fetch(
+      const res = await this.fetchWithAuth(
         `${this.baseUrl}/api/v1/analytics/timeseries?organization_id=${orgId}&range=${encodeURIComponent(rangeStr)}`,
         {
           signal: AbortSignal.timeout(5000),
@@ -1303,7 +1325,7 @@ class AgentGuardApiClient {
    */
   async resetDemoData(): Promise<{ success: boolean; message: string }> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/demo/reset`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/demo/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(10000),
@@ -1323,7 +1345,7 @@ class AgentGuardApiClient {
    */
   async getOrganizationSettings(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<OrganizationSettings> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/organizations/${orgId}/settings`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/organizations/${orgId}/settings`, {
         headers: {
           'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
           'X-Organization-Id': orgId,
@@ -1353,7 +1375,7 @@ class AgentGuardApiClient {
     update: Partial<OrganizationSettings>
   ): Promise<OrganizationSettings> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/v1/organizations/${orgId}/settings`, {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/organizations/${orgId}/settings`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1377,7 +1399,111 @@ class AgentGuardApiClient {
       throw handleNetworkError(err);
     }
   }
+
+  /**
+   * Inicio de sesion para usuario corporativo
+   */
+  async login(credentials: AuthCredentials): Promise<AuthResponse> {
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+      const data = await res.json();
+      const userRaw = data.user || data;
+      const user: User = {
+        id: userRaw.id,
+        email: userRaw.email,
+        name: userRaw.name || userRaw.email?.split('@')[0],
+        role: userRaw.role || 'ADMIN',
+        organization_id: userRaw.organization_id,
+        organizationId: userRaw.organization_id,
+        created_at: userRaw.created_at,
+      };
+      return {
+        access_token: data.access_token,
+        token_type: data.token_type || 'bearer',
+        user,
+      };
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
+
+  /**
+   * Registro de nuevo usuario y organizacion
+   */
+  async register(data: RegisterData): Promise<AuthResponse> {
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          organization_name: data.organizationName || 'Mi Organizacion',
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+      const resData = await res.json();
+      const userRaw = resData.user || resData;
+      const user: User = {
+        id: userRaw.id,
+        email: userRaw.email,
+        name: userRaw.name || data.name || userRaw.email?.split('@')[0],
+        role: userRaw.role || 'ADMIN',
+        organization_id: userRaw.organization_id,
+        organizationId: userRaw.organization_id,
+        created_at: userRaw.created_at,
+      };
+      return {
+        access_token: resData.access_token,
+        token_type: resData.token_type || 'bearer',
+        user,
+      };
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
+
+  /**
+   * Obtiene la identidad del usuario actual validando el token Bearer
+   */
+  async getMe(): Promise<User> {
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/auth/me`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+      const data = await res.json();
+      return {
+        id: data.id,
+        email: data.email,
+        name: data.name || data.email?.split('@')[0],
+        role: data.role || 'ADMIN',
+        organization_id: data.organization_id,
+        organizationId: data.organization_id,
+        created_at: data.created_at,
+      };
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
 }
+
 
 export const api = new AgentGuardApiClient();
 export default api;

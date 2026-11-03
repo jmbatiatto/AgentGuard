@@ -27,6 +27,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import AsyncSessionLocal, engine
+from app.core.security import get_password_hash
 from app.models.agent import Agent, AgentTool
 from app.models.alert import Alert
 from app.models.approval import Approval
@@ -150,10 +151,12 @@ async def seed_data(reset: bool = False) -> None:
         session.add(org)
 
         # 2. Usuarios Corporativos
+        default_pwd_hash = get_password_hash("admin123")
         user_admin = User(
             id=USER_ADMIN_ID,
             organization_id=ORG_ACME_ID,
             email="admin@acme.corp",
+            hashed_password=default_pwd_hash,
             role=UserRole.ADMIN,
             created_at=now,
         )
@@ -161,6 +164,7 @@ async def seed_data(reset: bool = False) -> None:
             id=USER_APPROVER_ID,
             organization_id=ORG_ACME_ID,
             email="approver@acme.corp",
+            hashed_password=default_pwd_hash,
             role=UserRole.APPROVER,
             created_at=now,
         )
@@ -168,6 +172,7 @@ async def seed_data(reset: bool = False) -> None:
             id=USER_OPERATOR_ID,
             organization_id=ORG_ACME_ID,
             email="operator@acme.corp",
+            hashed_password=default_pwd_hash,
             role=UserRole.OPERATOR,
             created_at=now,
         )

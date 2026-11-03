@@ -62,6 +62,12 @@ from app.schemas.api_key import (
     ApiKeyCreatedResponse,
     ApiKeyRead,
 )
+from app.schemas.auth import (
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+    UserMeResponse,
+)
 
 __all__ = [
     "BaseSchema",
@@ -100,4 +106,8 @@ __all__ = [
     "ApiKeyResponse",
     "ApiKeyCreatedResponse",
     "ApiKeyRead",
+    "LoginRequest",
+    "RegisterRequest",
+    "TokenResponse",
+    "UserMeResponse",
 ]

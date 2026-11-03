@@ -19,6 +19,10 @@ export interface ToastContextType {
     warning: (msg: string, duration?: number) => void;
     info: (msg: string, duration?: number) => void;
   };
+  success: (msg: string, duration?: number) => void;
+  error: (msg: string, duration?: number) => void;
+  warning: (msg: string, duration?: number) => void;
+  info: (msg: string, duration?: number) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -74,6 +78,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addToast,
       removeToast,
       toast,
+      success: toast.success,
+      error: toast.error,
+      warning: toast.warning,
+      info: toast.info,
     }),
     [toasts, addToast, removeToast, toast]
   );

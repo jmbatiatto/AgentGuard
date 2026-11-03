@@ -14,6 +14,8 @@ import {
   Terminal,
 } from 'lucide-react';
 import type { NavView } from '../../types/domain';
+import { ROLE_LABELS } from '../../constants/labels';
+import type { AuthUser } from '../../context/AuthContext';
 
 export type NavItemData = {
   id: string;
@@ -199,6 +201,7 @@ export interface DashboardSidebarProps {
   activeWorkspace?: string;
   onWorkspaceSelect?: (ws: string) => void;
   onLogout?: () => void;
+  currentUser?: AuthUser;
 }
 
 export function SidebarNav({ 
@@ -209,6 +212,7 @@ export function SidebarNav({
   activeWorkspace = 'Acme Corp',
   onWorkspaceSelect,
   onLogout,
+  currentUser,
 }: DashboardSidebarProps) {
   const navGroups: NavGroupData[] = [
     {
@@ -301,8 +305,30 @@ export function SidebarNav({
         ))}
       </div>
 
-      {/* Footer: Configuración y Cerrar sesión separados por divisor */}
-      <div className="mt-auto border-t border-slate-800 pt-4 flex flex-col gap-1">
+      {/* Footer: Usuario Autenticado + Configuración y Cerrar sesión */}
+      <div className="mt-auto border-t border-slate-800 pt-3 flex flex-col gap-1.5">
+        {currentUser && (
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-slate-900/60 border border-slate-800/80 mb-1">
+            <div
+              className="w-7 h-7 rounded-md flex items-center justify-center font-bold text-[11px] shrink-0"
+              style={{
+                backgroundColor: currentUser.avatarBg || 'rgba(99, 102, 241, 0.2)',
+                color: currentUser.badgeColor || '#818CF8',
+                border: `1px solid ${currentUser.badgeColor || '#818CF8'}`,
+              }}
+            >
+              {currentUser.avatarInitials}
+            </div>
+            <div className="flex flex-col min-w-0 overflow-hidden text-left">
+              <span className="text-[12px] font-semibold text-slate-200 truncate">
+                {currentUser.name}
+              </span>
+              <span className="text-[10px] font-medium text-slate-400 truncate">
+                {ROLE_LABELS[currentUser.role] || currentUser.role}
+              </span>
+            </div>
+          </div>
+        )}
         {bottomItems.map(item => (
           <NavItem 
             key={item.id} 

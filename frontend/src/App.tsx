@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ShieldAlert, WifiOff, RefreshCw } from 'lucide-react';
 import { ThemeProvider } from './context/ThemeProvider';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ToastContainer } from './components/common/ToastContainer';
 import { AuthView } from './views/AuthView';
@@ -20,12 +20,21 @@ import { api } from './services/api';
 
 const getInitialView = (): NavView => {
   const hash = window.location.hash.replace('#', '').toLowerCase() as NavView;
-  const validViews: NavView[] = ['overview', 'agents', 'tools', 'policies', 'approvals', 'traces', 'playground', 'settings'];
+  const validViews: NavView[] = [
+    'overview',
+    'agents',
+    'tools',
+    'policies',
+    'approvals',
+    'traces',
+    'playground',
+    'settings',
+  ];
   return validViews.includes(hash) ? hash : 'overview';
 };
 
-export const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+const AppContent: React.FC = () => {
+  const { isAuthenticated, logout } = useAuth();
   const [currentView, setCurrentView] = useState<NavView>(getInitialView);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
   const [securityAlert, setSecurityAlert] = useState<{
@@ -64,21 +73,34 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '').toLowerCase() as NavView;
-      const validViews: NavView[] = ['overview', 'agents', 'tools', 'policies', 'approvals', 'traces', 'playground', 'settings'];
-      if (validViews.includes(hash)) {
-        setCurrentView(hash);
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (hash === 'auth') {
+        return;
+      }
+      const validViews: NavView[] = [
+        'overview',
+        'agents',
+        'tools',
+        'policies',
+        'approvals',
+        'traces',
+        'playground',
+        'settings',
+      ];
+      if (validViews.includes(hash as NavView)) {
+        setCurrentView(hash as NavView);
       }
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Inicializar contador real desde backend
+  // Inicializar contador real desde backend si está autenticado
   useEffect(() => {
     if (!isAuthenticated) return;
     let isMounted = true;
-    api.getApprovals('PENDING')
+    api
+      .getApprovals('PENDING')
       .then((list) => {
         if (isMounted && list) {
           setPendingApprovalsCount(list.length);
@@ -87,14 +109,23 @@ export const App: React.FC = () => {
       .catch(() => {
         // Capturar silenciosamente si el backend está iniciando o offline
       });
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [isAuthenticated]);
 
-  const handleTriggerAlert = (alert: { id?: string; title: string; description?: string; severity?: string }) => {
+  const handleTriggerAlert = (alert: {
+    id?: string;
+    title: string;
+    description?: string;
+    severity?: string;
+  }) => {
     setSecurityAlert({
       id: alert.id,
       title: alert.title || '🚨 SIEM: Bloqueo en acción crítica detectado',
-      description: alert.description || 'Intento de violación de política o anomalía de seguridad interceptada en tiempo real.',
+      description:
+        alert.description ||
+        'Intento de violación de política o anomalía de seguridad interceptada en tiempo real.',
       severity: alert.severity || 'CRITICAL',
     });
     setTimeout(() => setSecurityAlert(null), 9000);
@@ -117,7 +148,6 @@ export const App: React.FC = () => {
       });
     },
     onAlertUpdated: (data) => {
-      // Si la alerta visualmente activa en el banner fue resuelta, cerrarla reactivamente
       if (data && data.alert_id) {
         setSecurityAlert((prev) => (prev && prev.id === data.alert_id ? null : prev));
       }
@@ -129,209 +159,217 @@ export const App: React.FC = () => {
   };
 
   // ── Pantalla de autenticación ──────────────────────────────────────────────
-  if (!isAuthenticated) {
+  if (!isAuthenticated || window.location.hash === '#auth') {
     return (
-      <ThemeProvider>
-        <ToastProvider>
-          <AuthView
-            onAuthenticated={() => {
-              setIsAuthenticated(true);
-              setCurrentView('overview');
-              window.location.hash = '#overview';
-            }}
-          />
-          <ToastContainer />
-        </ToastProvider>
-      </ThemeProvider>
+      <AuthView
+        onAuthenticated={() => {
+          handleNavigate('overview');
+        }}
+      />
     );
   }
 
   // ── Dashboard principal (post-login) ──────────────────────────────────────
   return (
+    <div className="app-container">
+      {/* Banner superior de modo degradado / pérdida de conectividad */}
+      {isDegradedMode && (
+        <div
+          role="status"
+          style={{
+            backgroundColor: '#1E1711',
+            borderBottom: '1px solid rgba(245, 158, 11, 0.4)',
+            color: '#FDE68A',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '12px',
+            fontWeight: 500,
+            zIndex: 99998,
+            position: 'relative',
+            width: '100%',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <WifiOff size={16} style={{ color: '#F59E0B', flexShrink: 0 }} />
+            <span>Modo degradado: conexión interrumpida con el backend o la base de datos</span>
+          </div>
+          <button
+            type="button"
+            onClick={checkConnectivity}
+            disabled={isCheckingHealth}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              borderRadius: '6px',
+              color: '#FDE68A',
+              padding: '4px 12px',
+              fontSize: '11px',
+              fontWeight: 600,
+              cursor: isCheckingHealth ? 'not-allowed' : 'pointer',
+              transition: 'all 0.15s ease-in-out',
+            }}
+          >
+            <RefreshCw size={12} className={isCheckingHealth ? 'animate-spin' : ''} />
+            <span>{isCheckingHealth ? 'Verificando...' : 'Reintentar conexión'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Global SIEM Incident Banner */}
+      {securityAlert && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            backgroundColor: '#1E1218',
+            border: '1px solid #EF4444',
+            boxShadow:
+              '0 12px 36px rgba(239, 68, 68, 0.45), 0 0 20px rgba(239, 68, 68, 0.25)',
+            borderRadius: '10px',
+            padding: '14px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px',
+            maxWidth: '640px',
+            width: '90%',
+          }}
+        >
+          <div
+            style={{
+              padding: '8px',
+              backgroundColor: 'rgba(239, 68, 68, 0.2)',
+              borderRadius: '8px',
+              color: '#EF4444',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <ShieldAlert size={22} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                color: '#F87171',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                letterSpacing: '0.5px',
+              }}
+            >
+              <span>🚨 SIEM SECURITY INCIDENT</span>
+              <span
+                style={{
+                  fontSize: '10px',
+                  backgroundColor: '#EF4444',
+                  color: '#fff',
+                  padding: '1px 6px',
+                  borderRadius: '4px',
+                  fontWeight: 700,
+                }}
+              >
+                {securityAlert.severity || 'CRITICAL'}
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: '13px',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                marginTop: '2px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {securityAlert.title}
+            </div>
+            {securityAlert.description && (
+              <div
+                style={{
+                  fontSize: '11px',
+                  color: '#CBD5E1',
+                  marginTop: '3px',
+                  lineHeight: 1.3,
+                }}
+              >
+                {securityAlert.description}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => setSecurityAlert(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#94A3B8',
+              cursor: 'pointer',
+              padding: '4px',
+              flexShrink: 0,
+            }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* Fixed Left Navigation Bar */}
+      <Sidebar
+        currentView={currentView}
+        onNavigate={handleNavigate}
+        pendingApprovalsCount={pendingApprovalsCount}
+        onLogout={() => {
+          logout();
+          window.location.hash = '#auth';
+        }}
+      />
+
+      {/* Main Content Area */}
+      <main className="main-content">
+        {currentView === 'overview' && (
+          <OverviewView
+            onNavigate={handleNavigate}
+            pendingApprovalsCount={pendingApprovalsCount}
+          />
+        )}
+        {currentView === 'agents' && <AgentsView />}
+        {currentView === 'tools' && <ToolsView />}
+        {currentView === 'policies' && <PoliciesView />}
+        {currentView === 'approvals' && (
+          <ApprovalsView onUpdatePendingCount={setPendingApprovalsCount} />
+        )}
+        {currentView === 'traces' && <TracesView />}
+        {currentView === 'playground' && (
+          <PlaygroundView
+            onTriggerApproval={handleTriggerApprovalFromPlayground}
+            onTriggerAlert={handleTriggerAlert}
+            onNavigate={handleNavigate}
+          />
+        )}
+        {currentView === 'settings' && <SettingsView />}
+      </main>
+    </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
     <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
-          <div className="app-container">
-            {/* Banner superior de modo degradado / pérdida de conectividad */}
-            {isDegradedMode && (
-              <div
-                role="status"
-                style={{
-                  backgroundColor: '#1E1711',
-                  borderBottom: '1px solid rgba(245, 158, 11, 0.4)',
-                  color: '#FDE68A',
-                  padding: '8px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  zIndex: 99998,
-                  position: 'relative',
-                  width: '100%',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <WifiOff size={16} style={{ color: '#F59E0B', flexShrink: 0 }} />
-                  <span>Modo degradado: conexión interrumpida con el backend o la base de datos</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={checkConnectivity}
-                  disabled={isCheckingHealth}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                    border: '1px solid rgba(245, 158, 11, 0.35)',
-                    borderRadius: '6px',
-                    color: '#FDE68A',
-                    padding: '4px 12px',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    cursor: isCheckingHealth ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.15s ease-in-out',
-                  }}
-                >
-                  <RefreshCw size={12} className={isCheckingHealth ? 'animate-spin' : ''} />
-                  <span>{isCheckingHealth ? 'Verificando...' : 'Reintentar conexión'}</span>
-                </button>
-              </div>
-            )}
-
-            {/* Global SIEM Incident Banner */}
-            {securityAlert && (
-              <div
-                style={{
-                  position: 'fixed',
-                  top: '20px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  zIndex: 99999,
-                  backgroundColor: '#1E1218',
-                  border: '1px solid #EF4444',
-                  boxShadow: '0 12px 36px rgba(239, 68, 68, 0.45), 0 0 20px rgba(239, 68, 68, 0.25)',
-                  borderRadius: '10px',
-                  padding: '14px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  maxWidth: '640px',
-                  width: '90%',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '8px',
-                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                    borderRadius: '8px',
-                    color: '#EF4444',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <ShieldAlert size={22} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      color: '#F87171',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    <span>🚨 SIEM SECURITY INCIDENT</span>
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        backgroundColor: '#EF4444',
-                        color: '#fff',
-                        padding: '1px 6px',
-                        borderRadius: '4px',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {securityAlert.severity || 'CRITICAL'}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      color: '#FFFFFF',
-                      marginTop: '2px',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {securityAlert.title}
-                  </div>
-                  {securityAlert.description && (
-                    <div style={{ fontSize: '11px', color: '#CBD5E1', marginTop: '3px', lineHeight: 1.3 }}>
-                      {securityAlert.description}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => setSecurityAlert(null)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#94A3B8',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    flexShrink: 0,
-                  }}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-
-            {/* Fixed Left Navigation Bar */}
-            <Sidebar
-              currentView={currentView}
-              onNavigate={handleNavigate}
-              pendingApprovalsCount={pendingApprovalsCount}
-              onLogout={() => {
-                setIsAuthenticated(false);
-                window.location.hash = '';
-              }}
-            />
-
-            {/* Main Content Area */}
-            <main className="main-content">
-              {currentView === 'overview' && (
-                <OverviewView onNavigate={handleNavigate} pendingApprovalsCount={pendingApprovalsCount} />
-              )}
-              {currentView === 'agents' && <AgentsView />}
-              {currentView === 'tools' && <ToolsView />}
-              {currentView === 'policies' && <PoliciesView />}
-              {currentView === 'approvals' && (
-                <ApprovalsView onUpdatePendingCount={setPendingApprovalsCount} />
-              )}
-              {currentView === 'traces' && <TracesView />}
-              {currentView === 'playground' && (
-                <PlaygroundView
-                  onTriggerApproval={handleTriggerApprovalFromPlayground}
-                  onTriggerAlert={handleTriggerAlert}
-                  onNavigate={handleNavigate}
-                />
-              )}
-              {currentView === 'settings' && <SettingsView />}
-            </main>
-
-            {/* Global Toast Container */}
-            <ToastContainer />
-          </div>
+          <AppContent />
+          <ToastContainer />
         </ToastProvider>
       </AuthProvider>
     </ThemeProvider>

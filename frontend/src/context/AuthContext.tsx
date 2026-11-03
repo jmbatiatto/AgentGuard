@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
-import { DEMO_IDS } from '../services/api';
-import type { UserRole } from '../types/domain';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api, DEMO_IDS } from '../services/api';
+import type { User, UserRole, AuthCredentials, RegisterData } from '../types/domain';
 
-export interface AuthUser {
+export interface AuthUser extends User {
   id: string;
   name: string;
   email: string;
@@ -84,36 +84,184 @@ export const DEMO_PROFILES: AuthUser[] = [
   },
 ];
 
-interface AuthContextType {
+export function formatAuthUser(user: Partial<User> | Partial<AuthUser>): AuthUser {
+  const email = user.email || 'usuario@acmecorp.com';
+  const name = user.name || email.split('@')[0];
+  const role: UserRole = user.role || 'ADMIN';
+  const initials =
+    user.avatarInitials ||
+    (name
+      ? name
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .substring(0, 2)
+          .toUpperCase()
+      : 'AG');
+
+  // Coincidencia con perfiles demo
+  const demoMatch = DEMO_PROFILES.find(
+    (p) =>
+      (user.id && p.id === user.id) ||
+      (user.email && p.email.toLowerCase() === user.email.toLowerCase())
+  );
+
+  return {
+    id: user.id || (demoMatch ? demoMatch.id : DEMO_IDS.USER_ADMIN_ID),
+    name: user.name || (demoMatch ? demoMatch.name : name),
+    email: email,
+    role: role,
+    organization_id: user.organization_id || user.organizationId || DEMO_IDS.ORG_ACME_ID,
+    organizationId: user.organization_id || user.organizationId || DEMO_IDS.ORG_ACME_ID,
+    avatarInitials: initials,
+    avatarBg:
+      demoMatch?.avatarBg ||
+      (role === 'ADMIN' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(16, 185, 129, 0.2)'),
+    badgeColor: demoMatch?.badgeColor || (role === 'ADMIN' ? '#818CF8' : '#34D399'),
+    description: demoMatch?.description || `Usuario autenticado con rol ${role}`,
+    canApproveHITL: ['ADMIN', 'APPROVER'].includes(role),
+    canConfigurePolicies: ['ADMIN'].includes(role),
+    canManageTeam: ['ADMIN'].includes(role),
+    created_at: user.created_at,
+  };
+}
+
+export interface AuthContextType {
   currentUser: AuthUser;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   switchUser: (userId: string) => void;
   availableUsers: AuthUser[];
+  login: (emailOrCreds: string | AuthCredentials, password?: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'agentguard_active_user_id';
+const STORAGE_TOKEN_KEY = 'agentguard_token';
+const STORAGE_USER_KEY = 'agentguard_user';
+const STORAGE_ACTIVE_ID_KEY = 'agentguard_active_user_id';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<AuthUser>(() => {
-    const savedId = localStorage.getItem(STORAGE_KEY);
-    if (savedId) {
-      const found = DEMO_PROFILES.find(u => u.id === savedId);
-      if (found) return found;
-    }
-    return DEMO_PROFILES[0]; // Default: Jonathan Araujo (ADMIN)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem(STORAGE_TOKEN_KEY));
   });
 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const [currentUser, setCurrentUser] = useState<AuthUser>(() => {
+    const storedUser = localStorage.getItem(STORAGE_USER_KEY);
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        return formatAuthUser(parsed);
+      } catch {
+        // Fallback
+      }
+    }
+    const savedId = localStorage.getItem(STORAGE_ACTIVE_ID_KEY);
+    if (savedId) {
+      const found = DEMO_PROFILES.find((u) => u.id === savedId);
+      if (found) return found;
+    }
+    return DEMO_PROFILES[0];
+  });
+
+  // Hidratación y validación de sesión al inicializar
+  useEffect(() => {
+    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+    if (!token) {
+      setIsAuthenticated(false);
+      setIsLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    api
+      .getMe()
+      .then((user) => {
+        if (!isMounted) return;
+        const formatted = formatAuthUser(user);
+        setCurrentUser(formatted);
+        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
+        localStorage.setItem(STORAGE_ACTIVE_ID_KEY, user.id);
+        setIsAuthenticated(true);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.warn('Token de autenticación expirado o inválido:', err);
+        // Purgar sesión ante token inválido o expirado
+        localStorage.removeItem(STORAGE_TOKEN_KEY);
+        localStorage.removeItem(STORAGE_USER_KEY);
+        localStorage.removeItem(STORAGE_ACTIVE_ID_KEY);
+        setIsAuthenticated(false);
+        setCurrentUser(DEMO_PROFILES[0]);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const login = async (emailOrCreds: string | AuthCredentials, maybePassword?: string) => {
+    const credentials: AuthCredentials =
+      typeof emailOrCreds === 'string'
+        ? { email: emailOrCreds, password: maybePassword || '' }
+        : emailOrCreds;
+
+    const response = await api.login(credentials);
+    localStorage.setItem(STORAGE_TOKEN_KEY, response.access_token);
+    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(response.user));
+    localStorage.setItem(STORAGE_ACTIVE_ID_KEY, response.user.id);
+    setCurrentUser(formatAuthUser(response.user));
+    setIsAuthenticated(true);
+  };
+
+  const register = async (data: RegisterData) => {
+    const response = await api.register(data);
+    localStorage.setItem(STORAGE_TOKEN_KEY, response.access_token);
+    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(response.user));
+    localStorage.setItem(STORAGE_ACTIVE_ID_KEY, response.user.id);
+    setCurrentUser(formatAuthUser(response.user));
+    setIsAuthenticated(true);
+  };
+
+  const logout = useCallback(() => {
+    localStorage.removeItem(STORAGE_TOKEN_KEY);
+    localStorage.removeItem(STORAGE_USER_KEY);
+    localStorage.removeItem(STORAGE_ACTIVE_ID_KEY);
+    setIsAuthenticated(false);
+    setCurrentUser(DEMO_PROFILES[0]);
+  }, []);
+
   const switchUser = (userId: string) => {
-    const target = DEMO_PROFILES.find(u => u.id === userId);
+    const target = DEMO_PROFILES.find((u) => u.id === userId);
     if (target) {
       setCurrentUser(target);
-      localStorage.setItem(STORAGE_KEY, target.id);
+      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(target));
+      localStorage.setItem(STORAGE_ACTIVE_ID_KEY, target.id);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, switchUser, availableUsers: DEMO_PROFILES }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        isAuthenticated,
+        isLoading,
+        switchUser,
+        availableUsers: DEMO_PROFILES,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -122,7 +270,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth debe ser utilizado dentro de un AuthProvider');
   }
   return context;
 };

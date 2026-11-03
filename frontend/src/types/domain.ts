@@ -192,3 +192,39 @@ export interface OrganizationSettings {
   retention_days: number;
 }
 
+
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  role: UserRole;
+  organization_id?: string;
+  organizationId?: string;
+  avatarInitials?: string;
+  avatarBg?: string;
+  badgeColor?: string;
+  description?: string;
+  canApproveHITL?: boolean;
+  canConfigurePolicies?: boolean;
+  canManageTeam?: boolean;
+  created_at?: string;
+}
+
+export interface AuthCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+  organizationName?: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}

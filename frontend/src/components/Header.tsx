@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Sun, Moon, Check, Shield, Lock, RotateCcw } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Check, Shield, Lock, RotateCcw, LogOut } from 'lucide-react';
 import { useTheme } from '../context/useTheme';
 import { useAuth } from '../context/AuthContext';
 import { ROLE_LABELS } from '../constants/labels';
@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton }) => {
   const { theme, toggleTheme } = useTheme();
-  const { currentUser, switchUser, availableUsers } = useAuth();
+  const { currentUser, switchUser, availableUsers, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -389,6 +389,47 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
                 >
                   <RotateCcw size={13} />
                   <span>Reiniciar Estado Demo (Factory Reset)</span>
+                </button>
+              </div>
+
+              {/* Botón de Cerrar Sesión */}
+              <div style={{
+                padding: '8px 12px',
+                borderTop: '1px solid var(--border-subtle)',
+                backgroundColor: 'var(--bg-card)',
+              }}>
+                <button
+                  id="btn-dropdown-logout"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    logout();
+                    window.location.hash = '#auth';
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '7px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                    color: '#F87171',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.16)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)';
+                  }}
+                >
+                  <LogOut size={13} />
+                  <span>Cerrar sesión</span>
                 </button>
               </div>
 
