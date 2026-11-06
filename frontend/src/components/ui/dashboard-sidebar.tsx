@@ -127,7 +127,7 @@ function NavItem({
   return (
     <div className="flex flex-col w-full">
       <div 
-        className={`group flex items-center justify-between py-2 rounded-lg cursor-pointer transition-colors duration-200 select-none border-l-2
+        className={`group flex items-center justify-between py-2.5 rounded-lg cursor-pointer transition-colors duration-200 select-none border-l-2
           ${isActive 
             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500' 
             : 'text-slate-400 hover:bg-slate-800/60 hover:text-white border-transparent'
@@ -280,7 +280,7 @@ export function SidebarNav({
   return (
     <aside className={`flex flex-col w-[240px] h-screen bg-[#0D1520] border-r border-slate-800/80 px-3 pt-5 pb-4 font-sans select-none shrink-0 ${className}`}>
       {/* Workspace Switcher en tarjeta con borde sutil */}
-      <div className="mb-5 px-1">
+      <div className="mb-8 px-1">
         <div className="border border-slate-800 bg-slate-900/50 rounded-xl p-3">
           <WorkspaceSwitcher selected={activeWorkspace} onSelect={onWorkspaceSelect} />
         </div>
