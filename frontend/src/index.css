@@ -314,8 +314,9 @@ pre {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 14px;
-  border-radius: 7px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
   font-family: inherit;
