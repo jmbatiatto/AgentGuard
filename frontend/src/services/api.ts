@@ -297,7 +297,7 @@ class AgentGuardApiClient {
         owner: 'Acme Admin',
         assignedTools: payload.tool_ids && payload.tool_ids.length > 0 ? ['Herramientas Asignadas'] : ['Sin herramientas'],
         status: (data.status || 'ACTIVE') as AgentStatus,
-        lastActivity: 'Recién creado ⚡',
+        lastActivity: 'Sin actividad registrada',
         initials: data.name.split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase(),
       };
     } catch (err) {

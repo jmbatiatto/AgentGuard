@@ -270,10 +270,10 @@ export const TracesView: React.FC = () => {
                               gap: '3px',
                             }}>
                               {trace.status === 'EXECUTED' || trace.approvalStatus === 'APPROVED'
-                                ? '✓ Autorizada por humano'
+                                ? 'Autorizada por humano'
                                 : trace.status === 'PENDING_APPROVAL' || trace.approvalStatus === 'PENDING'
-                                ? '⏳ Esperando aprobación'
-                                : '✕ Rechazada por humano'}
+                                ? 'Esperando aprobación'
+                                : 'Rechazada por humano'}
                             </span>
                           )}
                         </div>

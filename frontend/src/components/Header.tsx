@@ -111,12 +111,6 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
           {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-sky-600" />}
         </button>
 
-        {/* Operational Status Control */}
-        <div className="h-9 px-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 text-[12px] font-medium select-none shadow-2xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981] shrink-0" />
-          <span>Todos los sistemas operativos</span>
-        </div>
-
         {/* Organization / Tenant Selector Dropdown (INC-17) */}
         <div ref={orgDropdownRef} style={{ position: 'relative' }}>
           <button

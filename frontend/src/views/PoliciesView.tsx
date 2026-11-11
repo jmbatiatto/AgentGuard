@@ -24,6 +24,7 @@ import { Header } from '../components/Header';
 import { useToast } from '../context/ToastContext';
 import { SkeletonCard } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
+import { describeConditions, describeConditionJson } from '../utils/policyConditions';
 
 export const PoliciesView: React.FC = () => {
   const { toast } = useToast();
@@ -412,8 +413,8 @@ export const PoliciesView: React.FC = () => {
     }
   });
 
-  // Cálculo de Cobertura de Gobernanza
-  const totalActions = toolActions.length || 5;
+  // Cálculo de Cobertura de Gobernanza (sin métricas supuestas: sólo acciones del backend)
+  const totalActions = toolActions.length;
   const coveredActionsList = toolActions.filter(act => 
     policies.some(p => 
       (p.rules || []).some(r => r.action_name?.toLowerCase() === act.action_name.toLowerCase()) ||
@@ -437,6 +438,10 @@ export const PoliciesView: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, agentFilter, decisionFilter, statusFilter]);
+
+  // Lectura en lenguaje natural de las condiciones que se están editando
+  const conditionPreview = describeConditionJson(conditionStr);
+  const newRuleConditionPreview = describeConditionJson(newRuleConditions);
 
   // Badge de Decisión en Español
   const getDecisionBadge = (dec: PolicyDecision) => {
@@ -598,7 +603,7 @@ export const PoliciesView: React.FC = () => {
                         {act.action_name}
                       </span>
                       <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>
-                        ✓ Protegida
+                        Con política activa
                       </span>
                     </div>
                   ))}
@@ -833,21 +838,17 @@ export const PoliciesView: React.FC = () => {
                         <span>Prioridad: {rule.priority}</span>
                       </div>
 
-                      {rule.conditions && Object.keys(rule.conditions).length > 0 && (
-                        <pre style={{
-                          backgroundColor: '#020617',
-                          border: '1px solid #334155',
-                          borderRadius: '4px',
-                          padding: '6px 8px',
-                          color: '#38BDF8',
-                          fontSize: '11px',
-                          fontFamily: 'monospace',
-                          margin: 0,
-                          overflowX: 'auto',
-                        }}>
-                          {JSON.stringify(rule.conditions, null, 2)}
-                        </pre>
-                      )}
+                      <div style={{
+                        backgroundColor: '#020617',
+                        border: '1px solid #334155',
+                        borderRadius: '4px',
+                        padding: '6px 8px',
+                        color: '#CBD5E1',
+                        fontSize: '11px',
+                        lineHeight: 1.5,
+                      }}>
+                        {describeConditions(rule.conditions)}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1064,7 +1065,7 @@ export const PoliciesView: React.FC = () => {
 
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
-                  Condiciones Contextuales (JSONB)
+                  Condiciones de la regla
                 </label>
                 <textarea
                   rows={2}
@@ -1083,6 +1084,14 @@ export const PoliciesView: React.FC = () => {
                     resize: 'none',
                   }}
                 />
+                <div style={{
+                  marginTop: '6px',
+                  fontSize: '11px',
+                  lineHeight: 1.4,
+                  color: conditionPreview.valid ? 'var(--text-muted)' : '#F87171',
+                }}>
+                  Se leerá como: {conditionPreview.text}
+                </div>
               </div>
 
               <div style={{
@@ -1277,7 +1286,7 @@ export const PoliciesView: React.FC = () => {
 
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
-                  Condiciones Contextuales (JSONB)
+                  Condiciones de la regla
                 </label>
                 <textarea
                   rows={3}
@@ -1296,6 +1305,14 @@ export const PoliciesView: React.FC = () => {
                     resize: 'none',
                   }}
                 />
+                <div style={{
+                  marginTop: '6px',
+                  fontSize: '11px',
+                  lineHeight: 1.4,
+                  color: newRuleConditionPreview.valid ? 'var(--text-muted)' : '#F87171',
+                }}>
+                  Se leerá como: {newRuleConditionPreview.text}
+                </div>
               </div>
 
               <div style={{
@@ -1740,7 +1757,7 @@ export const PoliciesView: React.FC = () => {
                               <tr style={{ backgroundColor: '#1E293B', borderBottom: '1px solid #334155' }}>
                                 <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>ACCIÓN ATÓMICA</th>
                                 <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>AGENTE</th>
-                                <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>CONDICIÓN (JSONB)</th>
+                                <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>CONDICIÓN</th>
                                 <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>DECISIÓN</th>
                                 <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>PRIORIDAD</th>
                                 <th style={{ padding: '9px 14px', textAlign: 'right', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>ACCIONES DE REGLA</th>
@@ -1775,12 +1792,10 @@ export const PoliciesView: React.FC = () => {
                                     </div>
                                   </td>
 
-                                  {/* Condición */}
+                                  {/* Condición expresada en lenguaje natural */}
                                   <td style={{ padding: '10px 14px' }}>
-                                    <span className="code-pill" style={{ fontSize: '11px' }}>
-                                      {rule.conditions && Object.keys(rule.conditions).length > 0
-                                        ? JSON.stringify(rule.conditions)
-                                        : 'Sin restricciones'}
+                                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                      {describeConditions(rule.conditions)}
                                     </span>
                                   </td>
 
@@ -1857,10 +1872,15 @@ export const PoliciesView: React.FC = () => {
             flexWrap: 'wrap',
             gap: '12px',
           }}>
-            <div>
-              <strong style={{ color: 'var(--text-primary)' }}>
-                {filteredPolicies.length}
-              </strong> de <strong style={{ color: 'var(--text-primary)' }}>{policies.length}</strong> políticas mostradas ({totalRulesCount} reglas en total) · <span style={{ color: '#10B981', fontWeight: 600 }}>{allowRulesCount} ALLOW</span> · <span style={{ color: '#F59E0B', fontWeight: 600 }}>{hitlRulesCount} HITL</span> · <span style={{ color: '#EF4444', fontWeight: 600 }}>{denyRulesCount} DENY</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span>
+                <strong style={{ color: 'var(--text-primary)' }}>{filteredPolicies.length}</strong> de{' '}
+                <strong style={{ color: 'var(--text-primary)' }}>{policies.length}</strong> políticas mostradas
+                ({totalRulesCount} reglas en total)
+              </span>
+              <span style={{ color: '#10B981', fontWeight: 600 }}>{allowRulesCount} permitidas</span>
+              <span style={{ color: '#F59E0B', fontWeight: 600 }}>{hitlRulesCount} con aprobación</span>
+              <span style={{ color: '#EF4444', fontWeight: 600 }}>{denyRulesCount} denegadas</span>
             </div>
 
             {/* Controles de Paginación */}

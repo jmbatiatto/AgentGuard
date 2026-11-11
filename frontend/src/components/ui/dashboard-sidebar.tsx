@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronRight,
   Terminal,
+  Check,
 } from 'lucide-react';
 import type { NavView } from '../../types/domain';
 import { ROLE_LABELS } from '../../constants/labels';
@@ -90,7 +91,7 @@ export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps
                   }`}
                 >
                   <span className="truncate">{org.name}</span>
-                  {isSelected && <span className="text-emerald-400 text-xs">✓</span>}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" strokeWidth={2.5} />}
                 </div>
               );
             })}
@@ -263,7 +264,7 @@ export function SidebarNav({
   ];
 
   const bottomItems: NavItemData[] = [
-    { id: 'settings', viewId: 'settings', title: 'Configuración', icon: Settings, shortcut: '⌘,' },
+    { id: 'settings', viewId: 'settings', title: 'Configuración', icon: Settings },
     { id: 'logout', title: 'Cerrar sesión', icon: LogOut },
   ];
 
@@ -280,7 +281,7 @@ export function SidebarNav({
   return (
     <aside className={`flex flex-col w-[240px] h-screen bg-[#0D1520] border-r border-slate-800/80 px-3 pt-5 pb-4 font-sans select-none shrink-0 ${className}`}>
       {/* Workspace Switcher en tarjeta con borde sutil */}
-      <div className="mb-5 px-1">
+      <div className="mb-10 px-1">
         <div className="border border-slate-800 bg-slate-900/50 rounded-xl p-3">
           <WorkspaceSwitcher selected={activeWorkspace} onSelect={onWorkspaceSelect} />
         </div>

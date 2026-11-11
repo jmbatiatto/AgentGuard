@@ -61,19 +61,19 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
 
       const newReq: ApprovalRequest = {
         id: data.approval_id || `appr_${Date.now()}`,
-        agentName: data.agent_name || 'AI Agent',
-        agentInitials: (data.agent_name || 'AI').substring(0, 2).toUpperCase(),
-        action: data.action_name || 'refund.create',
-        resource: data.parameters?.gateway || 'payment/stripe_live',
+        agentName: data.agent_name || 'Agente sin identificar',
+        agentInitials: (data.agent_name || 'AG').substring(0, 2).toUpperCase(),
+        action: data.action_name || 'refund',
+        resource: data.parameters?.gateway || 'payment/stripe',
         amount: amountVal,
-        requestedAt: 'Recién (En Vivo ⚡)',
+        requestedAt: 'Recién',
         status: 'PENDING',
-        delegatedBy: 'Automated Gateway Trigger',
+        delegatedBy: 'Gateway automático',
         riskLevel: (data.risk_level || 'HIGH') as RiskLevel,
-        justification: data.parameters?.reason || 'Operación sensible interceptada por AgentGuard PEP que superó el umbral autónomo.',
+        justification: data.parameters?.reason || 'Operación sensible interceptada por el Gateway PEP al superar el umbral autónomo.',
         appliedPolicy: {
-          name: 'Real-time HITL Interception Policy',
-          condition: 'amount >= $500',
+          name: 'Intercepción HITL en vivo',
+          condition: 'Monto mayor o igual a $ 500',
         },
       };
 
@@ -87,7 +87,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       });
       setSelectedId(newReq.id);
       setFilterTab('PENDING');
-      setResolutionNotice(`⚡ Nueva solicitud en tiempo real: ${newReq.action} (${newReq.amount}) de ${newReq.agentName}`);
+      setResolutionNotice(`Nueva solicitud en tiempo real: ${newReq.action} (${newReq.amount}) de ${newReq.agentName}`);
       setTimeout(() => setResolutionNotice(null), 5000);
     },
     onResolvedApproval: (data) => {
@@ -124,7 +124,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
     }
 
     if (!currentUser.canApproveHITL) {
-      setResolutionNotice(`🔒 Permiso denegado: Tu perfil actual (${currentUser.role}) no tiene permisos para resolver solicitudes HITL. Cambia al rol APPROVER o ADMIN en el selector superior.`);
+      setResolutionNotice(`Permiso denegado: tu perfil actual (${currentUser.role}) no puede resolver solicitudes HITL. Cambiá al rol Aprobador o Administrador en el selector superior.`);
       setTimeout(() => setResolutionNotice(null), 4000);
       return;
     }
@@ -145,7 +145,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       onUpdatePendingCount(remainingCount);
     }
 
-    setResolutionNotice(`Solicitud ${targetReq.action} (${targetReq.amount}) ha sido ${action === 'APPROVED' ? 'Aprobada ✅' : 'Rechazada ❌'} por ${currentUser.name}.`);
+    setResolutionNotice(`Solicitud ${targetReq.action} (${targetReq.amount}) ${action === 'APPROVED' ? 'aprobada' : 'rechazada'} por ${currentUser.name}.`);
     setTimeout(() => setResolutionNotice(null), 4000);
 
     const nextPending = updated.find(r => r.status === 'PENDING');

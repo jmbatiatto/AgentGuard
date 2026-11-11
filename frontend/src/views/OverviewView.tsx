@@ -8,8 +8,6 @@ import {
   ShieldAlert,
   AlertTriangle,
   RefreshCw,
-  Sparkles,
-  Lock,
   Clock,
   ShieldAlert as AlertIcon
 } from 'lucide-react';
@@ -335,7 +333,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         id: alertData.alert_id || `alert_${Date.now()}`,
         title: alertData.title || 'Alerta de Seguridad: Acción crítica bloqueada',
         description: alertData.description || 'Intento de violación de política detectado automáticamente',
-        timeAgo: 'Recién ⚡',
+        timeAgo: 'Recién',
         severity: ((alertData.severity || 'CRITICAL').toUpperCase() as AlertSeverity),
         status: (alertData.status || 'OPEN') as 'OPEN' | 'RESOLVED',
       };
@@ -360,7 +358,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         decision: execData.decision,
         status: execData.status || 'EXECUTED',
         timestamp: new Date().toISOString(),
-        latencyMs: execData.evaluation_latency_ms || 14.5,
+        latencyMs: execData.evaluation_latency_ms ?? 0,
       };
 
       setRecentExecutions(prev => [newExec, ...prev.slice(0, 4)]);
@@ -435,15 +433,22 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
           gap: '12px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={16} color="#10B981" />
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: backendHealth.isOnline ? '#10B981' : '#F59E0B',
+              flexShrink: 0,
+            }} />
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-              {backendHealth.isOnline ? ' Todo en orden' : ' Modo seguro local'}
+              {backendHealth.isOnline ? 'Backend conectado' : 'Backend sin conexión'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-            <Lock size={14} color="#10B981" />
-            <span style={{ color: '#10B981', fontWeight: 600 }}> Entorno protegido</span>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            {backendHealth.isOnline
+              ? 'Decisiones del PDP registradas en auditoría'
+              : 'Operación local sin registro de auditoría'}
           </div>
         </div>
 
@@ -732,7 +737,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                       if (idx >= numPoints) return null;
                       const xPos = numPoints > 1 ? X_MIN + (idx / (numPoints - 1)) * (X_MAX - X_MIN) : 360;
                       const isLast = idx === numPoints - 1;
-                      const label = isLast ? 'Ahora ⚡' : formatHourLabel(points[idx]?.timestamp);
+                      const label = isLast ? 'Ahora' : formatHourLabel(points[idx]?.timestamp);
                       const anchor = idx === 0 ? 'start' : isLast ? 'end' : 'middle';
 
                       return (
@@ -772,10 +777,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                 <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                   <ShieldCheck size={32} color="#10B981" style={{ margin: '0 auto 10px' }} />
                   <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                    Todo tranquilo por ahora. No hay alertas recientes.
+                    Sin alertas abiertas
                   </div>
                   <div style={{ fontSize: '12px' }}>
-                    Tus asistentes están trabajando dentro de las reglas establecidas.
+                    No hay incidentes registrados en el período consultado.
                   </div>
                 </div>
               ) : (
@@ -942,10 +947,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
             <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)', fontSize: '13px' }}>
               <CheckCircle2 size={30} color="#10B981" style={{ margin: '0 auto 8px' }} />
               <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                Todo tranquilo por ahora. Aún no hay actividad reciente registrada.
+                Sin actividad registrada
               </div>
               <div style={{ fontSize: '12px' }}>
-                En cuanto tus asistentes comiencen a realizar tareas, verás cada paso aquí en tiempo real.
+                Las ejecuciones de tus agentes aparecerán acá a medida que ocurran.
               </div>
             </div>
           )}

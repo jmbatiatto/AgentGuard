@@ -36,7 +36,7 @@ const getInitialView = (): NavView => {
 const AppContent: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const [currentView, setCurrentView] = useState<NavView>(getInitialView);
-  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
   const [securityAlert, setSecurityAlert] = useState<{
     id?: string;
     title: string;
@@ -122,7 +122,7 @@ const AppContent: React.FC = () => {
   }) => {
     setSecurityAlert({
       id: alert.id,
-      title: alert.title || '🚨 SIEM: Bloqueo en acción crítica detectado',
+      title: alert.title || 'SIEM: bloqueo en acción crítica',
       description:
         alert.description ||
         'Intento de violación de política o anomalía de seguridad interceptada en tiempo real.',
@@ -268,7 +268,7 @@ const AppContent: React.FC = () => {
                 letterSpacing: '0.5px',
               }}
             >
-              <span>🚨 SIEM SECURITY INCIDENT</span>
+              <span>INCIDENTE DE SEGURIDAD</span>
               <span
                 style={{
                   fontSize: '10px',
