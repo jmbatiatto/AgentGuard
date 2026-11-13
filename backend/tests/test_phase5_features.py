@@ -22,6 +22,7 @@ from app.models.enums import (
 from app.models.organization import Organization
 from app.models.tool import Tool, ToolAction
 from app.models.user import User
+from tests.conftest import make_admin_jwt
 
 
 @pytest.fixture(autouse=True)
@@ -36,17 +37,20 @@ async def test_list_organizations_success():
     """1. GET /api/v1/organizations retorna el listado de organizaciones registradas (INC-17)."""
     org1 = Organization(id=uuid.uuid4(), name="Acme Corp", created_at=datetime.now(timezone.utc))
     org2 = Organization(id=uuid.uuid4(), name="Stark Industries", created_at=datetime.now(timezone.utc))
+    admin_user = User(id=uuid.uuid4(), organization_id=org1.id, email="admin@acme.corp", role=UserRole.ADMIN)
 
     mock_db = AsyncMock()
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = [org1, org2]
-    mock_db.execute.return_value = mock_result
+    mock_db.execute.side_effect = [res_user, mock_result]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/api/v1/organizations")
+        response = await client.get("/api/v1/organizations", headers=make_admin_jwt(admin_user))
 
     assert response.status_code == 200
     data = response.json()
@@ -99,7 +103,7 @@ async def test_siem_webhook_settings_update():
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.patch(
             f"/api/v1/organizations/{org_id}/settings",
-            headers={"X-User-Id": str(admin_user.id)},
+            headers=make_admin_jwt(admin_user),
             json={
                 "siem_webhook_url": "https://siem.internal/alerts",
                 "siem_webhook_enabled": True,
@@ -157,7 +161,7 @@ async def test_siem_webhook_test_ping_success():
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             f"/api/v1/organizations/{org_id}/settings/webhooks/test",
-            headers={"X-User-Id": str(admin_user.id)},
+            headers=make_admin_jwt(admin_user),
             json={
                 "webhook_url": "https://siem.internal/hooks",
                 "secret": "KeySecret123",
@@ -208,7 +212,7 @@ async def test_siem_webhook_test_ping_missing_url():
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             f"/api/v1/organizations/{org_id}/settings/webhooks/test",
-            headers={"X-User-Id": str(admin_user.id)},
+            headers=make_admin_jwt(admin_user),
             json={},
         )
 

@@ -31,6 +31,7 @@ from app.services.organization_service import organization_service
 from app.services.policy_service import policy_service
 from app.services.policy_rule_service import policy_rule_service
 from app.services.user_service import user_service
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -165,6 +166,10 @@ async def test_api_list_audit_events_success():
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
     event_id = uuid.uuid4()
     actor_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
@@ -184,7 +189,10 @@ async def test_api_list_audit_events_success():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/audit-events?organization_id={org_id}&limit=20&skip=0")
+            res = await client.get(
+                f"/api/v1/audit-events?organization_id={org_id}&limit=20&skip=0",
+                headers=make_admin_jwt(admin_user),
+            )
 
             assert res.status_code == 200
             data = res.json()
@@ -206,6 +214,10 @@ async def test_api_list_audit_events_offset_alias_and_filters():
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
 
     with patch.object(audit_service, "list_events", new_callable=AsyncMock) as mock_list:
         mock_list.return_value = []
@@ -213,7 +225,8 @@ async def test_api_list_audit_events_offset_alias_and_filters():
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             res = await client.get(
-                f"/api/v1/audit-events?organization_id={org_id}&offset=15&limit=10&actor_type=AGENT&event_type=TOOL_INVOCATION"
+                f"/api/v1/audit-events?organization_id={org_id}&offset=15&limit=10&actor_type=AGENT&event_type=TOOL_INVOCATION",
+                headers=make_admin_jwt(admin_user),
             )
 
             assert res.status_code == 200
@@ -251,7 +264,7 @@ async def test_api_list_audit_events_tenant_isolation_forbidden():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             # Intento de consultar Tenant B
             res = await client.get(
                 f"/api/v1/audit-events?organization_id={tenant_b_id}",
@@ -290,6 +303,10 @@ async def test_api_get_audit_event_by_id_success():
 
     event_id = uuid.uuid4()
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
     now = datetime.now(timezone.utc)
 
     event = AuditEvent(
@@ -307,7 +324,10 @@ async def test_api_get_audit_event_by_id_success():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/audit-events/{event_id}")
+            res = await client.get(
+                f"/api/v1/audit-events/{event_id}",
+                headers=make_admin_jwt(admin_user),
+            )
 
             assert res.status_code == 200
             data = res.json()
@@ -326,13 +346,20 @@ async def test_api_get_audit_event_not_found():
     app.dependency_overrides[get_db] = lambda: mock_db
 
     event_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=uuid.uuid4(), email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
 
     with patch.object(audit_service, "get_by_id", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = None
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/audit-events/{event_id}")
+            res = await client.get(
+                f"/api/v1/audit-events/{event_id}",
+                headers=make_admin_jwt(admin_user),
+            )
 
             assert res.status_code == 404
             assert "no encontrado" in res.json()["detail"]
@@ -357,6 +384,9 @@ async def test_mutation_agent_lifecycle_logs_audit_events():
 
     fake_org = Organization(id=org_id, name="Security Org", created_at=now)
     fake_user = User(id=user_id, organization_id=org_id, email="owner@sec.io", role=UserRole.ADMIN, created_at=now)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = fake_user
+    mock_db.execute.return_value = res_user
     fake_agent = Agent(
         id=agent_id,
         organization_id=org_id,
@@ -381,6 +411,7 @@ async def test_mutation_agent_lifecycle_logs_audit_events():
         mock_delete_agent.return_value = True
 
         transport = ASGITransport(app=app)
+        headers = make_admin_jwt(fake_user)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             # 1. Crear agente
             res_create = await client.post(
@@ -390,6 +421,7 @@ async def test_mutation_agent_lifecycle_logs_audit_events():
                     "owner_user_id": str(user_id),
                     "name": "AuditedBot",
                 },
+                headers=headers,
             )
             assert res_create.status_code == 201
             assert any(call.kwargs.get("event_type") == "AGENT_CREATED" for call in mock_log_audit.call_args_list)
@@ -408,12 +440,13 @@ async def test_mutation_agent_lifecycle_logs_audit_events():
             res_update = await client.patch(
                 f"/api/v1/agents/{agent_id}",
                 json={"status": "SUSPENDED"},
+                headers=headers,
             )
             assert res_update.status_code == 200
             assert any(call.kwargs.get("event_type") == "AGENT_SUSPENDED" for call in mock_log_audit.call_args_list)
 
             # 3. Eliminar agente
-            res_delete = await client.delete(f"/api/v1/agents/{agent_id}")
+            res_delete = await client.delete(f"/api/v1/agents/{agent_id}", headers=headers)
             assert res_delete.status_code == 204
             assert any(call.kwargs.get("event_type") == "AGENT_DELETED" for call in mock_log_audit.call_args_list)
 
@@ -432,6 +465,9 @@ async def test_mutation_policy_lifecycle_logs_audit_events():
     now = datetime.now(timezone.utc)
 
     admin_user = User(id=admin_id, organization_id=org_id, email="admin@audit.org", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
     fake_org = Organization(id=org_id, name="Audit Org", created_at=now)
     fake_policy = Policy(
         id=policy_id,
@@ -455,6 +491,7 @@ async def test_mutation_policy_lifecycle_logs_audit_events():
         mock_delete_policy.return_value = True
 
         transport = ASGITransport(app=app)
+        headers = make_admin_jwt(admin_user)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             # 1. Crear política
             res_create = await client.post(
@@ -465,6 +502,7 @@ async def test_mutation_policy_lifecycle_logs_audit_events():
                     "priority": 100,
                     "is_active": True,
                 },
+                headers=headers,
             )
             assert res_create.status_code == 201
             assert any(call.kwargs.get("event_type") == "POLICY_CREATED" for call in mock_log_audit.call_args_list)
@@ -483,12 +521,13 @@ async def test_mutation_policy_lifecycle_logs_audit_events():
             res_update = await client.patch(
                 f"/api/v1/policies/{policy_id}",
                 json={"priority": 150},
+                headers=headers,
             )
             assert res_update.status_code == 200
             assert any(call.kwargs.get("event_type") == "POLICY_UPDATED" for call in mock_log_audit.call_args_list)
 
             # 3. Eliminar política
-            res_delete = await client.delete(f"/api/v1/policies/{policy_id}")
+            res_delete = await client.delete(f"/api/v1/policies/{policy_id}", headers=headers)
             assert res_delete.status_code == 204
             assert any(call.kwargs.get("event_type") == "POLICY_DELETED" for call in mock_log_audit.call_args_list)
 
@@ -519,7 +558,7 @@ async def test_api_get_audit_event_tenant_mismatch():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             res = await client.get(
                 f"/api/v1/audit-events/{event_id}?organization_id={tenant_b_id}",
                 headers=headers,
@@ -570,7 +609,7 @@ async def test_mutation_policy_rules_logs_audit_events():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_id)}
+            headers = make_admin_jwt(admin_user)
 
             # 1. Crear regla
             res_create = await client.post(

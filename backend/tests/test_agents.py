@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from app.core.database import get_db
 from app.main import app
 from app.models.agent import Agent, AgentTool
-from app.models.enums import AgentStatus
+from app.models.enums import AgentStatus, UserRole
 from app.models.organization import Organization
 from app.models.tool import Tool
 from app.models.user import User
@@ -18,6 +18,7 @@ from app.services.agent_service import agent_service
 from app.services.organization_service import organization_service
 from app.services.tool_service import tool_service
 from app.services.user_service import user_service
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -109,6 +110,14 @@ async def test_agent_service_assign_tool():
     assert result.config["max_per_hour"] == 100
 
 
+def _setup_admin_auth(mock_db, org_id: uuid.UUID) -> dict[str, str]:
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
+    return make_admin_jwt(admin_user)
+
+
 # ==============================================================================
 # Pruebas de Endpoints HTTP (/api/v1/agents)
 # ==============================================================================
@@ -143,6 +152,7 @@ async def test_api_create_agent_success():
         mock_get_user.return_value = fake_user
         mock_create_agent.return_value = fake_agent
 
+        headers = _setup_admin_auth(mock_db, org_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
@@ -152,6 +162,7 @@ async def test_api_create_agent_success():
                     "owner_user_id": str(user_id),
                     "name": "DevBot",
                 },
+                headers=headers,
             )
 
             assert response.status_code == 201
@@ -182,6 +193,7 @@ async def test_api_create_agent_owner_different_org():
         mock_get_org.return_value = fake_org
         mock_get_user.return_value = fake_user
 
+        headers = _setup_admin_auth(mock_db, org_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
@@ -191,6 +203,7 @@ async def test_api_create_agent_owner_different_org():
                     "owner_user_id": str(user_id),
                     "name": "InvalidBot",
                 },
+                headers=headers,
             )
 
             assert response.status_code == 400
@@ -229,6 +242,7 @@ async def test_api_assign_tool_to_agent_success():
         mock_get_tool.return_value = fake_tool
         mock_assign.return_value = fake_agent_tool
 
+        headers = _setup_admin_auth(mock_db, org_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
@@ -238,6 +252,7 @@ async def test_api_assign_tool_to_agent_success():
                     "enabled": True,
                     "config": {"key": "val"},
                 },
+                headers=headers,
             )
 
             assert response.status_code == 201
@@ -269,11 +284,13 @@ async def test_api_assign_tool_different_org():
         mock_get_agent.return_value = fake_agent
         mock_get_tool.return_value = fake_tool
 
+        headers = _setup_admin_auth(mock_db, org_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 f"/api/v1/agents/{agent_id}/tools",
                 json={"tool_id": str(tool_id)},
+                headers=headers,
             )
 
             assert response.status_code == 400
@@ -308,9 +325,10 @@ async def test_api_list_agent_tools():
         mock_get_agent.return_value = fake_agent
         mock_list_tools.return_value = fake_agent_tools
 
+        headers = _setup_admin_auth(mock_db, fake_agent.organization_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/agents/{agent_id}/tools")
+            response = await client.get(f"/api/v1/agents/{agent_id}/tools", headers=headers)
 
             assert response.status_code == 200
             data = response.json()

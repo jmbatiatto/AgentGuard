@@ -26,6 +26,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core.database import get_db
 from app.main import app
+from tests.conftest import make_admin_jwt
 from app.models.agent import Agent
 from app.models.enums import RiskLevel, RuleEffect, UserRole
 from app.models.policy import Policy, PolicyRule
@@ -81,7 +82,7 @@ async def test_create_rule_in_policy_success():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             payload = {
                 "tool_action_id": str(action_id),
                 "priority": 150,
@@ -140,7 +141,7 @@ async def test_create_rule_in_policy_non_admin_forbidden():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(operator_user.id)}
+            headers = make_admin_jwt(operator_user)
             payload = {
                 "tool_action_id": str(uuid.uuid4()),
                 "priority": 100,
@@ -172,7 +173,7 @@ async def test_create_rule_in_policy_cross_tenant_rejected():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             alien_policy_id = uuid.uuid4()
             payload = {
                 "tool_action_id": str(uuid.uuid4()),
@@ -215,7 +216,7 @@ async def test_create_rule_tool_action_from_different_org():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             payload = {
                 "tool_action_id": str(action_id),
                 "priority": 100,
@@ -262,7 +263,7 @@ async def test_create_rule_target_agent_from_different_org():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             payload = {
                 "tool_action_id": str(action_id),
                 "target_agent_id": str(alien_agent_id),
@@ -313,7 +314,7 @@ async def test_update_policy_rule_success():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             payload = {
                 "priority": 250,
                 "effect": "ALLOW",
@@ -364,7 +365,7 @@ async def test_update_policy_rule_non_admin_forbidden():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(viewer_user.id)}
+            headers = make_admin_jwt(viewer_user)
             payload = {"priority": 200}
             res = await client.patch(f"/api/v1/policy-rules/{uuid.uuid4()}", json=payload, headers=headers)
 
@@ -392,7 +393,7 @@ async def test_update_policy_rule_cross_tenant_rejected():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             alien_rule_id = uuid.uuid4()
             payload = {"priority": 200}
             res = await client.patch(f"/api/v1/policy-rules/{alien_rule_id}", json=payload, headers=headers)
@@ -426,7 +427,7 @@ async def test_delete_policy_rule_individual_success():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             res = await client.delete(f"/api/v1/policy-rules/{rule_id}", headers=headers)
 
             assert res.status_code == 204
@@ -512,7 +513,7 @@ async def test_delete_policy_rule_cross_tenant_rejected():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             alien_rule_id = uuid.uuid4()
             res = await client.delete(f"/api/v1/policy-rules/{alien_rule_id}", headers=headers)
 

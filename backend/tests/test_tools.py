@@ -8,11 +8,14 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core.database import get_db
 from app.main import app
+from app.models.enums import UserRole
 from app.models.organization import Organization
 from app.models.tool import Tool
+from app.models.user import User
 from app.schemas.tool import ToolCreate
 from app.services.organization_service import organization_service
 from app.services.tool_service import tool_service
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -105,6 +108,14 @@ async def test_tool_service_list_by_org():
     assert result[0].name == "Tool 0"
 
 
+def _setup_admin_auth(mock_db, org_id: uuid.UUID) -> dict[str, str]:
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
+    return make_admin_jwt(admin_user)
+
+
 # ==============================================================================
 # Pruebas de Endpoints HTTP (/api/v1/tools)
 # ==============================================================================
@@ -136,6 +147,7 @@ async def test_api_create_tool_success():
         mock_get_org.return_value = fake_org
         mock_create_tool.return_value = fake_tool
 
+        headers = _setup_admin_auth(mock_db, org_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
@@ -147,6 +159,7 @@ async def test_api_create_tool_success():
                     "endpoint_url": "https://wh.logistics.corp",
                     "description": "Sistema de inventario",
                 },
+                headers=headers,
             )
 
             assert response.status_code == 201
@@ -170,6 +183,7 @@ async def test_api_create_tool_organization_not_found():
     with patch.object(organization_service, "get_by_id", new_callable=AsyncMock) as mock_get_org:
         mock_get_org.return_value = None
 
+        headers = _setup_admin_auth(mock_db, missing_org_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
@@ -179,6 +193,7 @@ async def test_api_create_tool_organization_not_found():
                     "name": "Orphan Tool",
                     "endpoint_url": "https://orphan.tool",
                 },
+                headers=headers,
             )
 
             assert response.status_code == 404
@@ -210,9 +225,13 @@ async def test_api_list_tools():
     with patch.object(tool_service, "list_by_org", new_callable=AsyncMock) as mock_list:
         mock_list.return_value = fake_tools
 
+        headers = _setup_admin_auth(mock_db, org_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/tools?organization_id={org_id}&skip=0&limit=10")
+            response = await client.get(
+                f"/api/v1/tools?organization_id={org_id}&skip=0&limit=10",
+                headers=headers,
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -242,9 +261,10 @@ async def test_api_get_tool_found():
     with patch.object(tool_service, "get_by_id", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = fake_tool
 
+        headers = _setup_admin_auth(mock_db, fake_tool.organization_id)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/tools/{tool_id}")
+            response = await client.get(f"/api/v1/tools/{tool_id}", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -263,10 +283,11 @@ async def test_api_get_tool_not_found():
     with patch.object(tool_service, "get_by_id", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = None
 
+        headers = _setup_admin_auth(mock_db, uuid.uuid4())
         random_id = uuid.uuid4()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/tools/{random_id}")
+            response = await client.get(f"/api/v1/tools/{random_id}", headers=headers)
 
             assert response.status_code == 404
             assert "no encontrada" in response.json()["detail"]

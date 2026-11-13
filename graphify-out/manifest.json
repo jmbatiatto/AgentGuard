@@ -42,8 +42,8 @@
     "semantic_hash": ""
   },
   "backend/app/api/organizations.py": {
-    "mtime": 1793716567.64948,
-    "seen": 1793719367.8052692,
+    "mtime": 1793720013.803428,
+    "seen": 1794587637.779278,
     "ast_hash": "f0faeae01962c305c9ca85ceb99b09e4",
     "semantic_hash": ""
   },
@@ -84,9 +84,9 @@
     "semantic_hash": "7a1dcd4e546326e349135dbe60729c47"
   },
   "backend/app/core/config.py": {
-    "mtime": 1792792114.7371073,
-    "seen": 1792792438.855761,
-    "ast_hash": "73574c7bd729a52d2e8a7a369b40f7a7",
+    "mtime": 1793724596.2867923,
+    "seen": 1794587637.779278,
+    "ast_hash": "e281c6f88d5676fb952110e64241e9b9",
     "semantic_hash": ""
   },
   "backend/app/core/database.py": {
@@ -198,14 +198,14 @@
     "semantic_hash": "02ca422c9738bcc72324cd0f532572f4"
   },
   "backend/app/schemas/gateway.py": {
-    "mtime": 1793716934.6374571,
-    "seen": 1793719367.8052692,
+    "mtime": 1793720014.927739,
+    "seen": 1794587637.779278,
     "ast_hash": "27d098552c9db094eaa4982ff0a41cb2",
     "semantic_hash": ""
   },
   "backend/app/schemas/organization.py": {
-    "mtime": 1793716451.6934998,
-    "seen": 1793719367.8052692,
+    "mtime": 1793720015.3278017,
+    "seen": 1794587637.779278,
     "ast_hash": "3c83b804b21d81807d62dbd00df1c516",
     "semantic_hash": ""
   },
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/pep_gateway_service.py": {
-    "mtime": 1793717403.9786997,
-    "seen": 1793719367.8052692,
-    "ast_hash": "e930bc18901a773b4f1f6f224cc16d6f",
+    "mtime": 1794587485.7194366,
+    "seen": 1794587637.779278,
+    "ast_hash": "b118f428af1fb806a8d95714402c55be",
     "semantic_hash": ""
   },
   "backend/app/services/policy_rule_service.py": {
@@ -354,10 +354,10 @@
     "semantic_hash": ""
   },
   "backend/tests/test_pep_gateway_service.py": {
-    "mtime": 1792444966.9554207,
-    "seen": 1792679930.2839012,
-    "ast_hash": "ffa8d270b8c6d4358614f84e41dd2efc",
-    "semantic_hash": "ffa8d270b8c6d4358614f84e41dd2efc"
+    "mtime": 1794587486.4249668,
+    "seen": 1794587637.779278,
+    "ast_hash": "2542b978d52686497aa1d91df5861acb",
+    "semantic_hash": ""
   },
   "backend/tests/test_policies.py": {
     "mtime": 1793625755.9290338,
@@ -448,12 +448,6 @@
     "seen": 1792679930.2839012,
     "ast_hash": "b2aa2c1a0e61ac0ddad8a715648c021f",
     "semantic_hash": "b2aa2c1a0e61ac0ddad8a715648c021f"
-  },
-  "frontend/src/data/mockData.ts": {
-    "mtime": 1793653629.459648,
-    "seen": 1793659151.9655757,
-    "ast_hash": "129f1c945a7c641cb27ce37565d26f6d",
-    "semantic_hash": ""
   },
   "frontend/src/main.tsx": {
     "mtime": 1792363183.444903,
@@ -576,9 +570,9 @@
     "semantic_hash": ""
   },
   "backend/scripts/seed_demo.py": {
-    "mtime": 1793676478.281683,
-    "seen": 1793677713.9103212,
-    "ast_hash": "a9229f52954d08a4720ba466e34a68d3",
+    "mtime": 1793721804.8348436,
+    "seen": 1794587637.779278,
+    "ast_hash": "25fe48530b8b49a64f07da36c74463e0",
     "semantic_hash": ""
   },
   "backend/tests/test_seed_demo.py": {
@@ -594,21 +588,21 @@
     "semantic_hash": ""
   },
   ".github/copilot-instructions.md": {
-    "mtime": 1792696290.57989,
-    "seen": 1792704600.6951466,
-    "ast_hash": "f7a210daefeb52564a2a506150a89e20",
+    "mtime": 1794586448.156031,
+    "seen": 1794587637.7802746,
+    "ast_hash": "823c99b20dd3914cf57702f436ef862f",
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1793675648.6912785,
-    "seen": 1793677713.912079,
-    "ast_hash": "8f93287e7cce3fcc5e018041ad41b414",
+    "mtime": 1794586767.3541243,
+    "seen": 1794587637.7802746,
+    "ast_hash": "9f0d504d6f56af8a54493b7e87809475",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1792696290.577381,
-    "seen": 1792704600.6951466,
-    "ast_hash": "94b9352d32fff791690ebc21c349836d",
+    "mtime": 1794586448.4952512,
+    "seen": 1794587637.7802746,
+    "ast_hash": "823c99b20dd3914cf57702f436ef862f",
     "semantic_hash": ""
   },
   "DECISIONS.md": {
@@ -671,24 +665,6 @@
     "ast_hash": "888e87793f63836a0e332a1f1832d705",
     "semantic_hash": ""
   },
-  "backend/desglose_de_pasos_semana_1_base_de_datos_y_setup_inicial.md": {
-    "mtime": 1791586548.3805275,
-    "seen": 1792682881.678428,
-    "ast_hash": "e0dd43a16e35cfbf9163799cf6caab21",
-    "semantic_hash": ""
-  },
-  "backend/desglose_de_pasos_semana_2_api_rest_de_gestion.md": {
-    "mtime": 1792363183.325188,
-    "seen": 1792682881.678428,
-    "ast_hash": "1c60dd6d02f4515c6c958aa35be04bf5",
-    "semantic_hash": ""
-  },
-  "backend/desglose_de_pasos_semana_3_gateway_interceptor_y_pdp.md": {
-    "mtime": 1792446210.432828,
-    "seen": 1792682881.678428,
-    "ast_hash": "8b88458bda5867bbe6e067505915fe0b",
-    "semantic_hash": ""
-  },
   "backend/requirements.txt": {
     "mtime": 1793625755.9098017,
     "seen": 1793649774.6049895,
@@ -696,9 +672,9 @@
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1791721905.4218543,
-    "seen": 1792682881.678428,
-    "ast_hash": "dd0598ac0049ed21e5cabcb2fa590c32",
+    "mtime": 1793723891.706684,
+    "seen": 1794587637.7802746,
+    "ast_hash": "7caa32e39d7e3a61419f01d284dc3ceb",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -713,34 +689,10 @@
     "ast_hash": "4ab371416a8b0daaab42512f46c5b508",
     "semantic_hash": ""
   },
-  "guia_simple_proyecto_agentguard.html": {
-    "mtime": 1793625756.0684671,
-    "seen": 1793649774.6049895,
-    "ast_hash": "c2d8f9f1ebc4b581ba713c84440040e7",
-    "semantic_hash": ""
-  },
-  "guia_simple_proyecto_agentguard.md": {
-    "mtime": 1791485357.569806,
-    "seen": 1792682881.678428,
-    "ast_hash": "9c51ee6188fb9a50cf1335a5a325f978",
-    "semantic_hash": ""
-  },
   "pnpm-workspace.yaml": {
     "mtime": 1791485526.8488317,
     "seen": 1792682881.678428,
     "ast_hash": "67c37f25b36cf5e85ec1750e98041322",
-    "semantic_hash": ""
-  },
-  "AgentGuard_Propuesta_Desarrollo_Web_v2.pdf": {
-    "mtime": 1791394928.5692146,
-    "seen": 1792682881.678428,
-    "ast_hash": "49652b0b42c0d8c5d647ba29010bf6ec",
-    "semantic_hash": ""
-  },
-  "guia_simple_proyecto_agentguard.pdf": {
-    "mtime": 1791394928.6877294,
-    "seen": 1792682881.678428,
-    "ast_hash": "da9dcf28f851b2d7b30f1c1a4db80b85",
     "semantic_hash": ""
   },
   "frontend/public/favicon.svg": {
@@ -753,24 +705,6 @@
     "mtime": 1793625755.948308,
     "seen": 1793649774.6049895,
     "ast_hash": "21c7473c592c67dc87223d49892c8f0a",
-    "semantic_hash": ""
-  },
-  "frontend/src/assets/hero.png": {
-    "mtime": 1793625755.954363,
-    "seen": 1793649774.6049895,
-    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
-    "semantic_hash": ""
-  },
-  "frontend/src/assets/react.svg": {
-    "mtime": 1793625755.9576447,
-    "seen": 1793649774.6049895,
-    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
-    "semantic_hash": ""
-  },
-  "frontend/src/assets/vite.svg": {
-    "mtime": 1793625755.9602435,
-    "seen": 1793649774.6049895,
-    "ast_hash": "6d5180a782d64c8cf51ba01c2a2184d8",
     "semantic_hash": ""
   },
   "backend/app/api/websocket.py": {
@@ -852,8 +786,8 @@
     "semantic_hash": ""
   },
   "frontend/src/context/AuthContext.tsx": {
-    "mtime": 1793719178.0028102,
-    "seen": 1793719367.810281,
+    "mtime": 1793720017.2547612,
+    "seen": 1794587637.7802746,
     "ast_hash": "2152ba3e10952446da8567d7de12a376",
     "semantic_hash": ""
   },
@@ -879,12 +813,6 @@
     "mtime": 1792792180.5033727,
     "seen": 1792792438.855761,
     "ast_hash": "a38a7d561da14ce9ec9da3321dd75a26",
-    "semantic_hash": ""
-  },
-  "docs/PROPUESTAS_MEJORAS_FRONTEND.md": {
-    "mtime": 1792779611.538643,
-    "seen": 1792782689.5341976,
-    "ast_hash": "d8121dac5603af386a5a11884d6c2cdb",
     "semantic_hash": ""
   },
   "backend/alembic/versions/002_add_latency_ms_to_executions.py": {
@@ -930,9 +858,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ui/dashboard-sidebar.tsx": {
-    "mtime": 1793718568.0650103,
-    "seen": 1793719367.810281,
-    "ast_hash": "f61636a2e21d18aa6000c5a1ffb36a8b",
+    "mtime": 1794580203.9553561,
+    "seen": 1794587637.7802746,
+    "ast_hash": "97de695b2400d71b8ad370d4b35d59b5",
     "semantic_hash": ""
   },
   "frontend/src/constants/labels.ts": {
@@ -945,48 +873,6 @@
     "mtime": 1793677080.2551663,
     "seen": 1793677713.912079,
     "ast_hash": "5a2edbbeab775facf26737d160f25857",
-    "semantic_hash": ""
-  },
-  "INFORME_MOCKUPS_FRONT_BACK.md": {
-    "mtime": 1793653629.2923875,
-    "seen": 1793659151.9655757,
-    "ast_hash": "06b7c4a4374869a9074cd0decbe4c38d",
-    "semantic_hash": ""
-  },
-  "audit_reports/01_AUDITORIA_GAP_DOCUMENTACION.md": {
-    "mtime": 1793396816.1965835,
-    "seen": 1793649774.6049895,
-    "ast_hash": "d924a67eb8d8b2694d669acb6cf1de6c",
-    "semantic_hash": ""
-  },
-  "audit_reports/02_ESTADO_FRONTEND_ALMA_MATER.md": {
-    "mtime": 1793396816.442175,
-    "seen": 1793649774.6049895,
-    "ast_hash": "e33c77e4eefe284a429817cb8ab0edb4",
-    "semantic_hash": ""
-  },
-  "audit_reports/03_ESTADO_BACKEND_PENDIENTES.md": {
-    "mtime": 1793397735.718907,
-    "seen": 1793649774.6049895,
-    "ast_hash": "0936d9bf221b2d3e803576d7d5b30023",
-    "semantic_hash": ""
-  },
-  "audit_reports/04_INVENTARIO_LIMPIEZA_ARCHIVOS_HUERFANOS.md": {
-    "mtime": 1793396816.9354827,
-    "seen": 1793649774.6049895,
-    "ast_hash": "f7be9ed7f0e86a17f5d244bfd7127ffa",
-    "semantic_hash": ""
-  },
-  "audit_reports/05_PREGUNTAS_CLAVE_USUARIO.md": {
-    "mtime": 1793396817.1571264,
-    "seen": 1793649774.6049895,
-    "ast_hash": "15c4b35dddb40188089e8d1c11c33c98",
-    "semantic_hash": ""
-  },
-  "audit_reports/06_RECOMENDACIONES_ARQUITECTURA_Y_MEJORES_PRACTICAS.md": {
-    "mtime": 1793396817.3081627,
-    "seen": 1793649774.6049895,
-    "ast_hash": "613d843bbdad4850e30bfd43c9dbcc20",
     "semantic_hash": ""
   },
   "backend/app/api/analytics.py": {
@@ -1116,9 +1002,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/auth.py": {
-    "mtime": 1793703514.7444377,
-    "seen": 1793719367.8052692,
-    "ast_hash": "caa97f01060b282583ac50f1857efab4",
+    "mtime": 1793722562.3403013,
+    "seen": 1794587637.779278,
+    "ast_hash": "748d83ec60c738a56bfb71a7f28b1c99",
     "semantic_hash": ""
   },
   "backend/app/core/security.py": {
@@ -1134,9 +1020,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_auth.py": {
-    "mtime": 1793677841.4902315,
-    "seen": 1793719367.810281,
-    "ast_hash": "28dd51d2c35a20e366b30f136fe843d2",
+    "mtime": 1793721879.4846494,
+    "seen": 1794587637.779278,
+    "ast_hash": "8380267b597aa7b990f708d52d1eb60c",
     "semantic_hash": ""
   },
   "frontend/src/components/layout/Header.tsx": {
@@ -1152,15 +1038,123 @@
     "semantic_hash": ""
   },
   "backend/app/services/webhook_service.py": {
-    "mtime": 1793716533.1546943,
-    "seen": 1793719367.810281,
-    "ast_hash": "cdae413615f1e0310782ecc551bd12ae",
+    "mtime": 1793719962.662748,
+    "seen": 1794587637.779278,
+    "ast_hash": "271fb500f17452fa0afbf92f6f708ff9",
     "semantic_hash": ""
   },
   "backend/tests/test_phase5_features.py": {
-    "mtime": 1793717133.5726388,
-    "seen": 1793719367.810281,
-    "ast_hash": "6d14b9371005aa30c48648119e31053a",
+    "mtime": 1794587486.8006537,
+    "seen": 1794587637.779278,
+    "ast_hash": "a53b7260ddbfebef96f35f68dc9b9e8e",
+    "semantic_hash": ""
+  },
+  "docs/archive/BRIEFING.md": {
+    "mtime": 1793673261.8964682,
+    "seen": 1794587637.7802746,
+    "ast_hash": "e92a6f1da2620d46381c2b594c6fcd93",
+    "semantic_hash": ""
+  },
+  "docs/archive/INFORME_MOCKUPS_FRONT_BACK.md": {
+    "mtime": 1793653629.2923875,
+    "seen": 1794587637.7802746,
+    "ast_hash": "06b7c4a4374869a9074cd0decbe4c38d",
+    "semantic_hash": ""
+  },
+  "docs/archive/ORIGINAL_REQUEST.md": {
+    "mtime": 1793669553.620047,
+    "seen": 1794587637.7802746,
+    "ast_hash": "0ac8c8e77cf246d14401666cc3fbc806",
+    "semantic_hash": ""
+  },
+  "docs/archive/PROPUESTAS_MEJORAS_FRONTEND.md": {
+    "mtime": 1792779611.538643,
+    "seen": 1794587637.7802746,
+    "ast_hash": "d8121dac5603af386a5a11884d6c2cdb",
+    "semantic_hash": ""
+  },
+  "docs/archive/_AUDIT_MD_INDEX.md": {
+    "mtime": 1794581007.0454185,
+    "seen": 1794587637.7802746,
+    "ast_hash": "bc857caed8ecbb44e11c0c2d7b51f980",
+    "semantic_hash": ""
+  },
+  "docs/archive/_MASTER_PROJECT_SNAPSHOT.md": {
+    "mtime": 1794581007.3194358,
+    "seen": 1794587637.7802746,
+    "ast_hash": "ae5cd5deb8930524a26390fc86d3ea48",
+    "semantic_hash": ""
+  },
+  "docs/archive/audit_reports/01_AUDITORIA_GAP_DOCUMENTACION.md": {
+    "mtime": 1793396816.1965835,
+    "seen": 1794587637.7802746,
+    "ast_hash": "d924a67eb8d8b2694d669acb6cf1de6c",
+    "semantic_hash": ""
+  },
+  "docs/archive/audit_reports/02_ESTADO_FRONTEND_ALMA_MATER.md": {
+    "mtime": 1793396816.442175,
+    "seen": 1794587637.7802746,
+    "ast_hash": "e33c77e4eefe284a429817cb8ab0edb4",
+    "semantic_hash": ""
+  },
+  "docs/archive/audit_reports/03_ESTADO_BACKEND_PENDIENTES.md": {
+    "mtime": 1793397735.718907,
+    "seen": 1794587637.7802746,
+    "ast_hash": "0936d9bf221b2d3e803576d7d5b30023",
+    "semantic_hash": ""
+  },
+  "docs/archive/audit_reports/04_INVENTARIO_LIMPIEZA_ARCHIVOS_HUERFANOS.md": {
+    "mtime": 1793396816.9354827,
+    "seen": 1794587637.7802746,
+    "ast_hash": "f7be9ed7f0e86a17f5d244bfd7127ffa",
+    "semantic_hash": ""
+  },
+  "docs/archive/audit_reports/05_PREGUNTAS_CLAVE_USUARIO.md": {
+    "mtime": 1793396817.1571264,
+    "seen": 1794587637.7802746,
+    "ast_hash": "15c4b35dddb40188089e8d1c11c33c98",
+    "semantic_hash": ""
+  },
+  "docs/archive/audit_reports/06_RECOMENDACIONES_ARQUITECTURA_Y_MEJORES_PRACTICAS.md": {
+    "mtime": 1793396817.3081627,
+    "seen": 1794587637.7802746,
+    "ast_hash": "613d843bbdad4850e30bfd43c9dbcc20",
+    "semantic_hash": ""
+  },
+  "docs/archive/desglose_de_pasos_semana_1_base_de_datos_y_setup_inicial.md": {
+    "mtime": 1791586548.3805275,
+    "seen": 1794587637.7802746,
+    "ast_hash": "e0dd43a16e35cfbf9163799cf6caab21",
+    "semantic_hash": ""
+  },
+  "docs/archive/desglose_de_pasos_semana_2_api_rest_de_gestion.md": {
+    "mtime": 1792363183.325188,
+    "seen": 1794587637.7802746,
+    "ast_hash": "1c60dd6d02f4515c6c958aa35be04bf5",
+    "semantic_hash": ""
+  },
+  "docs/archive/desglose_de_pasos_semana_3_gateway_interceptor_y_pdp.md": {
+    "mtime": 1792446210.432828,
+    "seen": 1794587637.7802746,
+    "ast_hash": "8b88458bda5867bbe6e067505915fe0b",
+    "semantic_hash": ""
+  },
+  "docs/archive/guia_simple_proyecto_agentguard.md": {
+    "mtime": 1791485357.569806,
+    "seen": 1794587637.7802746,
+    "ast_hash": "9c51ee6188fb9a50cf1335a5a325f978",
+    "semantic_hash": ""
+  },
+  "docs/archive/handoff.md": {
+    "mtime": 1793673286.3529775,
+    "seen": 1794587637.7802746,
+    "ast_hash": "725a4821d4b010bf25de2c1f93d0911f",
+    "semantic_hash": ""
+  },
+  "docs/archive/AgentGuard_Propuesta_Desarrollo_Web_v2.pdf": {
+    "mtime": 1791394928.5692146,
+    "seen": 1794587637.7802746,
+    "ast_hash": "49652b0b42c0d8c5d647ba29010bf6ec",
     "semantic_hash": ""
   }
 }

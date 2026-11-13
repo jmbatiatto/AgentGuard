@@ -1,11 +1,13 @@
 """Router de API REST para el Gateway Interceptor en Tiempo de Ejecución (PEP)."""
 
-from fastapi import APIRouter, Depends, Response, status
+from typing import Optional
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.models.enums import PolicyDecision
 from app.schemas.gateway import GatewayExecuteRequest, GatewayExecuteResponse
+from app.services.api_key_service import api_key_service
 from app.services.pep_gateway_service import pep_gateway_service
 
 router = APIRouter(prefix="/gateway", tags=["Gateway (PEP)"])
@@ -39,9 +41,29 @@ router = APIRouter(prefix="/gateway", tags=["Gateway (PEP)"])
 async def execute_gateway_action(
     request: GatewayExecuteRequest,
     response: Response,
+    x_agentguard_key: Optional[str] = Header(default=None, alias="X-AgentGuard-Key"),
     db: AsyncSession = Depends(get_db),
 ) -> GatewayExecuteResponse:
     """Intercepción síncrona en tiempo de ejecución de la invocación de herramientas."""
+    if not x_agentguard_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Cabecera X-AgentGuard-Key requerida para autenticar en el Data Plane",
+        )
+
+    api_key = await api_key_service.verify_api_key(db=db, raw_key=x_agentguard_key)
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API Key inválida, expirada o revocada",
+        )
+
+    if request.organization_id != api_key.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="El agente y la solicitud deben pertenecer a la misma organización de la API Key",
+        )
+
     result = await pep_gateway_service.execute(db=db, request=request)
 
     if result.decision == PolicyDecision.ALLOW:

@@ -5,8 +5,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.enums import ApprovalStatus
+from app.models.user import User
 from app.schemas.approval import ApprovalDetailRead, ApprovalResolveRequest
 from app.services.pep_gateway_service import pep_gateway_service
 
@@ -44,6 +46,7 @@ async def list_approvals(
         le=100,
         description="Límite máximo de registros por página",
     ),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[ApprovalDetailRead]:
     """Retorna solicitudes de aprobación ordenadas con su contexto de ejecución forense."""
@@ -65,6 +68,7 @@ async def list_approvals(
 )
 async def get_approval(
     approval_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ApprovalDetailRead:
     """Retorna una solicitud de aprobación con su traza o 404 si no existe."""
@@ -90,6 +94,7 @@ async def get_approval(
 async def resolve_approval(
     approval_id: UUID,
     resolve_in: ApprovalResolveRequest,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ApprovalDetailRead:
     """Resuelve un ticket de aprobación humana y actualiza el estado de la ejecución forense."""

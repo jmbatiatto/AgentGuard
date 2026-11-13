@@ -132,7 +132,7 @@ class PEPGatewayService:
         agent_res = await db.execute(agent_stmt)
         agent = agent_res.scalar_one_or_none()
 
-        if not agent:
+        if not agent or agent.organization_id != request.organization_id:
             latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
             return GatewayExecuteResponse(
                 execution_id=execution_id,

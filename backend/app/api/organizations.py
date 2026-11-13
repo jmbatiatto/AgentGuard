@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_admin_user
+from app.api.deps import get_current_user, require_admin_user
 from app.core.database import get_db
 from app.models.enums import ActorType
 from app.models.user import User
@@ -32,6 +32,7 @@ router = APIRouter(prefix="/organizations", tags=["Organizations"])
 )
 async def create_organization(
     org_in: OrganizationCreate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> OrganizationRead:
     """Crea un nuevo tenant y lo persiste en la base de datos."""
@@ -58,6 +59,7 @@ async def list_organizations(
         le=500,
         description="Límite máximo de registros por página",
     ),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[OrganizationRead]:
     """Retorna las organizaciones con paginación."""
@@ -73,6 +75,7 @@ async def list_organizations(
 )
 async def get_organization(
     org_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> OrganizationRead:
     """Retorna una organización específica o 404 si no existe."""

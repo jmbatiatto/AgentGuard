@@ -14,6 +14,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate
 from app.services.organization_service import organization_service
 from app.services.user_service import user_service
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -118,10 +119,24 @@ async def test_user_service_list_by_org():
 # Pruebas de Endpoints HTTP (/api/v1/users)
 # ==============================================================================
 
+def _setup_admin_auth(mock_db, org_id=None):
+    admin_user = User(
+        id=uuid.uuid4(),
+        organization_id=org_id or uuid.uuid4(),
+        email="admin@test.com",
+        role=UserRole.ADMIN,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute = AsyncMock(return_value=res_user)
+    return make_admin_jwt(admin_user)
+
+
 @pytest.mark.asyncio
 async def test_api_create_user_success():
     """Valida registro exitoso de usuario (201 Created)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
@@ -149,6 +164,7 @@ async def test_api_create_user_success():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/users",
+                headers=headers,
                 json={
                     "organization_id": str(org_id),
                     "email": "operator@fintech.com",
@@ -170,6 +186,7 @@ async def test_api_create_user_success():
 async def test_api_create_user_organization_not_found():
     """Valida que si la organización no existe devuelva 404."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     missing_org_id = uuid.uuid4()
@@ -181,6 +198,7 @@ async def test_api_create_user_organization_not_found():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/users",
+                headers=headers,
                 json={
                     "organization_id": str(missing_org_id),
                     "email": "user@nonexistent.com",
@@ -197,6 +215,7 @@ async def test_api_create_user_organization_not_found():
 async def test_api_create_user_email_conflict():
     """Valida que si el email ya existe devuelva 409 Conflict."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
@@ -219,6 +238,7 @@ async def test_api_create_user_email_conflict():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/users",
+                headers=headers,
                 json={
                     "organization_id": str(org_id),
                     "email": "duplicate@health.com",
@@ -235,6 +255,7 @@ async def test_api_create_user_email_conflict():
 async def test_api_list_users():
     """Valida listado de usuarios con parámetro de filtro por organización."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
@@ -249,7 +270,7 @@ async def test_api_list_users():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/users?organization_id={org_id}&skip=0&limit=10")
+            response = await client.get(f"/api/v1/users?organization_id={org_id}&skip=0&limit=10", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -263,6 +284,7 @@ async def test_api_list_users():
 async def test_api_get_user_found():
     """Valida consulta de usuario existente por UUID."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     user_id = uuid.uuid4()
@@ -280,7 +302,7 @@ async def test_api_get_user_found():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/users/{user_id}")
+            response = await client.get(f"/api/v1/users/{user_id}", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -295,6 +317,7 @@ async def test_api_get_user_found():
 async def test_api_get_user_not_found():
     """Valida consulta de usuario inexistente (404)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     with patch.object(user_service, "get_by_id", new_callable=AsyncMock) as mock_get:
@@ -303,7 +326,7 @@ async def test_api_get_user_not_found():
         random_id = uuid.uuid4()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/users/{random_id}")
+            response = await client.get(f"/api/v1/users/{random_id}", headers=headers)
 
             assert response.status_code == 404
             assert "no encontrado" in response.json()["detail"]
@@ -364,6 +387,7 @@ async def test_user_service_delete():
 async def test_api_patch_user_role():
     """Valida actualización de rol vía PATCH /api/v1/users/{id}."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     user_id = uuid.uuid4()
@@ -382,6 +406,7 @@ async def test_api_patch_user_role():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.patch(
                 f"/api/v1/users/{user_id}",
+                headers=headers,
                 json={"role": "ADMIN"}
             )
 
@@ -397,6 +422,7 @@ async def test_api_patch_user_role():
 async def test_api_delete_user():
     """Valida eliminación de usuario vía DELETE /api/v1/users/{id}."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     user_id = uuid.uuid4()
@@ -406,7 +432,7 @@ async def test_api_delete_user():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.delete(f"/api/v1/users/{user_id}")
+            response = await client.delete(f"/api/v1/users/{user_id}", headers=headers)
 
             assert response.status_code == 204
 
@@ -417,6 +443,7 @@ async def test_api_delete_user():
 async def test_api_delete_user_not_found():
     """Valida eliminación de usuario inexistente (404)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     user_id = uuid.uuid4()
@@ -426,7 +453,7 @@ async def test_api_delete_user_not_found():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.delete(f"/api/v1/users/{user_id}")
+            response = await client.delete(f"/api/v1/users/{user_id}", headers=headers)
 
             assert response.status_code == 404
             assert "no encontrado" in response.json()["detail"]

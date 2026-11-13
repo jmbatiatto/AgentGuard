@@ -9,15 +9,17 @@ from httpx import ASGITransport, AsyncClient
 from app.core.database import get_db
 from app.main import app
 from app.models.agent import Agent
-from app.models.enums import RiskLevel, RuleEffect
+from app.models.enums import RiskLevel, RuleEffect, UserRole
 from app.models.policy import Policy, PolicyRule
 from app.models.tool import Tool, ToolAction
+from app.models.user import User
 from app.schemas.policy_rule import PolicyRuleCreate
 from app.services.agent_service import agent_service
 from app.services.policy_rule_service import policy_rule_service
 from app.services.policy_service import policy_service
 from app.services.tool_action_service import tool_action_service
 from app.services.tool_service import tool_service
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -117,10 +119,24 @@ async def test_policy_rule_service_list_rules():
 # Pruebas de Endpoints HTTP (/api/v1/policy-rules) — Ruta Separada
 # ==============================================================================
 
+def _setup_admin_auth(mock_db, org_id=None):
+    admin_user = User(
+        id=uuid.uuid4(),
+        organization_id=org_id or uuid.uuid4(),
+        email="admin@test.com",
+        role=UserRole.ADMIN,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute = AsyncMock(return_value=res_user)
+    return make_admin_jwt(admin_user)
+
+
 @pytest.mark.asyncio
 async def test_api_create_policy_rule_success():
     """Valida registro exitoso de una regla de política (201 Created)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
@@ -162,6 +178,7 @@ async def test_api_create_policy_rule_success():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/policy-rules",
+                headers=headers,
                 json={
                     "policy_id": str(policy_id),
                     "tool_action_id": str(action_id),
@@ -185,6 +202,7 @@ async def test_api_create_policy_rule_success():
 async def test_api_create_policy_rule_policy_not_found():
     """Valida que si la política no existe devuelva 404."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     missing_policy_id = uuid.uuid4()
@@ -197,6 +215,7 @@ async def test_api_create_policy_rule_policy_not_found():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/policy-rules",
+                headers=headers,
                 json={
                     "policy_id": str(missing_policy_id),
                     "tool_action_id": str(action_id),
@@ -213,6 +232,7 @@ async def test_api_create_policy_rule_policy_not_found():
 async def test_api_create_policy_rule_target_agent_different_org():
     """Valida que si el agente pertenece a otra organización retorne 400 Bad Request."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
@@ -241,6 +261,7 @@ async def test_api_create_policy_rule_target_agent_different_org():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/policy-rules",
+                headers=headers,
                 json={
                     "policy_id": str(policy_id),
                     "tool_action_id": str(action_id),
@@ -258,6 +279,7 @@ async def test_api_create_policy_rule_target_agent_different_org():
 async def test_api_list_policy_rules():
     """Valida listado de reglas filtradas por política."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     policy_id = uuid.uuid4()
@@ -280,7 +302,7 @@ async def test_api_list_policy_rules():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/policy-rules?policy_id={policy_id}&skip=0&limit=10")
+            response = await client.get(f"/api/v1/policy-rules?policy_id={policy_id}&skip=0&limit=10", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -294,6 +316,7 @@ async def test_api_list_policy_rules():
 async def test_api_get_policy_rule_found():
     """Valida consulta de regla existente por UUID."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     rule_id = uuid.uuid4()
@@ -313,7 +336,7 @@ async def test_api_get_policy_rule_found():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/policy-rules/{rule_id}")
+            response = await client.get(f"/api/v1/policy-rules/{rule_id}", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -328,6 +351,7 @@ async def test_api_get_policy_rule_found():
 async def test_api_get_policy_rule_not_found():
     """Valida consulta de regla inexistente (404)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     with patch.object(policy_rule_service, "get_by_id", new_callable=AsyncMock) as mock_get:
@@ -336,7 +360,7 @@ async def test_api_get_policy_rule_not_found():
         random_id = uuid.uuid4()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/policy-rules/{random_id}")
+            response = await client.get(f"/api/v1/policy-rules/{random_id}", headers=headers)
 
             assert response.status_code == 404
             assert "no encontrada" in response.json()["detail"]

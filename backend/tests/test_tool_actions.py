@@ -8,11 +8,13 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core.database import get_db
 from app.main import app
-from app.models.enums import RiskLevel
+from app.models.enums import RiskLevel, UserRole
 from app.models.tool import Tool, ToolAction
+from app.models.user import User
 from app.schemas.tool_action import ToolActionCreate
 from app.services.tool_service import tool_service
 from app.services.tool_action_service import tool_action_service
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -129,10 +131,24 @@ async def test_tool_action_service_list_actions():
 # Pruebas de Endpoints HTTP (/api/v1/tool-actions) — Ruta Separada
 # ==============================================================================
 
+def _setup_admin_auth(mock_db, org_id=None):
+    admin_user = User(
+        id=uuid.uuid4(),
+        organization_id=org_id or uuid.uuid4(),
+        email="admin@test.com",
+        role=UserRole.ADMIN,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute = AsyncMock(return_value=res_user)
+    return make_admin_jwt(admin_user)
+
+
 @pytest.mark.asyncio
 async def test_api_create_tool_action_success():
     """Valida registro exitoso de una acción atómica (201 Created)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     tool_id = uuid.uuid4()
@@ -167,6 +183,7 @@ async def test_api_create_tool_action_success():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/tool-actions",
+                headers=headers,
                 json={
                     "tool_id": str(tool_id),
                     "action_name": "update_price",
@@ -189,6 +206,7 @@ async def test_api_create_tool_action_success():
 async def test_api_create_tool_action_tool_not_found():
     """Valida que si la herramienta padre no existe devuelva 404."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     missing_tool_id = uuid.uuid4()
@@ -200,6 +218,7 @@ async def test_api_create_tool_action_tool_not_found():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/tool-actions",
+                headers=headers,
                 json={
                     "tool_id": str(missing_tool_id),
                     "action_name": "orphan_action",
@@ -216,6 +235,7 @@ async def test_api_create_tool_action_tool_not_found():
 async def test_api_create_tool_action_duplicate_conflict():
     """Valida que si ya existe una acción con el mismo nombre en la herramienta devuelva 409 Conflict."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     tool_id = uuid.uuid4()
@@ -232,6 +252,7 @@ async def test_api_create_tool_action_duplicate_conflict():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/tool-actions",
+                headers=headers,
                 json={
                     "tool_id": str(tool_id),
                     "action_name": "duplicate_act",
@@ -248,6 +269,7 @@ async def test_api_create_tool_action_duplicate_conflict():
 async def test_api_list_tool_actions():
     """Valida listado de acciones atómicas con filtro por herramienta."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     tool_id = uuid.uuid4()
@@ -268,7 +290,7 @@ async def test_api_list_tool_actions():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/tool-actions?tool_id={tool_id}&skip=0&limit=10")
+            response = await client.get(f"/api/v1/tool-actions?tool_id={tool_id}&skip=0&limit=10", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -282,6 +304,7 @@ async def test_api_list_tool_actions():
 async def test_api_get_tool_action_found():
     """Valida consulta de acción atómica existente por UUID."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     action_id = uuid.uuid4()
@@ -299,7 +322,7 @@ async def test_api_get_tool_action_found():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/tool-actions/{action_id}")
+            response = await client.get(f"/api/v1/tool-actions/{action_id}", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -314,6 +337,7 @@ async def test_api_get_tool_action_found():
 async def test_api_get_tool_action_not_found():
     """Valida consulta de acción atómica inexistente (404)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     with patch.object(tool_action_service, "get_by_id", new_callable=AsyncMock) as mock_get:
@@ -322,7 +346,7 @@ async def test_api_get_tool_action_not_found():
         random_id = uuid.uuid4()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/tool-actions/{random_id}")
+            response = await client.get(f"/api/v1/tool-actions/{random_id}", headers=headers)
 
             assert response.status_code == 404
             assert "no encontrada" in response.json()["detail"]

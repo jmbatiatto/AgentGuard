@@ -25,6 +25,7 @@ from app.models.user import User
 from app.schemas.api_key import ApiKeyCreate, ApiKeyCreatedResponse, ApiKeyResponse
 from app.services.api_key_service import api_key_service
 from app.services.organization_service import organization_service
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -163,11 +164,14 @@ async def test_api_create_api_key_returns_raw_key_once_and_hides_hash():
     mock_db = AsyncMock()
     mock_db.add = MagicMock()
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
 
     fake_org = Organization(id=org_id, name="Acme Security Corp")
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_org = MagicMock()
     res_org.scalar_one_or_none.return_value = fake_org
-    mock_db.execute.return_value = res_org
+    mock_db.execute.side_effect = [res_user, res_org]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -179,7 +183,7 @@ async def test_api_create_api_key_returns_raw_key_once_and_hides_hash():
                 "name": "Integration Worker Key",
                 "expires_in_days": 60,
             }
-            res = await client.post("/api/v1/api-keys", json=payload)
+            res = await client.post("/api/v1/api-keys", json=payload, headers=make_admin_jwt(admin_user))
             assert res.status_code == 201
             data = res.json()
 
@@ -201,9 +205,13 @@ async def test_api_create_api_key_returns_raw_key_once_and_hides_hash():
 async def test_api_create_api_key_org_not_found():
     """Valida que POST /api/v1/api-keys con organización inexistente devuelva 404."""
     mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_org = MagicMock()
     res_org.scalar_one_or_none.return_value = None
-    mock_db.execute.return_value = res_org
+    mock_db.execute.side_effect = [res_user, res_org]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -211,10 +219,10 @@ async def test_api_create_api_key_org_not_found():
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             payload = {
-                "organization_id": str(uuid.uuid4()),
+                "organization_id": str(org_id),
                 "name": "Orphan Key",
             }
-            res = await client.post("/api/v1/api-keys", json=payload)
+            res = await client.post("/api/v1/api-keys", json=payload, headers=make_admin_jwt(admin_user))
             assert res.status_code == 404
             assert "no encontrada" in res.json()["detail"]
     finally:
@@ -248,6 +256,7 @@ async def test_api_list_api_keys_does_not_leak_plaintext_or_hash():
     mock_db = AsyncMock()
     org_id = uuid.uuid4()
     key_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
 
     fake_key = ApiKey(
         id=key_id,
@@ -260,18 +269,23 @@ async def test_api_list_api_keys_does_not_leak_plaintext_or_hash():
         is_active=True,
     )
 
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     mock_scalars = MagicMock()
     mock_scalars.all.return_value = [fake_key]
     mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
-    mock_db.execute.return_value = mock_result
+    mock_db.execute.side_effect = [res_user, mock_result]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/api-keys?organization_id={org_id}")
+            res = await client.get(
+                f"/api/v1/api-keys?organization_id={org_id}",
+                headers=make_admin_jwt(admin_user),
+            )
             assert res.status_code == 200
             data = res.json()
             assert len(data) == 1
@@ -312,6 +326,7 @@ async def test_api_get_api_key_by_id_success():
     mock_db = AsyncMock()
     key_id = uuid.uuid4()
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
 
     fake_key = ApiKey(
         id=key_id,
@@ -323,16 +338,21 @@ async def test_api_get_api_key_by_id_success():
         is_active=True,
     )
 
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_mock = MagicMock()
     res_mock.scalar_one_or_none.return_value = fake_key
-    mock_db.execute.return_value = res_mock
+    mock_db.execute.side_effect = [res_user, res_mock]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/api-keys/{key_id}")
+            res = await client.get(
+                f"/api/v1/api-keys/{key_id}",
+                headers=make_admin_jwt(admin_user),
+            )
             assert res.status_code == 200
             data = res.json()
             assert data["id"] == str(key_id)
@@ -348,16 +368,22 @@ async def test_api_get_api_key_by_id_success():
 async def test_api_get_api_key_by_id_not_found():
     """Valida que GET /api/v1/api-keys/{id} devuelva 404 si la llave no existe."""
     mock_db = AsyncMock()
+    admin_user = User(id=uuid.uuid4(), organization_id=uuid.uuid4(), email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_mock = MagicMock()
     res_mock.scalar_one_or_none.return_value = None
-    mock_db.execute.return_value = res_mock
+    mock_db.execute.side_effect = [res_user, res_mock]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/api-keys/{uuid.uuid4()}")
+            res = await client.get(
+                f"/api/v1/api-keys/{uuid.uuid4()}",
+                headers=make_admin_jwt(admin_user),
+            )
             assert res.status_code == 404
             assert "no encontrada" in res.json()["detail"]
     finally:
@@ -370,6 +396,7 @@ async def test_api_revoke_api_key_success():
     mock_db = AsyncMock()
     key_id = uuid.uuid4()
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
 
     fake_key = ApiKey(
         id=key_id,
@@ -380,16 +407,21 @@ async def test_api_revoke_api_key_success():
         is_active=True,
     )
 
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_mock = MagicMock()
     res_mock.scalar_one_or_none.return_value = fake_key
-    mock_db.execute.return_value = res_mock
+    mock_db.execute.side_effect = [res_user, res_mock, res_mock]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.delete(f"/api/v1/api-keys/{key_id}")
+            res = await client.delete(
+                f"/api/v1/api-keys/{key_id}",
+                headers=make_admin_jwt(admin_user),
+            )
             assert res.status_code == 200
             data = res.json()
             assert data["is_active"] is False
@@ -439,7 +471,7 @@ async def test_api_multi_tenant_isolation_cross_tenant_forbidden():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_org_a.id)}
+            headers = make_admin_jwt(admin_org_a)
 
             # Intento de listar llaves de Org B
             res = await client.get(f"/api/v1/api-keys?organization_id={org_b}", headers=headers)

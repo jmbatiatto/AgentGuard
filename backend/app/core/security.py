@@ -1,9 +1,10 @@
 """Módulo de Seguridad, Criptografía y Tokens JWT para AgentGuard."""
 
 from datetime import datetime, timedelta, timezone
-import os
 from typing import Any, Dict, Optional
 import bcrypt
+
+from app.core.config import settings
 
 # Compatibilidad passlib con bcrypt >= 4.0 / 5.0
 if not hasattr(bcrypt, "__about__"):
@@ -25,9 +26,7 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "agentguard-super-secret-key-change-in-prod-2026")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 horas
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -47,17 +46,17 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     """Crea y firma un JWT con expiración calculada."""
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (
-        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
     """Decodifica y valida la firma y expiración de un token JWT."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
         return None

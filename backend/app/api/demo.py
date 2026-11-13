@@ -5,7 +5,10 @@ import sys
 from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime, timezone
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException
+
+from app.api.deps import require_admin_user
+from app.models.user import User
 
 # Garantizar resolución confiable de scripts.seed_demo independientemente del CWD de ejecución
 _backend_root = Path(__file__).resolve().parent.parent.parent
@@ -28,7 +31,9 @@ router = APIRouter(prefix="/demo", tags=["Demo Operations"])
         "con los agentes, herramientas, políticas y trazas iniciales para la presentación."
     ),
 )
-async def reset_demo_data() -> Dict[str, Any]:
+async def reset_demo_data(
+    current_admin: User = Depends(require_admin_user),
+) -> Dict[str, Any]:
     """Ejecuta el re-seeding determinista con reset=True."""
     try:
         await seed_data(reset=True)

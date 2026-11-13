@@ -77,8 +77,8 @@ async def test_login_success():
 
 
 @pytest.mark.asyncio
-async def test_login_seed_user_fallback():
-    """2. Usuario semilla con hashed_password=None usando 'admin123' genera hash y permite login."""
+async def test_login_seed_user_without_hash_rejected():
+    """2. Usuario con hashed_password=None usando contraseñas maestras antiguas es rechazado con 401."""
     org_id = uuid.uuid4()
     user_id = uuid.uuid4()
 
@@ -95,28 +95,23 @@ async def test_login_seed_user_fallback():
     mock_result = MagicMock(spec=Result)
     mock_result.scalar_one_or_none.return_value = user
     mock_db.execute.return_value = mock_result
-    mock_db.commit = AsyncMock()
-    mock_db.refresh = AsyncMock()
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post(
-            "/api/v1/auth/login",
-            json={"email": "admin@acme.corp", "password": "admin123"},
-        )
-
-    assert response.status_code == 200
-    data = response.json()
-    assert "access_token" in data
-    assert user.hashed_password is not None
-    assert mock_db.commit.called
+        for legacy_pwd in ("admin123", "demo-password"):
+            response = await client.post(
+                "/api/v1/auth/login",
+                json={"email": "admin@acme.corp", "password": legacy_pwd},
+            )
+            assert response.status_code == 401
+            assert user.hashed_password is None
 
 
 @pytest.mark.asyncio
 async def test_login_demo_credentials_and_alias():
-    """Validación específica para 'admin@acmecorp.com' con 'demo-password' y alias acme.corp."""
+    """Validación específica para 'admin@acmecorp.com' con hash real de 'demo-password' y alias acme.corp."""
     org_id = uuid.uuid4()
     user_id = uuid.uuid4()
 
@@ -124,7 +119,7 @@ async def test_login_demo_credentials_and_alias():
         id=user_id,
         organization_id=org_id,
         email="admin@acmecorp.com",
-        hashed_password=None,
+        hashed_password=get_password_hash("demo-password"),
         role=UserRole.ADMIN,
         created_at=datetime.now(timezone.utc),
     )
@@ -133,8 +128,6 @@ async def test_login_demo_credentials_and_alias():
     mock_result = MagicMock(spec=Result)
     mock_result.scalar_one_or_none.return_value = user
     mock_db.execute.return_value = mock_result
-    mock_db.commit = AsyncMock()
-    mock_db.refresh = AsyncMock()
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -369,4 +362,27 @@ async def test_anti_ai_shielding_in_control_plane():
 
     assert response.status_code == 403
     assert "AI Agents are not permitted" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_control_plane_rejects_anonymous_and_x_user_id_without_jwt():
+    """11. Endpoints del Control Plane sin JWT (o solo con X-User-Id sin firma) retornan 401."""
+    mock_db = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res_anon = await client.get("/api/v1/organizations")
+        assert res_anon.status_code == 401
+
+        res_spoof = await client.post(
+            f"/api/v1/policies/{uuid.uuid4()}/rules",
+            headers={"X-User-Id": str(uuid.uuid4())},
+            json={
+                "tool_action_id": str(uuid.uuid4()),
+                "effect": "ALLOW",
+                "priority": 10,
+            },
+        )
+        assert res_spoof.status_code == 401
 

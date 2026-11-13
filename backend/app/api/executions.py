@@ -9,9 +9,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.enums import PolicyDecision, ExecutionStatus
 from app.models.execution import Execution
+from app.models.user import User
 from app.schemas.execution import ExecutionResponse
 
 logger = logging.getLogger("agentguard.api.executions")
@@ -67,6 +69,7 @@ async def list_executions(
     status: Optional[ExecutionStatus] = Query(None, description="Filtrar por estado del ciclo de vida"),
     skip: int = Query(0, ge=0, description="Desplazamiento para paginación"),
     limit: int = Query(50, ge=1, le=200, description="Límite de resultados a retornar"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[ExecutionResponse]:
     """Consulta la tabla executions con joins optimizados y orden descendente."""
@@ -107,6 +110,7 @@ async def list_executions(
 )
 async def get_execution_by_id(
     execution_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ExecutionResponse:
     """Busca una traza forense por su identificador UUID único."""

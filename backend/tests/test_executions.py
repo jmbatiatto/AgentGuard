@@ -8,10 +8,24 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core.database import get_db
 from app.main import app
-from app.models.enums import PolicyDecision, ExecutionStatus
+from app.models.enums import PolicyDecision, ExecutionStatus, UserRole
 from app.models.execution import Execution
 from app.models.agent import Agent
 from app.models.tool import Tool, ToolAction
+from app.models.user import User
+from tests.conftest import make_admin_jwt
+
+
+def _make_auth(org_id=None):
+    user = User(
+        id=uuid.uuid4(),
+        organization_id=org_id or uuid.uuid4(),
+        email="admin@test.com",
+        role=UserRole.ADMIN,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = user
+    return res_user, make_admin_jwt(user)
 
 
 @pytest.mark.asyncio
@@ -40,12 +54,13 @@ async def test_list_executions_endpoint():
     mock_scalars.all.return_value = [fake_exec]
     mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
-    mock_db.execute = AsyncMock(return_value=mock_result)
+    res_user, headers = _make_auth()
+    mock_db.execute = AsyncMock(side_effect=[res_user, mock_result])
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get("/api/v1/executions")
+            response = await client.get("/api/v1/executions", headers=headers)
             assert response.status_code == 200
             data = response.json()
             assert isinstance(data, list)
@@ -62,14 +77,15 @@ async def test_get_execution_by_id_not_found():
     mock_db = AsyncMock()
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = None
-    mock_db.execute = AsyncMock(return_value=mock_result)
+    res_user, headers = _make_auth()
+    mock_db.execute = AsyncMock(side_effect=[res_user, mock_result])
     app.dependency_overrides[get_db] = lambda: mock_db
 
     fake_id = uuid.uuid4()
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/executions/{fake_id}")
+            response = await client.get(f"/api/v1/executions/{fake_id}", headers=headers)
             assert response.status_code == 404
             assert "no encontrada" in response.json()["detail"]
     finally:

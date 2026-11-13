@@ -25,6 +25,7 @@ from app.models.user import User
 from app.schemas.analytics import AnalyticsOverviewResponse, AnalyticsTimeseriesResponse
 from app.services.analytics_service import analytics_service
 from app.services.organization_service import organization_service
+from tests.conftest import make_admin_jwt
 
 
 class MockOverviewRow(NamedTuple):
@@ -219,6 +220,10 @@ async def test_api_analytics_overview_success():
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
     org = Organization(id=org_id, name="Acme Corp")
 
     overview_resp = AnalyticsOverviewResponse(
@@ -237,7 +242,10 @@ async def test_api_analytics_overview_success():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/analytics/overview?organization_id={org_id}")
+            res = await client.get(
+                f"/api/v1/analytics/overview?organization_id={org_id}",
+                headers=make_admin_jwt(admin_user),
+            )
 
             assert res.status_code == 200
             data = res.json()
@@ -254,36 +262,66 @@ async def test_api_analytics_overview_success():
 @pytest.mark.asyncio
 async def test_api_analytics_overview_missing_org_id():
     """Valida que si falta el parámetro organization_id se retorne 400 Bad Request."""
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.get("/api/v1/analytics/overview")
-        assert res.status_code == 400
-        assert "obligatorio" in res.json()["detail"].lower()
+    mock_db = AsyncMock()
+    admin_user = User(id=uuid.uuid4(), organization_id=uuid.uuid4(), email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            res = await client.get("/api/v1/analytics/overview", headers=make_admin_jwt(admin_user))
+            assert res.status_code == 400
+            assert "obligatorio" in res.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
 async def test_api_analytics_overview_invalid_uuid():
     """Valida que un valor no convertible a UUID retorne 400 Bad Request."""
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.get("/api/v1/analytics/overview?organization_id=not-a-valid-uuid")
-        assert res.status_code == 400
-        assert "inválido" in res.json()["detail"].lower()
+    mock_db = AsyncMock()
+    admin_user = User(id=uuid.uuid4(), organization_id=uuid.uuid4(), email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            res = await client.get(
+                "/api/v1/analytics/overview?organization_id=not-a-valid-uuid",
+                headers=make_admin_jwt(admin_user),
+            )
+            assert res.status_code == 400
+            assert "inválido" in res.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
 async def test_api_analytics_overview_org_not_found():
     """Valida que una organización inexistente retorne 404 Not Found."""
     mock_db = AsyncMock()
-    app.dependency_overrides[get_db] = lambda: mock_db
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
+    app.dependency_overrides[get_db] = lambda: mock_db
 
     with patch.object(organization_service, "get_by_id", new_callable=AsyncMock) as mock_get_org:
         mock_get_org.return_value = None
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/analytics/overview?organization_id={org_id}")
+            res = await client.get(
+                f"/api/v1/analytics/overview?organization_id={org_id}",
+                headers=make_admin_jwt(admin_user),
+            )
             assert res.status_code == 404
             assert "no encontrada" in res.json()["detail"].lower()
 
@@ -313,7 +351,7 @@ async def test_api_analytics_overview_cross_tenant_forbidden():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             res = await client.get(
                 f"/api/v1/analytics/overview?organization_id={tenant_b_id}",
                 headers=headers,
@@ -347,6 +385,10 @@ async def test_api_analytics_timeseries_success():
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
     org = Organization(id=org_id, name="Acme Corp")
     now = datetime.now(timezone.utc)
 
@@ -366,7 +408,10 @@ async def test_api_analytics_timeseries_success():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/analytics/timeseries?organization_id={org_id}&range=24h")
+            res = await client.get(
+                f"/api/v1/analytics/timeseries?organization_id={org_id}&range=24h",
+                headers=make_admin_jwt(admin_user),
+            )
 
             assert res.status_code == 200
             data = res.json()
@@ -388,18 +433,24 @@ async def test_api_analytics_timeseries_empty_state_and_defaults():
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
     org = Organization(id=org_id, name="Acme Corp")
 
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_ts = MagicMock()
     res_ts.all.return_value = []
-    mock_db.execute.return_value = res_ts
+    mock_db.execute.side_effect = [res_user, res_ts]
 
     with patch.object(organization_service, "get_by_id", new_callable=AsyncMock) as mock_get_org:
         mock_get_org.return_value = org
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/analytics/timeseries?organization_id={org_id}")
+            res = await client.get(
+                f"/api/v1/analytics/timeseries?organization_id={org_id}",
+                headers=make_admin_jwt(admin_user),
+            )
 
             assert res.status_code == 200
             data = res.json()

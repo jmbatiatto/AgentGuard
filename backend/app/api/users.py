@@ -5,7 +5,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user, require_admin_user
 from app.core.database import get_db
+from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.organization_service import organization_service
 from app.services.user_service import user_service
@@ -22,6 +24,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 )
 async def create_user(
     user_in: UserCreate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserRead:
     """Registra un nuevo usuario validando existencia de la organización e unicidad del email."""
@@ -68,6 +71,7 @@ async def list_users(
         le=500,
         description="Límite máximo de registros por página",
     ),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[UserRead]:
     """Retorna el listado de usuarios según los filtros aplicados."""
@@ -88,6 +92,7 @@ async def list_users(
 )
 async def get_user(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserRead:
     """Retorna un usuario por su UUID o 404 si no existe."""
@@ -110,6 +115,7 @@ async def get_user(
 async def update_user(
     user_id: UUID,
     user_in: UserUpdate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserRead:
     """Actualiza el rol del usuario o retorna 404 si no existe."""
@@ -136,6 +142,7 @@ async def update_user(
 )
 async def delete_user(
     user_id: UUID,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Elimina el usuario o retorna 404 si no existe."""

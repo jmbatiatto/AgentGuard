@@ -5,7 +5,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user, require_admin_user
 from app.core.database import get_db
+from app.models.user import User
 from app.schemas.tool_action import ToolActionCreate, ToolActionRead
 from app.services.tool_service import tool_service
 from app.services.tool_action_service import tool_action_service
@@ -22,6 +24,7 @@ router = APIRouter(prefix="/tool-actions", tags=["Tool Actions"])
 )
 async def create_tool_action(
     action_in: ToolActionCreate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolActionRead:
     """Crea una acción atómica validando que la herramienta exista y el nombre sea único para dicha herramienta."""
@@ -71,6 +74,7 @@ async def list_tool_actions(
         le=500,
         description="Límite máximo de registros por página",
     ),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[ToolActionRead]:
     """Retorna las acciones atómicas según los filtros aplicados."""
@@ -91,6 +95,7 @@ async def list_tool_actions(
 )
 async def get_tool_action(
     action_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolActionRead:
     """Retorna una acción atómica por su UUID o 404 si no existe."""

@@ -8,11 +8,14 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core.database import get_db
 from app.main import app
+from app.models.enums import UserRole
 from app.models.organization import Organization
 from app.models.policy import Policy
+from app.models.user import User
 from app.schemas.policy import PolicyCreate
 from app.services.organization_service import organization_service
 from app.services.policy_service import policy_service
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -109,10 +112,24 @@ async def test_policy_service_list_by_org():
 # Pruebas de Endpoints HTTP (/api/v1/policies)
 # ==============================================================================
 
+def _setup_admin_auth(mock_db, org_id=None):
+    admin_user = User(
+        id=uuid.uuid4(),
+        organization_id=org_id or uuid.uuid4(),
+        email="admin@test.com",
+        role=UserRole.ADMIN,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute = AsyncMock(return_value=res_user)
+    return make_admin_jwt(admin_user)
+
+
 @pytest.mark.asyncio
 async def test_api_create_policy_success():
     """Valida registro exitoso de una política (201 Created)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
@@ -139,6 +156,7 @@ async def test_api_create_policy_success():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/policies",
+                headers=headers,
                 json={
                     "organization_id": str(org_id),
                     "name": "Data Export Guard",
@@ -160,6 +178,7 @@ async def test_api_create_policy_success():
 async def test_api_create_policy_organization_not_found():
     """Valida que si la organización no existe devuelva 404."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     missing_org_id = uuid.uuid4()
@@ -171,6 +190,7 @@ async def test_api_create_policy_organization_not_found():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/policies",
+                headers=headers,
                 json={
                     "organization_id": str(missing_org_id),
                     "name": "Orphan Policy",
@@ -187,6 +207,7 @@ async def test_api_create_policy_organization_not_found():
 async def test_api_list_policies():
     """Valida listado de políticas con parámetro de filtro por organización."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     org_id = uuid.uuid4()
@@ -208,7 +229,7 @@ async def test_api_list_policies():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/policies?organization_id={org_id}&skip=0&limit=10")
+            response = await client.get(f"/api/v1/policies?organization_id={org_id}&skip=0&limit=10", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -222,6 +243,7 @@ async def test_api_list_policies():
 async def test_api_get_policy_found():
     """Valida consulta de política existente por UUID."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     policy_id = uuid.uuid4()
@@ -240,7 +262,7 @@ async def test_api_get_policy_found():
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/policies/{policy_id}")
+            response = await client.get(f"/api/v1/policies/{policy_id}", headers=headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -254,6 +276,7 @@ async def test_api_get_policy_found():
 async def test_api_get_policy_not_found():
     """Valida consulta de política inexistente (404)."""
     mock_db = AsyncMock()
+    headers = _setup_admin_auth(mock_db)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     with patch.object(policy_service, "get_by_id", new_callable=AsyncMock) as mock_get:
@@ -262,7 +285,7 @@ async def test_api_get_policy_not_found():
         random_id = uuid.uuid4()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/policies/{random_id}")
+            response = await client.get(f"/api/v1/policies/{random_id}", headers=headers)
 
             assert response.status_code == 404
             assert "no encontrada" in response.json()["detail"]

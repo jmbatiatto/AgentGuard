@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_admin_user
+from app.api.deps import get_current_user, require_admin_user
 from app.core.database import get_db
 from app.models.enums import ActorType
 from app.models.user import User
@@ -83,6 +83,7 @@ async def list_policies(
         le=500,
         description="Límite máximo de registros por página",
     ),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[PolicyRead]:
     """Retorna las políticas según los filtros aplicados."""
@@ -103,6 +104,7 @@ async def list_policies(
 )
 async def get_policy(
     policy_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRead:
     """Retorna una política por su UUID o 404 si no existe."""

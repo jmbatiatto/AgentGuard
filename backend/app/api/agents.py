@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user, require_admin_user
 from app.core.database import get_db
 from app.schemas.agent import (
     AgentCreate,
@@ -14,6 +15,7 @@ from app.schemas.agent import (
     AgentToolRead,
 )
 from app.models.enums import ActorType, AgentStatus
+from app.models.user import User
 from app.services.agent_service import agent_service
 from app.services.audit_service import audit_service
 from app.services.organization_service import organization_service
@@ -32,6 +34,7 @@ router = APIRouter(prefix="/agents", tags=["Agents"])
 )
 async def create_agent(
     agent_in: AgentCreate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentRead:
     """Registra un agente validando existencia del tenant y que el owner pertenezca a la misma organización."""
@@ -95,6 +98,7 @@ async def list_agents(
         le=500,
         description="Límite máximo de registros por página",
     ),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[AgentRead]:
     """Retorna los agentes según los filtros aplicados."""
@@ -115,6 +119,7 @@ async def list_agents(
 )
 async def get_agent(
     agent_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentRead:
     """Retorna un agente por su UUID o 404 si no existe."""
@@ -137,6 +142,7 @@ async def get_agent(
 async def update_agent(
     agent_id: UUID,
     agent_in: AgentUpdate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentRead:
     """Actualiza datos del agente o retorna 404 si no existe."""
@@ -180,6 +186,7 @@ async def update_agent(
 )
 async def delete_agent(
     agent_id: UUID,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Elimina el agente de la base de datos."""
@@ -224,6 +231,7 @@ async def delete_agent(
 async def assign_tool_to_agent(
     agent_id: UUID,
     tool_in: AgentToolCreate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentToolRead:
     """Asocia una herramienta validando existencia de agente y herramienta, y pertenencia a la misma organización."""
@@ -259,6 +267,7 @@ async def assign_tool_to_agent(
 )
 async def list_agent_tools(
     agent_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[AgentToolRead]:
     """Retorna las herramientas asignadas al agente especificado."""

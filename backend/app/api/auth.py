@@ -59,18 +59,8 @@ async def login(
             detail="Credenciales de acceso incorrectas o usuario no encontrado",
         )
 
-    # Validación de contraseña con soporte para usuarios semilla y contraseñas demo
-    valid_password = False
-    if user.hashed_password is not None:
-        valid_password = verify_password(credentials.password, user.hashed_password)
-
-    if not valid_password and credentials.password in ("demo-password", "admin123", "demo123", "secret123"):
-        valid_password = True
-        user.hashed_password = get_password_hash(credentials.password)
-        await db.commit()
-        await db.refresh(user)
-
-    if not valid_password:
+    # Validación estricta de contraseña contra hash almacenado
+    if not user.hashed_password or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales de acceso incorrectas",
@@ -112,7 +102,6 @@ async def register(
 
     # 2. Asignar o crear la organización
     org_name = register_data.organization_name or f"Org {register_data.name}"
-    org = Organization(name=org_name)
     org = Organization(
         id=uuid.uuid4(),
         name=org_name,

@@ -2,14 +2,32 @@
 
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.core.database import get_db
 from app.main import app
 from app.models.approval import Approval
 from app.models.execution import Execution
-from app.models.enums import ApprovalStatus, ExecutionStatus, PolicyDecision
+from app.models.enums import ApprovalStatus, ExecutionStatus, PolicyDecision, UserRole
+from app.models.user import User
+from tests.conftest import make_admin_jwt
+
+
+def _setup_user_auth(org_id=None, role=UserRole.ADMIN):
+    mock_db = AsyncMock()
+    user = User(
+        id=uuid.uuid4(),
+        organization_id=org_id or uuid.uuid4(),
+        email="approver@test.com",
+        role=role,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = user
+    mock_db.execute = AsyncMock(return_value=res_user)
+    app.dependency_overrides[get_db] = lambda: mock_db
+    return make_admin_jwt(user)
 
 
 @pytest.mark.asyncio
@@ -38,18 +56,22 @@ async def test_approvals_list_endpoint():
     )
     approval.execution = execution
 
-    with patch("app.api.approvals.pep_gateway_service.list_approvals", new_callable=AsyncMock) as mock_list:
-        mock_list.return_value = [approval]
+    headers = _setup_user_auth()
+    try:
+        with patch("app.api.approvals.pep_gateway_service.list_approvals", new_callable=AsyncMock) as mock_list:
+            mock_list.return_value = [approval]
 
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get("/api/v1/approvals?skip=0&limit=10")
-            assert res.status_code == 200
-            data = res.json()
-            assert len(data) == 1
-            assert data[0]["id"] == str(appr_id)
-            assert data[0]["status"] == "PENDING"
-            assert data[0]["execution"]["id"] == str(exec_id)
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                res = await client.get("/api/v1/approvals?skip=0&limit=10", headers=headers)
+                assert res.status_code == 200
+                data = res.json()
+                assert len(data) == 1
+                assert data[0]["id"] == str(appr_id)
+                assert data[0]["status"] == "PENDING"
+                assert data[0]["execution"]["id"] == str(exec_id)
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
@@ -66,30 +88,38 @@ async def test_approvals_get_by_id_success():
         created_at=now,
     )
 
-    with patch("app.api.approvals.pep_gateway_service.get_approval_by_id", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = approval
+    headers = _setup_user_auth()
+    try:
+        with patch("app.api.approvals.pep_gateway_service.get_approval_by_id", new_callable=AsyncMock) as mock_get:
+            mock_get.return_value = approval
 
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/approvals/{appr_id}")
-            assert res.status_code == 200
-            data = res.json()
-            assert data["id"] == str(appr_id)
-            assert data["status"] == "PENDING"
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                res = await client.get(f"/api/v1/approvals/{appr_id}", headers=headers)
+                assert res.status_code == 200
+                data = res.json()
+                assert data["id"] == str(appr_id)
+                assert data["status"] == "PENDING"
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
 async def test_approvals_get_by_id_not_found():
     """Valida 404 cuando la aprobación no existe."""
     fake_id = uuid.uuid4()
-    with patch("app.api.approvals.pep_gateway_service.get_approval_by_id", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = None
+    headers = _setup_user_auth()
+    try:
+        with patch("app.api.approvals.pep_gateway_service.get_approval_by_id", new_callable=AsyncMock) as mock_get:
+            mock_get.return_value = None
 
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/approvals/{fake_id}")
-            assert res.status_code == 404
-            assert "no encontrada" in res.json()["detail"]
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                res = await client.get(f"/api/v1/approvals/{fake_id}", headers=headers)
+                assert res.status_code == 404
+                assert "no encontrada" in res.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
@@ -109,39 +139,47 @@ async def test_approvals_resolve_success():
         created_at=now,
     )
 
-    with patch("app.api.approvals.pep_gateway_service.resolve_approval", new_callable=AsyncMock) as mock_res:
-        mock_res.return_value = resolved_approval
+    headers = _setup_user_auth()
+    try:
+        with patch("app.api.approvals.pep_gateway_service.resolve_approval", new_callable=AsyncMock) as mock_res:
+            mock_res.return_value = resolved_approval
 
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            payload = {
-                "decision": "APPROVED",
-                "resolution_reason": "Monto verificado con el cliente por teléfono.",
-                "approver_user_id": str(approver_id),
-            }
-            res = await client.post(f"/api/v1/approvals/{appr_id}/resolve", json=payload)
-            assert res.status_code == 200
-            data = res.json()
-            assert data["id"] == str(appr_id)
-            assert data["status"] == "APPROVED"
-            assert data["resolution_reason"] == "Monto verificado con el cliente por teléfono."
-            assert data["assigned_approver_id"] == str(approver_id)
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                payload = {
+                    "decision": "APPROVED",
+                    "resolution_reason": "Monto verificado con el cliente por teléfono.",
+                    "approver_user_id": str(approver_id),
+                }
+                res = await client.post(f"/api/v1/approvals/{appr_id}/resolve", headers=headers, json=payload)
+                assert res.status_code == 200
+                data = res.json()
+                assert data["id"] == str(appr_id)
+                assert data["status"] == "APPROVED"
+                assert data["resolution_reason"] == "Monto verificado con el cliente por teléfono."
+                assert data["assigned_approver_id"] == str(approver_id)
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
 async def test_approvals_resolve_already_resolved_or_not_found():
     """Valida 400 Bad Request cuando la aprobación ya fue resuelta o no existe."""
     fake_id = uuid.uuid4()
-    with patch("app.api.approvals.pep_gateway_service.resolve_approval", new_callable=AsyncMock) as mock_res:
-        mock_res.return_value = None
+    headers = _setup_user_auth()
+    try:
+        with patch("app.api.approvals.pep_gateway_service.resolve_approval", new_callable=AsyncMock) as mock_res:
+            mock_res.return_value = None
 
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            payload = {
-                "decision": "REJECTED",
-                "resolution_reason": "Rechazo tardío",
-                "approver_user_id": str(uuid.uuid4()),
-            }
-            res = await client.post(f"/api/v1/approvals/{fake_id}/resolve", json=payload)
-            assert res.status_code == 400
-            assert "no existe o ya ha sido resuelta" in res.json()["detail"]
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                payload = {
+                    "decision": "REJECTED",
+                    "resolution_reason": "Rechazo tardío",
+                    "approver_user_id": str(uuid.uuid4()),
+                }
+                res = await client.post(f"/api/v1/approvals/{fake_id}/resolve", headers=headers, json=payload)
+                assert res.status_code == 400
+                assert "no existe o ya ha sido resuelta" in res.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()

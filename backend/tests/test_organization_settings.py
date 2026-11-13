@@ -32,6 +32,7 @@ from app.services.organization_service import (
     DEFAULT_ORGANIZATION_SETTINGS,
     organization_service,
 )
+from tests.conftest import make_admin_jwt
 
 
 # ==============================================================================
@@ -172,6 +173,7 @@ async def test_api_get_settings_success():
     """Valida que GET /api/v1/organizations/{org_id}/settings devuelva la configuración del tenant."""
     mock_db = AsyncMock()
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
     org = Organization(
         id=org_id,
         name="Acme Corp",
@@ -183,16 +185,21 @@ async def test_api_get_settings_success():
         },
     )
 
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_mock = MagicMock()
     res_mock.scalar_one_or_none.return_value = org
-    mock_db.execute.return_value = res_mock
+    mock_db.execute.side_effect = [res_user, res_mock]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/organizations/{org_id}/settings")
+            res = await client.get(
+                f"/api/v1/organizations/{org_id}/settings",
+                headers=make_admin_jwt(admin_user),
+            )
             assert res.status_code == 200
             data = res.json()
             assert data["fail_closed"] is True
@@ -207,16 +214,23 @@ async def test_api_get_settings_success():
 async def test_api_get_settings_not_found():
     """Valida que GET /api/v1/organizations/{org_id}/settings devuelva 404 si el tenant no existe."""
     mock_db = AsyncMock()
+    missing_org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=missing_org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_mock = MagicMock()
     res_mock.scalar_one_or_none.return_value = None
-    mock_db.execute.return_value = res_mock
+    mock_db.execute.side_effect = [res_user, res_mock]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.get(f"/api/v1/organizations/{uuid.uuid4()}/settings")
+            res = await client.get(
+                f"/api/v1/organizations/{missing_org_id}/settings",
+                headers=make_admin_jwt(admin_user),
+            )
             assert res.status_code == 404
             assert "no encontrada" in res.json()["detail"]
     finally:
@@ -228,11 +242,14 @@ async def test_api_patch_settings_success():
     """Valida que PATCH /api/v1/organizations/{org_id}/settings actualice la configuración."""
     mock_db = AsyncMock()
     org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
     org = Organization(id=org_id, name="Acme Corp", settings={})
 
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_mock = MagicMock()
     res_mock.scalar_one_or_none.return_value = org
-    mock_db.execute.return_value = res_mock
+    mock_db.execute.side_effect = [res_user, res_mock]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -245,7 +262,11 @@ async def test_api_patch_settings_success():
                 "retention_days": 365,
             }
             with patch("app.services.organization_service.audit_service.log_audit_event", new_callable=AsyncMock):
-                res = await client.patch(f"/api/v1/organizations/{org_id}/settings", json=payload)
+                res = await client.patch(
+                    f"/api/v1/organizations/{org_id}/settings",
+                    json=payload,
+                    headers=make_admin_jwt(admin_user),
+                )
                 assert res.status_code == 200
                 data = res.json()
                 assert data["mask_sensitive"] is False
@@ -260,9 +281,13 @@ async def test_api_patch_settings_success():
 async def test_api_patch_settings_not_found():
     """Valida que PATCH devuelva 404 si la organización no existe."""
     mock_db = AsyncMock()
+    missing_org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=missing_org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
     res_mock = MagicMock()
     res_mock.scalar_one_or_none.return_value = None
-    mock_db.execute.return_value = res_mock
+    mock_db.execute.side_effect = [res_user, res_mock]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -270,8 +295,9 @@ async def test_api_patch_settings_not_found():
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             res = await client.patch(
-                f"/api/v1/organizations/{uuid.uuid4()}/settings",
+                f"/api/v1/organizations/{missing_org_id}/settings",
                 json={"retention_days": 30},
+                headers=make_admin_jwt(admin_user),
             )
             assert res.status_code == 404
             assert "no encontrada" in res.json()["detail"]
@@ -347,7 +373,7 @@ async def test_api_multi_tenant_isolation_get_cross_tenant_denied():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             # Intento de consultar Tenant B
             res = await client.get(
                 f"/api/v1/organizations/{org_b_id}/settings",
@@ -381,7 +407,7 @@ async def test_api_multi_tenant_isolation_patch_cross_tenant_denied():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             # Intento de mutar Tenant B
             res = await client.patch(
                 f"/api/v1/organizations/{org_b_id}/settings",
@@ -430,7 +456,7 @@ async def test_api_admin_user_same_tenant_allowed():
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            headers = {"X-User-Id": str(admin_user.id)}
+            headers = make_admin_jwt(admin_user)
             res = await client.get(
                 f"/api/v1/organizations/{org_id}/settings",
                 headers=headers,

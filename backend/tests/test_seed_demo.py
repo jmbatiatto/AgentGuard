@@ -1,7 +1,11 @@
 """Pruebas unitarias para el script de inicialización y semillas (seed_demo)."""
 
+import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
+
+from app.core.database import get_db
+from tests.conftest import make_admin_jwt
 
 from app.models.agent import Agent, AgentTool
 from app.models.alert import Alert
@@ -164,13 +168,29 @@ async def test_api_reset_demo_success():
     from httpx import ASGITransport, AsyncClient
     from app.main import app
 
-    with patch("app.api.demo.seed_data", new_callable=AsyncMock) as mock_seed:
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.post("/api/v1/demo/reset")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["status"] == "success"
-            assert str(ORG_ACME_ID) in data["organization_id"]
-            mock_seed.assert_awaited_once_with(reset=True)
+    mock_db = AsyncMock()
+    admin_user = User(
+        id=uuid.uuid4(),
+        organization_id=ORG_ACME_ID,
+        email="admin@test.com",
+        role=UserRole.ADMIN,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute = AsyncMock(return_value=res_user)
+    app.dependency_overrides[get_db] = lambda: mock_db
+    headers = make_admin_jwt(admin_user)
+
+    try:
+        with patch("app.api.demo.seed_data", new_callable=AsyncMock) as mock_seed:
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                response = await client.post("/api/v1/demo/reset", headers=headers)
+                assert response.status_code == 200
+                data = response.json()
+                assert data["status"] == "success"
+                assert str(ORG_ACME_ID) in data["organization_id"]
+                mock_seed.assert_awaited_once_with(reset=True)
+    finally:
+        app.dependency_overrides.clear()
 

@@ -8,10 +8,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.websocket_manager import ws_manager
 from app.models.alert import Alert
 from app.models.enums import AlertSeverity, AlertStatus
+from app.models.user import User
 from app.schemas.alert import AlertRead, AlertUpdateRequest
 
 logger = logging.getLogger("agentguard.api.alerts")
@@ -34,6 +36,7 @@ async def list_alerts(
     severity: Optional[AlertSeverity] = Query(None, description="Filtrar por severidad (CRITICAL, HIGH, MEDIUM, LOW)"),
     skip: int = Query(0, ge=0, description="Paginación: desplazamiento de registros"),
     limit: int = Query(50, ge=1, le=100, description="Paginación: límite máximo de resultados"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[AlertRead]:
     """Retorna alertas de seguridad ordenadas de más recientes a más antiguas."""
@@ -63,6 +66,7 @@ async def list_alerts(
 )
 async def get_alert_by_id(
     alert_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AlertRead:
     """Retorna una alerta por ID o 404 si no existe."""
@@ -87,6 +91,7 @@ async def get_alert_by_id(
 async def update_alert_status(
     alert_id: UUID,
     update_data: AlertUpdateRequest,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AlertRead:
     """Actualiza el estado de una alerta y notifica en tiempo real vía WebSocket."""

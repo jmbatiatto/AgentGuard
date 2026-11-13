@@ -19,10 +19,12 @@ from httpx import ASGITransport, AsyncClient
 from app.core.database import get_db
 from app.main import app
 from app.models.agent import Agent, AgentTool
-from app.models.enums import AgentStatus, ExecutionStatus, PolicyDecision, RiskLevel
+from app.models.enums import AgentStatus, ExecutionStatus, PolicyDecision, RiskLevel, UserRole
 from app.models.execution import Execution
 from app.models.tool import Tool, ToolAction
+from app.models.user import User
 from app.schemas.gateway import GatewayExecuteRequest
+from tests.conftest import make_admin_jwt, make_api_key_pair
 from app.services.pdp_engine import PDPDecisionResult
 from app.services.pep_gateway_service import pep_gateway_service
 
@@ -230,16 +232,25 @@ async def test_executions_api_list_serializes_db_latency_not_hardcoded():
     fake_exec.evaluated_policy_rule = None
     fake_exec.approval = None
 
+    user = User(
+        id=uuid.uuid4(),
+        organization_id=uuid.uuid4(),
+        email="auditor@test.com",
+        role=UserRole.ADMIN,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = user
+
     mock_scalars = MagicMock()
     mock_scalars.all.return_value = [fake_exec]
     mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
-    mock_db.execute = AsyncMock(return_value=mock_result)
+    mock_db.execute = AsyncMock(side_effect=[res_user, mock_result])
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get("/api/v1/executions")
+            response = await client.get("/api/v1/executions", headers=make_admin_jwt(user))
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 1
@@ -278,14 +289,23 @@ async def test_executions_api_get_by_id_serializes_db_latency():
     fake_exec.evaluated_policy_rule = None
     fake_exec.approval = None
 
+    user = User(
+        id=uuid.uuid4(),
+        organization_id=uuid.uuid4(),
+        email="auditor@test.com",
+        role=UserRole.ADMIN,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = user
+
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = fake_exec
-    mock_db.execute = AsyncMock(return_value=mock_result)
+    mock_db.execute = AsyncMock(side_effect=[res_user, mock_result])
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.get(f"/api/v1/executions/{exec_id}")
+            response = await client.get(f"/api/v1/executions/{exec_id}", headers=make_admin_jwt(user))
             assert response.status_code == 200
             data = response.json()
             assert data["id"] == str(exec_id)
@@ -312,6 +332,7 @@ async def test_gateway_execute_endpoint_serializes_real_latency():
     action = ToolAction(id=action_id, tool_id=tool_id, action_name="process_payment", risk_level=RiskLevel.MEDIUM)
     agent_tool = AgentTool(agent_id=agent_id, tool_id=tool_id, enabled=True)
 
+    raw_key, _, res_key = make_api_key_pair(org_id)
     res_agent = MagicMock()
     res_agent.scalar_one_or_none.return_value = agent
     res_tool = MagicMock()
@@ -321,7 +342,7 @@ async def test_gateway_execute_endpoint_serializes_real_latency():
     res_agent_tool = MagicMock()
     res_agent_tool.scalar_one_or_none.return_value = agent_tool
 
-    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+    mock_db.execute.side_effect = [res_key, res_agent, res_tool, res_action, res_agent_tool]
 
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -342,7 +363,11 @@ async def test_gateway_execute_endpoint_serializes_real_latency():
                     "action_name": "process_payment",
                     "parameters": {"amount": 200},
                 }
-                res = await client.post("/api/v1/gateway/execute", json=payload)
+                res = await client.post(
+                    "/api/v1/gateway/execute",
+                    headers={"X-AgentGuard-Key": raw_key},
+                    json=payload,
+                )
                 assert res.status_code == 200
                 data = res.json()
                 assert "latency_ms" in data

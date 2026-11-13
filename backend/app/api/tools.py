@@ -5,7 +5,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user, require_admin_user
 from app.core.database import get_db
+from app.models.user import User
 from app.schemas.tool import ToolCreate, ToolRead, ToolUpdate
 from app.services.organization_service import organization_service
 from app.services.tool_service import tool_service
@@ -23,6 +25,7 @@ router = APIRouter(prefix="/tools", tags=["Tools"])
 )
 async def create_tool(
     tool_in: ToolCreate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolRead:
     """Crea una nueva herramienta externa validando existencia de la organización."""
@@ -59,6 +62,7 @@ async def list_tools(
         le=500,
         description="Límite máximo de registros por página",
     ),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[ToolRead]:
     """Retorna las herramientas según los filtros aplicados."""
@@ -79,6 +83,7 @@ async def list_tools(
 )
 async def get_tool(
     tool_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolRead:
     """Retorna una herramienta por su UUID o 404 si no existe."""
@@ -101,6 +106,7 @@ async def get_tool(
 async def update_tool(
     tool_id: UUID,
     tool_in: ToolUpdate,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolRead:
     """Actualiza una herramienta existente o retorna 404 si no existe."""
@@ -121,6 +127,7 @@ async def update_tool(
 )
 async def delete_tool(
     tool_id: UUID,
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Elimina una herramienta existente."""
