@@ -222,8 +222,8 @@
     "semantic_hash": ""
   },
   "backend/app/schemas/tool.py": {
-    "mtime": 1794593216.9858298,
-    "seen": 1794593398.9488037,
+    "mtime": 1794596368.199533,
+    "seen": 1794602929.8643856,
     "ast_hash": "33f93e56d9bfefad1f0c225d806e6a22",
     "semantic_hash": ""
   },
@@ -378,8 +378,8 @@
     "semantic_hash": "bc5dbe8177179a57c6cfb00d5078cf84"
   },
   "backend/tests/test_schemas.py": {
-    "mtime": 1794593190.3340924,
-    "seen": 1794593398.9498057,
+    "mtime": 1794596369.5067189,
+    "seen": 1794602929.8643856,
     "ast_hash": "041447b96c4014c07411cb306cf9ac68",
     "semantic_hash": ""
   },
@@ -492,14 +492,14 @@
     "semantic_hash": ""
   },
   "frontend/src/views/ToolsView.tsx": {
-    "mtime": 1794593180.3113332,
-    "seen": 1794593398.9498057,
+    "mtime": 1794596376.909268,
+    "seen": 1794602929.8653858,
     "ast_hash": "513513bb25eb4252b4300c1ffe52a9a6",
     "semantic_hash": ""
   },
   "frontend/src/views/TracesView.tsx": {
-    "mtime": 1794593185.1904364,
-    "seen": 1794593398.9498057,
+    "mtime": 1794596378.6695533,
+    "seen": 1794602929.8653858,
     "ast_hash": "c8ac04e1e84cffa2b92eb8716a2fab97",
     "semantic_hash": ""
   },
@@ -618,9 +618,9 @@
     "semantic_hash": ""
   },
   "agent-demo/README.md": {
-    "mtime": 1793625755.7645767,
-    "seen": 1793649774.6049895,
-    "ast_hash": "8d0e03965afac71df1847359efbf96f9",
+    "mtime": 1794602391.9086413,
+    "seen": 1794602929.8653858,
+    "ast_hash": "157fe7c0e1010af1391a9820873e78bd",
     "semantic_hash": ""
   },
   "agentguard_arquitectura_runtime.md": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "frontend/src/views/SettingsView.tsx": {
-    "mtime": 1794593229.3615756,
-    "seen": 1794593398.9498057,
+    "mtime": 1794596374.96498,
+    "seen": 1794602929.8653858,
     "ast_hash": "c3bdbdbabb97c3e570b65fd216fe87cb",
     "semantic_hash": ""
   },
@@ -1167,6 +1167,18 @@
     "mtime": 1794592705.505978,
     "seen": 1794592818.653928,
     "ast_hash": "6fab6bf30a6c42fea436b016de0ad583",
+    "semantic_hash": ""
+  },
+  "agent-demo/run_demo.py": {
+    "mtime": 1794602542.198095,
+    "seen": 1794602929.8633687,
+    "ast_hash": "6bc31b78ef9387b96a49d060f0c269bb",
+    "semantic_hash": ""
+  },
+  "agent-demo/requirements.txt": {
+    "mtime": 1794602539.517215,
+    "seen": 1794602929.8653858,
+    "ast_hash": "f63966fd7a1fcf9f42e38dd8cfc1fb8b",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {
