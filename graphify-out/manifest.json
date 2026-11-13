@@ -456,15 +456,15 @@
     "semantic_hash": "df3369963799e47ef5a77cdca932abf0"
   },
   "frontend/src/types/domain.ts": {
-    "mtime": 1793717729.0025141,
-    "seen": 1793719367.810281,
-    "ast_hash": "bb42640c6f2406daefc1f592e330bdf0",
+    "mtime": 1794591964.5542095,
+    "seen": 1794592818.653928,
+    "ast_hash": "12b34b26db0a4f7096bc146c29300d3b",
     "semantic_hash": ""
   },
   "frontend/src/views/AgentsView.tsx": {
-    "mtime": 1793671127.4354658,
-    "seen": 1793672572.5216236,
-    "ast_hash": "a20cd89a7441535286f48a4a76e15981",
+    "mtime": 1794592713.0977829,
+    "seen": 1794592818.653928,
+    "ast_hash": "e1b872ccdc43bd621a4d1494cda9a921",
     "semantic_hash": ""
   },
   "frontend/src/views/ApprovalsView.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/OverviewView.tsx": {
-    "mtime": 1793659872.9740188,
-    "seen": 1793660019.007696,
-    "ast_hash": "bbf745b2194806b9470cb27ec159f478",
+    "mtime": 1794592715.5750902,
+    "seen": 1794592818.653928,
+    "ast_hash": "0bc190d40d2c166a1adf37cc64bae343",
     "semantic_hash": ""
   },
   "frontend/src/views/PlaygroundView.tsx": {
@@ -726,9 +726,9 @@
     "semantic_hash": ""
   },
   "frontend/src/services/api.ts": {
-    "mtime": 1793718139.6293402,
-    "seen": 1793719367.810281,
-    "ast_hash": "5fbf92c399cc25eecfa5efa5d819d1b0",
+    "mtime": 1794592711.6413348,
+    "seen": 1794592818.653928,
+    "ast_hash": "810455e12f0e637f02d6ea9c932c6242",
     "semantic_hash": ""
   },
   "frontend/src/services/useAgentGuardWebSocket.ts": {
@@ -786,9 +786,9 @@
     "semantic_hash": ""
   },
   "frontend/src/context/AuthContext.tsx": {
-    "mtime": 1793720017.2547612,
-    "seen": 1794587637.7802746,
-    "ast_hash": "2152ba3e10952446da8567d7de12a376",
+    "mtime": 1794592709.0624685,
+    "seen": 1794592818.653928,
+    "ast_hash": "d8df86683ef3fb0a1f14f16e01d3174d",
     "semantic_hash": ""
   },
   "backend/app/api/demo.py": {
@@ -852,9 +852,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ui/auth-ui.tsx": {
-    "mtime": 1793676810.9237177,
-    "seen": 1793677713.912079,
-    "ast_hash": "c94272aa750e3305ce04295ff92a4b4d",
+    "mtime": 1794592707.5388453,
+    "seen": 1794592818.653928,
+    "ast_hash": "64ed287f2e054e12d74e4af9e5315600",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/dashboard-sidebar.tsx": {
@@ -870,9 +870,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/AuthView.tsx": {
-    "mtime": 1793677080.2551663,
-    "seen": 1793677713.912079,
-    "ast_hash": "5a2edbbeab775facf26737d160f25857",
+    "mtime": 1794592713.4405265,
+    "seen": 1794592818.653928,
+    "ast_hash": "0799df70a5385f32bfbbdbb56541e0cc",
     "semantic_hash": ""
   },
   "backend/app/api/analytics.py": {
@@ -1002,9 +1002,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/auth.py": {
-    "mtime": 1794590673.552294,
-    "seen": 1794591443.2007244,
-    "ast_hash": "0b5bf16129e6f90b45d4b3faf23db8c7",
+    "mtime": 1794591890.2539644,
+    "seen": 1794592818.6532052,
+    "ast_hash": "d8d0b52efdfc34e0dcd3e309599cffa8",
     "semantic_hash": ""
   },
   "backend/app/core/security.py": {
@@ -1014,9 +1014,9 @@
     "semantic_hash": ""
   },
   "backend/app/schemas/auth.py": {
-    "mtime": 1793676337.4455545,
-    "seen": 1793677713.9103212,
-    "ast_hash": "0812f7dfd78af8620a93680b40c4e467",
+    "mtime": 1794591882.611501,
+    "seen": 1794592818.653928,
+    "ast_hash": "4514e4220598c9d9d87ffd3b3cf828f3",
     "semantic_hash": ""
   },
   "backend/tests/test_auth.py": {
@@ -1155,6 +1155,18 @@
     "mtime": 1791394928.5692146,
     "seen": 1794587637.7802746,
     "ast_hash": "49652b0b42c0d8c5d647ba29010bf6ec",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_auth_register_org.py": {
+    "mtime": 1794592185.890016,
+    "seen": 1794592818.653928,
+    "ast_hash": "26e261de3c1a21b450b1778bc06ffc39",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/QuickSetupWizard.tsx": {
+    "mtime": 1794592705.505978,
+    "seen": 1794592818.653928,
+    "ast_hash": "6fab6bf30a6c42fea436b016de0ad583",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {
