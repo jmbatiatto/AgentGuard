@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api, DEMO_IDS } from '../services/api';
-import type { User, UserRole, AuthCredentials, RegisterData, Organization } from '../types/domain';
+import type {
+  User,
+  UserRole,
+  AuthCredentials,
+  RegisterData,
+  RegisterOrgData,
+  RegisterOrgResponse,
+  Organization,
+} from '../types/domain';
 
 export interface AuthUser extends User {
   id: string;
@@ -138,6 +146,7 @@ export interface AuthContextType {
   availableUsers: AuthUser[];
   login: (emailOrCreds: string | AuthCredentials, password?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  registerOrg: (data: RegisterOrgData) => Promise<RegisterOrgResponse>;
   logout: () => void;
 }
 
@@ -278,6 +287,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(true);
   };
 
+  const registerOrg = async (data: RegisterOrgData): Promise<RegisterOrgResponse> => {
+    const response = await api.registerOrg(data);
+    const userWithAdminName: User = {
+      ...response.user,
+      name: data.admin_name,
+      organization_id: response.organization.id,
+      organizationId: response.organization.id,
+    };
+
+    localStorage.setItem(STORAGE_TOKEN_KEY, response.access_token);
+    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userWithAdminName));
+    localStorage.setItem(STORAGE_ACTIVE_ID_KEY, response.user.id);
+    localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, response.organization.id);
+    api.setActiveOrganizationId(response.organization.id);
+
+    setAvailableOrganizations((prev) => {
+      const exists = prev.some((o) => o.id === response.organization.id);
+      return exists ? prev : [response.organization, ...prev];
+    });
+    setCurrentOrganizationId(response.organization.id);
+    setCurrentUser(formatAuthUser(userWithAdminName));
+    setIsAuthenticated(true);
+
+    return {
+      ...response,
+      user: userWithAdminName,
+    };
+  };
+
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_TOKEN_KEY);
     localStorage.removeItem(STORAGE_USER_KEY);
@@ -327,6 +365,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         availableUsers: DEMO_PROFILES,
         login,
         register,
+        registerOrg,
         logout,
       }}
     >

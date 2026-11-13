@@ -14,6 +14,7 @@ import {
   ShieldAlert as AlertIcon
 } from 'lucide-react';
 import { Header } from '../components/Header';
+import { QuickSetupWizard } from '../components/QuickSetupWizard';
 import { api, DEMO_IDS } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import type {
@@ -267,6 +268,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isBackendReady, setIsBackendReady] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   const loadOverviewData = async () => {
     setIsRefreshing(true);
@@ -420,27 +422,43 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         title="Vista general"
         subtitle="Un vistazo a las tareas de tus asistentes y los bloqueos de seguridad del día."
         actionButton={
-          <button
-            onClick={loadOverviewData}
-            title="Actualizar datos en tiempo real"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
-              borderRadius: '8px',
-              fontSize: '12px',
-              cursor: 'pointer',
-              fontWeight: 500,
-            }}
-          >
-            <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
-            <span>Actualizar</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              onClick={() => setIsWizardOpen(true)}
+              className="btn btn-primary"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px' }}
+            >
+              <Sparkles size={14} />
+              <span>Proteger Agente en 3 Clics</span>
+            </button>
+            <button
+              onClick={loadOverviewData}
+              title="Actualizar datos en tiempo real"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-secondary)',
+                borderRadius: '8px',
+                fontSize: '12px',
+                cursor: 'pointer',
+                fontWeight: 500,
+              }}
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
+              <span>Actualizar</span>
+            </button>
+          </div>
         }
+      />
+      <QuickSetupWizard
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        onComplete={loadOverviewData}
       />
 
       <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>

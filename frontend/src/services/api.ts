@@ -31,10 +31,19 @@ import type {
   User,
   AuthCredentials,
   RegisterData,
+  RegisterOrgData,
   AuthResponse,
+  RegisterOrgResponse,
 } from '../types/domain';
 
-export type { User, AuthCredentials, RegisterData, AuthResponse };
+export type {
+  User,
+  AuthCredentials,
+  RegisterData,
+  RegisterOrgData,
+  AuthResponse,
+  RegisterOrgResponse,
+};
 
 export type { OrganizationSettings, Organization, SiemWebhookTestResult };
 
@@ -179,6 +188,13 @@ class AgentGuardApiClient {
     }
   }
 
+  /**
+   * Retorna el ID de usuario activo persistido en la sesion
+   */
+  public getActiveUserId(): string {
+    return (typeof window !== 'undefined' ? localStorage.getItem('agentguard_active_user_id') : null) || DEMO_IDS.USER_ADMIN_ID;
+  }
+
   private async fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('agentguard_token') : null;
     const headers = new Headers(init?.headers);
@@ -210,7 +226,7 @@ class AgentGuardApiClient {
   /**
    * Obtiene la lista de agentes registrados en el tenant
    */
-  async getAgents(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Agent[]> {
+  async getAgents(orgId: string = this.getActiveOrganizationId()): Promise<Agent[]> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/agents?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(4000),
@@ -247,8 +263,8 @@ class AgentGuardApiClient {
     orgId?: string;
     ownerUserId?: string;
   }): Promise<Agent> {
-    const orgId = payload.orgId || DEMO_IDS.ORG_ACME_ID;
-    const ownerUserId = payload.ownerUserId || DEMO_IDS.USER_ADMIN_ID;
+    const orgId = payload.orgId || this.getActiveOrganizationId();
+    const ownerUserId = payload.ownerUserId || this.getActiveUserId();
 
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/agents`, {
@@ -346,7 +362,7 @@ class AgentGuardApiClient {
   /**
    * Obtiene la lista de herramientas disponibles en el tenant
    */
-  async getTools(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Tool[]> {
+  async getTools(orgId: string = this.getActiveOrganizationId()): Promise<Tool[]> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/tools?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(4000),
@@ -442,7 +458,7 @@ class AgentGuardApiClient {
     actions?: Array<{ action_name: string; risk_level: string; description?: string }>;
     orgId?: string;
   }): Promise<Tool> {
-    const orgId = payload.orgId || DEMO_IDS.ORG_ACME_ID;
+    const orgId = payload.orgId || this.getActiveOrganizationId();
 
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/tools`, {
@@ -463,24 +479,37 @@ class AgentGuardApiClient {
       }
 
       const toolData = await res.json();
+      const createdActions: Array<{
+        id: string;
+        action_name: string;
+        risk_level: RiskLevel;
+        description?: string;
+      }> = [];
 
       // Crear acciones atómicas asociadas
       if (payload.actions && payload.actions.length > 0) {
         for (const act of payload.actions) {
-          try {
-            await this.fetchWithAuth(`${this.baseUrl}/api/v1/tool-actions`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                tool_id: toolData.id,
-                action_name: act.action_name,
-                risk_level: act.risk_level || 'LOW',
-                description: act.description || `Acción ${act.action_name}`,
-              }),
-            });
-          } catch (err) {
-            console.warn(`Error creando acción ${act.action_name}:`, err);
+          const actRes = await this.fetchWithAuth(`${this.baseUrl}/api/v1/tool-actions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tool_id: toolData.id,
+              action_name: act.action_name,
+              risk_level: act.risk_level || 'LOW',
+              description: act.description || `Acción ${act.action_name}`,
+            }),
+            signal: AbortSignal.timeout(5000),
+          });
+          if (!actRes.ok) {
+            throw await extractApiError(actRes);
           }
+          const actData = await actRes.json();
+          createdActions.push({
+            id: actData.id,
+            action_name: actData.action_name,
+            risk_level: (actData.risk_level || act.risk_level || 'LOW') as RiskLevel,
+            description: actData.description,
+          });
         }
       }
 
@@ -488,10 +517,14 @@ class AgentGuardApiClient {
         id: toolData.id,
         name: toolData.name,
         description: toolData.description || 'Herramienta externa conectada',
-        availableActions: payload.actions?.map(a => a.action_name) || ['execute'],
+        availableActions: createdActions.length > 0 ? createdActions.map(a => a.action_name) : (payload.actions?.map(a => a.action_name) || ['execute']),
         assignedAgent: 'Todos los agentes autorizados',
         status: 'Active',
         initials: toolData.name.substring(0, 2).toUpperCase(),
+        protocol: toolData.protocol || payload.protocol || 'REST',
+        endpoint_url: toolData.endpoint_url || payload.endpoint_url,
+        actionsList: createdActions,
+        created_at: toolData.created_at,
       };
     } catch (err) {
       throw handleNetworkError(err);
@@ -501,7 +534,7 @@ class AgentGuardApiClient {
   /**
    * Obtiene la lista de políticas jerárquicas con su colección de reglas hijas (.rules)
    */
-  async getPolicies(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<Policy[]> {
+  async getPolicies(orgId: string = this.getActiveOrganizationId()): Promise<Policy[]> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policies?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(4000),
@@ -728,11 +761,12 @@ class AgentGuardApiClient {
     description?: string;
     priority?: number;
     tool_action_id?: string;
+    target_agent_id?: string;
     effect?: PolicyDecision;
     conditions?: Record<string, any>;
     orgId?: string;
   }): Promise<Policy> {
-    const orgId = payload.orgId || DEMO_IDS.ORG_ACME_ID;
+    const orgId = payload.orgId || this.getActiveOrganizationId();
 
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/policies`, {
@@ -759,6 +793,7 @@ class AgentGuardApiClient {
         try {
           const ruleRes = await this.createPolicyRule(polData.id, {
             toolActionId: payload.tool_action_id,
+            targetAgentId: payload.target_agent_id,
             effect: payload.effect || 'ALLOW',
             priority: payload.priority || 100,
             conditions: payload.conditions || {},
@@ -1569,6 +1604,50 @@ class AgentGuardApiClient {
         access_token: resData.access_token,
         token_type: resData.token_type || 'bearer',
         user,
+      };
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
+
+  /**
+   * Alta autogestionada SaaS B2B: crea organizacion, usuario ADMIN y API Key inicial en 1 transaccion
+   */
+  async registerOrg(data: RegisterOrgData): Promise<RegisterOrgResponse> {
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/auth/register-org`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_name: data.organization_name,
+          admin_name: data.admin_name,
+          email: data.email,
+          password: data.password,
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+      const resData = await res.json();
+      const userRaw = resData.user || resData;
+      const user: User = {
+        id: userRaw.id,
+        email: userRaw.email,
+        name: data.admin_name || userRaw.email?.split('@')[0],
+        role: userRaw.role || 'ADMIN',
+        organization_id: userRaw.organization_id,
+        organizationId: userRaw.organization_id,
+        created_at: userRaw.created_at,
+      };
+      return {
+        access_token: resData.access_token,
+        token_type: resData.token_type || 'bearer',
+        user,
+        organization: resData.organization,
+        api_key: resData.api_key,
+        api_key_prefix: resData.api_key_prefix,
+        api_key_id: resData.api_key_id,
       };
     } catch (err) {
       throw handleNetworkError(err);

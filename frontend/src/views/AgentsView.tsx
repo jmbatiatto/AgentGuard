@@ -12,9 +12,11 @@ import {
   Check, 
   Power, 
   Trash2, 
-  Clock 
+  Clock,
+  Sparkles 
 } from 'lucide-react';
 import { Header } from '../components/Header';
+import { QuickSetupWizard } from '../components/QuickSetupWizard';
 import { useToast } from '../context/ToastContext';
 import { SkeletonRow } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
@@ -28,8 +30,9 @@ export const AgentsView: React.FC = () => {
   const [ownerFilter, setOwnerFilter] = useState('All');
   const [toolFilter, setToolFilter] = useState('All');
 
-  // Modal State (Register Agent)
+  // Modal State (Register Agent & Quick Setup Wizard)
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
   const [name, setName] = useState('');
   const [purpose, setPurpose] = useState('');
@@ -544,11 +547,32 @@ export const AgentsView: React.FC = () => {
         title="Agentes" 
         subtitle="Gestiona los agentes de IA registrados y sus capacidades."
         actionButton={
-          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-            <Plus size={16} strokeWidth={2.5} />
-            <span>Registrar agente</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setIsWizardOpen(true)}
+            >
+              <Sparkles size={15} />
+              <span>Proteger Agente en 3 Clics</span>
+            </button>
+            <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+              <Plus size={16} strokeWidth={2.5} />
+              <span>Registrar agente</span>
+            </button>
+          </div>
         }
+      />
+      <QuickSetupWizard
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        onComplete={() => {
+          loadAgents();
+          api
+            .getTools()
+            .then((tools) => setAvailableTools(tools || []))
+            .catch(() => {});
+        }}
       />
 
       <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>

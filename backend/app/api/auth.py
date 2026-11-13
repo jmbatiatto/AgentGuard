@@ -13,16 +13,22 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
+from app.models.api_key import ApiKey
 from app.models.enums import UserRole
 from app.models.organization import Organization
 from app.models.user import User
 from app.schemas.auth import (
     LoginRequest,
+    RegisterOrgRequest,
+    RegisterOrgResponse,
     RegisterRequest,
     TokenResponse,
     UserMeResponse,
 )
+from app.schemas.organization import OrganizationRead
 from app.schemas.user import UserRead
+from app.services.api_key_service import ApiKeyService
+from app.services.organization_service import DEFAULT_ORGANIZATION_SETTINGS
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
@@ -136,6 +142,90 @@ async def register(
         access_token=access_token,
         token_type="bearer",
         user=UserRead.model_validate(user),
+    )
+
+
+@router.post(
+    "/register-org",
+    response_model=RegisterOrgResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Alta Autogestionada de Organización SaaS B2B",
+    description=(
+        "Crea en una única transacción atómica una nueva Organización con settings por defecto, "
+        "su usuario Administrador con rol ADMIN y una primera API Key operativa (ag_live_...)."
+    ),
+)
+async def register_organization(
+    payload: RegisterOrgRequest,
+    db: AsyncSession = Depends(get_db),
+) -> RegisterOrgResponse:
+    """Registra una empresa nueva, su usuario ADMIN y su API Key inicial de forma atómica."""
+    email_clean = payload.email.strip().lower()
+    existing = await db.execute(select(User).where(User.email == email_clean))
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El correo electrónico ya se encuentra registrado",
+        )
+
+    now = datetime.now(timezone.utc)
+    org_name_clean = payload.organization_name.strip()
+
+    org = Organization(
+        id=uuid.uuid4(),
+        name=org_name_clean,
+        settings=dict(DEFAULT_ORGANIZATION_SETTINGS),
+        created_at=now,
+    )
+
+    hashed_password = get_password_hash(payload.password)
+    user = User(
+        id=uuid.uuid4(),
+        organization_id=org.id,
+        email=email_clean,
+        hashed_password=hashed_password,
+        role=UserRole.ADMIN,
+        created_at=now,
+    )
+
+    raw_key = ApiKeyService._generate_raw_key()
+    key_prefix = raw_key[:12]
+    hashed_key = ApiKeyService._hash_key(raw_key)
+    api_key_obj = ApiKey(
+        id=uuid.uuid4(),
+        organization_id=org.id,
+        name=f"Key Principal — {org_name_clean}"[:100],
+        key_prefix=key_prefix,
+        hashed_key=hashed_key,
+        created_at=now,
+        expires_at=None,
+        is_active=True,
+    )
+
+    try:
+        db.add(org)
+        db.add(user)
+        db.add(api_key_obj)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+
+    token_claims = {
+        "sub": str(user.id),
+        "org_id": str(user.organization_id),
+        "role": user.role.value,
+    }
+    access_token = create_access_token(data=token_claims)
+
+    return RegisterOrgResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserRead.model_validate(user),
+        organization=OrganizationRead.model_validate(org),
+        api_key=raw_key,
+        api_key_prefix=key_prefix,
+        api_key_id=api_key_obj.id,
     )
 
 

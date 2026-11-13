@@ -264,33 +264,46 @@ function SignInForm({
   );
 }
 
-// ─── Formulario Registrarse ────────────────────────────────────────────────────
+// ─── Formulario Registrarse (Empresa SaaS B2B) ───────────────────────────────
 function SignUpForm({
   onSuccess,
   onSignUp,
+  onRegisterOrg,
   isLoading,
 }: {
   onSuccess?: () => void;
   onSignUp?: (data: { email: string; password: string; name: string; organizationName?: string }) => Promise<void>;
+  onRegisterOrg?: (data: {
+    organization_name: string;
+    admin_name: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
   isLoading?: boolean;
 }) {
-  const [name, setName] = useState("");
+  const [adminName, setAdminName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [orgName, setOrgName] = useState("");
-  const [orgSlug, setOrgSlug] = useState("");
 
   const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (onSignUp) {
-      await onSignUp({ email, password, name, organizationName: orgName });
+    if (onRegisterOrg) {
+      await onRegisterOrg({
+        organization_name: orgName,
+        admin_name: adminName,
+        email,
+        password,
+      });
+    } else if (onSignUp) {
+      await onSignUp({ email, password, name: adminName, organizationName: orgName });
     } else if (onSuccess) {
       onSuccess();
     }
   };
   return (
-    <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-8">
-      <div className="flex flex-col items-center gap-3 text-center">
+    <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-6">
+      <div className="flex flex-col items-center gap-2 text-center">
         {/* Logo AgentGuard */}
         <div className="flex items-center justify-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
@@ -298,33 +311,48 @@ function SignUpForm({
           </div>
           <span className="text-2xl font-extrabold tracking-tight">AgentGuard</span>
         </div>
-        <h1 className="text-xl font-bold text-foreground">Crear cuenta</h1>
+        <h1 className="text-xl font-bold text-foreground">Registrar Empresa</h1>
         <p className="text-balance text-sm text-muted-foreground">
-          Completá tus datos para registrarte
+          Creá tu tenant aislado, usuario administrador y primera API Key operativa
         </p>
       </div>
-      <div className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="name-signup">Nombre completo</Label>
+      <div className="grid gap-3.5">
+        <div className="grid gap-1.5">
+          <Label htmlFor="org-name">Nombre de la Empresa</Label>
+          <div className="relative">
+            <Input
+              id="org-name"
+              name="organization_name"
+              type="text"
+              placeholder="Acme FinTech S.A."
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="name-signup">Nombre del Administrador</Label>
           <Input
             id="name-signup"
-            name="name"
+            name="admin_name"
             type="text"
-            placeholder="Juan García"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            placeholder="Laura Gómez"
+            value={adminName}
+            onChange={(e) => setAdminName(e.target.value)}
             required
             autoComplete="name"
             disabled={isLoading}
           />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="email-signup">Correo electrónico</Label>
+        <div className="grid gap-1.5">
+          <Label htmlFor="email-signup">Correo electrónico corporativo</Label>
           <Input
             id="email-signup"
             name="email"
             type="email"
-            placeholder="usuario@empresa.com"
+            placeholder="admin@miempresa.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -334,98 +362,102 @@ function SignUpForm({
         </div>
         <PasswordInput
           name="password"
-          label="Contraseña"
+          label="Contraseña (mín. 6 caracteres)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={6}
           autoComplete="new-password"
-          placeholder="Contraseña"
+          placeholder="••••••••"
           disabled={isLoading}
         />
 
-        {/* Apartado para registrar a la Empresa / Organización */}
-        <div className="pt-3 mt-1 border-t border-border/80">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-              <Building2 className="h-4 w-4" />
-            </div>
-            <div>
-              <span className="text-xs font-bold text-foreground block">
-                Registrar Empresa / Organización
-              </span>
-              <span className="text-[11px] text-muted-foreground block">
-                Aislamiento multi-tenant para tus agentes de IA
-              </span>
-            </div>
-          </div>
-          <div className="grid gap-3">
-            <div className="grid gap-2">
-              <Label htmlFor="org-name">Nombre de la Empresa</Label>
-              <Input
-                id="org-name"
-                name="org_name"
-                type="text"
-                placeholder="Acme Corp"
-                value={orgName}
-                onChange={(e) => setOrgName(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="org-slug">Slug del Workspace</Label>
-              <Input
-                id="org-slug"
-                name="org_slug"
-                type="text"
-                placeholder="acme-corp"
-                value={orgSlug}
-                onChange={(e) => setOrgSlug(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-          </div>
+        <div className="flex items-center gap-2 rounded-lg border border-border/80 bg-accent/30 px-3 py-2 text-xs text-muted-foreground">
+          <Building2 className="h-4 w-4 shrink-0 text-primary" />
+          <span>Se generará automáticamente una API Key inicial con aislamiento multi-tenant.</span>
         </div>
 
-        <Button type="submit" variant="outline" className="mt-2" disabled={isLoading}>
-          {isLoading ? "Creando cuenta..." : "Crear cuenta y Empresa"}
+        <Button type="submit" variant="default" className="mt-1" disabled={isLoading}>
+          {isLoading ? "Creando empresa y credenciales..." : "Registrar Empresa y Generar API Key"}
         </Button>
       </div>
     </form>
   );
 }
 
-// ─── Contenedor del formulario con toggle + botón Google ──────────────────────
+// ─── Contenedor del formulario con pestañas + botón demo ──────────────────────
 function AuthFormContainer({
   isSignIn,
-  onToggle,
+  onSelectMode,
   onSuccess,
   onSignIn,
   onSignUp,
+  onRegisterOrg,
   isLoading,
 }: {
   isSignIn: boolean;
-  onToggle: () => void;
+  onSelectMode: (signIn: boolean) => void;
   onSuccess?: () => void;
   onSignIn?: (credentials: { email: string; password: string }) => Promise<void>;
   onSignUp?: (data: { email: string; password: string; name: string; organizationName?: string }) => Promise<void>;
+  onRegisterOrg?: (data: {
+    organization_name: string;
+    admin_name: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
   isLoading?: boolean;
 }) {
   return (
-    <div className="mx-auto grid w-[350px] gap-2">
+    <div className="mx-auto grid w-[380px] max-w-full gap-4">
+      {/* Barra de pestañas Iniciar Sesión / Registrar Empresa */}
+      <div
+        role="tablist"
+        aria-label="Modo de acceso"
+        className="grid grid-cols-2 rounded-lg border border-border bg-muted/40 p-1"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isSignIn}
+          onClick={() => onSelectMode(true)}
+          disabled={isLoading}
+          className={cn(
+            "rounded-md px-3 py-2 text-sm font-medium transition-all",
+            isSignIn
+              ? "bg-background text-foreground shadow-sm border border-border/70"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Iniciar Sesión
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isSignIn}
+          onClick={() => onSelectMode(false)}
+          disabled={isLoading}
+          className={cn(
+            "rounded-md px-3 py-2 text-sm font-medium transition-all",
+            !isSignIn
+              ? "bg-background text-foreground shadow-sm border border-border/70"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Registrar Empresa
+        </button>
+      </div>
+
       {isSignIn ? (
         <SignInForm onSuccess={onSuccess} onSignIn={onSignIn} isLoading={isLoading} />
       ) : (
-        <SignUpForm onSuccess={onSuccess} onSignUp={onSignUp} isLoading={isLoading} />
+        <SignUpForm
+          onSuccess={onSuccess}
+          onSignUp={onSignUp}
+          onRegisterOrg={onRegisterOrg}
+          isLoading={isLoading}
+        />
       )}
-
-      <div className="text-center text-sm">
-        {isSignIn ? "¿No tenés cuenta?" : "¿Ya tenés cuenta?"}{" "}
-        <Button variant="link" className="pl-1 text-foreground" onClick={onToggle}>
-          {isSignIn ? "Registrarse" : "Iniciar sesión"}
-        </Button>
-      </div>
 
       <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
         <span className="relative z-10 bg-background px-2 text-muted-foreground">
@@ -481,6 +513,13 @@ export interface AuthUIProps {
   onAuthenticated?: () => void;
   onSignIn?: (credentials: { email: string; password: string }) => Promise<void>;
   onSignUp?: (data: { email: string; password: string; name: string; organizationName?: string }) => Promise<void>;
+  onRegisterOrg?: (data: {
+    organization_name: string;
+    admin_name: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
+  onboardingSuccess?: React.ReactNode;
   isLoading?: boolean;
 }
 
@@ -514,10 +553,11 @@ export function AuthUI({
   onAuthenticated,
   onSignIn,
   onSignUp,
+  onRegisterOrg,
+  onboardingSuccess,
   isLoading = false,
 }: AuthUIProps) {
   const [isSignIn, setIsSignIn] = useState(true);
-  const toggleForm = () => setIsSignIn((prev) => !prev);
 
   const finalSignIn = {
     image: { ...defaultSignInContent.image, ...signInContent.image },
@@ -528,7 +568,7 @@ export function AuthUI({
     quote: { ...defaultSignUpContent.quote, ...signUpContent.quote },
   };
 
-  const currentContent = isSignIn ? finalSignIn : finalSignUp;
+  const currentContent = isSignIn && !onboardingSuccess ? finalSignIn : finalSignUp;
 
   return (
     <div className="w-full min-h-screen md:grid md:grid-cols-2">
@@ -537,16 +577,21 @@ export function AuthUI({
         input[type="password"]::-ms-clear { display: none; }
       `}</style>
 
-      {/* Panel izquierdo: formulario */}
-      <div className="flex h-screen items-center justify-center p-6 md:h-auto md:p-0 md:py-12 bg-background">
-        <AuthFormContainer
-          isSignIn={isSignIn}
-          onToggle={toggleForm}
-          onSuccess={onAuthenticated}
-          onSignIn={onSignIn}
-          onSignUp={onSignUp}
-          isLoading={isLoading}
-        />
+      {/* Panel izquierdo: formulario o credencial generada */}
+      <div className="flex min-h-screen items-center justify-center p-6 md:h-auto md:p-8 bg-background">
+        {onboardingSuccess ? (
+          onboardingSuccess
+        ) : (
+          <AuthFormContainer
+            isSignIn={isSignIn}
+            onSelectMode={setIsSignIn}
+            onSuccess={onAuthenticated}
+            onSignIn={onSignIn}
+            onSignUp={onSignUp}
+            onRegisterOrg={onRegisterOrg}
+            isLoading={isLoading}
+          />
+        )}
       </div>
 
       {/* Panel derecho: imagen + cita */}

@@ -242,8 +242,25 @@ export interface RegisterData {
   organizationName?: string;
 }
 
+export interface RegisterOrgData {
+  organization_name: string;
+  admin_name: string;
+  email: string;
+  password: string;
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;
   user: User;
+}
+
+export interface RegisterOrgResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+  organization: Organization;
+  api_key: string;
+  api_key_prefix: string;
+  api_key_id: string;
 }
