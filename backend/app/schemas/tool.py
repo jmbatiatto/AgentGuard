@@ -1,7 +1,7 @@
 """Schemas Pydantic v2 para Herramientas Externas (Tools)."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 from uuid import UUID
 from pydantic import Field
 
@@ -22,10 +22,9 @@ class ToolCreate(BaseSchema):
         max_length=255,
         description="Nombre identificador de la herramienta",
     )
-    protocol: str = Field(
+    protocol: Literal["REST"] = Field(
         default="REST",
-        max_length=50,
-        description="Protocolo de comunicación (REST, gRPC, MCP, etc.)",
+        description="Protocolo de comunicación soportado (únicamente REST, según ADR-003)",
     )
     endpoint_url: str = Field(
         ...,
@@ -48,10 +47,9 @@ class ToolUpdate(BaseSchema):
         max_length=255,
         description="Nuevo nombre identificador de la herramienta",
     )
-    protocol: Optional[str] = Field(
+    protocol: Optional[Literal["REST"]] = Field(
         default=None,
-        max_length=50,
-        description="Nuevo protocolo de comunicación",
+        description="Protocolo de comunicación soportado (únicamente REST, según ADR-003)",
     )
     endpoint_url: Optional[str] = Field(
         default=None,

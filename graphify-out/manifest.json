@@ -222,9 +222,9 @@
     "semantic_hash": ""
   },
   "backend/app/schemas/tool.py": {
-    "mtime": 1793625755.8496134,
-    "seen": 1793649774.6029642,
-    "ast_hash": "dd9681d5e45245a6afe3e3a1b3641cbe",
+    "mtime": 1794593216.9858298,
+    "seen": 1794593398.9488037,
+    "ast_hash": "33f93e56d9bfefad1f0c225d806e6a22",
     "semantic_hash": ""
   },
   "backend/app/schemas/tool_action.py": {
@@ -378,10 +378,10 @@
     "semantic_hash": "bc5dbe8177179a57c6cfb00d5078cf84"
   },
   "backend/tests/test_schemas.py": {
-    "mtime": 1792443222.2558448,
-    "seen": 1792679930.2839012,
-    "ast_hash": "e6f9773040dfb4fe1f6c441b119514eb",
-    "semantic_hash": "e6f9773040dfb4fe1f6c441b119514eb"
+    "mtime": 1794593190.3340924,
+    "seen": 1794593398.9498057,
+    "ast_hash": "041447b96c4014c07411cb306cf9ac68",
+    "semantic_hash": ""
   },
   "backend/tests/test_tool_actions.py": {
     "mtime": 1794590712.1719937,
@@ -492,15 +492,15 @@
     "semantic_hash": ""
   },
   "frontend/src/views/ToolsView.tsx": {
-    "mtime": 1793671871.69675,
-    "seen": 1793672572.5216236,
-    "ast_hash": "5150cd8002ba6e3db92ba04b2112ec74",
+    "mtime": 1794593180.3113332,
+    "seen": 1794593398.9498057,
+    "ast_hash": "513513bb25eb4252b4300c1ffe52a9a6",
     "semantic_hash": ""
   },
   "frontend/src/views/TracesView.tsx": {
-    "mtime": 1793671649.1719596,
-    "seen": 1793672572.5216236,
-    "ast_hash": "b5203a517ffe1da69137eb79a5ba49c1",
+    "mtime": 1794593185.1904364,
+    "seen": 1794593398.9498057,
+    "ast_hash": "c8ac04e1e84cffa2b92eb8716a2fab97",
     "semantic_hash": ""
   },
   "frontend/tsconfig.app.json": {
@@ -780,9 +780,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/SettingsView.tsx": {
-    "mtime": 1793718873.1295593,
-    "seen": 1793719367.810281,
-    "ast_hash": "2c2f12e9fe9b9b9b3e6bf7087c33a863",
+    "mtime": 1794593229.3615756,
+    "seen": 1794593398.9498057,
+    "ast_hash": "c3bdbdbabb97c3e570b65fd216fe87cb",
     "semantic_hash": ""
   },
   "frontend/src/context/AuthContext.tsx": {

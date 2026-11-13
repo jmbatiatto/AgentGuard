@@ -749,8 +749,6 @@ export const ToolsView: React.FC = () => {
                     }}
                   >
                     <option value="REST">REST API</option>
-                    <option value="gRPC">gRPC</option>
-                    <option value="MCP">Model Context Protocol</option>
                   </select>
                 </div>
               </div>

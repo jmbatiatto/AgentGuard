@@ -51,7 +51,7 @@ export const TracesView: React.FC = () => {
         status: newTraceData.status || 'EXECUTED',
         evaluatedPolicyRuleId: newTraceData.evaluated_policy_rule_id,
         timestamp: newTraceData.timestamp,
-        latencyMs: newTraceData.latency_ms || 22.0,
+        latencyMs: newTraceData.latency_ms ?? 0,
         approvalStatus: newTraceData.status === 'PENDING_APPROVAL' ? 'PENDING' : null,
       };
 

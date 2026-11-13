@@ -54,7 +54,7 @@ export const SettingsView: React.FC = () => {
   const [copiedTenantId, setCopiedTenantId] = useState(false);
 
   const copyTenantId = () => {
-    navigator.clipboard.writeText(DEMO_IDS.ORG_ACME_ID);
+    navigator.clipboard.writeText(activeOrgId);
     setCopiedTenantId(true);
     showToast('Tenant UUID copiado al portapapeles');
     setTimeout(() => setCopiedTenantId(false), 2000);
@@ -80,7 +80,7 @@ export const SettingsView: React.FC = () => {
   const fetchApiKeys = async () => {
     setIsLoadingKeys(true);
     try {
-      const data = await api.getApiKeys(DEMO_IDS.ORG_ACME_ID);
+      const data = await api.getApiKeys(activeOrgId);
       setApiKeys(data);
     } catch {
       showToast('Error al sincronizar API Keys del backend', 'error');
@@ -97,7 +97,7 @@ export const SettingsView: React.FC = () => {
     try {
       const res = await api.createApiKey({
         name: newKeyName.trim(),
-        organization_id: DEMO_IDS.ORG_ACME_ID,
+        organization_id: activeOrgId,
       });
 
       setGeneratedKey(res.rawKey);
@@ -122,7 +122,7 @@ export const SettingsView: React.FC = () => {
 
     setIsRevokingKey(true);
     try {
-      const ok = await api.revokeApiKey(key.id, DEMO_IDS.ORG_ACME_ID);
+      const ok = await api.revokeApiKey(key.id, activeOrgId);
       if (ok) {
         setApiKeys(prev => prev.map(item => (item.id === key.id ? { ...item, isActive: false } : item)));
         showToast('Llave de acceso revocada exitosamente');
@@ -150,7 +150,7 @@ export const SettingsView: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     try {
-      const data = await api.getUsers(DEMO_IDS.ORG_ACME_ID);
+      const data = await api.getUsers(activeOrgId);
       setUsers(data);
     } catch {
       showToast('Error al sincronizar usuarios del backend', 'error');
@@ -163,7 +163,7 @@ export const SettingsView: React.FC = () => {
     fetchUsers();
     fetchApiKeys();
     fetchSettings();
-  }, []);
+  }, [activeOrgId]);
 
   useEffect(() => {
     if (activeTab === 'apikeys') {
@@ -182,7 +182,7 @@ export const SettingsView: React.FC = () => {
       const created = await api.createUser({
         email: newUserEmail.trim(),
         role: newUserRole,
-        organization_id: DEMO_IDS.ORG_ACME_ID,
+        organization_id: activeOrgId,
       });
 
       if (created) {
@@ -414,7 +414,7 @@ export const SettingsView: React.FC = () => {
                   color: 'var(--text-secondary)',
                   border: '1px solid var(--border-subtle)',
                 }}>
-                  {DEMO_IDS.ORG_ACME_ID}
+                  {activeOrgId}
                 </code>
                 <button
                   onClick={copyTenantId}
@@ -943,7 +943,7 @@ HEADERS = {
 }
 
 payload = {
-    "organization_id": "${DEMO_IDS.ORG_ACME_ID}",
+    "organization_id": "${activeOrgId}",
     "agent_id": "${DEMO_IDS.AGENT_SALES_ID}",
     "tool_id": "${DEMO_IDS.TOOL_CRM_ID}",
     "action_name": "create_quote",
@@ -964,7 +964,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
         "http://localhost:8000/api/v1/gateway/execute",
         headers={"X-AgentGuard-Key": "${(apiKeys.find(k => k.isActive !== false) || apiKeys[0])?.prefix || 'ag_live_7a3d9b01'}..."},
         json={
-            "organization_id": "${DEMO_IDS.ORG_ACME_ID}",
+            "organization_id": "${activeOrgId}",
             "agent_id": "${DEMO_IDS.AGENT_SALES_ID}",
             "tool_id": "${DEMO_IDS.TOOL_STRIPE_ID}",
             "action_name": action_name,
@@ -980,7 +980,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
   -H "Content-Type: application/json" \\
   -H "X-AgentGuard-Key: ${(apiKeys.find(k => k.isActive !== false) || apiKeys[0])?.prefix || 'ag_live_7a3d9b01'}..." \\
   -d '{
-    "organization_id": "${DEMO_IDS.ORG_ACME_ID}",
+    "organization_id": "${activeOrgId}",
     "agent_id": "${DEMO_IDS.AGENT_SALES_ID}",
     "tool_id": "${DEMO_IDS.TOOL_CRM_ID}",
     "action_name": "create_quote",

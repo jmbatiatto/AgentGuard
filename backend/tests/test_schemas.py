@@ -88,6 +88,15 @@ def test_tool_and_action_schemas():
     assert tool_in.protocol == "REST"
     assert tool_in.description is None
 
+    for unsupported_protocol in ("MCP", "gRPC"):
+        with pytest.raises(ValidationError):
+            ToolCreate(
+                organization_id=org_id,
+                name="Unsupported Tool",
+                protocol=unsupported_protocol,
+                endpoint_url="https://api.billing.acme.internal",
+            )
+
     tool_id = uuid.uuid4()
     action_in = ToolActionCreate(
         tool_id=tool_id,
