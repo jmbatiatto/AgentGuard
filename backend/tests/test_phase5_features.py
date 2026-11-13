@@ -287,4 +287,7 @@ async def test_gateway_simulate_endpoint():
     assert data["result"]["simulated"] is True
     assert "sandbox" in data["result"]["message"].lower()
     assert data["simulation_explanation"] is not None
-    assert mock_db.commit.called
+    assert "Acción permitida por el motor PDP" in data["simulation_explanation"]
+    assert "Vector hostil detectado" not in data["simulation_explanation"]
+    assert not mock_db.add.called
+    assert not mock_db.commit.called

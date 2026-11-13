@@ -67,8 +67,29 @@ class PEPGatewayService:
                             return resp.json()
                         except Exception:
                             return {"raw": resp.text, "status_code": resp.status_code}
+
+                    logger.warning(
+                        "Herramienta externa %s respondió con error HTTP %d",
+                        endpoint,
+                        resp.status_code,
+                    )
+                    return {
+                        "status": "error",
+                        "dispatched_to": endpoint,
+                        "action": action_name,
+                        "status_code": resp.status_code,
+                        "error": f"La herramienta externa respondió con HTTP {resp.status_code}",
+                        "executed_at": datetime.now(timezone.utc).isoformat(),
+                    }
             except Exception as exc:
-                logger.warning("Fallo llamada física a %s: %s. Aplicando simulación segura.", endpoint, exc)
+                logger.warning("Fallo llamada física a %s: %s. Aplicando bloqueo fail-closed.", endpoint, exc)
+                return {
+                    "status": "error",
+                    "dispatched_to": endpoint,
+                    "action": action_name,
+                    "error": str(exc),
+                    "executed_at": datetime.now(timezone.utc).isoformat(),
+                }
 
         # Simulación estándar de respuesta para pruebas locales y demos offline
         return {
@@ -204,22 +225,23 @@ class PEPGatewayService:
         if not agent_tool:
             # Denegación por falta de capacidad asignada
             latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
-            execution = Execution(
-                id=execution_id,
-                organization_id=request.organization_id,
-                agent_id=request.agent_id,
-                delegator_user_id=request.delegator_user_id,
-                tool_id=request.tool_id,
-                tool_action_id=tool_action.id,
-                resource=request.resource,
-                request_context=sanitized_params,
-                decision=PolicyDecision.DENY,
-                status=ExecutionStatus.REJECTED,
-                timestamp=now,
-                latency_ms=latency_ms,
-            )
-            db.add(execution)
-            await db.commit()
+            if not request.dry_run:
+                execution = Execution(
+                    id=execution_id,
+                    organization_id=request.organization_id,
+                    agent_id=request.agent_id,
+                    delegator_user_id=request.delegator_user_id,
+                    tool_id=request.tool_id,
+                    tool_action_id=tool_action.id,
+                    resource=request.resource,
+                    request_context=sanitized_params,
+                    decision=PolicyDecision.DENY,
+                    status=ExecutionStatus.REJECTED,
+                    timestamp=now,
+                    latency_ms=latency_ms,
+                )
+                db.add(execution)
+                await db.commit()
             return GatewayExecuteResponse(
                 execution_id=execution_id,
                 organization_id=request.organization_id,
@@ -350,7 +372,7 @@ class PEPGatewayService:
                 case _:
                     # Fail-Closed por defecto ante cualquier veredicto desconocido o no tipificado
                     exec_status = ExecutionStatus.REJECTED
-                    if tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
+                    if not request.dry_run and tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
                         alert = Alert(
                             id=uuid.uuid4(),
                             organization_id=request.organization_id,
@@ -365,32 +387,33 @@ class PEPGatewayService:
         # 7. Medir latencia física acumulada y persistir Traza Forense Inmutable en Execution
         latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
 
-        execution = Execution(
-            id=execution_id,
-            organization_id=request.organization_id,
-            agent_id=request.agent_id,
-            delegator_user_id=request.delegator_user_id,
-            tool_id=request.tool_id,
-            tool_action_id=tool_action.id,
-            resource=request.resource,
-            request_context=sanitized_params,
-            decision=final_decision,
-            status=exec_status,
-            evaluated_policy_rule_id=evaluated_rule_id,
-            timestamp=now,
-            latency_ms=latency_ms,
-        )
-        db.add(execution)
+        if not request.dry_run:
+            execution = Execution(
+                id=execution_id,
+                organization_id=request.organization_id,
+                agent_id=request.agent_id,
+                delegator_user_id=request.delegator_user_id,
+                tool_id=request.tool_id,
+                tool_action_id=tool_action.id,
+                resource=request.resource,
+                request_context=sanitized_params,
+                decision=final_decision,
+                status=exec_status,
+                evaluated_policy_rule_id=evaluated_rule_id,
+                timestamp=now,
+                latency_ms=latency_ms,
+            )
+            db.add(execution)
 
-        if alert:
-            alert.execution = execution
-            db.add(alert)
+            if alert:
+                alert.execution = execution
+                db.add(alert)
 
-        if approval:
-            approval.execution = execution
-            db.add(approval)
+            if approval:
+                approval.execution = execution
+                db.add(approval)
 
-        await db.commit()
+            await db.commit()
 
         # Despachar notificación asíncrona a SIEM si hubo alerta y no es simulación
         if alert and not request.dry_run:
@@ -413,7 +436,7 @@ class PEPGatewayService:
 
         simulation_explanation = None
         if request.dry_run:
-            if threat:
+            if threat.is_threat:
                 simulation_explanation = (
                     f"Vector hostil detectado ({threat.owasp_category}): {threat.details}. En producción genera alerta CRITICAL."
                 )
@@ -467,27 +490,28 @@ class PEPGatewayService:
             )
 
         # Emitir traza forense de ejecución en tiempo real vía WebSocket
-        await ws_manager.broadcast(
-            event_type="NEW_EXECUTION",
-            data={
-                "id": str(execution_id),
-                "organization_id": str(request.organization_id),
-                "agent_id": str(request.agent_id),
-                "agent_name": agent.name,
-                "tool_id": str(request.tool_id),
-                "tool_name": tool.name,
-                "tool_action_id": str(tool_action.id),
-                "action_name": request.action_name,
-                "resource": request.resource or "global",
-                "request_context": sanitized_params,
-                "decision": final_decision.value,
-                "status": exec_status.value,
-                "evaluated_policy_rule_id": str(evaluated_rule_id) if evaluated_rule_id else None,
-                "timestamp": now.isoformat(),
-                "latency_ms": latency_ms,
-            },
-            organization_id=request.organization_id,
-        )
+        if not request.dry_run:
+            await ws_manager.broadcast(
+                event_type="NEW_EXECUTION",
+                data={
+                    "id": str(execution_id),
+                    "organization_id": str(request.organization_id),
+                    "agent_id": str(request.agent_id),
+                    "agent_name": agent.name,
+                    "tool_id": str(request.tool_id),
+                    "tool_name": tool.name,
+                    "tool_action_id": str(tool_action.id),
+                    "action_name": request.action_name,
+                    "resource": request.resource or "global",
+                    "request_context": sanitized_params,
+                    "decision": final_decision.value,
+                    "status": exec_status.value,
+                    "evaluated_policy_rule_id": str(evaluated_rule_id) if evaluated_rule_id else None,
+                    "timestamp": now.isoformat(),
+                    "latency_ms": latency_ms,
+                },
+                organization_id=request.organization_id,
+            )
 
         return GatewayExecuteResponse(
             execution_id=execution_id,
@@ -526,6 +550,7 @@ class PEPGatewayService:
                 selectinload(Approval.execution).selectinload(Execution.tool_action),
             )
             .where(Approval.id == approval_id)
+            .with_for_update()
         )
         result = await db.execute(stmt)
         approval = result.scalar_one_or_none()
@@ -556,44 +581,6 @@ class PEPGatewayService:
                 if approval.execution:
                     approval.execution.status = ExecutionStatus.REJECTED
                 await db.commit()
-
-        # Despachar notificación asíncrona a SIEM si hubo alerta y no es simulación
-        if alert and not request.dry_run:
-            try:
-                from app.services.organization_service import organization_service
-                from app.services.webhook_service import webhook_service
-                org_settings = await organization_service.get_settings(db=db, org_id=request.organization_id)
-                if org_settings:
-                    await webhook_service.dispatch_security_alert_if_enabled(
-                        settings=org_settings,
-                        organization_id=request.organization_id,
-                        alert_title=alert.title,
-                        alert_description=alert.description,
-                        severity=alert.severity.value,
-                        execution_id=execution_id,
-                        threat_analysis=security_telemetry,
-                    )
-            except Exception as exc:
-                logger.warning("Fallo no bloqueante al notificar a SIEM: %s", exc)
-
-        simulation_explanation = None
-        if request.dry_run:
-            if threat:
-                simulation_explanation = (
-                    f"Vector hostil detectado ({threat.owasp_category}): {threat.details}. En producción genera alerta CRITICAL."
-                )
-            elif final_decision == PolicyDecision.ALLOW:
-                simulation_explanation = (
-                    f"Acción permitida por el motor PDP. Regla: {pdp_result.reason or 'ALLOW por política activa'}. Modo sandbox sin red."
-                )
-            elif final_decision == PolicyDecision.REQUIRE_APPROVAL:
-                simulation_explanation = (
-                    f"La política exige aprobación humana (HITL). Razón: {pdp_result.reason}. En producción genera ticket pendiente."
-                )
-            else:
-                simulation_explanation = (
-                    f"Acción denegada por política PDP. Razón: {pdp_result.reason or rejection_reason}."
-                )
                 await db.refresh(approval)
                 return approval
 
@@ -621,44 +608,6 @@ class PEPGatewayService:
                 approval.execution.status = ExecutionStatus.REJECTED
 
         await db.commit()
-
-        # Despachar notificación asíncrona a SIEM si hubo alerta y no es simulación
-        if alert and not request.dry_run:
-            try:
-                from app.services.organization_service import organization_service
-                from app.services.webhook_service import webhook_service
-                org_settings = await organization_service.get_settings(db=db, org_id=request.organization_id)
-                if org_settings:
-                    await webhook_service.dispatch_security_alert_if_enabled(
-                        settings=org_settings,
-                        organization_id=request.organization_id,
-                        alert_title=alert.title,
-                        alert_description=alert.description,
-                        severity=alert.severity.value,
-                        execution_id=execution_id,
-                        threat_analysis=security_telemetry,
-                    )
-            except Exception as exc:
-                logger.warning("Fallo no bloqueante al notificar a SIEM: %s", exc)
-
-        simulation_explanation = None
-        if request.dry_run:
-            if threat:
-                simulation_explanation = (
-                    f"Vector hostil detectado ({threat.owasp_category}): {threat.details}. En producción genera alerta CRITICAL."
-                )
-            elif final_decision == PolicyDecision.ALLOW:
-                simulation_explanation = (
-                    f"Acción permitida por el motor PDP. Regla: {pdp_result.reason or 'ALLOW por política activa'}. Modo sandbox sin red."
-                )
-            elif final_decision == PolicyDecision.REQUIRE_APPROVAL:
-                simulation_explanation = (
-                    f"La política exige aprobación humana (HITL). Razón: {pdp_result.reason}. En producción genera ticket pendiente."
-                )
-            else:
-                simulation_explanation = (
-                    f"Acción denegada por política PDP. Razón: {pdp_result.reason or rejection_reason}."
-                )
         await db.refresh(approval)
 
         org_id = approval.execution.organization_id if approval.execution else None
