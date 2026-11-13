@@ -1,115 +1,111 @@
-# 🔄 Guía de Defensa: Máquinas de Estados y Ciclo de Vida en Runtime
+# 🔄 Guía de Defensa: Máquinas de Estados y Ciclo de Vida en Runtime (Protocolo HITL 202 Accepted)
 **Archivo visual opcional (Draw.io):** [`diagramas/agentguard_estados_ciclo_vida.drawio`](./diagramas/agentguard_estados_ciclo_vida.drawio)  
-**Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
+**Proyecto:** AgentGuard — Plataforma SaaS B2B Multi-Tenant de Gobernanza en Runtime  
 **Cátedra:** Desarrollo Web — 5to Semestre, ITU - Universidad Nacional de Cuyo  
 
 ---
 
-## 1. Importancia del Modelado de Estados en Arquitecturas Asíncronas
+## 1. Modelado de Estados en Arquitecturas Asíncronas (`202 Accepted`)
 
-En sistemas distribuidos donde intervienen humanos (*Human-in-the-loop*), las peticiones no siempre son del tipo *Request/Response* sincrónico inmediato. Una llamada interceptada puede quedar suspendida durante minutos a la espera de que un supervisor presione un botón en el navegador.
+En AgentGuard, cuando una operación requiere intervención humana (*Human-in-the-Loop*, regla `REQUIRE_APPROVAL`), el Gateway PEP **no bloquea conexiones HTTP con long-polling ni retiene sockets abiertos**. En su lugar implementa un protocolo asíncrono desacoplado basado en **`HTTP 202 Accepted`** y eventos reactivos por **WebSocket**.
 
 > **Argumento para el docente:**  
-> *«Formalizar el ciclo de vida mediante máquinas de estados UML garantiza que el backend de AgentGuard sea determinista, prevenga condiciones de carrera (*race conditions*) y aplique el principio de **Fail-Closed** ante cualquier contingencia o desconexión».*
+> *«Responder `202 Accepted` con un `approval_id` desacopla el ciclo de vida del agente respecto del tiempo de respuesta humano, evita timeouts HTTP y garantiza atomicidad y principio Fail-Closed mediante bloqueo pesimista (`SELECT ... FOR UPDATE`) y TTL de 15 minutos en PostgreSQL».*
 
 ---
 
-## 2. Diagramas de Estados UML (Mermaid)
+## 2. Diagramas de Estados Reales (Mermaid)
 
-### A. Máquina 1: Ciclo de Vida de una Ejecución (`Execution`)
+### A. Máquina 1: Ciclo de Vida de una Ejecución (`Execution.status`)
+
+Enums reales implementados en `backend/app/models/enums.py`:
+* `PolicyDecision`: `ALLOW`, `DENY`, `REQUIRE_APPROVAL`
+* `ExecutionStatus`: `PENDING_APPROVAL`, `EXECUTED`, `REJECTED`
 
 ```mermaid
 stateDiagram-v2
-    [*] --> RECEIVED: Tool Call HTTP recibida en Gateway
-    
-    RECEIVED --> EVALUATING: Autenticación OK y Contexto Extraído
-    RECEIVED --> BLOCKED: Token Inválido o Malformado
-    
-    EVALUATING --> BLOCKED: Decisión PDP == DENY
-    EVALUATING --> DISPATCHING: Decisión PDP == ALLOW
-    EVALUATING --> PENDING_APPROVAL: Decisión PDP == REQUIRE_APPROVAL
-    
-    PENDING_APPROVAL --> DISPATCHING: Operador Aprueba Ticket
-    PENDING_APPROVAL --> REJECTED_BY_APPROVER: Operador Rechaza Ticket
-    PENDING_APPROVAL --> ABORTED_BY_TIMEOUT: Expiración TTL (15 minutos)
-    
-    DISPATCHING --> COMPLETED: API REST responde (200 OK)
-    DISPATCHING --> FAILED: Error en API destino (5xx / Red)
-    
-    BLOCKED --> [*]: Retorna 403 Forbidden
-    REJECTED_BY_APPROVER --> [*]: Retorna 403 con Justificación
-    ABORTED_BY_TIMEOUT --> [*]: Retorna 408 Request Timeout
-    COMPLETED --> [*]: Retorna Payload Exitoso
-    FAILED --> [*]: Retorna 502 Bad Gateway
+    [*] --> RECEIVING: POST /api/v1/gateway/execute + X-AgentGuard-Key
+
+    RECEIVING --> REJECTED: API Key invalida (401) / Tenant o Agente invalido (403)
+    RECEIVING --> EVALUATING: Contexto sanitizado (LLM06) + Capacidad AgentTool OK
+
+    EVALUATING --> REJECTED: ThreatDetector hostil o PDP == DENY (403 Forbidden)
+    EVALUATING --> EXECUTED: PDP == ALLOW -> Despacho HTTP REST a Tool (200 OK)
+    EVALUATING --> PENDING_APPROVAL: PDP == REQUIRE_APPROVAL -> Crea Approval PENDING (202 Accepted)
+
+    PENDING_APPROVAL --> EXECUTED: Aprobador resuelve APPROVED -> Reanuda Tool Dispatch
+    PENDING_APPROVAL --> REJECTED: Aprobador resuelve REJECTED o vence TTL (15 min -> EXPIRED)
+
+    EXECUTED --> [*]
+    REJECTED --> [*]
 ```
 
-### B. Máquina 2: Ciclo de Vida de una Aprobación (`Approval`)
+### B. Máquina 2: Ciclo de Vida de una Aprobación (`Approval.status`)
+
+Enum real: `ApprovalStatus`: `PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING: Generado por regla de riesgo (Monto >= $500)
-    
-    PENDING --> APPROVED: Operador hace click en [Aprobar]
-    PENDING --> REJECTED: Operador hace click en [Rechazar]
-    PENDING --> EXPIRED: Superado límite de tiempo (TTL)
-    
-    APPROVED --> [*]: Descongela llamada hacia API destino
-    REJECTED --> [*]: Cancela ejecución y notifica motivo
-    EXPIRED --> [*]: Cierra ticket por principio Fail-Closed
+    [*] --> PENDING: Creada por regla REQUIRE_APPROVAL (HTTP 202 Accepted)
+
+    PENDING --> APPROVED: APPROVER o ADMIN ejecuta POST /api/v1/approvals/{id}/resolve (APPROVED)
+    PENDING --> REJECTED: APPROVER o ADMIN ejecuta POST /api/v1/approvals/{id}/resolve (REJECTED)
+    PENDING --> EXPIRED: Superado TTL de 15 minutos (900 s) al intentar resolver
+
+    APPROVED --> [*]: Despacha Tool + Execution -> EXECUTED + WS RESOLVED_APPROVAL
+    REJECTED --> [*]: Cancela despacho + Execution -> REJECTED + WS RESOLVED_APPROVAL
+    EXPIRED --> [*]: Cierra por Fail-Closed + Execution -> REJECTED
 ```
 
-### C. Máquina 3: Ciclo de Vida de un Incidente de Seguridad (`Alert`)
+### C. Máquina 3: Ciclo de Vida de un Incidente de Seguridad (`Alert.status`)
+
+Enum real: `AlertStatus`: `OPEN`, `INVESTIGATING`, `RESOLVED`, `DISMISSED`.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> OPEN: Detectado por PDP (Prompt Injection / Egress anómalo)
-    
-    OPEN --> INVESTIGATING: Operador abre incidente en Dashboard
-    
-    INVESTIGATING --> RESOLVED: Mitigación aplicada (Revocación / Nueva regla)
-    INVESTIGATING --> DISMISSED: Falso positivo justificado y auditado
-    
-    RESOLVED --> [*]: Incidente cerrado
-    DISMISSED --> [*]: Incidente descartado
+    [*] --> OPEN: Disparada por ThreatDetector / accion CRITICAL denegada
+
+    OPEN --> INVESTIGATING: Operador abre incidente en TracesView / Alerts
+    INVESTIGATING --> RESOLVED: Mitigacion aplicada (nueva regla / revocacion de agente o key)
+    INVESTIGATING --> DISMISSED: Falso positivo documentado
+
+    RESOLVED --> [*]
+    DISMISSED --> [*]
 ```
 
 ---
 
-## 3. Análisis Detallado de las Transiciones
+## 3. Análisis Detallado de Transiciones y Respuestas HTTP
 
-### Máquina 1: Ejecución en Runtime
-1. **`RECEIVED`:** La tool call es recibida en el Gateway. Se validan sintaxis y autenticidad del token del agente.
-2. **`EVALUATING`:** El PDP toma la tupla contextual y evalúa las políticas cacheadas en Redis.
-3. **Bifurcación de Decisión:**
-   * **Rama `BLOCKED` (Si la decisión es `DENY`):** Transición terminal inmediata. Se corta la conexión, se devuelve `403 Forbidden` y la herramienta externa jamás es invocada.
-   * **Rama `DISPATCHING` (Si la decisión es `ALLOW`):** Se enruta a la API REST de destino. Si esta responde con éxito, culmina en el estado final **`COMPLETED` (200 OK)**.
-   * **Rama `PENDING_APPROVAL` (Si la decisión es `REQUIRE_APPROVAL`):** La solicitud se congela en el Gateway, se persiste en base de datos y se dispara la alerta por WebSocket hacia la interfaz del operador humano.
-4. **Resolución de la Espera Humana:**
-   * Si el operador acepta $\rightarrow$ Transición a `DISPATCHING` $\rightarrow$ `COMPLETED`.
-   * Si el operador rechaza $\rightarrow$ Transición a `REJECTED_BY_APPROVER` (403 con motivo explícito).
-   * Si vence el TTL $\rightarrow$ Transición a `ABORTED_BY_TIMEOUT` (408 Request Timeout).
+1. **Recepción y Sanitización (`POST /api/v1/gateway/execute`):**
+   * Valida la cabecera `X-AgentGuard-Key` contra `api_keys` (`401 Unauthorized` si falta o está revocada) y comprueba `request.organization_id == api_key.organization_id` (`403 Forbidden` si difiere).
+   * Enmascara secretos y PII (`sanitizer_service.py`) y analiza vectores hostiles (`threat_detector.py`).
+2. **Evaluación Determinista sobre PostgreSQL 16 (`pdp_engine.py`):**
+   * Consulta directamente las políticas activas y reglas de la organización en PostgreSQL (sin caché Redis de lectura) evaluando prioridad y predicados `JSONB`.
+   * **Si `DENY` (o amenaza detectada o falta capacidad `AgentTool`):** Persiste `Execution(status=REJECTED)` (y `Alert(severity=CRITICAL)` si aplica) y responde **`403 Forbidden`**.
+   * **Si `ALLOW`:** Ejecuta `_dispatch_to_tool()` sobre HTTP REST (con comportamiento *fail-closed* si la herramienta falla o responde `>= 400`), persiste `Execution(status=EXECUTED)` con `latency_ms` real y responde **`200 OK`**.
+   * **Si `REQUIRE_APPROVAL`:** Persiste `Execution(status=PENDING_APPROVAL)` y `Approval(status=PENDING)`, emite evento **`NEW_APPROVAL`** por WebSocket (`/api/v1/ws/{organization_id}`) y responde inmediatamente **`202 Accepted`** incluyendo `approval_id`.
+3. **Resolución HITL en Segundo Paso (`POST /api/v1/approvals/{approval_id}/resolve`):**
+   * Exige usuario humano autenticado vía JWT con rol `APPROVER` o `ADMIN`.
+   * Si el tiempo transcurrido supera **15 minutos (`900` segundos)**, transiciona automáticamente el ticket a `EXPIRED` y la ejecución a `REJECTED` (Fail-Closed).
+   * Si aprueba dentro del TTL, reanuda `_dispatch_to_tool()`, pasa `Approval` a `APPROVED`, `Execution` a `EXECUTED` y notifica vía WebSocket con el evento **`RESOLVED_APPROVAL`**.
 
 ---
 
-## 4. Principios de Robustez: Idempotencia y Prevención de Condiciones de Carrera
+## 4. Concurrencia y Prevención de Condiciones de Carrera (TOCTOU)
 
-Durante la defensa, es vital explicar cómo el backend resuelve los problemas de concurrencia:
+En `PEPGatewayService.resolve_approval()` (`backend/app/services/pep_gateway_service.py`), la concurrencia entre múltiples aprobadores se resuelve mediante:
 
-1. **Bloqueo Optimista / Atómico en Base de Datos:** Cuando dos operadores intentan aprobar la misma solicitud al mismo tiempo, la actualización SQL se realiza mediante una cláusula atómica:
-   ```sql
-   UPDATE approvals 
-   SET status = 'APPROVED', assigned_approver_id = :userId, resolved_at = NOW() 
-   WHERE id = :approvalId AND status = 'PENDING';
-   ```
-   Si la fila ya no está en `PENDING`, la segunda transacción no afecta registros y recibe un error amigable, impidiendo doble ejecución.
-2. **Idempotencia de Invocación:** Si un agente de IA reintenta enviar una petición debido a latencia de red, el Gateway identifica el mismo `request_id` y no duplica la orden de compra ni la devolución.
+1. **Bloqueo Pesimista a Nivel de Fila (`.with_for_update()`):**
+   La consulta SQLAlchemy adquiere un bloqueo exclusivo en PostgreSQL (`SELECT ... FOR UPDATE`) sobre el registro `Approval` antes de verificar `approval.status == ApprovalStatus.PENDING` y su TTL. Si dos operadores hacen clic al mismo tiempo, la segunda transacción queda serializada y al leer el nuevo estado ya resuelto (`!= PENDING`) aborta de forma segura sin despachar dos veces la herramienta.
+2. **Restricción Única en Base de Datos (`uq_approval_execution`):** Garantiza relación 1:1 estricta entre cada `Execution` y su ticket `Approval`.
 
 ---
 
 ## 5. Preguntas Difíciles del Profesor y Respuestas Sugeridas
 
-### ❓ P1: *"¿Cómo hace el Gateway para mantener al agente esperando mientras el humano aprueba en la web sin agotar las conexiones del servidor?"*
-> **Respuesta:** «En Python con FastAPI y el servidor ASGI Uvicorn (ADR-001: arquitectura asíncrona basada en el *Event Loop* de `asyncio`), las conexiones son completamente no bloqueantes. Cuando una llamada entra en `PENDING_APPROVAL`, no se bloquea un hilo del sistema operativo; la corutina suspende su flujo cediendo el control al Event Loop y emite un broadcast reactivo por WebSockets a la bandeja de aprobaciones del frontend. Cuando el operador humano con rol `APPROVER` hace click en Aprobar, el Gateway reanuda la ejecución y despacha la respuesta inmediatamente, consumiendo un mínimo de recursos de CPU y memoria».
+### ❓ P1: *"¿Por qué cambiaron de mantener la conexión HTTP abierta a devolver `202 Accepted` en HITL?"*
+> **Respuesta:** «Porque una autorización humana puede demorar minutos. Mantener una conexión HTTP en *long-polling* esperando `200 OK` expone al agente cliente a *timeouts* de sockets y agota descriptores del servidor. Con `202 Accepted`, el Gateway responde al instante entregando el `approval_id` y el `execution_id`, el frontend recibe la alerta reactiva en vivo por WebSocket (`/api/v1/ws/{organization_id}`) y el humano resuelve de forma asíncrona sin bloquear threads ni corutinas».
 
-### ❓ P2: *"¿Por qué consideraron el estado `EXPIRED` en lugar de dejar que la aprobación espere indefinidamente?"*
-> **Respuesta:** «Por el principio de seguridad **Fail-Closed**. Un agente no puede esperar eternamente porque los modelos y los clientes HTTP tienen tiempos límite de desconexión (*socket timeouts*). Si nadie aprueba una transferencia de dinero en 15 minutos, asumir el silencio como rechazo seguro evita que se ejecuten transacciones fuera de contexto horas más tarde».
+### ❓ P2: *"¿Por qué consideraron el estado `EXPIRED` a los 15 minutos?"*
+> **Respuesta:** «Por el principio **Fail-Closed**. Si ningún supervisor autoriza una operación de alto riesgo dentro de la ventana de contexto (`900 s`), el sistema invalida automáticamente el ticket como `EXPIRED` y marca la ejecución como `REJECTED`, evitando que un reembolso o acción sensible se ejecute horas después fuera de contexto».

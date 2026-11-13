@@ -1,23 +1,22 @@
-# 🛡️ Guía de Defensa: Modelo Entidad-Relación Relacional Multi-Tenant v2.0
+# 🛡️ Guía de Defensa: Modelo Entidad-Relación Relacional Multi-Tenant (13 Tablas)
 **Archivo visual opcional (Draw.io):** [`diagramas/agentguard_mer_relacional.drawio`](./diagramas/agentguard_mer_relacional.drawio)  
-**Proyecto:** AgentGuard — Runtime Authorization & Governance for AI Agents  
+**Proyecto:** AgentGuard — Plataforma SaaS B2B Multi-Tenant de Gobernanza en Runtime  
 **Cátedra:** Desarrollo Web — 5to Semestre, ITU - Universidad Nacional de Cuyo  
 
 ---
 
 ## 1. Propósito y Alcance del Diagrama
 
-Este diagrama modela la **capa relacional lógica/física** de AgentGuard. Representa cómo la base de datos almacena el estado de las organizaciones, los agentes de IA, las herramientas que consumen, las políticas de autorización contextual y la trazabilidad forense de cada ejecución en tiempo real (*Execution Traces*).
-
-Está optimizado para un motor **PostgreSQL** moderno, combinando la consistencia relacional con campos semiestructurados (`JSONB`) indexados mediante GIN.
+Este documento modela la **capa relacional lógica y física** implementada en AgentGuard sobre **PostgreSQL 16** (puerto host **`5433`**). Incluye **13 tablas** (las 12 entidades originales del MER más **`api_keys`** para autenticación del Data Plane), integrando claves primarias **`UUID v4`**, columnas **`JSONB`** con índices **GIN** y discriminador de tenant `organization_id` gestionado mediante Alembic (`001` a `005`).
 
 ---
 
-## 2. Diagrama del Modelo Entidad-Relación (Mermaid)
+## 2. Diagrama del Modelo Entidad-Relación (Mermaid — 13 Tablas)
 
 ```mermaid
 erDiagram
     ORGANIZATION ||--o{ USER : "posee miembros (1:N)"
+    ORGANIZATION ||--o{ API_KEY : "emite credenciales PEP (1:N)"
     ORGANIZATION ||--o{ AGENT : "registra agentes (1:N)"
     ORGANIZATION ||--o{ TOOL : "administra tools (1:N)"
     ORGANIZATION ||--o{ POLICY : "define politicas (1:N)"
@@ -49,6 +48,7 @@ erDiagram
     ORGANIZATION {
         UUID id PK
         VARCHAR name "Nombre de la empresa / tenant"
+        JSONB settings "Postura fail_closed, mask_sensitive, retencion y SIEM"
         TIMESTAMPTZ created_at
     }
 
@@ -56,7 +56,19 @@ erDiagram
         UUID id PK
         UUID organization_id FK
         VARCHAR email "Email unico corporativo"
-        ENUM role "ADMIN | OPERATOR | APPROVER"
+        VARCHAR hashed_password "Hash bcrypt/argon2 (Nullable legacy)"
+        ENUM role "ADMIN | OPERATOR | APPROVER | AUDITOR | VIEWER"
+        TIMESTAMPTZ created_at
+    }
+
+    API_KEY {
+        UUID id PK
+        UUID organization_id FK
+        VARCHAR name "Etiqueta descriptiva de la llave"
+        VARCHAR key_prefix "Prefijo visible (ag_live_...)"
+        VARCHAR hashed_key "Hash SHA-256 del secreto"
+        BOOLEAN is_active
+        TIMESTAMPTZ expires_at
         TIMESTAMPTZ created_at
     }
 
@@ -83,7 +95,7 @@ erDiagram
         UUID id PK
         UUID organization_id FK
         VARCHAR name "Nombre de la herramienta externa"
-        VARCHAR protocol "REST"
+        VARCHAR protocol "REST (unico protocolo soportado)"
         VARCHAR endpoint_url "URL base del servicio web"
         TEXT description
         TIMESTAMPTZ created_at
@@ -115,7 +127,7 @@ erDiagram
         ENUM effect "ALLOW | DENY | REQUIRE_APPROVAL"
         UUID tool_action_id FK "Accion objeto de control"
         UUID target_agent_id FK "Agente especifico (o NULL para todos)"
-        JSONB conditions "Predicados logicos (montos, roles, horarios)"
+        JSONB conditions "Predicados logicos (max_amount, roles, etc.)"
         TIMESTAMPTZ created_at
     }
 
@@ -130,23 +142,27 @@ erDiagram
         JSONB request_context "Parametros sanitizados del llamado"
         ENUM decision "ALLOW | DENY | REQUIRE_APPROVAL"
         ENUM status "PENDING_APPROVAL | REJECTED | EXECUTED"
-        UUID evaluated_policy_rule_id FK "Regla legal que justifico"
+        UUID evaluated_policy_rule_id FK "Regla que justifico el veredicto"
+        FLOAT latency_ms "Latencia real medida con perf_counter()"
         TIMESTAMPTZ timestamp "Marca temporal inmutable"
     }
 
     APPROVAL {
         UUID id PK
-        UUID execution_id FK
+        UUID execution_id FK "UniqueConstraint uq_approval_execution"
         UUID assigned_approver_id FK "Operador que resolvio (Nullable)"
         ENUM status "PENDING | APPROVED | REJECTED | EXPIRED"
         TEXT resolution_reason "Motivo documentado del humano"
         TIMESTAMPTZ resolved_at
+        TIMESTAMPTZ created_at
     }
 
     ALERT {
         UUID id PK
         UUID organization_id FK
         UUID execution_id FK "Trazabilidad forense (Nullable)"
+        VARCHAR title "Titulo del incidente"
+        TEXT description "Detalle forense"
         ENUM severity "LOW | MEDIUM | HIGH | CRITICAL"
         ENUM status "OPEN | INVESTIGATING | RESOLVED | DISMISSED"
         UUID resolved_by_user_id FK "Operador investigador (Nullable)"
@@ -168,55 +184,43 @@ erDiagram
 
 ## 3. Decisiones Arquitectónicas y Justificación Técnica
 
-### A. Estrategia Multi-Tenant: Base de Datos Compartida con Discriminador de Tenant
-* **Decisión:** Todas las tablas de dominio raíz portan la columna `organization_id (UUID)`.
-* **Justificación frente al tribunal:** Para el alcance de un MVP SaaS y arquitectura web ágil, una base de datos con esquema compartido (*Shared Database, Shared Schema*) y discriminador de tenant indexado es el estándar de la industria (utilizado por plataformas como GitHub, Slack o Stripe en sus fases de escala). Permite migraciones de esquema unificadas, minimiza la sobrecarga de conexiones y mantiene costos de infraestructura controlados sin comprometer el aislamiento lógico si se aplican políticas de **Row-Level Security (RLS)** en PostgreSQL.
+### A. Estrategia Multi-Tenant: Esquema Compartido con Aislamiento Obligatorio en Capa de Aplicación
+* **Decisión:** Todas las tablas de dominio raíz portan la columna indexada `organization_id (UUID)`. El aislamiento lógico se garantiza mediante **filtrado obligatorio por `organization_id` en todas las consultas y mutaciones SQLAlchemy de la capa de servicios y routers**, sin depender de Row-Level Security (RLS) en PostgreSQL.
+* **Justificación en el SaaS B2B:**
+  1. En el **Control Plane**, el usuario autenticado vía JWT opera acotado a su organización (y en `POST /api/v1/auth/register-org` cada empresa nueva obtiene su tenant, usuario `ADMIN` y primera `ApiKey` aislados).
+  2. En el **Data Plane** (`POST /api/v1/gateway/execute`), el Gateway verifica criptográficamente la cabecera `X-AgentGuard-Key` contra `api_keys` y exige `request.organization_id == api_key.organization_id`, bloqueando con `403 Forbidden` cualquier intento de cruce de tenant.
+  3. Este enfoque mantiene migraciones Alembic simples y deterministas, dejando RLS nativo en PostgreSQL como capa de defensa en profundidad opcional a futuro.
 
-### B. Uso de UUID v4 como Clave Primaria en lugar de Enteros Seriales
-* **Justificación:**
-  1. **Prevención de Ataques de Enumeración (Insecure Direct Object References - IDOR):** Un ID incremental secuencial (`/api/v1/agents/1`, `/agents/2`) permite a atacantes o agentes comprometidos deducir la existencia y volumen de otros recursos.
-  2. **Generación Descentralizada:** El API Gateway o servicios asíncronos pueden generar identificadores de ejecución sin bloquear transaccionalmente secuencias en la base de datos.
-  3. **Seguridad Multi-Tenant:** Dificulta colisiones accidentales entre tenants.
+### B. Uso de `UUID v4` como Clave Primaria en lugar de Enteros Seriales
+1. **Prevención de Enumeración (IDOR):** Un ID secuencial (`/api/v1/agents/1`) permitiría inferir volumen de clientes o intentar accesos cruzados.
+2. **Generación Descentralizada:** Los servicios asíncronos en Python generan identificadores UUID sin bloqueos de secuencias.
 
-### C. Uso Estratégico de `JSONB` vs. Normalización Extrema
-En el modelo observamos `JSONB` en cuatro lugares clave:
-1. `PolicyRule.conditions`: Define los predicados dinámicos de evaluación (ej. `{"amount_max": 5000, "allowed_roles": ["sales"], "allowed_hours": "08:00-18:00"}`). Normalizar esto en tablas de atributos clave-valor (EAV) destruiría el rendimiento con decenas de *JOINs* innecesarios en la ruta crítica del gateway.
-2. `Execution.request_context`: Metadatos contextuales sanitizados del llamado en runtime (ej. `{"ip": "192.168.1.10", "environment": "production", "delegation_chain": ["user_1", "agent_sales"]}`).
-3. `AgentTool.config`: Parámetros específicos de conexión y límites que un agente particular tiene sobre una herramienta.
-4. `AuditEvent.metadata`: Datos forenses del evento.
+### C. Uso Estratégico de `JSONB` con Índices GIN
+En el modelo se aprovecha `JSONB` en:
+1. `Organization.settings`: Parámetros de gobernanza (`fail_closed`, `mask_sensitive`, `max_autonomous_amount`, `retention_days`, webhook SIEM).
+2. `PolicyRule.conditions`: Predicados dinámicos evaluados por el PDP (`{"max_amount": 5000}`, `{"amount": {"lte": 10000}}`, etc.).
+3. `Execution.request_context`: Contexto sanitizado del llamado en runtime.
+4. `AgentTool.config` y `AuditEvent.metadata`: Límites específicos por vínculo agente-herramienta y detalle forense de eventos administrativos.
 
-> **Defensa clave:** PostgreSQL ofrece índices invertidos generalizados (**GIN**) sobre columnas `JSONB`, lo que permite realizar consultas indexadas sobre propiedades internas sin perder la flexibilidad requerida por entornos agentic donde los esquemas de herramientas varían constantemente.
-
-### D. Sanitización y Privacidad del `request_context`
-* **Defensa:** Cumpliendo con OWASP GenAI (LLM06 - Sensitive Information Disclosure), el gateway aplica una etapa de **sanitización y enmascaramiento (*masking*)** antes de persistir en `Execution`. Se almacenan tipos y montos, pero nunca tokens de acceso, API keys o payloads crudos con información confidencial de clientes.
+### D. Sanitización y Privacidad del `request_context` (OWASP LLM06)
+Antes de persistir cualquier fila en `executions`, `sanitizer_service.py` enmascara tokens (`Bearer ...`, `ag_live_...`), credenciales y PII sensible para evitar fugas de secretos en trazas y auditorías.
 
 ---
 
-## 4. Las 7 Correcciones y Mejoras de la Versión 2.0
+## 4. Capacidades Clave de la Persistencia
 
-Frente a la primera versión del proyecto, este modelo incorpora mejoras estructurales que deben destacarse durante la presentación:
-
-1. **Relación $N:N$ entre Agente y Herramienta (`AgentTool`):** En la versión inicial un agente tenía herramientas fijas o viceversa. Ahora, una herramienta (ej. *API REST de Salesforce*) puede asignarse a múltiples agentes, cada uno con configuraciones, scopes y estados de habilitación independientes.
-2. **Granularidad Fina con `ToolAction`:** Anteriormente se autorizaba la herramienta genérica o mediante un string de texto libre. Ahora se modela la acción atómica (`ToolAction`) con su propio `risk_level` (LOW, MEDIUM, HIGH, CRITICAL), garantizando integridad referencial con FKs.
-3. **Mecanismo Determinista de Prioridad y Precedencia:** `Policy` y `PolicyRule` cuentan con un campo `priority (INTEGER)`. La regla fundamental de seguridad es el **Principio de Mínimo Privilegio y Denegación por Defecto (*Fail-Closed*)**: ante un conflicto o empate de reglas, `DENY` siempre vence a `ALLOW`.
-4. **Desacoplamiento del Ciclo de Vida de Aprobación (`Approval`):** Las aprobaciones no son un flag booleano en la ejecución, sino una entidad hija con estados (`PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`), asignación de usuario aprobador y motivo de resolución.
-5. **Entidad de Seguridad `Alert`:** Permite registrar incidentes anómalos o intentos de violación (ej. *Prompt Injection* detectado) y rastrear quién la investigó (`resolved_by_user_id`).
-6. **Separación de `AuditEvent` y `Execution`:** `Execution` almacena llamadas operativas de agentes en runtime; `AuditEvent` audita acciones administrativas humanas (quién creó una política, quién revocó una credencial, quién cambió permisos).
-7. **Estandarización 100% RESTful:** Las herramientas externas se registran mediante sus URLs de endpoints HTTP protegidos (`endpoint_url`), métodos HTTP y esquemas de autenticación estándar (Bearer Token / API Key), permitiendo integrar cualquier API web sin dependencias de protocolos propietarios.
+1. **Credenciales Criptográficas de Data Plane (`api_keys`):** Almacena el hash SHA-256 (`hashed_key`) y solo el prefijo (`key_prefix`), evitando exponer secretos en texto plano tras el onboarding o generación inicial.
+2. **Relación $N:N$ entre Agente y Herramienta (`agent_tools`):** Un agente únicamente puede invocar herramientas vinculadas y habilitadas (`enabled = True`); ante ausencia de vínculo, el Gateway responde `403 Forbidden` (*Agent lacks capability*).
+3. **Granularidad Atómica (`tool_actions`) y Protocolo Único `REST` (`tools.protocol`):** Cada acción posee su propio `risk_level` (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`) sobre herramientas estandarizadas en HTTP REST (ADR-003).
+4. **Trazabilidad Forense con Latencia Real (`executions.latency_ms`):** Registra el tiempo efectivo medido con `time.perf_counter()` junto con la regla evaluada (`evaluated_policy_rule_id`), decisión y estado.
+5. **Desacoplamiento HITL (`approvals`) e Incidentes (`alerts`):** Con restricción única `uq_approval_execution` sobre `execution_id`, bloqueo pesimista al resolver y trazabilidad hacia `resolved_by_user_id`.
 
 ---
 
 ## 5. Preguntas Difíciles del Profesor y Respuestas Recomendadas
 
-### ❓ P1: *"¿Por qué la tabla `Execution` tiene tantas claves foráneas? ¿No genera dependencia acoplada?"*
-> **Respuesta:** «Las claves foráneas en `Execution` son deliberadas: representan la cadena de delegación y auditoría inmutable exigida por estándares de gobernanza agentic (CSA 2026). Necesitamos correlacionar de forma atómica: **Quién solicitó** (`agent_id`), **En nombre de quién** (`delegator_user_id`), **Qué herramienta** (`tool_id`), **Qué acción puntual** (`tool_action_id`) y **Bajo qué regla legal** (`evaluated_policy_rule_id`). Esto asegura integridad referencial y permite consultar trazas forenses instantáneas sin ambigüedades».
+### ❓ P1: *"¿Por qué la tabla `executions` tiene tantas claves foráneas?"*
+> **Respuesta:** «Representan la cadena de trazabilidad y delegación exigida en gobernanza agentic: correlacionan de forma atómica **quién solicitó** (`agent_id`), **en nombre de quién** (`delegator_user_id`), **qué herramienta REST** (`tool_id`), **qué acción atómica** (`tool_action_id`), **bajo qué regla** (`evaluated_policy_rule_id`) y **en qué tenant** (`organization_id`)».
 
-### ❓ P2: *"¿Por qué `delegator_user_id` es Nullable en `Execution`?"*
-> **Respuesta:** «Porque los agentes de IA pueden operar bajo dos modalidades:
-> 1. **Delegación directa:** Un usuario humano le pide al agente que ejecute una tarea (ej. "Prepara un presupuesto para el cliente X"), donde `delegator_user_id` contiene el UUID del usuario.
-> 2. **Operación en background / Autónomo:** Un agente programado en un cron nocturno para conciliar catálogos o reintentar transacciones, donde opera de forma autónoma para la organización sin un usuario humano en la sesión».
-
-### ❓ P3: *"Si el volumen de ejecuciones crece exponencialmente, ¿cómo escala la tabla `Execution`?"*
-> **Respuesta:** «El diseño está preparado para dos estrategias estándar en bases de datos empresariales:
-> 1. **Particionamiento por Rango de Fechas:** Particionar la tabla `Execution` mensualmente sobre la columna `timestamp`.
-> 2. **Separación de Almacenamiento Frío/Caliente:** Mantener las ejecuciones de los últimos 30 días en PostgreSQL para el dashboard operativo, y archivar trazas históricas en un *data lake* o almacenamiento columnar mediante procesos en segundo plano (*Audit Service*), tal como lo contempla la arquitectura propuesta».
+### ❓ P2: *"¿Cómo aseguran el aislamiento Multi-Tenant si no activaron RLS en PostgreSQL?"*
+> **Respuesta:** «Todas las tablas raíz tienen `organization_id` indexado con PKs `UUID v4`, y el aislamiento se impone obligatoriamente en dos fronteras: en el Control Plane las rutas exigen JWT y filtran por `organization_id` en cada consulta/mutación SQLAlchemy; en el Data Plane el Gateway autentica la cabecera `X-AgentGuard-Key` contra `api_keys` y rechaza con `403` si `request.organization_id` no coincide con el propietario de la API Key».
