@@ -176,7 +176,7 @@ class AgentGuardApiClient {
    * Retorna el ID de organizacion activa persistida en la sesion
    */
   public getActiveOrganizationId(): string {
-    return (typeof window !== 'undefined' ? localStorage.getItem('agentguard_active_org') : null) || DEMO_IDS.ORG_ACME_ID;
+    return (typeof window !== 'undefined' ? localStorage.getItem('agentguard_active_org') : null) || '';
   }
 
   /**
@@ -184,7 +184,11 @@ class AgentGuardApiClient {
    */
   public setActiveOrganizationId(orgId: string): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('agentguard_active_org', orgId);
+      if (orgId) {
+        localStorage.setItem('agentguard_active_org', orgId);
+      } else {
+        localStorage.removeItem('agentguard_active_org');
+      }
     }
   }
 
@@ -192,7 +196,7 @@ class AgentGuardApiClient {
    * Retorna el ID de usuario activo persistido en la sesion
    */
   public getActiveUserId(): string {
-    return (typeof window !== 'undefined' ? localStorage.getItem('agentguard_active_user_id') : null) || DEMO_IDS.USER_ADMIN_ID;
+    return (typeof window !== 'undefined' ? localStorage.getItem('agentguard_active_user_id') : null) || '';
   }
 
   private async fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
@@ -841,7 +845,7 @@ class AgentGuardApiClient {
    */
   async getApprovals(
     status?: ApprovalStatus,
-    orgId: string = DEMO_IDS.ORG_ACME_ID
+    orgId: string = this.getActiveOrganizationId()
   ): Promise<ApprovalRequest[]> {
     try {
       const query = new URLSearchParams({ organization_id: orgId });
@@ -892,17 +896,20 @@ class AgentGuardApiClient {
     approvalId: string,
     decision: 'APPROVED' | 'REJECTED',
     reason: string = 'Resolución emitida desde el Dashboard HITL',
-    approverUserId: string = DEMO_IDS.USER_APPROVER_ID
+    approverUserId?: string
   ): Promise<boolean> {
     try {
+      const bodyPayload: Record<string, any> = {
+        decision,
+        resolution_reason: reason,
+      };
+      if (approverUserId) {
+        bodyPayload.approver_user_id = approverUserId;
+      }
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/approvals/${approvalId}/resolve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          decision,
-          resolution_reason: reason,
-          approver_user_id: approverUserId,
-        }),
+        body: JSON.stringify(bodyPayload),
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -999,7 +1006,7 @@ class AgentGuardApiClient {
    * Obtiene la lista forense de eventos de auditoría (/api/v1/audit-events)
    */
   async getAuditEvents(
-    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    orgId: string = this.getActiveOrganizationId(),
     filters?: { actor_type?: string; event_type?: string; skip?: number; limit?: number }
   ): Promise<any[]> {
     try {
@@ -1010,10 +1017,6 @@ class AgentGuardApiClient {
       if (filters?.limit !== undefined) query.append('limit', String(filters.limit));
 
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/audit-events?${query.toString()}`, {
-        headers: {
-          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
-          'X-Organization-Id': orgId,
-        },
         signal: AbortSignal.timeout(5000),
       });
 
@@ -1031,7 +1034,7 @@ class AgentGuardApiClient {
    * Obtiene la lista forense de ejecuciones (/api/v1/executions)
    */
   async getExecutions(
-    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    orgId: string = this.getActiveOrganizationId(),
     decision?: PolicyDecision
   ): Promise<ExecutionTrace[]> {
     try {
@@ -1062,7 +1065,7 @@ class AgentGuardApiClient {
         status: item.status || 'EXECUTED',
         evaluatedPolicyRuleId: item.evaluated_policy_rule_id,
         timestamp: item.timestamp,
-        latencyMs: item.latency_ms || 22.0,
+        latencyMs: item.latency_ms ?? 0,
         approvalStatus: item.approval_status || null,
         approvalResolvedAt: item.approval_resolved_at || null,
         resolutionReason: item.resolution_reason || null,
@@ -1075,7 +1078,7 @@ class AgentGuardApiClient {
   /**
    * Obtiene alertas de seguridad desde /api/v1/alerts
    */
-  async getAlerts(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<SecurityAlert[]> {
+  async getAlerts(orgId: string = this.getActiveOrganizationId()): Promise<SecurityAlert[]> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/alerts?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(5000),
@@ -1117,13 +1120,17 @@ class AgentGuardApiClient {
   async updateAlertStatus(
     alertId: string,
     status: 'INVESTIGATING' | 'RESOLVED' | 'DISMISSED',
-    userId: string = DEMO_IDS.USER_ADMIN_ID
+    userId?: string
   ): Promise<boolean> {
     try {
+      const bodyPayload: Record<string, any> = { status };
+      if (userId) {
+        bodyPayload.resolved_by_user_id = userId;
+      }
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/alerts/${alertId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, resolved_by_user_id: userId }),
+        body: JSON.stringify(bodyPayload),
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -1138,7 +1145,7 @@ class AgentGuardApiClient {
   /**
    * Obtiene la lista de usuarios y roles RBAC de la organización
    */
-  async getUsers(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<UserMember[]> {
+  async getUsers(orgId: string = this.getActiveOrganizationId()): Promise<UserMember[]> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/users?organization_id=${orgId}&skip=0&limit=100`, {
         signal: AbortSignal.timeout(4000),
@@ -1163,15 +1170,21 @@ class AgentGuardApiClient {
   /**
    * Invita o crea un nuevo usuario corporativo en la organización
    */
-  async createUser(payload: { email: string; role: UserRole; organization_id?: string }): Promise<UserMember> {
+  async createUser(payload: {
+    email: string;
+    role: UserRole;
+    password: string;
+    organization_id?: string;
+  }): Promise<UserMember> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          organization_id: payload.organization_id || DEMO_IDS.ORG_ACME_ID,
+          organization_id: payload.organization_id || this.getActiveOrganizationId(),
           email: payload.email,
           role: payload.role,
+          password: payload.password,
         }),
         signal: AbortSignal.timeout(5000),
       });
@@ -1239,13 +1252,9 @@ class AgentGuardApiClient {
   /**
    * Obtiene las credenciales de API Key de la organización para autenticación en el Gateway PEP
    */
-  async getApiKeys(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<GatewayApiKey[]> {
+  async getApiKeys(orgId: string = this.getActiveOrganizationId()): Promise<GatewayApiKey[]> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/api-keys?organization_id=${orgId}&skip=0&limit=100`, {
-        headers: {
-          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
-          'X-Organization-Id': orgId,
-        },
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -1276,15 +1285,13 @@ class AgentGuardApiClient {
     organization_id?: string;
     expires_in_days?: number;
   }): Promise<{ key: GatewayApiKey; rawKey: string }> {
-    const orgId = payload.organization_id || DEMO_IDS.ORG_ACME_ID;
+    const orgId = payload.organization_id || this.getActiveOrganizationId();
 
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/api-keys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
-          'X-Organization-Id': orgId,
         },
         body: JSON.stringify({
           name: payload.name,
@@ -1319,14 +1326,10 @@ class AgentGuardApiClient {
   /**
    * Revoca lógicamente una API Key de la organización (DELETE /api/v1/api-keys/{id})
    */
-  async revokeApiKey(keyId: string, orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<boolean> {
+  async revokeApiKey(keyId: string, orgId: string = this.getActiveOrganizationId()): Promise<boolean> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/api-keys/${keyId}?organization_id=${orgId}`, {
         method: 'DELETE',
-        headers: {
-          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
-          'X-Organization-Id': orgId,
-        },
         signal: AbortSignal.timeout(5000),
       });
       if (!res.ok && res.status !== 204) {
@@ -1341,7 +1344,7 @@ class AgentGuardApiClient {
   /**
    * Obtiene métricas agregadas globales y KPIs (/api/v1/analytics/overview)
    */
-  async getAnalyticsOverview(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<AnalyticsOverview> {
+  async getAnalyticsOverview(orgId: string = this.getActiveOrganizationId()): Promise<AnalyticsOverview> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/analytics/overview?organization_id=${orgId}`, {
         signal: AbortSignal.timeout(5000),
@@ -1367,7 +1370,7 @@ class AgentGuardApiClient {
    * Obtiene la serie temporal de actividad horaria (/api/v1/analytics/timeseries)
    */
   async getAnalyticsTimeseries(
-    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    orgId: string = this.getActiveOrganizationId(),
     rangeStr: string = '24h'
   ): Promise<AnalyticsTimeseries> {
     try {
@@ -1426,13 +1429,9 @@ class AgentGuardApiClient {
   /**
    * Obtiene la configuración de gobernanza y postura Fail-Closed de la organización
    */
-  async getOrganizationSettings(orgId: string = DEMO_IDS.ORG_ACME_ID): Promise<OrganizationSettings> {
+  async getOrganizationSettings(orgId: string = this.getActiveOrganizationId()): Promise<OrganizationSettings> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/organizations/${orgId}/settings`, {
-        headers: {
-          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
-          'X-Organization-Id': orgId,
-        },
         signal: AbortSignal.timeout(4000),
       });
       if (!res.ok) {
@@ -1458,7 +1457,7 @@ class AgentGuardApiClient {
    * Actualiza parcialmente la configuración de gobernanza de la organización
    */
   async updateOrganizationSettings(
-    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    orgId: string = this.getActiveOrganizationId(),
     update: Partial<OrganizationSettings>
   ): Promise<OrganizationSettings> {
     try {
@@ -1466,8 +1465,6 @@ class AgentGuardApiClient {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
-          'X-Organization-Id': orgId,
         },
         body: JSON.stringify(update),
         signal: AbortSignal.timeout(5000),
@@ -1512,7 +1509,7 @@ class AgentGuardApiClient {
    * Realiza una prueba de emisión y firma con el endpoint Webhook SIEM
    */
   async testSiemWebhook(
-    orgId: string = DEMO_IDS.ORG_ACME_ID,
+    orgId: string = this.getActiveOrganizationId(),
     payload?: { webhook_url?: string; secret?: string }
   ): Promise<SiemWebhookTestResult> {
     try {
@@ -1520,8 +1517,6 @@ class AgentGuardApiClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': DEMO_IDS.USER_ADMIN_ID,
-          'X-Organization-Id': orgId,
         },
         body: JSON.stringify(payload || {}),
         signal: AbortSignal.timeout(5000),
@@ -1555,7 +1550,7 @@ class AgentGuardApiClient {
         id: userRaw.id,
         email: userRaw.email,
         name: userRaw.name || userRaw.email?.split('@')[0],
-        role: userRaw.role || 'ADMIN',
+        role: userRaw.role || 'VIEWER',
         organization_id: userRaw.organization_id,
         organizationId: userRaw.organization_id,
         created_at: userRaw.created_at,
@@ -1595,7 +1590,7 @@ class AgentGuardApiClient {
         id: userRaw.id,
         email: userRaw.email,
         name: userRaw.name || data.name || userRaw.email?.split('@')[0],
-        role: userRaw.role || 'ADMIN',
+        role: userRaw.role || 'VIEWER',
         organization_id: userRaw.organization_id,
         organizationId: userRaw.organization_id,
         created_at: userRaw.created_at,
@@ -1672,7 +1667,7 @@ class AgentGuardApiClient {
         id: data.id,
         email: data.email,
         name: data.name || data.email?.split('@')[0],
-        role: data.role || 'ADMIN',
+        role: data.role || 'VIEWER',
         organization_id: data.organization_id,
         organizationId: data.organization_id,
         created_at: data.created_at,

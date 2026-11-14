@@ -227,6 +227,10 @@ export interface User {
   canApproveHITL?: boolean;
   canConfigurePolicies?: boolean;
   canManageTeam?: boolean;
+  canManageAlerts?: boolean;
+  canRunPlayground?: boolean;
+  canViewAudit?: boolean;
+  canResetDemo?: boolean;
   created_at?: string;
 }
 

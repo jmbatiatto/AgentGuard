@@ -9,8 +9,8 @@ import {
   PlayCircle, 
   Settings, 
   LogOut,
-  ChevronDown,
   ChevronRight,
+  Lock,
   Terminal,
 } from 'lucide-react';
 import type { NavView } from '../../types/domain';
@@ -37,66 +37,30 @@ interface WorkspaceSwitcherProps {
   onSelect?: (ws: string) => void;
 }
 
-export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const { currentOrganization, availableOrganizations, switchOrganization } = useAuth();
-  
-  const currentName = currentOrganization?.name || selected || 'Acme Corp';
+export function WorkspaceSwitcher({ selected }: WorkspaceSwitcherProps) {
+  const { currentOrganization } = useAuth();
+  const currentName = currentOrganization?.name || selected || 'Organización';
 
   return (
-    <div className="relative">
-      <div 
-        id="sidebar-workspace-switcher"
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-800/60 cursor-pointer transition-colors duration-200 select-none group"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[13px] shrink-0">
-            {currentName.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex flex-col overflow-hidden min-w-0">
-            <span className="text-[13px] font-semibold leading-none mb-1 text-white truncate max-w-[120px]">
-              {currentName}
-            </span>
-            <span className="text-[11px] text-slate-500 leading-none">
-              Tenant Activo
-            </span>
-          </div>
+    <div
+      id="sidebar-workspace-locked"
+      title="Organización bloqueada por sesión JWT"
+      className="flex items-center justify-between px-3 py-2.5 rounded-xl select-none"
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[13px] shrink-0">
+          {currentName.charAt(0).toUpperCase()}
         </div>
-        <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors duration-200 shrink-0" strokeWidth={1.5} />
+        <div className="flex flex-col overflow-hidden min-w-0">
+          <span className="text-[13px] font-semibold leading-none mb-1 text-white truncate max-w-[120px]">
+            {currentName}
+          </span>
+          <span className="text-[11px] text-slate-400 leading-none">
+            Tenant Verificado
+          </span>
+        </div>
       </div>
-
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-[52px] left-0 w-full bg-[#111B2A] border border-slate-700/60 rounded-xl shadow-xl z-50 py-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
-            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase border-b border-slate-800 mb-1">
-              Organizaciones (Tenants)
-            </div>
-            {availableOrganizations.map(org => {
-              const isSelected = org.id === currentOrganization?.id;
-              return (
-                <div 
-                  key={org.id}
-                  onClick={() => { 
-                    switchOrganization(org.id); 
-                    if (onSelect) onSelect(org.name);
-                    setIsOpen(false); 
-                  }}
-                  className={`px-3 py-2 mx-1 text-[13px] rounded-lg cursor-pointer transition-colors duration-200 flex items-center justify-between ${
-                    isSelected 
-                      ? 'bg-emerald-500/10 text-emerald-400 font-medium' 
-                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
-                  }`}
-                >
-                  <span className="truncate">{org.name}</span>
-                  {isSelected && <span className="text-emerald-400 text-xs">✓</span>}
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+      <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" strokeWidth={1.75} />
     </div>
   );
 }

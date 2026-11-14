@@ -144,6 +144,7 @@ export const SettingsView: React.FC = () => {
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState<UserRole>('OPERATOR');
   const [isSubmittingUser, setIsSubmittingUser] = useState(false);
 
@@ -175,26 +176,33 @@ export const SettingsView: React.FC = () => {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserEmail.trim()) return;
+    if (!newUserEmail.trim() || !activeOrgId) return;
+    if (newUserPassword.length < 8) {
+      showToast('La contraseña inicial debe tener al menos 8 caracteres', 'error');
+      return;
+    }
 
     setIsSubmittingUser(true);
     try {
       const created = await api.createUser({
         email: newUserEmail.trim(),
+        password: newUserPassword,
         role: newUserRole,
         organization_id: activeOrgId,
       });
 
       if (created) {
         setUsers(prev => [created, ...prev]);
-        showToast(`Usuario ${created.email} invitado exitosamente`);
+        showToast(`Usuario ${created.email} creado exitosamente`);
         setIsUserModalOpen(false);
         setNewUserEmail('');
+        setNewUserPassword('');
       } else {
         showToast('Error al crear usuario en la organización', 'error');
       }
-    } catch {
-      showToast('Fallo al invocar el endpoint de usuarios', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Fallo al invocar el endpoint de usuarios';
+      showToast(msg, 'error');
     } finally {
       setIsSubmittingUser(false);
     }
@@ -1738,6 +1746,31 @@ def execute_guarded_tool(action_name: str, **kwargs):
                     borderRadius: '8px',
                     color: 'var(--text-primary)',
                     fontSize: '13px',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Contraseña Inicial (mín. 8 caracteres)
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  maxLength={128}
+                  placeholder="••••••••"
+                  value={newUserPassword}
+                  onChange={e => setNewUserPassword(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    backgroundColor: 'rgba(255,255,255,0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                    fontSize: '13px',
+                    outline: 'none',
                   }}
                 />
               </div>

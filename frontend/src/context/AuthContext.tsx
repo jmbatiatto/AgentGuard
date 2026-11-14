@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api, DEMO_IDS } from '../services/api';
+import { ROLE_DESCRIPTIONS, ROLE_STYLES } from '../constants/labels';
 import type {
   User,
   UserRole,
@@ -22,117 +23,79 @@ export interface AuthUser extends User {
   canApproveHITL: boolean;
   canConfigurePolicies: boolean;
   canManageTeam: boolean;
+  canManageAlerts: boolean;
+  canRunPlayground: boolean;
+  canViewAudit: boolean;
+  canResetDemo: boolean;
 }
 
-export const DEMO_PROFILES: AuthUser[] = [
-  {
-    id: DEMO_IDS.USER_ADMIN_ID,
-    name: 'Jonathan Araujo',
-    email: 'admin@acmecorp.com',
-    role: 'ADMIN',
-    avatarInitials: 'JA',
-    avatarBg: 'rgba(99, 102, 241, 0.2)',
-    badgeColor: '#818CF8',
-    description: 'Control total de plataforma, políticas PDP y credenciales del Gateway',
-    canApproveHITL: true,
-    canConfigurePolicies: true,
-    canManageTeam: true,
-  },
-  {
-    id: DEMO_IDS.USER_APPROVER_ID,
-    name: 'Elena Rostova',
-    email: 'compliance.lead@acmecorp.com',
-    role: 'APPROVER',
-    avatarInitials: 'ER',
-    avatarBg: 'rgba(245, 158, 11, 0.2)',
-    badgeColor: '#FBBF24',
-    description: 'Oficial de Cumplimiento autorizado para resolver aprobaciones HITL',
-    canApproveHITL: true,
-    canConfigurePolicies: false,
-    canManageTeam: false,
-  },
-  {
-    id: DEMO_IDS.USER_OPERATOR_ID,
-    name: 'Carlos Mendez',
-    email: 'ops.engineer@acmecorp.com',
-    role: 'OPERATOR',
-    avatarInitials: 'CM',
-    avatarBg: 'rgba(16, 185, 129, 0.2)',
-    badgeColor: '#34D399',
-    description: 'Ingeniero de Operaciones, simulación de agentes en el playground',
-    canApproveHITL: false,
-    canConfigurePolicies: false,
-    canManageTeam: false,
-  },
-  {
-    id: '22222222-2222-2222-2222-222222222204',
-    name: 'Lucia Vance',
-    email: 'sec.auditor@acmecorp.com',
-    role: 'AUDITOR',
-    avatarInitials: 'LV',
-    avatarBg: 'rgba(56, 189, 248, 0.2)',
-    badgeColor: '#38BDF8',
-    description: 'Auditor de Seguridad con acceso de solo lectura a trazas e incidentes',
-    canApproveHITL: false,
-    canConfigurePolicies: false,
-    canManageTeam: false,
-  },
-  {
-    id: '22222222-2222-2222-2222-222222222205',
-    name: 'Sofía Valenzuela',
-    email: 'guest.viewer@acmecorp.com',
-    role: 'VIEWER',
-    avatarInitials: 'SV',
-    avatarBg: 'rgba(148, 163, 184, 0.2)',
-    badgeColor: '#94A3B8',
-    description: 'Acceso de solo lectura al dashboard y métricas ejecutivas',
-    canApproveHITL: false,
-    canConfigurePolicies: false,
-    canManageTeam: false,
-  },
-];
+const VALID_ROLES: UserRole[] = ['ADMIN', 'APPROVER', 'OPERATOR', 'AUDITOR', 'VIEWER'];
+
+function normalizeRole(role?: string): UserRole {
+  const upper = (role || 'VIEWER').toUpperCase() as UserRole;
+  return VALID_ROLES.includes(upper) ? upper : 'VIEWER';
+}
 
 export function formatAuthUser(user: Partial<User> | Partial<AuthUser>): AuthUser {
-  const email = user.email || 'usuario@acmecorp.com';
-  const name = user.name || email.split('@')[0];
-  const role: UserRole = user.role || 'ADMIN';
+  const email = user.email || '';
+  const name = user.name || (email ? email.split('@')[0] : 'Usuario');
+  const role: UserRole = normalizeRole(user.role);
+  const orgId = user.organization_id || user.organizationId || '';
+  const roleStyle = ROLE_STYLES[role] || ROLE_STYLES.VIEWER;
+
   const initials =
     user.avatarInitials ||
     (name
       ? name
           .split(' ')
+          .filter(Boolean)
           .map((n: string) => n[0])
           .join('')
           .substring(0, 2)
           .toUpperCase()
       : 'AG');
 
-  // Coincidencia con perfiles demo
-  const demoMatch = DEMO_PROFILES.find(
-    (p) =>
-      (user.id && p.id === user.id) ||
-      (user.email && p.email.toLowerCase() === user.email.toLowerCase())
-  );
-
   return {
-    id: user.id || (demoMatch ? demoMatch.id : DEMO_IDS.USER_ADMIN_ID),
-    name: user.name || (demoMatch ? demoMatch.name : name),
-    email: email,
-    role: role,
-    organization_id: user.organization_id || user.organizationId || DEMO_IDS.ORG_ACME_ID,
-    organizationId: user.organization_id || user.organizationId || DEMO_IDS.ORG_ACME_ID,
+    id: user.id || '',
+    name,
+    email,
+    role,
+    organization_id: orgId,
+    organizationId: orgId,
     avatarInitials: initials,
-    avatarBg:
-      demoMatch?.avatarBg ||
-      (role === 'ADMIN' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(16, 185, 129, 0.2)'),
-    badgeColor: demoMatch?.badgeColor || (role === 'ADMIN' ? '#818CF8' : '#34D399'),
-    description: demoMatch?.description || `Usuario autenticado con rol ${role}`,
-    canApproveHITL: ['ADMIN', 'APPROVER'].includes(role),
-    canConfigurePolicies: ['ADMIN'].includes(role),
-    canManageTeam: ['ADMIN'].includes(role),
+    avatarBg: roleStyle.bg,
+    badgeColor: roleStyle.color,
+    description: ROLE_DESCRIPTIONS[role] || `Usuario autenticado con rol ${role}`,
+    canApproveHITL: role === 'ADMIN' || role === 'APPROVER',
+    canConfigurePolicies: role === 'ADMIN',
+    canManageTeam: role === 'ADMIN',
+    canManageAlerts: role === 'ADMIN' || role === 'APPROVER' || role === 'OPERATOR',
+    canRunPlayground: role === 'ADMIN' || role === 'OPERATOR',
+    canViewAudit: role === 'ADMIN' || role === 'AUDITOR',
+    canResetDemo: role === 'ADMIN' && orgId === DEMO_IDS.ORG_ACME_ID,
     created_at: user.created_at,
   };
 }
+
+const UNAUTHENTICATED_USER: AuthUser = {
+  id: '',
+  name: 'Sesión no iniciada',
+  email: '',
+  role: 'VIEWER',
+  organization_id: '',
+  organizationId: '',
+  avatarInitials: '--',
+  avatarBg: ROLE_STYLES.VIEWER.bg,
+  badgeColor: ROLE_STYLES.VIEWER.color,
+  description: 'Inicia sesión para operar dentro de tu organización',
+  canApproveHITL: false,
+  canConfigurePolicies: false,
+  canManageTeam: false,
+  canManageAlerts: false,
+  canRunPlayground: false,
+  canViewAudit: false,
+  canResetDemo: false,
+};
 
 export interface AuthContextType {
   currentUser: AuthUser;
@@ -140,10 +103,6 @@ export interface AuthContextType {
   isLoading: boolean;
   currentOrganizationId: string;
   currentOrganization: Organization | null;
-  availableOrganizations: Organization[];
-  switchOrganization: (orgId: string) => void;
-  switchUser: (userId: string) => void;
-  availableUsers: AuthUser[];
   login: (emailOrCreds: string | AuthCredentials, password?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   registerOrg: (data: RegisterOrgData) => Promise<RegisterOrgResponse>;
@@ -157,77 +116,72 @@ const STORAGE_USER_KEY = 'agentguard_user';
 const STORAGE_ACTIVE_ID_KEY = 'agentguard_active_user_id';
 const STORAGE_ACTIVE_ORG_KEY = 'agentguard_active_org';
 
-const DEFAULT_DEMO_ORGS: Organization[] = [
-  {
-    id: DEMO_IDS.ORG_ACME_ID,
-    name: 'Acme Corp (Principal)',
-    created_at: '2026-01-01T00:00:00Z',
-  },
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return Boolean(localStorage.getItem(STORAGE_TOKEN_KEY));
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  const [availableOrganizations, setAvailableOrganizations] = useState<Organization[]>(DEFAULT_DEMO_ORGS);
-
-  const [currentOrganizationId, setCurrentOrganizationId] = useState<string>(() => {
-    return (
-      (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_ACTIVE_ORG_KEY) : null) ||
-      DEMO_IDS.ORG_ACME_ID
-    );
-  });
+  const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
 
   const [currentUser, setCurrentUser] = useState<AuthUser>(() => {
+    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
     const storedUser = localStorage.getItem(STORAGE_USER_KEY);
-    if (storedUser) {
+    if (token && storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
         return formatAuthUser(parsed);
       } catch {
-        // Fallback
+        // Fallback fail-closed
       }
     }
-    const savedId = localStorage.getItem(STORAGE_ACTIVE_ID_KEY);
-    if (savedId) {
-      const found = DEMO_PROFILES.find((u) => u.id === savedId);
-      if (found) return found;
-    }
-    return DEMO_PROFILES[0];
+    return UNAUTHENTICATED_USER;
   });
 
-  // Carga de organizaciones disponibles para el switcher multitenant
-  useEffect(() => {
-    let isMounted = true;
-    api
-      .listOrganizations()
-      .then((orgs) => {
-        if (!isMounted || !orgs || orgs.length === 0) return;
-        setAvailableOrganizations(orgs);
-        const savedOrgId = localStorage.getItem(STORAGE_ACTIVE_ORG_KEY);
-        if (savedOrgId && orgs.some((o) => o.id === savedOrgId)) {
-          setCurrentOrganizationId(savedOrgId);
-        } else if (orgs[0]) {
-          setCurrentOrganizationId(orgs[0].id);
-          localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgs[0].id);
-        }
-      })
-      .catch((err) => {
-        console.warn('Uso de organizaciones predeterminadas para entorno local:', err);
-      });
-    return () => {
-      isMounted = false;
-    };
+  const [currentOrganizationId, setCurrentOrganizationId] = useState<string>(() => {
+    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+    if (!token) return '';
+    return (
+      localStorage.getItem(STORAGE_ACTIVE_ORG_KEY) ||
+      currentUser.organization_id ||
+      ''
+    );
+  });
+
+  const syncOrganization = useCallback(async (orgId: string) => {
+    if (!orgId) {
+      setCurrentOrganization(null);
+      return;
+    }
+    try {
+      const orgs = await api.listOrganizations();
+      if (orgs && orgs.length > 0) {
+        const matched = orgs.find((o) => o.id === orgId) || orgs[0];
+        setCurrentOrganization(matched);
+      }
+    } catch {
+      // Mantiene datos básicos de organización por ID si el detalle falla temporalmente
+      setCurrentOrganization((prev) =>
+        prev && prev.id === orgId
+          ? prev
+          : {
+              id: orgId,
+              name: orgId === DEMO_IDS.ORG_ACME_ID ? 'Acme Corp' : 'Organización Activa',
+              created_at: new Date().toISOString(),
+            }
+      );
+    }
   }, []);
 
-  // Hidratación y validación de sesión al inicializar
+  // Hidratación y validación de sesión JWT al inicializar
   useEffect(() => {
     const token = localStorage.getItem(STORAGE_TOKEN_KEY);
     if (!token) {
       setIsAuthenticated(false);
+      setCurrentUser(UNAUTHENTICATED_USER);
+      setCurrentOrganization(null);
+      setCurrentOrganizationId('');
+      api.setActiveOrganizationId('');
       setIsLoading(false);
       return;
     }
@@ -235,23 +189,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let isMounted = true;
     api
       .getMe()
-      .then((user) => {
+      .then(async (user) => {
         if (!isMounted) return;
         const formatted = formatAuthUser(user);
-        setCurrentUser(formatted);
+        const orgId = formatted.organization_id || '';
         localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(STORAGE_ACTIVE_ID_KEY, user.id);
+        localStorage.setItem(STORAGE_ACTIVE_ID_KEY, formatted.id);
+        if (orgId) {
+          localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgId);
+          api.setActiveOrganizationId(orgId);
+          setCurrentOrganizationId(orgId);
+        }
+        setCurrentUser(formatted);
         setIsAuthenticated(true);
+        await syncOrganization(orgId);
       })
       .catch((err) => {
         if (!isMounted) return;
         console.warn('Token de autenticación expirado o inválido:', err);
-        // Purgar sesión ante token inválido o expirado
         localStorage.removeItem(STORAGE_TOKEN_KEY);
         localStorage.removeItem(STORAGE_USER_KEY);
         localStorage.removeItem(STORAGE_ACTIVE_ID_KEY);
+        localStorage.removeItem(STORAGE_ACTIVE_ORG_KEY);
+        api.setActiveOrganizationId('');
         setIsAuthenticated(false);
-        setCurrentUser(DEMO_PROFILES[0]);
+        setCurrentUser(UNAUTHENTICATED_USER);
+        setCurrentOrganization(null);
+        setCurrentOrganizationId('');
       })
       .finally(() => {
         if (isMounted) {
@@ -262,7 +226,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [syncOrganization]);
+
+  const applyAuthenticatedSession = useCallback(
+    async (token: string, rawUser: User, explicitOrg?: Organization) => {
+      const formatted = formatAuthUser(rawUser);
+      const orgId = explicitOrg?.id || formatted.organization_id || '';
+
+      localStorage.setItem(STORAGE_TOKEN_KEY, token);
+      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(rawUser));
+      localStorage.setItem(STORAGE_ACTIVE_ID_KEY, formatted.id);
+      if (orgId) {
+        localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgId);
+        api.setActiveOrganizationId(orgId);
+      }
+
+      setCurrentOrganizationId(orgId);
+      setCurrentUser(formatted);
+      if (explicitOrg) {
+        setCurrentOrganization(explicitOrg);
+      } else {
+        await syncOrganization(orgId);
+      }
+      setIsAuthenticated(true);
+    },
+    [syncOrganization]
+  );
 
   const login = async (emailOrCreds: string | AuthCredentials, maybePassword?: string) => {
     const credentials: AuthCredentials =
@@ -271,20 +260,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         : emailOrCreds;
 
     const response = await api.login(credentials);
-    localStorage.setItem(STORAGE_TOKEN_KEY, response.access_token);
-    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(response.user));
-    localStorage.setItem(STORAGE_ACTIVE_ID_KEY, response.user.id);
-    setCurrentUser(formatAuthUser(response.user));
-    setIsAuthenticated(true);
+    await applyAuthenticatedSession(response.access_token, response.user);
   };
 
   const register = async (data: RegisterData) => {
     const response = await api.register(data);
-    localStorage.setItem(STORAGE_TOKEN_KEY, response.access_token);
-    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(response.user));
-    localStorage.setItem(STORAGE_ACTIVE_ID_KEY, response.user.id);
-    setCurrentUser(formatAuthUser(response.user));
-    setIsAuthenticated(true);
+    await applyAuthenticatedSession(response.access_token, response.user);
   };
 
   const registerOrg = async (data: RegisterOrgData): Promise<RegisterOrgResponse> => {
@@ -296,19 +277,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       organizationId: response.organization.id,
     };
 
-    localStorage.setItem(STORAGE_TOKEN_KEY, response.access_token);
-    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userWithAdminName));
-    localStorage.setItem(STORAGE_ACTIVE_ID_KEY, response.user.id);
-    localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, response.organization.id);
-    api.setActiveOrganizationId(response.organization.id);
-
-    setAvailableOrganizations((prev) => {
-      const exists = prev.some((o) => o.id === response.organization.id);
-      return exists ? prev : [response.organization, ...prev];
-    });
-    setCurrentOrganizationId(response.organization.id);
-    setCurrentUser(formatAuthUser(userWithAdminName));
-    setIsAuthenticated(true);
+    await applyAuthenticatedSession(
+      response.access_token,
+      userWithAdminName,
+      response.organization
+    );
 
     return {
       ...response,
@@ -320,36 +293,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem(STORAGE_TOKEN_KEY);
     localStorage.removeItem(STORAGE_USER_KEY);
     localStorage.removeItem(STORAGE_ACTIVE_ID_KEY);
+    localStorage.removeItem(STORAGE_ACTIVE_ORG_KEY);
+    api.setActiveOrganizationId('');
     setIsAuthenticated(false);
-    setCurrentUser(DEMO_PROFILES[0]);
+    setCurrentOrganizationId('');
+    setCurrentOrganization(null);
+    setCurrentUser(UNAUTHENTICATED_USER);
   }, []);
 
-  const switchOrganization = useCallback((orgId: string) => {
-    setCurrentOrganizationId(orgId);
-    localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgId);
-    api.setActiveOrganizationId(orgId);
-    setCurrentUser((prev) => ({
-      ...prev,
-      organization_id: orgId,
-      organizationId: orgId,
-    }));
-  }, []);
-
-  const switchUser = (userId: string) => {
-    const target = DEMO_PROFILES.find((u) => u.id === userId);
-    if (target) {
-      setCurrentUser(target);
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(target));
-      localStorage.setItem(STORAGE_ACTIVE_ID_KEY, target.id);
-    }
-  };
-
-  const currentOrganization =
-    availableOrganizations.find((o) => o.id === currentOrganizationId) || {
-      id: currentOrganizationId,
-      name: 'Acme Corp (Principal)',
-      created_at: new Date().toISOString(),
-    };
+  const resolvedOrganization: Organization | null =
+    currentOrganization ||
+    (currentOrganizationId
+      ? {
+          id: currentOrganizationId,
+          name:
+            currentOrganizationId === DEMO_IDS.ORG_ACME_ID
+              ? 'Acme Corp (Principal)'
+              : 'Organización Activa',
+          created_at: new Date().toISOString(),
+        }
+      : null);
 
   return (
     <AuthContext.Provider
@@ -358,11 +321,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         isLoading,
         currentOrganizationId,
-        currentOrganization,
-        availableOrganizations,
-        switchOrganization,
-        switchUser,
-        availableUsers: DEMO_PROFILES,
+        currentOrganization: resolvedOrganization,
         login,
         register,
         registerOrg,

@@ -9,7 +9,6 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { DEMO_IDS } from './api';
 
 export interface WebSocketEventMessage {
   type: 'NEW_APPROVAL' | 'RESOLVED_APPROVAL' | 'NEW_ALERT' | 'ALERT_STATUS_UPDATED' | 'NEW_EXECUTION' | 'PONG' | 'CONNECTED';
@@ -29,7 +28,7 @@ export interface UseAgentGuardWebSocketOptions {
 }
 
 export function useAgentGuardWebSocket({
-  orgId = DEMO_IDS.ORG_ACME_ID,
+  orgId = '',
   enabled = true,
   onNewApproval,
   onResolvedApproval,
@@ -63,7 +62,7 @@ export function useAgentGuardWebSocket({
   });
 
   const connect = useCallback(() => {
-    if (!enabled) return;
+    if (!enabled || !orgId) return;
 
     // Calcular WebSocket URL
     const isHttps = window.location.protocol === 'https:';
@@ -126,7 +125,7 @@ export function useAgentGuardWebSocket({
         if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
 
         // Reintento con backoff exponencial (máx 15s)
-        if (enabled) {
+        if (enabled && orgId) {
           const delay = Math.min(1000 * Math.pow(1.5, reconnectAttemptsRef.current), 15000);
           reconnectAttemptsRef.current += 1;
           reconnectTimeoutRef.current = window.setTimeout(() => {
