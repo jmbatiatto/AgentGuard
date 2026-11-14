@@ -420,8 +420,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Header.tsx": {
-    "mtime": 1794689207.370849,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691536.2011075,
+    "seen": 1794696418.1132112,
     "ast_hash": "b749902aec0d5fb845a66b9eacc2531f",
     "semantic_hash": ""
   },
@@ -462,38 +462,38 @@
     "semantic_hash": ""
   },
   "frontend/src/views/AgentsView.tsx": {
-    "mtime": 1794690690.0692813,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691543.228664,
+    "seen": 1794696418.1132112,
     "ast_hash": "c79a3559cc32de7040b1dfd322983fee",
     "semantic_hash": ""
   },
   "frontend/src/views/ApprovalsView.tsx": {
-    "mtime": 1794690485.5772812,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691546.8263345,
+    "seen": 1794696418.1132112,
     "ast_hash": "4511977c10b34103069098613cadadc4",
     "semantic_hash": ""
   },
   "frontend/src/views/OverviewView.tsx": {
-    "mtime": 1794690534.5185304,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691548.3144448,
+    "seen": 1794696418.1132112,
     "ast_hash": "9d584da48570cc69beaea23b7ccc9236",
     "semantic_hash": ""
   },
   "frontend/src/views/PlaygroundView.tsx": {
-    "mtime": 1794690905.7090929,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691551.348297,
+    "seen": 1794696418.1132112,
     "ast_hash": "54eabe6acec147cb02a50fc2b31a5614",
     "semantic_hash": ""
   },
   "frontend/src/views/PoliciesView.tsx": {
-    "mtime": 1794690941.1617343,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691553.1893313,
+    "seen": 1794696418.1132112,
     "ast_hash": "df8fcee9639a57d52aee33b82b65a61c",
     "semantic_hash": ""
   },
   "frontend/src/views/ToolsView.tsx": {
-    "mtime": 1794690614.9414833,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691558.256222,
+    "seen": 1794696418.1132112,
     "ast_hash": "d4ebc8ca857f45183d09f3ae3e2a74fb",
     "semantic_hash": ""
   },
@@ -570,15 +570,15 @@
     "semantic_hash": ""
   },
   "backend/scripts/seed_demo.py": {
-    "mtime": 1794626762.8462324,
-    "seen": 1794691361.6934378,
-    "ast_hash": "659a565f11543af5132c7e5cdf6eec9f",
+    "mtime": 1794695969.9067636,
+    "seen": 1794696418.1132112,
+    "ast_hash": "1a4a630938a9eeeeed40ab49b3964c1e",
     "semantic_hash": ""
   },
   "backend/tests/test_seed_demo.py": {
-    "mtime": 1794626770.1807168,
-    "seen": 1794691361.6934378,
-    "ast_hash": "d2943a1f995c881ff0e7af6695995b8e",
+    "mtime": 1794695997.2020726,
+    "seen": 1794696418.1132112,
+    "ast_hash": "216431d985dc037b32e9c8aa5a479a91",
     "semantic_hash": ""
   },
   "scripts/seed_demo.py": {
@@ -726,21 +726,21 @@
     "semantic_hash": ""
   },
   "frontend/src/services/api.ts": {
-    "mtime": 1794689328.7376091,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691540.2768378,
+    "seen": 1794696418.1132112,
     "ast_hash": "766fa26760102e10d208befa1ea71c68",
     "semantic_hash": ""
   },
   "frontend/src/services/useAgentGuardWebSocket.ts": {
-    "mtime": 1794689341.3546789,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691541.0572493,
+    "seen": 1794696418.1132112,
     "ast_hash": "8300fc0dbc4067221b4f493a523c5e33",
     "semantic_hash": ""
   },
   "scripts/start-all.ps1": {
-    "mtime": 1792694085.5874362,
-    "seen": 1792694163.6834195,
-    "ast_hash": "8416c98bbedc1f4b1cf1dddc936e0a8e",
+    "mtime": 1794696016.3869898,
+    "seen": 1794696418.114207,
+    "ast_hash": "1f043cb27d2f9107add7628a78fb5288",
     "semantic_hash": ""
   },
   "scripts/stop-all.ps1": {
@@ -780,14 +780,14 @@
     "semantic_hash": ""
   },
   "frontend/src/views/SettingsView.tsx": {
-    "mtime": 1794691088.0665746,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691556.1363084,
+    "seen": 1794696418.1132112,
     "ast_hash": "6dcd571734cb5d729ed4790f7c61f178",
     "semantic_hash": ""
   },
   "frontend/src/context/AuthContext.tsx": {
-    "mtime": 1794689203.7682908,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691538.3658614,
+    "seen": 1794696418.1132112,
     "ast_hash": "02c7e8a103cbaf5826dd75a0e9cca161",
     "semantic_hash": ""
   },
@@ -858,8 +858,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ui/dashboard-sidebar.tsx": {
-    "mtime": 1794690463.9084318,
-    "seen": 1794691361.6934378,
+    "mtime": 1794691537.071118,
+    "seen": 1794696418.1132112,
     "ast_hash": "64be96ae43942d084150d46678b91851",
     "semantic_hash": ""
   },
@@ -1185,6 +1185,12 @@
     "mtime": 1794625834.3208191,
     "seen": 1794691361.6934378,
     "ast_hash": "7d61930b1f3380b7d5a626a720feff1a",
+    "semantic_hash": ""
+  },
+  "agentguard_credenciales_demo.md": {
+    "mtime": 1794694003.8953876,
+    "seen": 1794696418.1177442,
+    "ast_hash": "0aedd83546a652a708c94b316b4e4d69",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {

@@ -159,16 +159,85 @@ async def test_seed_data_fresh_creation():
 
 @pytest.mark.asyncio
 async def test_seed_data_already_exists_without_reset():
-    """Valida que seed_data no duplique registros si ya existen y no se pasa --reset."""
+    """Valida que seed_data no duplique registros si los 5 usuarios canónicos ya existen."""
     mock_session = AsyncMock()
     mock_session.add = MagicMock()
     mock_session.get.return_value = Organization(id=ORG_ACME_ID, name="Acme Corp")
+
+    existing_users = [
+        User(id=USER_ADMIN_ID, organization_id=ORG_ACME_ID, email="admin@acmecorp.com", hashed_password="h", role=UserRole.ADMIN),
+        User(id=USER_APPROVER_ID, organization_id=ORG_ACME_ID, email="approver@acmecorp.com", hashed_password="h", role=UserRole.APPROVER),
+        User(id=USER_OPERATOR_ID, organization_id=ORG_ACME_ID, email="operator@acmecorp.com", hashed_password="h", role=UserRole.OPERATOR),
+        User(id=USER_AUDITOR_ID, organization_id=ORG_ACME_ID, email="auditor@acmecorp.com", hashed_password="h", role=UserRole.AUDITOR),
+        User(id=USER_VIEWER_ID, organization_id=ORG_ACME_ID, email="viewer@acmecorp.com", hashed_password="h", role=UserRole.VIEWER),
+    ]
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = existing_users
+    mock_session.execute = AsyncMock(return_value=mock_result)
 
     mock_session_cm = AsyncMock()
     mock_session_cm.__aenter__.return_value = mock_session
     mock_session_cm.__aexit__.return_value = None
 
+    with patch("scripts.seed_demo.AsyncSessionLocal", return_value=mock_session_cm):
+        await seed_data(reset=False)
+
     mock_session.add.assert_not_called()
+    mock_session.commit.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_seed_data_syncs_missing_canonical_users_without_reset():
+    """Si Acme Corp existe con esquema viejo (3 usuarios), agrega auditor y viewer sin resetear."""
+    mock_session = AsyncMock()
+    added_entities = []
+    mock_session.add = MagicMock(side_effect=lambda entity: added_entities.append(entity))
+    mock_session.get.return_value = Organization(id=ORG_ACME_ID, name="Acme Corp")
+
+    legacy_admin = User(
+        id=USER_ADMIN_ID,
+        organization_id=ORG_ACME_ID,
+        email="admin@acmecorp.com",
+        hashed_password=None,
+        role=UserRole.ADMIN,
+    )
+    legacy_approver = User(
+        id=USER_APPROVER_ID,
+        organization_id=ORG_ACME_ID,
+        email="approver@acmecorp.com",
+        hashed_password="h",
+        role=UserRole.APPROVER,
+    )
+    legacy_operator = User(
+        id=USER_OPERATOR_ID,
+        organization_id=ORG_ACME_ID,
+        email="operator@acmecorp.com",
+        hashed_password="h",
+        role=UserRole.OPERATOR,
+    )
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [
+        legacy_admin,
+        legacy_approver,
+        legacy_operator,
+    ]
+    mock_session.execute = AsyncMock(return_value=mock_result)
+
+    mock_session_cm = AsyncMock()
+    mock_session_cm.__aenter__.return_value = mock_session
+    mock_session_cm.__aexit__.return_value = None
+
+    with patch("scripts.seed_demo.AsyncSessionLocal", return_value=mock_session_cm):
+        with patch("scripts.seed_demo.clear_database", new_callable=AsyncMock) as mock_clear:
+            await seed_data(reset=False)
+            mock_clear.assert_not_awaited()
+
+    added_users = [e for e in added_entities if isinstance(e, User)]
+    assert {u.email for u in added_users} == {"auditor@acmecorp.com", "viewer@acmecorp.com"}
+    assert {u.role for u in added_users} == {UserRole.AUDITOR, UserRole.VIEWER}
+    assert all(u.hashed_password for u in added_users)
+    assert legacy_admin.hashed_password
+    mock_session.commit.assert_awaited_once()
 
 
 @pytest.mark.asyncio

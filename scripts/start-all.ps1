@@ -3,6 +3,10 @@
 # Levanta secuencialmente: Docker (Postgres/Redis) -> Backend (FastAPI) -> Frontend (Vite) -> Abre Navegador
 # ==============================================================================
 
+param(
+    [switch]$Reset
+)
+
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $ErrorActionPreference = "Stop"
 
@@ -106,23 +110,29 @@ if (-not (Test-Path $venvPython)) {
 
 # Aplicar migraciones con Alembic
 $alembicExe = Join-Path $venvDir "Scripts\alembic.exe"
-try {
-    Write-Host "[*] Aplicando migraciones de esquema con Alembic..." -ForegroundColor Gray
-    & $alembicExe upgrade head
-    Write-Host "[OK] Esquema de base de datos sincronizado (12 tablas operativas)." -ForegroundColor Green
-} catch {
-    Write-Host "[!] Nota sobre migraciones: Las tablas ya estan al dia o se omitio la migracion." -ForegroundColor Yellow
+Write-Host "[*] Aplicando migraciones de esquema con Alembic..." -ForegroundColor Gray
+& $alembicExe upgrade head
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[!] Error al aplicar migraciones de base de datos con Alembic (codigo $LASTEXITCODE)." -ForegroundColor Red
+    exit 1
 }
+Write-Host "[OK] Esquema de base de datos sincronizado (13 tablas operativas)." -ForegroundColor Green
 
-# Ejecutar Seeder oficial de Acme Corp
+# Ejecutar Seeder oficial de Acme Corp (sincroniza los 5 roles RBAC sin borrar datos existentes)
 $seedScript = Join-Path $backendDir "scripts\seed_demo.py"
-try {
-    Write-Host "[*] Verificando datos semilla de la demo (Acme Corp, Agentes, Herramientas, Politicas)..." -ForegroundColor Gray
-    & $venvPython $seedScript
-    Write-Host "[OK] Semillas de datos cargadas correctamente." -ForegroundColor Green
-} catch {
-    Write-Host "[!] Nota sobre semillas: Ya se encuentran cargadas." -ForegroundColor Yellow
+$seedArgs = @($seedScript)
+if ($Reset) {
+    Write-Host "[*] Reiniciando datos semilla de la demo (--reset)..." -ForegroundColor Yellow
+    $seedArgs += "--reset"
+} else {
+    Write-Host "[*] Verificando y sincronizando datos semilla de Acme Corp (5 roles RBAC)..." -ForegroundColor Gray
 }
+& $venvPython @seedArgs
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[!] Error al ejecutar el seeder demo (codigo $LASTEXITCODE)." -ForegroundColor Red
+    exit 1
+}
+Write-Host "[OK] Semillas y usuarios RBAC sincronizados correctamente." -ForegroundColor Green
 Write-Host ""
 
 # ------------------------------------------------------------------------------
@@ -241,8 +251,8 @@ Write-Host ""
 Write-Host "  [FRONTEND]   http://localhost:5173" -ForegroundColor White
 Write-Host "  [BACKEND]    http://localhost:8000" -ForegroundColor White
 Write-Host "  [DOCS]       http://localhost:8000/docs" -ForegroundColor Cyan
-Write-Host "  [WEBSOCKET]  ws://localhost:8000/api/v1/ws" -ForegroundColor Cyan
-Write-Host "  [POSTGRES]   localhost:5432 (agentguard_db)" -ForegroundColor Gray
+Write-Host "  [WEBSOCKET]  ws://localhost:8000/api/v1/ws/{organization_id}" -ForegroundColor Cyan
+Write-Host "  [POSTGRES]   localhost:5433 (agentguard_db)" -ForegroundColor Gray
 Write-Host "  [REDIS]      localhost:6379" -ForegroundColor Gray
 Write-Host ""
 Write-Host "====================================================================" -ForegroundColor Green

@@ -23,7 +23,7 @@ backend_path = Path(__file__).resolve().parent.parent
 if str(backend_path) not in sys.path:
     sys.path.insert(0, str(backend_path))
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import AsyncSessionLocal, engine
@@ -62,6 +62,14 @@ USER_APPROVER_ID = uuid.UUID("22222222-2222-2222-2222-222222222202")
 USER_OPERATOR_ID = uuid.UUID("22222222-2222-2222-2222-222222222203")
 USER_AUDITOR_ID = uuid.UUID("22222222-2222-2222-2222-222222222204")
 USER_VIEWER_ID = uuid.UUID("22222222-2222-2222-2222-222222222205")
+
+CANONICAL_ACME_USERS: tuple[tuple[uuid.UUID, str, UserRole], ...] = (
+    (USER_ADMIN_ID, "admin@acmecorp.com", UserRole.ADMIN),
+    (USER_APPROVER_ID, "approver@acmecorp.com", UserRole.APPROVER),
+    (USER_OPERATOR_ID, "operator@acmecorp.com", UserRole.OPERATOR),
+    (USER_AUDITOR_ID, "auditor@acmecorp.com", UserRole.AUDITOR),
+    (USER_VIEWER_ID, "viewer@acmecorp.com", UserRole.VIEWER),
+)
 
 AGENT_SALES_ID = uuid.UUID("33333333-3333-3333-3333-333333333301")
 AGENT_FINANCE_ID = uuid.UUID("33333333-3333-3333-3333-333333333302")
@@ -128,6 +136,60 @@ async def clear_database(session: AsyncSession) -> None:
     logger.info("Limpieza completada.")
 
 
+def _build_canonical_user(
+    user_id: uuid.UUID,
+    email: str,
+    role: UserRole,
+    hashed_password: str,
+    now: datetime,
+) -> User:
+    """Construye un usuario canónico de demostración para Acme Corp."""
+    return User(
+        id=user_id,
+        organization_id=ORG_ACME_ID,
+        email=email,
+        hashed_password=hashed_password,
+        role=role,
+        created_at=now,
+    )
+
+
+async def ensure_canonical_demo_users(
+    session: AsyncSession,
+    now: datetime,
+) -> tuple[int, int]:
+    """Sincroniza usuarios RBAC faltantes o sin hash sin borrar datos existentes."""
+    canonical_ids = [uid for uid, _, _ in CANONICAL_ACME_USERS]
+    canonical_emails = [email for _, email, _ in CANONICAL_ACME_USERS]
+    result = await session.execute(
+        select(User).where(or_(User.id.in_(canonical_ids), User.email.in_(canonical_emails)))
+    )
+    existing_users = list(result.scalars().all())
+    by_id = {user.id: user for user in existing_users}
+    by_email = {user.email: user for user in existing_users}
+
+    default_pwd_hash: str | None = None
+    created = 0
+    updated = 0
+
+    for user_id, email, role in CANONICAL_ACME_USERS:
+        existing = by_id.get(user_id) or by_email.get(email)
+        if existing is not None:
+            if existing.organization_id == ORG_ACME_ID and not existing.hashed_password:
+                if default_pwd_hash is None:
+                    default_pwd_hash = get_password_hash("demo-password")
+                existing.hashed_password = default_pwd_hash
+                updated += 1
+            continue
+
+        if default_pwd_hash is None:
+            default_pwd_hash = get_password_hash("demo-password")
+        session.add(_build_canonical_user(user_id, email, role, default_pwd_hash, now))
+        created += 1
+
+    return created, updated
+
+
 async def seed_data(reset: bool = False) -> None:
     """Puebla todas las entidades requeridas para la demo oficial."""
     now = datetime.now(timezone.utc)
@@ -139,7 +201,16 @@ async def seed_data(reset: bool = False) -> None:
             if reset:
                 await clear_database(session)
             else:
-                logger.info("La organización Acme Corp ya existe. Usa --reset para recrear.")
+                created_users, updated_users = await ensure_canonical_demo_users(session, now)
+                if created_users or updated_users:
+                    await session.commit()
+                    logger.info(
+                        "Organización Acme Corp sincronizada sin --reset (%s usuario(s) nuevo(s), %s hash(es) completado(s)).",
+                        created_users,
+                        updated_users,
+                    )
+                else:
+                    logger.info("La organización Acme Corp ya existe con todos los usuarios demo activos. Usa --reset para recrear.")
                 return
 
         logger.info("Iniciando creación de semillas oficiales de AgentGuard...")
@@ -154,47 +225,12 @@ async def seed_data(reset: bool = False) -> None:
 
         # 2. Usuarios Corporativos
         default_pwd_hash = get_password_hash("demo-password")
-        user_admin = User(
-            id=USER_ADMIN_ID,
-            organization_id=ORG_ACME_ID,
-            email="admin@acmecorp.com",
-            hashed_password=default_pwd_hash,
-            role=UserRole.ADMIN,
-            created_at=now,
+        session.add_all(
+            [
+                _build_canonical_user(user_id, email, role, default_pwd_hash, now)
+                for user_id, email, role in CANONICAL_ACME_USERS
+            ]
         )
-        user_approver = User(
-            id=USER_APPROVER_ID,
-            organization_id=ORG_ACME_ID,
-            email="approver@acmecorp.com",
-            hashed_password=default_pwd_hash,
-            role=UserRole.APPROVER,
-            created_at=now,
-        )
-        user_operator = User(
-            id=USER_OPERATOR_ID,
-            organization_id=ORG_ACME_ID,
-            email="operator@acmecorp.com",
-            hashed_password=default_pwd_hash,
-            role=UserRole.OPERATOR,
-            created_at=now,
-        )
-        user_auditor = User(
-            id=USER_AUDITOR_ID,
-            organization_id=ORG_ACME_ID,
-            email="auditor@acmecorp.com",
-            hashed_password=default_pwd_hash,
-            role=UserRole.AUDITOR,
-            created_at=now,
-        )
-        user_viewer = User(
-            id=USER_VIEWER_ID,
-            organization_id=ORG_ACME_ID,
-            email="viewer@acmecorp.com",
-            hashed_password=default_pwd_hash,
-            role=UserRole.VIEWER,
-            created_at=now,
-        )
-        session.add_all([user_admin, user_approver, user_operator, user_auditor, user_viewer])
 
         # 3. Agentes de IA
         agent_sales = Agent(
