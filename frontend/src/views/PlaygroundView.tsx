@@ -11,13 +11,15 @@ import {
   Building2, 
   RotateCcw, 
   Table, 
-  Terminal 
+  Terminal,
+  Lock
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import type { NavView } from '../types/domain';
-import { DECISION_LABELS } from '../constants/labels';
+import { DECISION_LABELS, ROLE_LABELS } from '../constants/labels';
 import { api, DEMO_IDS } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 interface PlaygroundViewProps {
   onTriggerApproval?: () => void;
@@ -171,8 +173,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   onTriggerAlert, 
   onNavigate 
 }) => {
-  const { currentOrganizationId } = useAuth();
-  const activeOrgId = currentOrganizationId || DEMO_IDS.ORG_ACME_ID;
+  const { currentOrganizationId, currentUser } = useAuth();
+  const { toast } = useToast();
+  const activeOrgId = currentOrganizationId || '';
   const [isAgentGuardActive, setIsAgentGuardActive] = useState<boolean>(true);
   const [isSandboxMode, setIsSandboxMode] = useState<boolean>(true);
   const [activeResult, setActiveResult] = useState<SimulationResult | null>(null);
@@ -185,11 +188,21 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const [activeDbTable, setActiveDbTable] = useState<'products' | 'customers' | 'transactions'>('products');
 
   const handleResetDatabase = async () => {
+    if (!currentUser.canRunPlayground) {
+      toast.error('Tu rol actual no tiene permisos para modificar el estado del simulador.');
+      return;
+    }
     setDbState(INITIAL_DATABASE_STATE);
+    if (!currentUser.canResetDemo) {
+      toast.info('Simulador local restablecido. El reseteo completo del tenant en PostgreSQL requiere rol ADMIN en Acme Corp.');
+      return;
+    }
     try {
       await api.resetDemoData();
+      toast.success('Base de datos de demostración restablecida correctamente.');
     } catch (err) {
-      console.warn('Error al restablecer demo data en backend:', err);
+      const msg = err instanceof Error ? err.message : 'Error al restablecer demo data en backend';
+      toast.error(msg);
     }
   };
 
@@ -749,6 +762,27 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
           overflowY: 'auto',
           flexShrink: 0,
         }}>
+          {!currentUser.canRunPlayground && (
+            <div style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '10px',
+              padding: '12px 14px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+              fontSize: '12px',
+              color: 'var(--danger-text)',
+              lineHeight: 1.4,
+            }}>
+              <Lock size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <strong>Playground en modo solo lectura ({ROLE_LABELS[currentUser.role] || currentUser.role}):</strong>{' '}
+                Solo los roles <strong>ADMIN</strong> u <strong>OPERATOR</strong> pueden simular o despachar invocaciones contra el Gateway PEP.
+              </div>
+            </div>
+          )}
+
           {/* COMPARADOR TOGGLE HERO BANNER */}
           <div style={{
             backgroundColor: isAgentGuardActive ? 'rgba(2, 132, 199, 0.08)' : 'rgba(239, 68, 68, 0.08)',
@@ -782,6 +816,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
 
               {/* Botón Switch Toggle */}
               <button
+                disabled={!currentUser.canRunPlayground}
+                title={!currentUser.canRunPlayground ? 'Requiere rol ADMIN u OPERATOR' : undefined}
                 onClick={() => {
                   setIsAgentGuardActive(!isAgentGuardActive);
                   setActiveResult(null);
@@ -794,7 +830,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                   borderRadius: '8px',
                   fontSize: '12px',
                   fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor: !currentUser.canRunPlayground ? 'not-allowed' : 'pointer',
+                  opacity: !currentUser.canRunPlayground ? 0.45 : 1,
                   border: isAgentGuardActive ? '1px solid var(--brand-primary)' : '1px solid #EF4444',
                   backgroundColor: isAgentGuardActive ? 'var(--brand-primary)' : '#EF4444',
                   color: '#FFFFFF',
@@ -831,6 +868,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
               </div>
             </div>
             <button
+              disabled={!currentUser.canRunPlayground}
+              title={!currentUser.canRunPlayground ? 'Requiere rol ADMIN u OPERATOR' : undefined}
               onClick={() => setIsSandboxMode(!isSandboxMode)}
               style={{
                 padding: '4px 10px',
@@ -840,7 +879,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                 border: '1px solid var(--border-subtle)',
                 backgroundColor: isSandboxMode ? 'rgba(2, 132, 199, 0.15)' : 'var(--surface-secondary)',
                 color: isSandboxMode ? 'var(--brand-primary)' : 'var(--text-secondary)',
-                cursor: 'pointer',
+                cursor: !currentUser.canRunPlayground ? 'not-allowed' : 'pointer',
+                opacity: !currentUser.canRunPlayground ? 0.45 : 1,
               }}
             >
               {isSandboxMode ? 'Sandbox DB' : 'Producción'}
@@ -873,9 +913,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             <button 
               id="btn-simulate-scenario-1"
               onClick={runScenario1}
-              disabled={isLoading}
+              disabled={isLoading || !currentUser.canRunPlayground}
               className="btn btn-secondary" 
-              style={{ width: '100%', justifyContent: 'center' }}
+              style={{ width: '100%', justifyContent: 'center', opacity: !currentUser.canRunPlayground ? 0.45 : 1, cursor: !currentUser.canRunPlayground ? 'not-allowed' : 'pointer' }}
             >
               <Play size={14} fill="currentColor" />
               <span>Simular Escenario 1</span>
@@ -908,9 +948,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             <button 
               id="btn-simulate-scenario-2"
               onClick={runScenario2}
-              disabled={isLoading}
+              disabled={isLoading || !currentUser.canRunPlayground}
               className="btn btn-secondary" 
-              style={{ width: '100%', justifyContent: 'center' }}
+              style={{ width: '100%', justifyContent: 'center', opacity: !currentUser.canRunPlayground ? 0.45 : 1, cursor: !currentUser.canRunPlayground ? 'not-allowed' : 'pointer' }}
             >
               <Play size={14} fill="currentColor" />
               <span>Simular Escenario 2</span>
@@ -943,9 +983,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             <button 
               id="btn-simulate-scenario-3"
               onClick={runScenario3}
-              disabled={isLoading}
+              disabled={isLoading || !currentUser.canRunPlayground}
               className="btn btn-secondary" 
-              style={{ width: '100%', justifyContent: 'center' }}
+              style={{ width: '100%', justifyContent: 'center', opacity: !currentUser.canRunPlayground ? 0.45 : 1, cursor: !currentUser.canRunPlayground ? 'not-allowed' : 'pointer' }}
             >
               <Play size={14} fill="currentColor" />
               <span>Simular Escenario 3</span>
@@ -1010,14 +1050,16 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             <button 
               id="btn-simulate-scenario-4"
               onClick={() => runScenario4()}
-              disabled={isLoading}
+              disabled={isLoading || !currentUser.canRunPlayground}
               className="btn btn-secondary" 
               style={{ 
                 width: '100%', 
                 justifyContent: 'center', 
                 gap: '8px',
                 borderColor: 'rgba(239, 68, 68, 0.4)', 
-                color: '#EF4444' 
+                color: '#EF4444',
+                opacity: !currentUser.canRunPlayground ? 0.45 : 1,
+                cursor: !currentUser.canRunPlayground ? 'not-allowed' : 'pointer',
               }}
             >
               <ShieldAlert size={14} />
@@ -1050,9 +1092,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             </p>
             <button 
               onClick={runScenario5}
-              disabled={isLoading}
+              disabled={isLoading || !currentUser.canRunPlayground}
               className="btn btn-secondary" 
-              style={{ width: '100%', justifyContent: 'center' }}
+              style={{ width: '100%', justifyContent: 'center', opacity: !currentUser.canRunPlayground ? 0.45 : 1, cursor: !currentUser.canRunPlayground ? 'not-allowed' : 'pointer' }}
             >
               <Play size={14} fill="currentColor" />
               <span>Simular Escenario 5</span>
@@ -1125,21 +1167,27 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
             </div>
 
             {/* Reset Database Button */}
-            <button
-              onClick={handleResetDatabase}
-              title="Restablecer la base de datos simulada al estado inicial de Acme Corp"
-              className="btn btn-secondary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '5px 10px',
-                fontSize: '11px',
-              }}
-            >
-              <RotateCcw size={13} />
-              <span>Reiniciar Base de Datos</span>
-            </button>
+            {currentUser.canRunPlayground && (
+              <button
+                onClick={handleResetDatabase}
+                title={
+                  currentUser.canResetDemo
+                    ? 'Restablecer la base de datos y entorno demo de Acme Corp'
+                    : 'Restablecer la tabla del simulador local'
+                }
+                className="btn btn-secondary"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 10px',
+                  fontSize: '11px',
+                }}
+              >
+                <RotateCcw size={13} />
+                <span>{currentUser.canResetDemo ? 'Reiniciar Base de Datos' : 'Reiniciar Simulador Local'}</span>
+              </button>
+            )}
           </div>
 
           {/* TAB 1: BASE DE DATOS EMPRESARIAL SIMULADA */}

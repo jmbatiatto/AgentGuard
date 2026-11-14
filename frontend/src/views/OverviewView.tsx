@@ -15,7 +15,9 @@ import {
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { QuickSetupWizard } from '../components/QuickSetupWizard';
-import { api, DEMO_IDS } from '../services/api';
+import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import type {
   NavView,
@@ -260,6 +262,8 @@ const OverviewSkeleton: React.FC = () => {
 };
 
 export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingApprovalsCount }) => {
+  const { currentUser, currentOrganizationId } = useAuth();
+  const { toast } = useToast();
   const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
   const [recentExecutions, setRecentExecutions] = useState<ExecutionTrace[]>([]);
   const [backendHealth, setBackendHealth] = useState<BackendHealthState | null>(null);
@@ -343,6 +347,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
 
   // Suscripción WebSocket para alertas y ejecuciones en vivo
   useAgentGuardWebSocket({
+    orgId: currentOrganizationId,
     onNewAlert: (alertData) => {
       const newAlert: SecurityAlert = {
         id: alertData.alert_id || `alert_${Date.now()}`,
@@ -362,7 +367,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
     onNewExecution: (execData) => {
       const newExec: ExecutionTrace = {
         id: execData.execution_id || `exec_${Date.now()}`,
-        organizationId: execData.organization_id || DEMO_IDS.ORG_ACME_ID,
+        organizationId: execData.organization_id || currentOrganizationId || '',
         agentId: execData.agent_id,
         agentName: execData.agent_id?.includes('sales') ? 'Agente de Ventas' : 'Agente IA',
         toolId: execData.tool_id,
@@ -400,8 +405,18 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
   });
 
   const handleResolveAlert = async (alertId: string) => {
+    if (!currentUser.canManageAlerts) {
+      toast.error('Tu rol actual no tiene permisos para resolver alertas de seguridad.');
+      return;
+    }
     setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, status: 'RESOLVED' } : a));
-    await api.updateAlertStatus(alertId, 'RESOLVED');
+    try {
+      await api.updateAlertStatus(alertId, 'RESOLVED');
+      toast.success('Alerta marcada como resuelta');
+    } catch (err: any) {
+      setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, status: 'OPEN' } : a));
+      toast.error(err?.detail || err?.message || 'No se pudo resolver la alerta en el servidor.');
+    }
   };
 
   // Validación global de carga: backend + ciclo i18n
@@ -423,15 +438,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         subtitle="Un vistazo a las tareas de tus asistentes y los bloqueos de seguridad del día."
         actionButton={
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button
-              type="button"
-              onClick={() => setIsWizardOpen(true)}
-              className="btn btn-primary"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px' }}
-            >
-              <Sparkles size={14} />
-              <span>Proteger Agente en 3 Clics</span>
-            </button>
+            {currentUser.canConfigurePolicies && (
+              <button
+                type="button"
+                onClick={() => setIsWizardOpen(true)}
+                className="btn btn-primary"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px' }}
+              >
+                <Sparkles size={14} />
+                <span>Proteger Agente en 3 Clics</span>
+              </button>
+            )}
             <button
               onClick={loadOverviewData}
               title="Actualizar datos en tiempo real"
@@ -455,11 +472,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
           </div>
         }
       />
-      <QuickSetupWizard
-        isOpen={isWizardOpen}
-        onClose={() => setIsWizardOpen(false)}
-        onComplete={loadOverviewData}
-      />
+      {currentUser.canConfigurePolicies && (
+        <QuickSetupWizard
+          isOpen={isWizardOpen}
+          onClose={() => setIsWizardOpen(false)}
+          onComplete={loadOverviewData}
+        />
+      )}
 
       <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>
         {/* 2. Banner de Estado Natural (Zero jerga técnica) */}
@@ -866,7 +885,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                             {alert.timeAgo}
                           </span>
-                          {!isResolved && (
+                          {!isResolved && currentUser.canManageAlerts && (
                             <button
                               onClick={() => handleResolveAlert(alert.id)}
                               className="btn btn-secondary"

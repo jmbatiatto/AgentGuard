@@ -15,7 +15,7 @@ interface ApprovalsViewProps {
 }
 
 export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCount }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, currentOrganizationId } = useAuth();
   const { toast } = useToast();
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
@@ -54,6 +54,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
 
   // Suscripción WebSocket para actualizaciones y nuevos tickets en vivo
   const { isConnected } = useAgentGuardWebSocket({
+    orgId: currentOrganizationId,
     onNewApproval: (data) => {
       const amountVal = data.parameters?.amount != null 
         ? `$${Number(data.parameters.amount).toLocaleString('en-US')}.00` 
@@ -124,7 +125,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
     }
 
     if (!currentUser.canApproveHITL) {
-      setResolutionNotice(`🔒 Permiso denegado: Tu perfil actual (${currentUser.role}) no tiene permisos para resolver solicitudes HITL. Cambia al rol APPROVER o ADMIN en el selector superior.`);
+      setResolutionNotice(`🔒 Permiso denegado: Tu perfil actual (${currentUser.role}) no tiene permisos para resolver solicitudes HITL. Inicia sesión con una cuenta APPROVER o ADMIN para autorizar o rechazar.`);
       setTimeout(() => setResolutionNotice(null), 4000);
       return;
     }
@@ -560,7 +561,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
                         border: '1px solid rgba(239, 68, 68, 0.25)',
                       }}>
                         <Lock size={14} />
-                        <span>Perfil en modo solo lectura (<strong>{currentUser.role}</strong>). Cambia a <strong>APPROVER</strong> o <strong>ADMIN</strong> en el menú superior para resolver.</span>
+                        <span>Perfil en modo solo lectura (<strong>{currentUser.role}</strong>). Inicia sesión como <strong>APPROVER</strong> o <strong>ADMIN</strong> para resolver.</span>
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button 

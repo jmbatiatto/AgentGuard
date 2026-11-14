@@ -180,6 +180,15 @@ export function SidebarNav({
   onLogout,
   currentUser,
 }: DashboardSidebarProps) {
+  const developerItems: NavItemData[] = [
+    ...(currentUser?.canRunPlayground
+      ? [{ id: 'playground', viewId: 'playground' as NavView, title: 'Playground', icon: PlayCircle }]
+      : []),
+    ...(currentUser?.canManageTeam
+      ? [{ id: 'api', viewId: 'settings' as NavView, title: 'Configuración & RBAC', icon: Terminal }]
+      : []),
+  ];
+
   const navGroups: NavGroupData[] = [
     {
       items: [
@@ -217,13 +226,12 @@ export function SidebarNav({
         },
       ]
     },
-    {
-      heading: 'Desarrolladores',
-      items: [
-        { id: 'playground', viewId: 'playground', title: 'Playground', icon: PlayCircle },
-        { id: 'api', viewId: 'settings', title: 'Configuración & RBAC', icon: Terminal },
-      ]
-    }
+    ...(developerItems.length > 0
+      ? [{
+          heading: 'Desarrolladores',
+          items: developerItems,
+        }]
+      : []),
   ];
 
   const bottomItems: NavItemData[] = [

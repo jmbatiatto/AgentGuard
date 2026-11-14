@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import type { Tool, RiskLevel } from '../types/domain';
-import { RISK_LABELS } from '../constants/labels';
+import { RISK_LABELS, ROLE_LABELS } from '../constants/labels';
 import {
   Plus,
   Search,
+  Lock,
   X,
   Wrench,
   Copy,
@@ -19,11 +20,13 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Header } from '../components/Header';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonRow } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 
 export const ToolsView: React.FC = () => {
+  const { currentUser } = useAuth();
   const { toast } = useToast();
   const [tools, setTools] = useState<Tool[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -86,6 +89,10 @@ export const ToolsView: React.FC = () => {
   // Connect new Tool
   const handleConnectTool = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para conectar herramientas.');
+      return;
+    }
     if (!name.trim() || !endpointUrl.trim()) return;
 
     setIsSubmitting(true);
@@ -121,6 +128,10 @@ export const ToolsView: React.FC = () => {
   // Add Action from Drawer
   const handleAddAction = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para agregar acciones atómicas.');
+      return;
+    }
     if (!selectedTool || !newActionName.trim()) return;
 
     setIsAddingAction(true);
@@ -151,6 +162,10 @@ export const ToolsView: React.FC = () => {
 
   // Delete Tool
   const handleDeleteTool = async (tool: Tool) => {
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para eliminar herramientas.');
+      return;
+    }
     const confirmed = window.confirm(
       `¿Estás seguro de eliminar la herramienta "${tool.name}"?\nEsta acción es irreversible y removerá sus acciones atómicas asociadas.`
     );
@@ -498,6 +513,7 @@ export const ToolsView: React.FC = () => {
               </div>
 
               {/* Formulario Agregar Acción Atómica en Caliente */}
+              {currentUser.canConfigurePolicies && (
               <div style={{
                 backgroundColor: 'rgba(56, 189, 248, 0.05)',
                 border: '1px dashed rgba(56, 189, 248, 0.3)',
@@ -607,6 +623,7 @@ export const ToolsView: React.FC = () => {
                   </button>
                 </form>
               </div>
+              )}
             </div>
 
             {/* Botones de Acción Final */}
@@ -622,28 +639,30 @@ export const ToolsView: React.FC = () => {
                 <span>Ver Trazas de esta Herramienta</span>
               </button>
 
-              <button
-                onClick={() => handleDeleteTool(selectedTool)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#F87171',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'background-color 0.15s ease',
-                }}
-              >
-                <Trash2 size={15} />
-                <span>Eliminar Herramienta del Catálogo</span>
-              </button>
+              {currentUser.canConfigurePolicies && (
+                <button
+                  onClick={() => handleDeleteTool(selectedTool)}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#F87171',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                >
+                  <Trash2 size={15} />
+                  <span>Eliminar Herramienta del Catálogo</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -883,10 +902,17 @@ export const ToolsView: React.FC = () => {
         title="Herramientas" 
         subtitle="Controla las herramientas y recursos disponibles para tus agentes."
         actionButton={
-          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-            <Plus size={16} strokeWidth={2.5} />
-            <span>Conectar herramienta</span>
-          </button>
+          currentUser.canConfigurePolicies ? (
+            <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+              <Plus size={16} strokeWidth={2.5} />
+              <span>Conectar herramienta</span>
+            </button>
+          ) : (
+            <span className="badge badge-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '12px' }}>
+              <Lock size={13} />
+              <span>Solo lectura ({ROLE_LABELS[currentUser.role] || currentUser.role})</span>
+            </span>
+          )
         }
       />
 
@@ -995,11 +1021,11 @@ export const ToolsView: React.FC = () => {
                       icon={<Wrench size={32} />}
                       title="No hay herramientas conectadas"
                       description="Conecta APIs o herramientas externas para que tus agentes operen bajo políticas de seguridad."
-                      action={{
+                      action={currentUser.canConfigurePolicies ? {
                         label: 'Conectar herramienta',
                         icon: <Plus size={15} />,
                         onClick: () => setIsModalOpen(true),
-                      }}
+                      } : undefined}
                     />
                   </td>
                 </tr>

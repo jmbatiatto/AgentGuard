@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import type { Agent, AgentStatus, Tool } from '../types/domain';
-import { AGENT_STATUS_LABELS } from '../constants/labels';
+import { AGENT_STATUS_LABELS, ROLE_LABELS } from '../constants/labels';
 import { 
   Plus, 
   Search, 
+  Lock,
   ChevronRight, 
   X, 
   Bot, 
@@ -17,11 +18,13 @@ import {
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { QuickSetupWizard } from '../components/QuickSetupWizard';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonRow } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 
 export const AgentsView: React.FC = () => {
+  const { currentUser } = useAuth();
   const { toast } = useToast();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -73,6 +76,10 @@ export const AgentsView: React.FC = () => {
 
   const handleRegisterAgent = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para registrar agentes.');
+      return;
+    }
     if (!name.trim()) return;
 
     setIsSubmitting(true);
@@ -115,6 +122,10 @@ export const AgentsView: React.FC = () => {
   };
 
   const handleToggleAgentStatus = async (agent: Agent) => {
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para modificar el estado del agente.');
+      return;
+    }
     setIsUpdatingStatus(true);
     const newStatus: AgentStatus = agent.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     try {
@@ -130,6 +141,10 @@ export const AgentsView: React.FC = () => {
   };
 
   const handleDeleteAgent = async (agent: Agent) => {
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para eliminar agentes.');
+      return;
+    }
     if (!window.confirm(`¿Estás seguro de que deseas eliminar al agente "${agent.name}"?`)) return;
     try {
       await api.deleteAgent(agent.id);
@@ -266,15 +281,17 @@ export const AgentsView: React.FC = () => {
                   <span className="badge-dot" />
                   <span>{AGENT_STATUS_LABELS[selectedAgent.status] || selectedAgent.status}</span>
                 </span>
-                <button
-                  onClick={() => handleToggleAgentStatus(selectedAgent)}
-                  disabled={isUpdatingStatus}
-                  className="btn btn-secondary"
-                  style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Power size={12} color={selectedAgent.status === 'ACTIVE' ? '#EF4444' : '#10B981'} />
-                  <span>{selectedAgent.status === 'ACTIVE' ? 'Suspender Agente' : 'Activar Agente'}</span>
-                </button>
+                {currentUser.canConfigurePolicies && (
+                  <button
+                    onClick={() => handleToggleAgentStatus(selectedAgent)}
+                    disabled={isUpdatingStatus}
+                    className="btn btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Power size={12} color={selectedAgent.status === 'ACTIVE' ? '#EF4444' : '#10B981'} />
+                    <span>{selectedAgent.status === 'ACTIVE' ? 'Suspender Agente' : 'Activar Agente'}</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -318,26 +335,28 @@ export const AgentsView: React.FC = () => {
                 <Clock size={15} />
                 <span>Ver Trazas de este Agente</span>
               </button>
-              <button
-                onClick={() => handleDeleteAgent(selectedAgent)}
-                style={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#EF4444',
-                  borderRadius: '8px',
-                  padding: '10px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                }}
-              >
-                <Trash2 size={15} />
-                <span>Eliminar Agente</span>
-              </button>
+              {currentUser.canConfigurePolicies && (
+                <button
+                  onClick={() => handleDeleteAgent(selectedAgent)}
+                  style={{
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#EF4444',
+                    borderRadius: '8px',
+                    padding: '10px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                  }}
+                >
+                  <Trash2 size={15} />
+                  <span>Eliminar Agente</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -547,33 +566,42 @@ export const AgentsView: React.FC = () => {
         title="Agentes" 
         subtitle="Gestiona los agentes de IA registrados y sus capacidades."
         actionButton={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setIsWizardOpen(true)}
-            >
-              <Sparkles size={15} />
-              <span>Proteger Agente en 3 Clics</span>
-            </button>
-            <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-              <Plus size={16} strokeWidth={2.5} />
-              <span>Registrar agente</span>
-            </button>
-          </div>
+          currentUser.canConfigurePolicies ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setIsWizardOpen(true)}
+              >
+                <Sparkles size={15} />
+                <span>Proteger Agente en 3 Clics</span>
+              </button>
+              <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                <Plus size={16} strokeWidth={2.5} />
+                <span>Registrar agente</span>
+              </button>
+            </div>
+          ) : (
+            <span className="badge badge-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '12px' }}>
+              <Lock size={13} />
+              <span>Solo lectura ({ROLE_LABELS[currentUser.role] || currentUser.role})</span>
+            </span>
+          )
         }
       />
-      <QuickSetupWizard
-        isOpen={isWizardOpen}
-        onClose={() => setIsWizardOpen(false)}
-        onComplete={() => {
-          loadAgents();
-          api
-            .getTools()
-            .then((tools) => setAvailableTools(tools || []))
-            .catch(() => {});
-        }}
-      />
+      {currentUser.canConfigurePolicies && (
+        <QuickSetupWizard
+          isOpen={isWizardOpen}
+          onClose={() => setIsWizardOpen(false)}
+          onComplete={() => {
+            loadAgents();
+            api
+              .getTools()
+              .then((tools) => setAvailableTools(tools || []))
+              .catch(() => {});
+          }}
+        />
+      )}
 
       <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>
         {/* Table Filters & Search Bar */}
@@ -679,11 +707,11 @@ export const AgentsView: React.FC = () => {
                       icon={<Bot size={32} />}
                       title="No hay agentes registrados"
                       description="Aún no se han configurado identidades de agentes de IA en esta organización."
-                      action={{
+                      action={currentUser.canConfigurePolicies ? {
                         label: 'Registrar nuevo agente',
                         icon: <Plus size={15} />,
                         onClick: () => setIsModalOpen(true),
-                      }}
+                      } : undefined}
                     />
                   </td>
                 </tr>

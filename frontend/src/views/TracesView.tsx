@@ -5,11 +5,13 @@ import { api } from '../services/api';
 import { useAgentGuardWebSocket } from '../services/useAgentGuardWebSocket';
 import type { ExecutionTrace, PolicyDecision } from '../types/domain';
 import { DECISION_LABELS } from '../constants/labels';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonRow } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 
 export const TracesView: React.FC = () => {
+  const { currentOrganizationId } = useAuth();
   const { toast } = useToast();
   const [traces, setTraces] = useState<ExecutionTrace[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +38,7 @@ export const TracesView: React.FC = () => {
 
   // Suscripción WebSocket a nuevas ejecuciones en vivo
   useAgentGuardWebSocket({
+    orgId: currentOrganizationId,
     onNewExecution: (newTraceData) => {
       const formattedTrace: ExecutionTrace = {
         id: newTraceData.id,

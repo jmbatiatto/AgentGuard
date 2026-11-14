@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api, DEMO_IDS } from '../services/api';
+import { api } from '../services/api';
 import type { UserMember, UserRole, GatewayApiKey, OrganizationSettings } from '../types/domain';
 import { ROLE_LABELS, ROLE_DESCRIPTIONS } from '../constants/labels';
 import {
@@ -31,8 +31,8 @@ import { useAuth } from '../context/AuthContext';
 
 export const SettingsView: React.FC = () => {
   const { toast } = useToast();
-  const { currentOrganizationId } = useAuth();
-  const activeOrgId = currentOrganizationId || DEMO_IDS.ORG_ACME_ID;
+  const { currentOrganizationId, currentOrganization, currentUser } = useAuth();
+  const activeOrgId = currentOrganizationId || '';
   const [activeTab, setActiveTab] = useState<'general' | 'apikeys' | 'team' | 'security' | 'siem'>('general');
 
   // Feedback Toast delegado al ToastContext global
@@ -49,7 +49,7 @@ export const SettingsView: React.FC = () => {
   // -------------------------------------------------------------
   // TAB 1: General & Tenant Profile
   // -------------------------------------------------------------
-  const [orgName, setOrgName] = useState('Acme Corp Global');
+  const [orgName, setOrgName] = useState(currentOrganization?.name || 'Organización Activa');
   const [retentionDays, setRetentionDays] = useState(90);
   const [copiedTenantId, setCopiedTenantId] = useState(false);
 
@@ -112,6 +112,10 @@ export const SettingsView: React.FC = () => {
   };
 
   const handleRevokeKey = async (key: GatewayApiKey) => {
+    if (!currentUser.canManageTeam) {
+      showToast('Solo usuarios con rol ADMIN pueden revocar API Keys.', 'error');
+      return;
+    }
     const confirmationPrompt =
       '¿Estás seguro de que deseas revocar esta llave de acceso? Esta acción deshabilitará inmediatamente cualquier agente que la utilice.';
 
@@ -161,21 +165,37 @@ export const SettingsView: React.FC = () => {
   };
 
   useEffect(() => {
+    if (currentOrganization?.name) {
+      setOrgName(currentOrganization.name);
+    }
+  }, [currentOrganization?.name]);
+
+  useEffect(() => {
+    if (!activeOrgId || !currentUser.canManageTeam) {
+      return;
+    }
     fetchUsers();
     fetchApiKeys();
     fetchSettings();
-  }, [activeOrgId]);
+  }, [activeOrgId, currentUser.canManageTeam]);
 
   useEffect(() => {
+    if (!activeOrgId || !currentUser.canManageTeam) {
+      return;
+    }
     if (activeTab === 'apikeys') {
       fetchApiKeys();
     } else if (activeTab === 'security' || activeTab === 'general') {
       fetchSettings();
     }
-  }, [activeTab]);
+  }, [activeTab, activeOrgId, currentUser.canManageTeam]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser.canManageTeam) {
+      showToast('Solo usuarios con rol ADMIN pueden crear miembros.', 'error');
+      return;
+    }
     if (!newUserEmail.trim() || !activeOrgId) return;
     if (newUserPassword.length < 8) {
       showToast('La contraseña inicial debe tener al menos 8 caracteres', 'error');
@@ -209,6 +229,10 @@ export const SettingsView: React.FC = () => {
   };
 
   const handleUpdateRole = async (userId: string, newRole: UserRole) => {
+    if (!currentUser.canManageTeam) {
+      showToast('Solo usuarios con rol ADMIN pueden modificar roles RBAC.', 'error');
+      return;
+    }
     try {
       const updated = await api.updateUserRole(userId, newRole);
       if (updated) {
@@ -223,6 +247,10 @@ export const SettingsView: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: string, email: string) => {
+    if (!currentUser.canManageTeam) {
+      showToast('Solo usuarios con rol ADMIN pueden eliminar usuarios.', 'error');
+      return;
+    }
     if (users.length <= 1) {
       showToast('No puedes eliminar al único administrador del tenant', 'error');
       return;
@@ -273,6 +301,10 @@ export const SettingsView: React.FC = () => {
     update: Partial<OrganizationSettings>,
     successMessage: string
   ) => {
+    if (!currentUser.canManageTeam || !activeOrgId) {
+      showToast('Solo usuarios con rol ADMIN pueden modificar la postura de gobernanza.', 'error');
+      return;
+    }
     setIsUpdatingSettings(true);
     try {
       const res = await api.updateOrganizationSettings(activeOrgId, update);
@@ -301,6 +333,10 @@ export const SettingsView: React.FC = () => {
   const [webhookTestStatus, setWebhookTestStatus] = useState<string | null>(null);
 
   const handleTestWebhook = async () => {
+    if (!currentUser.canManageTeam || !activeOrgId) {
+      showToast('Solo usuarios con rol ADMIN pueden probar conectores SIEM.', 'error');
+      return;
+    }
     setIsTestingWebhook(true);
     setWebhookTestStatus(null);
     try {
@@ -325,6 +361,10 @@ export const SettingsView: React.FC = () => {
   };
 
   const handleSaveSiemSettings = async () => {
+    if (!currentUser.canManageTeam || !activeOrgId) {
+      showToast('Solo usuarios con rol ADMIN pueden guardar conectores SIEM.', 'error');
+      return;
+    }
     setIsUpdatingSettings(true);
     try {
       await api.updateOrganizationSettings(activeOrgId, {
@@ -447,7 +487,7 @@ export const SettingsView: React.FC = () => {
             <div style={{ textAlign: 'right' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Aislamiento</span>
               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Multi-Tenant Estricto (RLS)
+                Multi-Tenant Estricto (Org ID)
               </span>
             </div>
             <div style={{ height: '32px', width: '1px', backgroundColor: 'var(--border-subtle)' }} />
@@ -460,6 +500,59 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
+        {!currentUser.canManageTeam ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px' }}>
+            <div style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '12px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <Shield size={20} color="var(--brand-primary)" />
+                <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                  Tu Sesión RBAC Activa
+                </h3>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+                Autenticado mediante JWT verificado como <strong>{currentUser.email}</strong> con el rol{' '}
+                <strong>{ROLE_LABELS[currentUser.role] || currentUser.role}</strong>.
+              </p>
+              <div style={{
+                padding: '12px 14px',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '8px',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.5,
+              }}>
+                <strong style={{ color: 'var(--text-primary)' }}>Alcance de tu rol:</strong>{' '}
+                {ROLE_DESCRIPTIONS[currentUser.role] || 'Acceso operativo según política RBAC del tenant.'}
+              </div>
+            </div>
+
+            <div style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '12px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <Lock size={20} color="#F87171" />
+                <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                  Control Plane Restringido (Solo ADMIN)
+                </h3>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                La administración de API Keys Gateway (PEP), gestión de miembros RBAC, postura Fail-Closed,
+                umbrales financieros, conectores SIEM y reinicio del entorno está reservada estrictamente para usuarios con rol{' '}
+                <strong>ADMINISTRADOR (ADMIN)</strong>.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Navigation Tabs */}
         <div style={{
           display: 'flex',
@@ -553,7 +646,7 @@ export const SettingsView: React.FC = () => {
                   gap: '8px',
                 }}>
                   <Database size={15} color="var(--brand-primary)" />
-                  US-East (Virginia) • PostgreSQL 16 Multi-Tenant RLS
+                  US-East (Virginia) • PostgreSQL 16 Multi-Tenant
                 </div>
               </div>
 
@@ -643,7 +736,8 @@ export const SettingsView: React.FC = () => {
               </div>
             </div>
 
-            {/* Factory Reset Demo Card */}
+            {/* Factory Reset Demo Card (Exclusivo ADMIN de Acme Corp) */}
+            {currentUser.canResetDemo && (
             <div style={{
               gridColumn: '1 / -1',
               backgroundColor: 'var(--bg-card)',
@@ -709,6 +803,7 @@ export const SettingsView: React.FC = () => {
                 <span>Re-sembrar Estado Demo</span>
               </button>
             </div>
+            )}
           </div>
         )}
 
@@ -952,8 +1047,8 @@ HEADERS = {
 
 payload = {
     "organization_id": "${activeOrgId}",
-    "agent_id": "${DEMO_IDS.AGENT_SALES_ID}",
-    "tool_id": "${DEMO_IDS.TOOL_CRM_ID}",
+    "agent_id": "<TU_AGENT_UUID>",
+    "tool_id": "<TU_CRM_TOOL_UUID>",
     "action_name": "create_quote",
     "parameters": {"amount": 2500, "customer_id": "cust_441"}
 }
@@ -973,8 +1068,8 @@ def execute_guarded_tool(action_name: str, **kwargs):
         headers={"X-AgentGuard-Key": "${(apiKeys.find(k => k.isActive !== false) || apiKeys[0])?.prefix || 'ag_live_7a3d9b01'}..."},
         json={
             "organization_id": "${activeOrgId}",
-            "agent_id": "${DEMO_IDS.AGENT_SALES_ID}",
-            "tool_id": "${DEMO_IDS.TOOL_STRIPE_ID}",
+            "agent_id": "<TU_AGENT_UUID>",
+            "tool_id": "<TU_PAYMENT_TOOL_UUID>",
             "action_name": action_name,
             "parameters": kwargs
         }
@@ -989,8 +1084,8 @@ def execute_guarded_tool(action_name: str, **kwargs):
   -H "X-AgentGuard-Key: ${(apiKeys.find(k => k.isActive !== false) || apiKeys[0])?.prefix || 'ag_live_7a3d9b01'}..." \\
   -d '{
     "organization_id": "${activeOrgId}",
-    "agent_id": "${DEMO_IDS.AGENT_SALES_ID}",
-    "tool_id": "${DEMO_IDS.TOOL_CRM_ID}",
+    "agent_id": "<TU_AGENT_UUID>",
+    "tool_id": "<TU_CRM_TOOL_UUID>",
     "action_name": "create_quote",
     "parameters": {"amount": 1200}
   }'`}
@@ -1492,12 +1587,14 @@ def execute_guarded_tool(action_name: str, **kwargs):
             </div>
           </div>
         )}
+          </>
+        )}
       </div>
 
       {/* ------------------------------------------------------------- */}
       {/* MODAL: Generar Nueva API Key                                  */}
       {/* ------------------------------------------------------------- */}
-      {isKeyModalOpen && (
+      {currentUser.canManageTeam && isKeyModalOpen && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -1696,7 +1793,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
       {/* ------------------------------------------------------------- */}
       {/* MODAL: Invitar Miembro / Crear Usuario                        */}
       {/* ------------------------------------------------------------- */}
-      {isUserModalOpen && (
+      {currentUser.canManageTeam && isUserModalOpen && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -1839,10 +1936,12 @@ def execute_guarded_tool(action_name: str, **kwargs):
       )}
 
       {/* In-App Factory Reset Modal */}
-      <ResetDemoModal
-        isOpen={isResetModalOpen}
-        onClose={() => setIsResetModalOpen(false)}
-      />
+      {currentUser.canResetDemo && (
+        <ResetDemoModal
+          isOpen={isResetModalOpen}
+          onClose={() => setIsResetModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

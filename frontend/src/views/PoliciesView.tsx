@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import type { Policy, PolicyDecision, PolicyRuleItem, Agent } from '../types/domain';
-import { DECISION_LABELS } from '../constants/labels';
+import { DECISION_LABELS, ROLE_LABELS } from '../constants/labels';
 import {
   Plus,
   Search,
+  Lock,
   ShieldCheck,
   X,
   Shield,
@@ -21,11 +22,13 @@ import {
   Zap,
 } from 'lucide-react';
 import { Header } from '../components/Header';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonCard } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 
 export const PoliciesView: React.FC = () => {
+  const { currentUser } = useAuth();
   const { toast } = useToast();
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -146,6 +149,10 @@ export const PoliciesView: React.FC = () => {
   // Crear Política Maestra
   const handleCreatePolicy = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para crear políticas.');
+      return;
+    }
     if (!name.trim()) return;
 
     let parsedConditions: Record<string, any> = {};
@@ -189,6 +196,10 @@ export const PoliciesView: React.FC = () => {
 
   // Abrir Modal para Añadir Regla a una Política Específica
   const handleOpenAddRuleModal = (policy: Policy) => {
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para configurar reglas de gobernanza.');
+      return;
+    }
     setTargetPolicyForRule(policy);
     if (toolActions.length > 0 && !newRuleActionId) {
       setNewRuleActionId(toolActions[0].id);
@@ -203,6 +214,10 @@ export const PoliciesView: React.FC = () => {
   // Enviar Nueva Regla para una Política Específica
   const handleAddRuleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para añadir reglas.');
+      return;
+    }
     if (!targetPolicyForRule) return;
 
     let parsedConditions: Record<string, any> = {};
@@ -241,6 +256,10 @@ export const PoliciesView: React.FC = () => {
 
   // Alternar Estado Activo / Inactivo de Política
   const handleTogglePolicyStatus = async (policy: Policy) => {
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para activar o desactivar políticas.');
+      return;
+    }
     const targetPolicyId = policy.policyId || policy.id;
     const newStatus = policy.status === 'Active' ? 'Inactive' : 'Active';
     setIsTogglingStatus(true);
@@ -255,7 +274,7 @@ export const PoliciesView: React.FC = () => {
         }
         await loadData();
       } else {
-        alert('No se pudo actualizar el estado de la política en el servidor.');
+        toast.error('No se pudo actualizar el estado de la política en el servidor.');
       }
     } finally {
       setIsTogglingStatus(false);
@@ -264,6 +283,10 @@ export const PoliciesView: React.FC = () => {
 
   // Desacoplamiento de Borrado: Eliminar Regla Individual sin tocar la política
   const handleDeleteRule = async (rule: PolicyRuleItem, policyName: string) => {
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para eliminar reglas.');
+      return;
+    }
     const actionLabel = rule.action_name || 'esta acción';
     const confirmed = window.confirm(
       `¿Estás seguro de eliminar la regla para "${actionLabel}" de la política "${policyName}"?\n\nEsta acción removerá únicamente esta regla determinista del motor PDP. La política contenedora y sus demás reglas se mantendrán activas.`
@@ -292,12 +315,16 @@ export const PoliciesView: React.FC = () => {
       }
       await loadData();
     } else {
-      alert('Error eliminando la regla del motor PDP.');
+      toast.error('Error eliminando la regla del motor PDP.');
     }
   };
 
   // Borrado de Contenedor Maestro de Política
   const handleDeletePolicy = async (policy: Policy) => {
+    if (!currentUser.canConfigurePolicies) {
+      toast.error('Requiere rol ADMIN para eliminar políticas.');
+      return;
+    }
     const ruleCount = policy.rules?.length || 0;
     const confirmed = window.confirm(
       `¿Estás seguro de eliminar la política contenedora "${policy.name}"?\n\nADVERTENCIA: Esta acción eliminará permanentemente la política y todas sus ${ruleCount} reglas asociadas del motor PDP.`
@@ -551,26 +578,28 @@ export const PoliciesView: React.FC = () => {
                             Riesgo: {act.risk_level}
                           </span>
                         </div>
-                        <button
-                          onClick={() => {
-                            if (policies.length > 0) {
-                              setTargetPolicyForRule(policies[0]);
-                              setNewRuleActionId(act.id);
-                              setIsCoverageModalOpen(false);
-                              setIsAddRuleModalOpen(true);
-                            } else {
-                              setSelectedActionId(act.id);
-                              setName(`Regla para ${act.action_name}`);
-                              setIsCoverageModalOpen(false);
-                              setIsModalOpen(true);
-                            }
-                          }}
-                          className="btn btn-secondary"
-                          style={{ padding: '4px 10px', fontSize: '11px', gap: '4px' }}
-                        >
-                          <Plus size={12} />
-                          <span>Crear regla</span>
-                        </button>
+                        {currentUser.canConfigurePolicies && (
+                          <button
+                            onClick={() => {
+                              if (policies.length > 0) {
+                                setTargetPolicyForRule(policies[0]);
+                                setNewRuleActionId(act.id);
+                                setIsCoverageModalOpen(false);
+                                setIsAddRuleModalOpen(true);
+                              } else {
+                                setSelectedActionId(act.id);
+                                setName(`Regla para ${act.action_name}`);
+                                setIsCoverageModalOpen(false);
+                                setIsModalOpen(true);
+                              }
+                            }}
+                            className="btn btn-secondary"
+                            style={{ padding: '4px 10px', fontSize: '11px', gap: '4px' }}
+                          >
+                            <Plus size={12} />
+                            <span>Crear regla</span>
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -743,15 +772,17 @@ export const PoliciesView: React.FC = () => {
                     {selectedPolicy.status === 'Active' ? 'Evaluada activamente por el PDP' : 'Desactivada temporalmente'}
                   </span>
                 </div>
-                <button
-                  onClick={() => handleTogglePolicyStatus(selectedPolicy)}
-                  disabled={isTogglingStatus}
-                  className="btn btn-secondary"
-                  style={{ padding: '5px 10px', fontSize: '11px', gap: '6px' }}
-                >
-                  <Power size={13} color={selectedPolicy.status === 'Active' ? '#F59E0B' : '#10B981'} />
-                  <span>{selectedPolicy.status === 'Active' ? 'Desactivar' : 'Activar'}</span>
-                </button>
+                {currentUser.canConfigurePolicies && (
+                  <button
+                    onClick={() => handleTogglePolicyStatus(selectedPolicy)}
+                    disabled={isTogglingStatus}
+                    className="btn btn-secondary"
+                    style={{ padding: '5px 10px', fontSize: '11px', gap: '6px' }}
+                  >
+                    <Power size={13} color={selectedPolicy.status === 'Active' ? '#F59E0B' : '#10B981'} />
+                    <span>{selectedPolicy.status === 'Active' ? 'Desactivar' : 'Activar'}</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -771,14 +802,16 @@ export const PoliciesView: React.FC = () => {
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Reglas Asociadas ({selectedPolicy.rules?.length || 0})
                 </label>
-                <button
-                  onClick={() => handleOpenAddRuleModal(selectedPolicy)}
-                  className="btn btn-secondary"
-                  style={{ padding: '3px 8px', fontSize: '11px', gap: '4px', color: '#38BDF8' }}
-                >
-                  <Plus size={11} />
-                  <span>+ Añadir regla</span>
-                </button>
+                {currentUser.canConfigurePolicies && (
+                  <button
+                    onClick={() => handleOpenAddRuleModal(selectedPolicy)}
+                    className="btn btn-secondary"
+                    style={{ padding: '3px 8px', fontSize: '11px', gap: '4px', color: '#38BDF8' }}
+                  >
+                    <Plus size={11} />
+                    <span>+ Añadir regla</span>
+                  </button>
+                )}
               </div>
 
               {(!selectedPolicy.rules || selectedPolicy.rules.length === 0) ? (
@@ -809,19 +842,21 @@ export const PoliciesView: React.FC = () => {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {getDecisionBadge(rule.effect)}
-                          <button
-                            onClick={() => handleDeleteRule(rule, selectedPolicy.name)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#F87171',
-                              cursor: 'pointer',
-                              padding: '2px',
-                            }}
-                            title="Eliminar regla individual"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          {currentUser.canConfigurePolicies && (
+                            <button
+                              onClick={() => handleDeleteRule(rule, selectedPolicy.name)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#F87171',
+                                cursor: 'pointer',
+                                padding: '2px',
+                              }}
+                              title="Eliminar regla individual"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -856,36 +891,40 @@ export const PoliciesView: React.FC = () => {
 
             {/* Botones de Acción Final del Drawer */}
             <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #1E293B', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button
-                onClick={() => handleTestPolicyInPlayground(selectedPolicy)}
-                className="btn btn-primary"
-                style={{ width: '100%', justifyContent: 'center', gap: '8px' }}
-              >
-                <Play size={15} fill="#FFFFFF" />
-                <span>Probar esta política en Playground</span>
-              </button>
+              {currentUser.canRunPlayground && (
+                <button
+                  onClick={() => handleTestPolicyInPlayground(selectedPolicy)}
+                  className="btn btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', gap: '8px' }}
+                >
+                  <Play size={15} fill="#FFFFFF" />
+                  <span>Probar esta política en Playground</span>
+                </button>
+              )}
 
-              <button
-                onClick={() => handleDeletePolicy(selectedPolicy)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#F87171',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                }}
-              >
-                <Trash2 size={15} />
-                <span>Eliminar Política Completa</span>
-              </button>
+              {currentUser.canConfigurePolicies && (
+                <button
+                  onClick={() => handleDeletePolicy(selectedPolicy)}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#F87171',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <Trash2 size={15} />
+                  <span>Eliminar Política Completa</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1336,10 +1375,17 @@ export const PoliciesView: React.FC = () => {
         title="Políticas de Gobernanza" 
         subtitle="Define y aplica políticas jerárquicas y reglas deterministas de autorización evaluadas por el Motor PDP."
         actionButton={
-          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-            <Plus size={16} strokeWidth={2.5} />
-            <span>Nueva Política</span>
-          </button>
+          currentUser.canConfigurePolicies ? (
+            <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+              <Plus size={16} strokeWidth={2.5} />
+              <span>Nueva Política</span>
+            </button>
+          ) : (
+            <span className="badge badge-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '12px' }}>
+              <Lock size={13} />
+              <span>Solo lectura ({ROLE_LABELS[currentUser.role] || currentUser.role})</span>
+            </span>
+          )
         }
       />
 
@@ -1521,11 +1567,11 @@ export const PoliciesView: React.FC = () => {
                 icon={<ShieldCheck size={32} />}
                 title="No hay políticas de seguridad registradas"
                 description="Crea tu primera política de autorización para regular las acciones de tus agentes."
-                action={{
+                action={currentUser.canConfigurePolicies ? {
                   label: 'Crear primera política',
                   icon: <Plus size={15} />,
                   onClick: () => setIsModalOpen(true),
-                }}
+                } : undefined}
               />
             </div>
           ) : paginatedPolicies.length === 0 ? (
@@ -1641,15 +1687,17 @@ export const PoliciesView: React.FC = () => {
 
                     {/* Derecha: Botones de Acción Maestro */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => handleOpenAddRuleModal(policy)}
-                        className="btn btn-secondary"
-                        style={{ padding: '6px 10px', fontSize: '11px', gap: '5px', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.3)' }}
-                        title="Añadir regla determinista a esta política"
-                      >
-                        <Plus size={13} />
-                        <span>+ Añadir Regla</span>
-                      </button>
+                      {currentUser.canConfigurePolicies && (
+                        <button
+                          onClick={() => handleOpenAddRuleModal(policy)}
+                          className="btn btn-secondary"
+                          style={{ padding: '6px 10px', fontSize: '11px', gap: '5px', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.3)' }}
+                          title="Añadir regla determinista a esta política"
+                        >
+                          <Plus size={13} />
+                          <span>+ Añadir Regla</span>
+                        </button>
+                      )}
 
                       <button
                         onClick={() => setSelectedPolicy(policy)}
@@ -1661,37 +1709,41 @@ export const PoliciesView: React.FC = () => {
                         <span>Inspeccionar</span>
                       </button>
 
-                      <button
-                        onClick={() => handleTogglePolicyStatus(policy)}
-                        disabled={isTogglingStatus}
-                        className="btn btn-secondary"
-                        style={{ padding: '6px 10px', fontSize: '11px', gap: '5px' }}
-                        title={policy.status === 'Active' ? 'Desactivar política' : 'Activar política'}
-                      >
-                        <Power size={13} color={policy.status === 'Active' ? '#F59E0B' : '#10B981'} />
-                        <span>{policy.status === 'Active' ? 'Desactivar' : 'Activar'}</span>
-                      </button>
+                      {currentUser.canConfigurePolicies && (
+                        <>
+                          <button
+                            onClick={() => handleTogglePolicyStatus(policy)}
+                            disabled={isTogglingStatus}
+                            className="btn btn-secondary"
+                            style={{ padding: '6px 10px', fontSize: '11px', gap: '5px' }}
+                            title={policy.status === 'Active' ? 'Desactivar política' : 'Activar política'}
+                          >
+                            <Power size={13} color={policy.status === 'Active' ? '#F59E0B' : '#10B981'} />
+                            <span>{policy.status === 'Active' ? 'Desactivar' : 'Activar'}</span>
+                          </button>
 
-                      <button
-                        onClick={() => handleDeletePolicy(policy)}
-                        style={{
-                          padding: '6px 10px',
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          color: '#F87171',
-                          borderRadius: '6px',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                        }}
-                        title="Eliminar política completa y todas sus reglas asociadas"
-                      >
-                        <Trash2 size={13} />
-                        <span>Eliminar</span>
-                      </button>
+                          <button
+                            onClick={() => handleDeletePolicy(policy)}
+                            style={{
+                              padding: '6px 10px',
+                              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              color: '#F87171',
+                              borderRadius: '6px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                            }}
+                            title="Eliminar política completa y todas sus reglas asociadas"
+                          >
+                            <Trash2 size={13} />
+                            <span>Eliminar</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -1718,14 +1770,16 @@ export const PoliciesView: React.FC = () => {
                           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                             Esta política no tiene reglas deterministas asignadas. Todas las solicitudes evaluadas caerán en Fail-Closed (DENY).
                           </span>
-                          <button
-                            onClick={() => handleOpenAddRuleModal(policy)}
-                            className="btn btn-secondary"
-                            style={{ fontSize: '11px', padding: '5px 12px', gap: '6px' }}
-                          >
-                            <Plus size={13} />
-                            <span>+ Añadir primera regla</span>
-                          </button>
+                          {currentUser.canConfigurePolicies && (
+                            <button
+                              onClick={() => handleOpenAddRuleModal(policy)}
+                              className="btn btn-secondary"
+                              style={{ fontSize: '11px', padding: '5px 12px', gap: '6px' }}
+                            >
+                              <Plus size={13} />
+                              <span>+ Añadir primera regla</span>
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <div style={{
@@ -1799,36 +1853,40 @@ export const PoliciesView: React.FC = () => {
                                   {/* Acciones por regla: Playground + Eliminar Regla Desacoplada */}
                                   <td style={{ padding: '10px 14px', textAlign: 'right' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                                      <button
-                                        onClick={() => handleTestRuleInPlayground(rule)}
-                                        className="btn btn-secondary"
-                                        style={{ padding: '4px 8px', fontSize: '11px', gap: '4px' }}
-                                        title="Probar esta regla en Playground"
-                                      >
-                                        <Play size={12} fill="#38BDF8" color="#38BDF8" />
-                                        <span>Probar</span>
-                                      </button>
+                                      {currentUser.canRunPlayground && (
+                                        <button
+                                          onClick={() => handleTestRuleInPlayground(rule)}
+                                          className="btn btn-secondary"
+                                          style={{ padding: '4px 8px', fontSize: '11px', gap: '4px' }}
+                                          title="Probar esta regla en Playground"
+                                        >
+                                          <Play size={12} fill="#38BDF8" color="#38BDF8" />
+                                          <span>Probar</span>
+                                        </button>
+                                      )}
 
-                                      <button
-                                        onClick={() => handleDeleteRule(rule, policy.name)}
-                                        style={{
-                                          padding: '4px 8px',
-                                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                                          color: '#F87171',
-                                          borderRadius: '6px',
-                                          fontSize: '11px',
-                                          fontWeight: 600,
-                                          cursor: 'pointer',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          gap: '4px',
-                                        }}
-                                        title="Eliminar únicamente esta regla determinista"
-                                      >
-                                        <Trash2 size={12} />
-                                        <span>Eliminar regla</span>
-                                      </button>
+                                      {currentUser.canConfigurePolicies && (
+                                        <button
+                                          onClick={() => handleDeleteRule(rule, policy.name)}
+                                          style={{
+                                            padding: '4px 8px',
+                                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                                            color: '#F87171',
+                                            borderRadius: '6px',
+                                            fontSize: '11px',
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                          }}
+                                          title="Eliminar únicamente esta regla determinista"
+                                        >
+                                          <Trash2 size={12} />
+                                          <span>Eliminar regla</span>
+                                        </button>
+                                      )}
                                     </div>
                                   </td>
                                 </tr>
