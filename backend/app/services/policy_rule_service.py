@@ -59,6 +59,7 @@ class PolicyRuleService:
         stmt = (
             select(PolicyRule)
             .options(
+                selectinload(PolicyRule.policy),
                 selectinload(PolicyRule.tool_action).selectinload(ToolAction.tool),
                 selectinload(PolicyRule.target_agent),
             )
@@ -73,11 +74,13 @@ class PolicyRuleService:
         policy_id: Optional[UUID] = None,
         skip: int = 0,
         limit: int = 100,
+        organization_id: Optional[UUID] = None,
     ) -> List[PolicyRule]:
         """Lista reglas ordenadas por prioridad descendente con paginación y carga ansiosa anti-MissingGreenlet."""
         stmt = (
             select(PolicyRule)
             .options(
+                selectinload(PolicyRule.policy),
                 selectinload(PolicyRule.tool_action).selectinload(ToolAction.tool),
                 selectinload(PolicyRule.target_agent),
             )
@@ -85,6 +88,10 @@ class PolicyRuleService:
             .offset(skip)
             .limit(limit)
         )
+        if organization_id is not None:
+            stmt = stmt.join(Policy, PolicyRule.policy_id == Policy.id).where(
+                Policy.organization_id == organization_id
+            )
         if policy_id:
             stmt = stmt.where(PolicyRule.policy_id == policy_id)
 

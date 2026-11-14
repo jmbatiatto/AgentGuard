@@ -136,10 +136,10 @@ def _setup_admin_auth(mock_db, org_id=None):
 async def test_api_create_policy_rule_success():
     """Valida registro exitoso de una regla de política (201 Created)."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    org_id = uuid.uuid4()
     policy_id = uuid.uuid4()
     tool_id = uuid.uuid4()
     action_id = uuid.uuid4()
@@ -232,10 +232,10 @@ async def test_api_create_policy_rule_policy_not_found():
 async def test_api_create_policy_rule_target_agent_different_org():
     """Valida que si el agente pertenece a otra organización retorne 400 Bad Request."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    org_id = uuid.uuid4()
     other_org_id = uuid.uuid4()
     policy_id = uuid.uuid4()
     tool_id = uuid.uuid4()

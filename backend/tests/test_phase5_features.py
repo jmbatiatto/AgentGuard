@@ -34,16 +34,15 @@ def cleanup_overrides():
 
 @pytest.mark.asyncio
 async def test_list_organizations_success():
-    """1. GET /api/v1/organizations retorna el listado de organizaciones registradas (INC-17)."""
+    """1. GET /api/v1/organizations retorna únicamente la organización del usuario autenticado."""
     org1 = Organization(id=uuid.uuid4(), name="Acme Corp", created_at=datetime.now(timezone.utc))
-    org2 = Organization(id=uuid.uuid4(), name="Stark Industries", created_at=datetime.now(timezone.utc))
     admin_user = User(id=uuid.uuid4(), organization_id=org1.id, email="admin@acme.corp", role=UserRole.ADMIN)
 
     mock_db = AsyncMock()
     res_user = MagicMock()
     res_user.scalar_one_or_none.return_value = admin_user
     mock_result = MagicMock()
-    mock_result.scalars.return_value.all.return_value = [org1, org2]
+    mock_result.scalar_one_or_none.return_value = org1
     mock_db.execute.side_effect = [res_user, mock_result]
 
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -54,9 +53,8 @@ async def test_list_organizations_success():
 
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 2
+    assert len(data) == 1
     assert data[0]["name"] == "Acme Corp"
-    assert data[1]["name"] == "Stark Industries"
 
 
 @pytest.mark.asyncio
@@ -232,13 +230,21 @@ async def test_gateway_simulate_endpoint():
     tool = Tool(id=tool_id, organization_id=org_id, name="CRM Facturación", endpoint_url="https://crm.api.corp")
     action = ToolAction(id=action_id, tool_id=tool_id, action_name="create_quote", risk_level=RiskLevel.LOW)
     agent_tool = AgentTool(id=uuid.uuid4(), agent_id=agent_id, tool_id=tool_id, enabled=True, config={})
+    operator_user = User(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        email="ops@acme.corp",
+        role=UserRole.OPERATOR,
+    )
 
     mock_db = AsyncMock()
 
     async def mock_execute(stmt):
         stmt_str = str(stmt)
         result = MagicMock()
-        if "FROM agents" in stmt_str:
+        if "FROM users" in stmt_str:
+            result.scalar_one_or_none.return_value = operator_user
+        elif "FROM agents" in stmt_str:
             result.scalar_one_or_none.return_value = agent
         elif "FROM tools" in stmt_str:
             result.scalar_one_or_none.return_value = tool
@@ -274,6 +280,7 @@ async def test_gateway_simulate_endpoint():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/gateway/simulate",
+                headers=make_admin_jwt(operator_user),
                 json={
                     "organization_id": str(org_id),
                     "agent_id": str(agent_id),

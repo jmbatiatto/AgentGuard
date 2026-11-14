@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_admin_user
+from app.api.deps import ensure_same_tenant, get_current_user, require_admin_user
 from app.core.database import get_db
 from app.models.enums import ActorType
 from app.models.user import User
@@ -62,8 +62,10 @@ async def list_organizations(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[OrganizationRead]:
-    """Retorna las organizaciones con paginación."""
-    return await organization_service.list_all(db=db, skip=skip, limit=limit)
+    """Retorna únicamente la organización del usuario autenticado (aislamiento multi-tenant)."""
+    _ = (skip, limit)
+    org = await organization_service.get_by_id(db=db, org_id=current_user.organization_id)
+    return [org] if org else []
 
 
 @router.get(
@@ -78,7 +80,12 @@ async def get_organization(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> OrganizationRead:
-    """Retorna una organización específica o 404 si no existe."""
+    """Retorna una organización específica validando pertenencia del usuario."""
+    ensure_same_tenant(
+        org_id,
+        current_user,
+        "Acceso denegado: No tiene autorización para consultar otra organización",
+    )
     org = await organization_service.get_by_id(db=db, org_id=org_id)
     if not org:
         raise HTTPException(

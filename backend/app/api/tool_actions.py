@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_admin_user
+from app.api.deps import ensure_same_tenant, get_current_user, require_admin_user
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.tool_action import ToolActionCreate, ToolActionRead
@@ -35,6 +35,11 @@ async def create_tool_action(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Herramienta con ID {action_in.tool_id} no encontrada",
         )
+    ensure_same_tenant(
+        tool.organization_id,
+        current_admin,
+        "Acceso denegado: La herramienta pertenece a otra organización",
+    )
 
     # Validación de unicidad de nombre de acción en la herramienta
     existing_action = await tool_action_service.get_by_tool_and_name(
@@ -77,12 +82,13 @@ async def list_tool_actions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[ToolActionRead]:
-    """Retorna las acciones atómicas según los filtros aplicados."""
+    """Retorna las acciones atómicas pertenecientes a la organización del usuario."""
     return await tool_action_service.list_actions(
         db=db,
         tool_id=tool_id,
         skip=skip,
         limit=limit,
+        organization_id=current_user.organization_id,
     )
 
 
@@ -98,11 +104,17 @@ async def get_tool_action(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolActionRead:
-    """Retorna una acción atómica por su UUID o 404 si no existe."""
+    """Retorna una acción atómica por su UUID validando aislamiento multi-tenant."""
     action = await tool_action_service.get_by_id(db=db, action_id=action_id)
     if not action:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Acción de herramienta con ID {action_id} no encontrada",
         )
+    if getattr(action, "tool", None) is not None:
+        ensure_same_tenant(action.tool.organization_id, current_user)
+    else:
+        tool = await tool_service.get_by_id(db=db, tool_id=action.tool_id)
+        if tool is not None:
+            ensure_same_tenant(tool.organization_id, current_user)
     return action

@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_admin_user
+from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.analytics import AnalyticsOverviewResponse, AnalyticsTimeseriesResponse
@@ -71,12 +71,12 @@ async def get_analytics_overview(
         default=None,
         description="Identificador UUID de la organización (tenant isolation)",
     ),
-    current_admin: Optional[User] = Depends(require_admin_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsOverviewResponse:
-    """Retorna KPIs agregados para el tenant especificado."""
+    """Retorna KPIs agregados para el tenant del usuario autenticado."""
     org_uuid = _validate_and_parse_org_id(organization_id)
-    await _verify_tenant_access(org_uuid=org_uuid, current_admin=current_admin, db=db)
+    await _verify_tenant_access(org_uuid=org_uuid, current_admin=current_user, db=db)
 
     return await analytics_service.get_overview(db=db, organization_id=org_uuid)
 
@@ -100,12 +100,12 @@ async def get_analytics_timeseries(
         default="24h",
         description="Ventana temporal para la serie (default: '24h')",
     ),
-    current_admin: Optional[User] = Depends(require_admin_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsTimeseriesResponse:
     """Retorna serie temporal horaria con 24 puntos cronológicos continuos."""
     org_uuid = _validate_and_parse_org_id(organization_id)
-    await _verify_tenant_access(org_uuid=org_uuid, current_admin=current_admin, db=db)
+    await _verify_tenant_access(org_uuid=org_uuid, current_admin=current_user, db=db)
 
     return await analytics_service.get_timeseries(
         db=db,

@@ -143,10 +143,10 @@ def _setup_admin_auth(mock_db, org_id=None):
 async def test_api_create_user_success():
     """Valida registro exitoso de usuario (201 Created)."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    org_id = uuid.uuid4()
     fake_user_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
 
@@ -194,10 +194,9 @@ async def test_api_create_user_success():
 async def test_api_create_user_organization_not_found():
     """Valida que si la organización no existe devuelva 404."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
-    app.dependency_overrides[get_db] = lambda: mock_db
-
     missing_org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, missing_org_id)
+    app.dependency_overrides[get_db] = lambda: mock_db
 
     with patch.object(organization_service, "get_by_id", new_callable=AsyncMock) as mock_get_org:
         mock_get_org.return_value = None
@@ -224,10 +223,10 @@ async def test_api_create_user_organization_not_found():
 async def test_api_create_user_email_conflict():
     """Valida que si el email ya existe devuelva 409 Conflict."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    org_id = uuid.uuid4()
     fake_org = Organization(id=org_id, name="HealthTech Corp", created_at=datetime.now(timezone.utc))
     existing_user = User(
         id=uuid.uuid4(),
@@ -265,10 +264,10 @@ async def test_api_create_user_email_conflict():
 async def test_api_list_users():
     """Valida listado de usuarios con parámetro de filtro por organización."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    org_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
     fake_users = [
         User(id=uuid.uuid4(), organization_id=org_id, email=f"staff{i}@corp.com", role=UserRole.OPERATOR, created_at=now)
@@ -294,14 +293,15 @@ async def test_api_list_users():
 async def test_api_get_user_found():
     """Valida consulta de usuario existente por UUID."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     user_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
     fake_user = User(
         id=user_id,
-        organization_id=uuid.uuid4(),
+        organization_id=org_id,
         email="target@corp.com",
         role=UserRole.AUDITOR,
         created_at=now,
@@ -397,19 +397,22 @@ async def test_user_service_delete():
 async def test_api_patch_user_role():
     """Valida actualización de rol vía PATCH /api/v1/users/{id}."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     user_id = uuid.uuid4()
     mock_user = User(
         id=user_id,
-        organization_id=uuid.uuid4(),
+        organization_id=org_id,
         email="patched@corp.com",
         role=UserRole.ADMIN,
         created_at=datetime.now(timezone.utc),
     )
 
-    with patch.object(user_service, "update", new_callable=AsyncMock) as mock_update:
+    with patch.object(user_service, "get_by_id", new_callable=AsyncMock) as mock_get, \
+         patch.object(user_service, "update", new_callable=AsyncMock) as mock_update:
+        mock_get.return_value = mock_user
         mock_update.return_value = mock_user
 
         transport = ASGITransport(app=app)
@@ -432,12 +435,22 @@ async def test_api_patch_user_role():
 async def test_api_delete_user():
     """Valida eliminación de usuario vía DELETE /api/v1/users/{id}."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     user_id = uuid.uuid4()
+    existing_user = User(
+        id=user_id,
+        organization_id=org_id,
+        email="delete@corp.com",
+        role=UserRole.VIEWER,
+        created_at=datetime.now(timezone.utc),
+    )
 
-    with patch.object(user_service, "delete", new_callable=AsyncMock) as mock_delete:
+    with patch.object(user_service, "get_by_id", new_callable=AsyncMock) as mock_get, \
+         patch.object(user_service, "delete", new_callable=AsyncMock) as mock_delete:
+        mock_get.return_value = existing_user
         mock_delete.return_value = True
 
         transport = ASGITransport(app=app)
@@ -458,8 +471,8 @@ async def test_api_delete_user_not_found():
 
     user_id = uuid.uuid4()
 
-    with patch.object(user_service, "delete", new_callable=AsyncMock) as mock_delete:
-        mock_delete.return_value = False
+    with patch.object(user_service, "get_by_id", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = None
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:

@@ -8,11 +8,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import (
+    ensure_same_tenant,
+    get_current_user,
+    require_roles,
+    resolve_tenant_org_id,
+)
 from app.core.database import get_db
 from app.core.websocket_manager import ws_manager
 from app.models.alert import Alert
-from app.models.enums import AlertSeverity, AlertStatus
+from app.models.enums import AlertSeverity, AlertStatus, UserRole
 from app.models.user import User
 from app.schemas.alert import AlertRead, AlertUpdateRequest
 
@@ -39,16 +44,16 @@ async def list_alerts(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[AlertRead]:
-    """Retorna alertas de seguridad ordenadas de más recientes a más antiguas."""
+    """Retorna alertas de seguridad de la organización del usuario ordenadas de más recientes a más antiguas."""
+    effective_org_id = resolve_tenant_org_id(organization_id, current_user)
     stmt = (
         select(Alert)
+        .where(Alert.organization_id == effective_org_id)
         .order_by(Alert.created_at.desc())
         .offset(skip)
         .limit(limit)
     )
 
-    if organization_id:
-        stmt = stmt.where(Alert.organization_id == organization_id)
     if status_filter:
         stmt = stmt.where(Alert.status == status_filter)
     if severity:
@@ -69,7 +74,7 @@ async def get_alert_by_id(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AlertRead:
-    """Retorna una alerta por ID o 404 si no existe."""
+    """Retorna una alerta por ID validando tenant o 404 si no existe."""
     stmt = select(Alert).where(Alert.id == alert_id)
     result = await db.execute(stmt)
     alert = result.scalar_one_or_none()
@@ -79,6 +84,7 @@ async def get_alert_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Alerta de seguridad con ID '{alert_id}' no encontrada.",
         )
+    ensure_same_tenant(alert.organization_id, current_user)
     return alert
 
 
@@ -86,15 +92,15 @@ async def get_alert_by_id(
     "/{alert_id}/status",
     response_model=AlertRead,
     summary="Actualizar Estado del Incidente",
-    description="Permite a un operador o administrador investigar, resolver o descartar una alerta de seguridad.",
+    description="Permite a un administrador, aprobador u operador investigar, resolver o descartar una alerta de seguridad.",
 )
 async def update_alert_status(
     alert_id: UUID,
     update_data: AlertUpdateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.APPROVER, UserRole.OPERATOR)),
     db: AsyncSession = Depends(get_db),
 ) -> AlertRead:
-    """Actualiza el estado de una alerta y notifica en tiempo real vía WebSocket."""
+    """Actualiza el estado de una alerta validando rol y tenant, y notifica en tiempo real vía WebSocket."""
     stmt = select(Alert).where(Alert.id == alert_id)
     result = await db.execute(stmt)
     alert = result.scalar_one_or_none()
@@ -104,10 +110,10 @@ async def update_alert_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Alerta de seguridad con ID '{alert_id}' no encontrada.",
         )
+    ensure_same_tenant(alert.organization_id, current_user)
 
     alert.status = update_data.status
-    if update_data.resolved_by_user_id:
-        alert.resolved_by_user_id = update_data.resolved_by_user_id
+    alert.resolved_by_user_id = current_user.id
 
     await db.commit()
     await db.refresh(alert)

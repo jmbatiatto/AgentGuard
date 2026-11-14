@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_admin_user
+from app.api.deps import ensure_same_tenant, get_current_user, require_admin_user, resolve_tenant_org_id
 from app.core.database import get_db
 from app.schemas.agent import (
     AgentCreate,
@@ -37,7 +37,12 @@ async def create_agent(
     current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentRead:
-    """Registra un agente validando existencia del tenant y que el owner pertenezca a la misma organización."""
+    """Registra un agente validando pertenencia del tenant y que el owner pertenezca a la misma organización."""
+    ensure_same_tenant(
+        agent_in.organization_id,
+        current_admin,
+        "Acceso denegado: No tiene autorización para crear agentes en otra organización",
+    )
     org = await organization_service.get_by_id(db=db, org_id=agent_in.organization_id)
     if not org:
         raise HTTPException(
@@ -101,10 +106,11 @@ async def list_agents(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[AgentRead]:
-    """Retorna los agentes según los filtros aplicados."""
+    """Retorna los agentes pertenecientes a la organización del usuario autenticado."""
+    effective_org_id = resolve_tenant_org_id(organization_id, current_user)
     return await agent_service.list_by_org(
         db=db,
-        organization_id=organization_id,
+        organization_id=effective_org_id,
         skip=skip,
         limit=limit,
     )
@@ -122,13 +128,14 @@ async def get_agent(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentRead:
-    """Retorna un agente por su UUID o 404 si no existe."""
+    """Retorna un agente por su UUID validando aislamiento multi-tenant."""
     agent = await agent_service.get_by_id(db=db, agent_id=agent_id)
     if not agent:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agente con ID {agent_id} no encontrado",
         )
+    ensure_same_tenant(agent.organization_id, current_user)
     return agent
 
 
@@ -145,7 +152,15 @@ async def update_agent(
     current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> AgentRead:
-    """Actualiza datos del agente o retorna 404 si no existe."""
+    """Actualiza datos del agente validando pertenencia a la organización."""
+    existing = await agent_service.get_by_id(db=db, agent_id=agent_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agente con ID {agent_id} no encontrado",
+        )
+    ensure_same_tenant(existing.organization_id, current_admin)
+
     agent = await agent_service.update(db=db, agent_id=agent_id, agent_in=agent_in)
     if not agent:
         raise HTTPException(
@@ -196,6 +211,7 @@ async def delete_agent(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agente con ID {agent_id} no encontrado",
         )
+    ensure_same_tenant(agent.organization_id, current_admin)
     org_id = agent.organization_id
     owner_id = agent.owner_user_id
     agent_name = agent.name
@@ -241,6 +257,7 @@ async def assign_tool_to_agent(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agente con ID {agent_id} no encontrado",
         )
+    ensure_same_tenant(agent.organization_id, current_admin)
 
     tool = await tool_service.get_by_id(db=db, tool_id=tool_in.tool_id)
     if not tool:
@@ -270,12 +287,13 @@ async def list_agent_tools(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[AgentToolRead]:
-    """Retorna las herramientas asignadas al agente especificado."""
+    """Retorna las herramientas asignadas al agente especificado validando tenant."""
     agent = await agent_service.get_by_id(db=db, agent_id=agent_id)
     if not agent:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agente con ID {agent_id} no encontrado",
         )
+    ensure_same_tenant(agent.organization_id, current_user)
 
     return await agent_service.list_agent_tools(db=db, agent_id=agent_id)

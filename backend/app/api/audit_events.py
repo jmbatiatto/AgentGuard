@@ -7,9 +7,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_admin_user
+from app.api.deps import require_roles
 from app.core.database import get_db
-from app.models.enums import ActorType
+from app.models.enums import ActorType, UserRole
 from app.models.user import User
 from app.schemas.audit_event import AuditEventResponse
 from app.services.audit_service import audit_service
@@ -58,7 +58,7 @@ async def list_audit_events(
         le=500,
         description="Límite máximo de registros por página",
     ),
-    current_admin: Optional[User] = Depends(require_admin_user),
+    current_admin: Optional[User] = Depends(require_roles(UserRole.ADMIN, UserRole.AUDITOR)),
     db: AsyncSession = Depends(get_db),
 ) -> List[AuditEventResponse]:
     """Retorna eventos de auditoría forense según los filtros aplicados y validando pertenencia de tenant."""
@@ -98,7 +98,7 @@ async def get_audit_event(
         default=None,
         description="ID opcional de la organización para validación multi-tenant",
     ),
-    current_admin: Optional[User] = Depends(require_admin_user),
+    current_admin: Optional[User] = Depends(require_roles(UserRole.ADMIN, UserRole.AUDITOR)),
     db: AsyncSession = Depends(get_db),
 ) -> AuditEventResponse:
     """Retorna un evento de auditoría específico por UUID o 404 si no existe."""

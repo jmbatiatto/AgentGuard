@@ -4,8 +4,10 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import ensure_same_tenant, get_current_user, require_roles
 from app.core.database import get_db
-from app.models.enums import PolicyDecision
+from app.models.enums import PolicyDecision, UserRole
+from app.models.user import User
 from app.schemas.gateway import GatewayExecuteRequest, GatewayExecuteResponse
 from app.services.api_key_service import api_key_service
 from app.services.pep_gateway_service import pep_gateway_service
@@ -88,9 +90,15 @@ async def execute_gateway_action(
 )
 async def simulate_gateway_action(
     request: GatewayExecuteRequest,
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.OPERATOR)),
     db: AsyncSession = Depends(get_db),
 ) -> GatewayExecuteResponse:
-    """Ejecuta una evaluación en modo simulación sandbox (dry_run=True)."""
+    """Ejecuta una evaluación en modo simulación sandbox (dry_run=True) validando rol y tenant."""
+    ensure_same_tenant(
+        request.organization_id,
+        current_user,
+        "Acceso denegado: No puede simular ejecuciones en otra organización",
+    )
     sim_request = request.model_copy(update={"dry_run": True})
     return await pep_gateway_service.execute(db=db, request=sim_request)
 
@@ -100,7 +108,9 @@ async def simulate_gateway_action(
     summary="Catálogo de Vectores de Ataque e Inyecciones de Prompt (OWASP 2026)",
     description="Retorna vectores de ataque estructurados para simulación en tiempo real en el Playground.",
 )
-async def get_attack_catalog() -> dict:
+async def get_attack_catalog(
+    current_user: User = Depends(get_current_user),
+) -> dict:
     """Retorna el banco oficial de vectores de ataque alineados a OWASP Agentic Top 10."""
     return {
         "catalog_version": "2026.1",

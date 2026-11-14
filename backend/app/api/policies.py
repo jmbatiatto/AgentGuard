@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_admin_user
+from app.api.deps import ensure_same_tenant, get_current_user, require_admin_user, resolve_tenant_org_id
 from app.core.database import get_db
 from app.models.enums import ActorType
 from app.models.user import User
@@ -28,10 +28,15 @@ router = APIRouter(prefix="/policies", tags=["Policies"])
 )
 async def create_policy(
     policy_in: PolicyCreate,
-    current_admin: Optional[User] = Depends(require_admin_user),
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRead:
-    """Crea una política validando existencia de la organización propietaria."""
+    """Crea una política validando pertenencia y existencia de la organización propietaria."""
+    ensure_same_tenant(
+        policy_in.organization_id,
+        current_admin,
+        "Acceso denegado: No tiene autorización para crear políticas en otra organización",
+    )
     org = await organization_service.get_by_id(db=db, org_id=policy_in.organization_id)
     if not org:
         raise HTTPException(
@@ -86,10 +91,11 @@ async def list_policies(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[PolicyRead]:
-    """Retorna las políticas según los filtros aplicados."""
+    """Retorna las políticas de la organización del usuario autenticado."""
+    effective_org_id = resolve_tenant_org_id(organization_id, current_user)
     return await policy_service.list_by_org(
         db=db,
-        organization_id=organization_id,
+        organization_id=effective_org_id,
         skip=skip,
         limit=limit,
     )
@@ -107,13 +113,14 @@ async def get_policy(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRead:
-    """Retorna una política por su UUID o 404 si no existe."""
+    """Retorna una política por su UUID validando aislamiento multi-tenant."""
     policy = await policy_service.get_by_id(db=db, policy_id=policy_id)
     if not policy:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Política con ID {policy_id} no encontrada",
         )
+    ensure_same_tenant(policy.organization_id, current_user)
     return policy
 
 
@@ -127,10 +134,18 @@ async def get_policy(
 async def update_policy(
     policy_id: UUID,
     policy_in: PolicyUpdate,
-    current_admin: Optional[User] = Depends(require_admin_user),
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRead:
-    """Actualiza una política existente o retorna 404 si no existe."""
+    """Actualiza una política existente validando pertenencia a la organización."""
+    existing = await policy_service.get_by_id(db=db, policy_id=policy_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Política con ID {policy_id} no encontrada",
+        )
+    ensure_same_tenant(existing.organization_id, current_admin)
+
     updated = await policy_service.update(db=db, policy_id=policy_id, policy_in=policy_in)
     if not updated:
         raise HTTPException(
@@ -176,6 +191,7 @@ async def delete_policy(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Política con ID {policy_id} no encontrada",
         )
+    ensure_same_tenant(policy.organization_id, current_admin)
     org_id = policy.organization_id
     policy_name = policy.name
 

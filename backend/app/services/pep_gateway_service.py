@@ -541,6 +541,7 @@ class PEPGatewayService:
         approver_user_id: UUID,
         decision: ApprovalStatus,
         resolution_reason: str,
+        organization_id: Optional[UUID] = None,
     ) -> Optional[Approval]:
         """Resuelve un ticket de aprobación humana, validando rol APPROVER/ADMIN, TTL de 15 min y reanudando despacho."""
         stmt = (
@@ -555,7 +556,19 @@ class PEPGatewayService:
         result = await db.execute(stmt)
         approval = result.scalar_one_or_none()
 
-        if not approval or approval.status != ApprovalStatus.PENDING:
+        if not approval:
+            return None
+
+        if (
+            organization_id is not None
+            and approval.execution is not None
+            and approval.execution.organization_id != organization_id
+        ):
+            raise PermissionError(
+                "Acceso denegado: La solicitud de aprobación pertenece a otra organización"
+            )
+
+        if approval.status != ApprovalStatus.PENDING:
             return None
 
         # 1. Validar rol del usuario aprobador (Regla 6 AGENTS.md: APPROVER o ADMIN)

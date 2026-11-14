@@ -129,10 +129,10 @@ def _setup_admin_auth(mock_db, org_id=None):
 async def test_api_create_policy_success():
     """Valida registro exitoso de una política (201 Created)."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    org_id = uuid.uuid4()
     policy_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
 
@@ -178,10 +178,9 @@ async def test_api_create_policy_success():
 async def test_api_create_policy_organization_not_found():
     """Valida que si la organización no existe devuelva 404."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
-    app.dependency_overrides[get_db] = lambda: mock_db
-
     missing_org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, missing_org_id)
+    app.dependency_overrides[get_db] = lambda: mock_db
 
     with patch.object(organization_service, "get_by_id", new_callable=AsyncMock) as mock_get_org:
         mock_get_org.return_value = None
@@ -207,10 +206,10 @@ async def test_api_create_policy_organization_not_found():
 async def test_api_list_policies():
     """Valida listado de políticas con parámetro de filtro por organización."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    org_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
     fake_policies = [
         Policy(
@@ -243,14 +242,15 @@ async def test_api_list_policies():
 async def test_api_get_policy_found():
     """Valida consulta de política existente por UUID."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     policy_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
     fake_policy = Policy(
         id=policy_id,
-        organization_id=uuid.uuid4(),
+        organization_id=org_id,
         name="Target Policy",
         priority=120,
         is_active=True,

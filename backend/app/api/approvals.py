@@ -5,7 +5,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_roles
+from app.api.deps import (
+    ensure_same_tenant,
+    get_current_user,
+    require_roles,
+    resolve_tenant_org_id,
+)
 from app.core.database import get_db
 from app.models.enums import ApprovalStatus, UserRole
 from app.models.user import User
@@ -49,10 +54,11 @@ async def list_approvals(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[ApprovalDetailRead]:
-    """Retorna solicitudes de aprobación ordenadas con su contexto de ejecución forense."""
+    """Retorna solicitudes de aprobación ordenadas pertenecientes a la organización del usuario."""
+    effective_org_id = resolve_tenant_org_id(organization_id, current_user)
     return await pep_gateway_service.list_approvals(
         db=db,
-        organization_id=organization_id,
+        organization_id=effective_org_id,
         status=status_filter,
         skip=skip,
         limit=limit,
@@ -71,13 +77,15 @@ async def get_approval(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ApprovalDetailRead:
-    """Retorna una solicitud de aprobación con su traza o 404 si no existe."""
+    """Retorna una solicitud de aprobación validando aislamiento multi-tenant o 404 si no existe."""
     approval = await pep_gateway_service.get_approval_by_id(db=db, approval_id=approval_id)
     if not approval:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Solicitud de aprobación con ID {approval_id} no encontrada",
         )
+    if approval.execution is not None:
+        ensure_same_tenant(approval.execution.organization_id, current_user)
     return approval
 
 
@@ -97,14 +105,21 @@ async def resolve_approval(
     current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.APPROVER)),
     db: AsyncSession = Depends(get_db),
 ) -> ApprovalDetailRead:
-    """Resuelve un ticket de aprobación humana sellando la identidad real del JWT."""
-    resolved = await pep_gateway_service.resolve_approval(
-        db=db,
-        approval_id=approval_id,
-        approver_user_id=current_user.id,
-        decision=resolve_in.decision,
-        resolution_reason=resolve_in.resolution_reason,
-    )
+    """Resuelve un ticket de aprobación humana sellando la identidad real del JWT y validando tenant."""
+    try:
+        resolved = await pep_gateway_service.resolve_approval(
+            db=db,
+            approval_id=approval_id,
+            approver_user_id=current_user.id,
+            decision=resolve_in.decision,
+            resolution_reason=resolve_in.resolution_reason,
+            organization_id=current_user.organization_id,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        )
     if not resolved:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

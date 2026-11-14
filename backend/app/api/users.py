@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_admin_user
+from app.api.deps import ensure_same_tenant, require_admin_user, resolve_tenant_org_id
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate
@@ -27,7 +27,13 @@ async def create_user(
     current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserRead:
-    """Registra un nuevo usuario validando existencia de la organización e unicidad del email."""
+    """Registra un nuevo usuario validando pertenencia del tenant, existencia e unicidad del email."""
+    ensure_same_tenant(
+        user_in.organization_id,
+        current_admin,
+        "Acceso denegado: No tiene autorización para crear usuarios en otra organización",
+    )
+
     # Validación de existencia de la organización
     org = await organization_service.get_by_id(db=db, org_id=user_in.organization_id)
     if not org:
@@ -71,13 +77,14 @@ async def list_users(
         le=500,
         description="Límite máximo de registros por página",
     ),
-    current_user: User = Depends(get_current_user),
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[UserRead]:
-    """Retorna el listado de usuarios según los filtros aplicados."""
+    """Retorna el listado de usuarios de la organización del administrador autenticado."""
+    effective_org_id = resolve_tenant_org_id(organization_id, current_admin)
     return await user_service.list_by_org(
         db=db,
-        organization_id=organization_id,
+        organization_id=effective_org_id,
         skip=skip,
         limit=limit,
     )
@@ -92,16 +99,17 @@ async def list_users(
 )
 async def get_user(
     user_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserRead:
-    """Retorna un usuario por su UUID o 404 si no existe."""
+    """Retorna un usuario por su UUID validando pertenencia a la organización."""
     user = await user_service.get_by_id(db=db, user_id=user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Usuario con ID {user_id} no encontrado",
         )
+    ensure_same_tenant(user.organization_id, current_admin)
     return user
 
 
@@ -118,12 +126,20 @@ async def update_user(
     current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserRead:
-    """Actualiza el rol del usuario o retorna 404 si no existe."""
+    """Actualiza el rol del usuario validando pertenencia al mismo tenant."""
     if user_in.role is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Se requiere especificar el campo 'role' para actualizar",
         )
+
+    existing = await user_service.get_by_id(db=db, user_id=user_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Usuario con ID {user_id} no encontrado",
+        )
+    ensure_same_tenant(existing.organization_id, current_admin)
 
     updated = await user_service.update(db=db, user_id=user_id, role=user_in.role)
     if not updated:
@@ -145,7 +161,15 @@ async def delete_user(
     current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Elimina el usuario o retorna 404 si no existe."""
+    """Elimina el usuario validando pertenencia a la organización."""
+    existing = await user_service.get_by_id(db=db, user_id=user_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Usuario con ID {user_id} no encontrado",
+        )
+    ensure_same_tenant(existing.organization_id, current_admin)
+
     deleted = await user_service.delete(db=db, user_id=user_id)
     if not deleted:
         raise HTTPException(

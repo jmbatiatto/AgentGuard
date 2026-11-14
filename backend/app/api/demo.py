@@ -34,7 +34,12 @@ router = APIRouter(prefix="/demo", tags=["Demo Operations"])
 async def reset_demo_data(
     current_admin: User = Depends(require_admin_user),
 ) -> Dict[str, Any]:
-    """Ejecuta el re-seeding determinista con reset=True."""
+    """Ejecuta el re-seeding determinista con reset=True únicamente dentro del tenant Acme Corp."""
+    if current_admin.organization_id != ORG_ACME_ID:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado: Solo un administrador del entorno Acme Corp puede restablecer los datos demo",
+        )
     try:
         await seed_data(reset=True)
         return {

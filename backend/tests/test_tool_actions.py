@@ -148,7 +148,8 @@ def _setup_admin_auth(mock_db, org_id=None):
 async def test_api_create_tool_action_success():
     """Valida registro exitoso de una acción atómica (201 Created)."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     tool_id = uuid.uuid4()
@@ -157,7 +158,7 @@ async def test_api_create_tool_action_success():
 
     fake_tool = Tool(
         id=tool_id,
-        organization_id=uuid.uuid4(),
+        organization_id=org_id,
         name="Sales API",
         endpoint_url="https://sales.corp",
         created_at=now,
@@ -235,11 +236,12 @@ async def test_api_create_tool_action_tool_not_found():
 async def test_api_create_tool_action_duplicate_conflict():
     """Valida que si ya existe una acción con el mismo nombre en la herramienta devuelva 409 Conflict."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     tool_id = uuid.uuid4()
-    fake_tool = Tool(id=tool_id, organization_id=uuid.uuid4(), name="ERP", endpoint_url="https://erp.corp")
+    fake_tool = Tool(id=tool_id, organization_id=org_id, name="ERP", endpoint_url="https://erp.corp")
     existing_action = ToolAction(id=uuid.uuid4(), tool_id=tool_id, action_name="duplicate_act", risk_level=RiskLevel.LOW)
 
     with patch.object(tool_service, "get_by_id", new_callable=AsyncMock) as mock_get_tool, \

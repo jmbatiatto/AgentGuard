@@ -132,3 +132,29 @@ def require_roles(*allowed_roles: UserRole):
         return current_user
 
     return _role_guard
+
+
+def resolve_tenant_org_id(
+    requested_org_id: Optional[UUID],
+    current_user: User,
+) -> UUID:
+    """Valida que un filtro opcional organization_id no apunte a otro tenant y fuerza aislamiento."""
+    if requested_org_id is not None and requested_org_id != current_user.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado: No tiene autorización para consultar o modificar recursos de otra organización",
+        )
+    return current_user.organization_id
+
+
+def ensure_same_tenant(
+    resource_org_id: UUID,
+    current_user: User,
+    detail: str = "Acceso denegado: El recurso pertenece a otra organización",
+) -> None:
+    """Garantiza aislamiento multi-tenant estricto (Anti-IDOR) respecto al usuario autenticado."""
+    if resource_org_id != current_user.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=detail,
+        )

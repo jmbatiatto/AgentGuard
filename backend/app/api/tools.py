@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_admin_user
+from app.api.deps import ensure_same_tenant, get_current_user, require_admin_user, resolve_tenant_org_id
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.tool import ToolCreate, ToolRead, ToolUpdate
@@ -28,7 +28,12 @@ async def create_tool(
     current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolRead:
-    """Crea una nueva herramienta externa validando existencia de la organización."""
+    """Crea una nueva herramienta externa validando pertenencia del tenant."""
+    ensure_same_tenant(
+        tool_in.organization_id,
+        current_admin,
+        "Acceso denegado: No tiene autorización para crear herramientas en otra organización",
+    )
     org = await organization_service.get_by_id(db=db, org_id=tool_in.organization_id)
     if not org:
         raise HTTPException(
@@ -65,10 +70,11 @@ async def list_tools(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[ToolRead]:
-    """Retorna las herramientas según los filtros aplicados."""
+    """Retorna las herramientas de la organización del usuario autenticado."""
+    effective_org_id = resolve_tenant_org_id(organization_id, current_user)
     return await tool_service.list_by_org(
         db=db,
-        organization_id=organization_id,
+        organization_id=effective_org_id,
         skip=skip,
         limit=limit,
     )
@@ -86,13 +92,14 @@ async def get_tool(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolRead:
-    """Retorna una herramienta por su UUID o 404 si no existe."""
+    """Retorna una herramienta por su UUID validando aislamiento multi-tenant."""
     tool = await tool_service.get_by_id(db=db, tool_id=tool_id)
     if not tool:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Herramienta con ID {tool_id} no encontrada",
         )
+    ensure_same_tenant(tool.organization_id, current_user)
     return tool
 
 
@@ -109,7 +116,15 @@ async def update_tool(
     current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> ToolRead:
-    """Actualiza una herramienta existente o retorna 404 si no existe."""
+    """Actualiza una herramienta existente validando pertenencia a la organización."""
+    existing = await tool_service.get_by_id(db=db, tool_id=tool_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Herramienta con ID {tool_id} no encontrada",
+        )
+    ensure_same_tenant(existing.organization_id, current_admin)
+
     updated = await tool_service.update(db=db, tool_id=tool_id, tool_in=tool_in)
     if not updated:
         raise HTTPException(
@@ -130,7 +145,15 @@ async def delete_tool(
     current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Elimina una herramienta existente."""
+    """Elimina una herramienta existente validando pertenencia a la organización."""
+    existing = await tool_service.get_by_id(db=db, tool_id=tool_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Herramienta con ID {tool_id} no encontrada",
+        )
+    ensure_same_tenant(existing.organization_id, current_admin)
+
     try:
         deleted = await tool_service.delete(db=db, tool_id=tool_id)
         if not deleted:

@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user
+from app.api.deps import ensure_same_tenant, get_current_user, resolve_tenant_org_id
 from app.core.database import get_db
 from app.models.enums import PolicyDecision, ExecutionStatus
 from app.models.execution import Execution
@@ -72,7 +72,8 @@ async def list_executions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[ExecutionResponse]:
-    """Consulta la tabla executions con joins optimizados y orden descendente."""
+    """Consulta la tabla executions aislada por tenant con joins optimizados y orden descendente."""
+    effective_org_id = resolve_tenant_org_id(organization_id, current_user)
     stmt = (
         select(Execution)
         .options(
@@ -82,13 +83,12 @@ async def list_executions(
             selectinload(Execution.evaluated_policy_rule),
             selectinload(Execution.approval),
         )
+        .where(Execution.organization_id == effective_org_id)
         .order_by(Execution.timestamp.desc())
         .offset(skip)
         .limit(limit)
     )
 
-    if organization_id:
-        stmt = stmt.where(Execution.organization_id == organization_id)
     if agent_id:
         stmt = stmt.where(Execution.agent_id == agent_id)
     if decision:
@@ -133,5 +133,6 @@ async def get_execution_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Traza de ejecución forense '{execution_id}' no encontrada.",
         )
+    ensure_same_tenant(execution.organization_id, current_user)
 
     return _to_execution_response(execution)

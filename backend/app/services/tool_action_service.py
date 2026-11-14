@@ -4,8 +4,9 @@ from typing import List, Optional
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.models.tool import ToolAction
+from app.models.tool import Tool, ToolAction
 from app.schemas.tool_action import ToolActionCreate
 
 
@@ -28,8 +29,12 @@ class ToolActionService:
 
     @staticmethod
     async def get_by_id(db: AsyncSession, action_id: UUID) -> Optional[ToolAction]:
-        """Obtiene una acción atómica por su UUID primario."""
-        stmt = select(ToolAction).where(ToolAction.id == action_id)
+        """Obtiene una acción atómica por su UUID primario cargando su herramienta contenedora."""
+        stmt = (
+            select(ToolAction)
+            .options(selectinload(ToolAction.tool))
+            .where(ToolAction.id == action_id)
+        )
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -53,14 +58,20 @@ class ToolActionService:
         tool_id: Optional[UUID] = None,
         skip: int = 0,
         limit: int = 100,
+        organization_id: Optional[UUID] = None,
     ) -> List[ToolAction]:
-        """Lista acciones atómicas con paginación y filtro opcional por herramienta."""
+        """Lista acciones atómicas con paginación y filtro opcional por herramienta y organización."""
         stmt = (
             select(ToolAction)
+            .options(selectinload(ToolAction.tool))
             .order_by(ToolAction.created_at.desc())
             .offset(skip)
             .limit(limit)
         )
+        if organization_id is not None:
+            stmt = stmt.join(Tool, ToolAction.tool_id == Tool.id).where(
+                Tool.organization_id == organization_id
+            )
         if tool_id:
             stmt = stmt.where(ToolAction.tool_id == tool_id)
 

@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_admin_user
+from app.api.deps import ensure_same_tenant, get_current_user, require_admin_user
 from app.core.database import get_db
 from app.models.enums import ActorType
 from app.models.user import User
@@ -29,17 +29,22 @@ router = APIRouter(prefix="/policy-rules", tags=["Policy Rules"])
 )
 async def create_policy_rule(
     rule_in: PolicyRuleCreate,
-    current_admin: Optional[User] = Depends(require_admin_user),
+    current_admin: User = Depends(require_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRuleRead:
-    """Registra una regla validando integridad de política, acción de herramienta y agente opcional."""
-    # 1. Validar que la política exista
+    """Registra una regla validando integridad de política, tenant, acción de herramienta y agente opcional."""
+    # 1. Validar que la política exista y pertenezca a la organización del admin
     policy = await policy_service.get_by_id(db=db, policy_id=rule_in.policy_id)
     if not policy:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Política con ID {rule_in.policy_id} no encontrada",
         )
+    ensure_same_tenant(
+        policy.organization_id,
+        current_admin,
+        "Acceso denegado: La política pertenece a otra organización",
+    )
 
     # 2. Validar que la acción de herramienta exista
     tool_action = await tool_action_service.get_by_id(db=db, action_id=rule_in.tool_action_id)
@@ -119,12 +124,13 @@ async def list_policy_rules(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> List[PolicyRuleRead]:
-    """Retorna las reglas según los filtros aplicados."""
+    """Retorna las reglas pertenecientes a la organización del usuario."""
     return await policy_rule_service.list_rules(
         db=db,
         policy_id=policy_id,
         skip=skip,
         limit=limit,
+        organization_id=current_user.organization_id,
     )
 
 
@@ -140,13 +146,19 @@ async def get_policy_rule(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> PolicyRuleRead:
-    """Retorna una regla por su UUID o 404 si no existe."""
+    """Retorna una regla por su UUID validando aislamiento multi-tenant."""
     rule = await policy_rule_service.get_by_id(db=db, rule_id=rule_id)
     if not rule:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Regla de política con ID {rule_id} no encontrada",
         )
+    if getattr(rule, "policy", None) is not None:
+        ensure_same_tenant(rule.policy.organization_id, current_user)
+    else:
+        parent_policy = await policy_service.get_by_id(db=db, policy_id=rule.policy_id)
+        if parent_policy is not None:
+            ensure_same_tenant(parent_policy.organization_id, current_user)
     return rule
 
 

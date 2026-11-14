@@ -268,11 +268,12 @@ async def test_executions_api_get_by_id_serializes_db_latency():
     app.dependency_overrides[get_db] = lambda: mock_db
 
     exec_id = uuid.uuid4()
+    org_id = uuid.uuid4()
     expected_latency = 98.76
 
     fake_exec = Execution(
         id=exec_id,
-        organization_id=uuid.uuid4(),
+        organization_id=org_id,
         agent_id=uuid.uuid4(),
         tool_id=uuid.uuid4(),
         tool_action_id=uuid.uuid4(),
@@ -291,7 +292,7 @@ async def test_executions_api_get_by_id_serializes_db_latency():
 
     user = User(
         id=uuid.uuid4(),
-        organization_id=uuid.uuid4(),
+        organization_id=org_id,
         email="auditor@test.com",
         role=UserRole.ADMIN,
     )

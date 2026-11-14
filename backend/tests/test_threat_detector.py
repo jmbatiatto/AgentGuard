@@ -92,19 +92,39 @@ def test_threat_detector_clean_parameters():
 @pytest.mark.asyncio
 async def test_api_get_attack_catalog():
     """Valida el endpoint GET /api/v1/gateway/attacks."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
-        resp = await client.get("/api/v1/gateway/attacks")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "vectors" in data
-        assert len(data["vectors"]) >= 4
-        codes = [v["owasp_code"] for v in data["vectors"]]
-        assert "ASI01" in codes
-        assert "ASI03" in codes
-        assert "ASI04" in codes
-        assert "ASI05" in codes
+    import uuid
+    from app.models.enums import UserRole
+    from app.models.user import User
+    from tests.conftest import make_admin_jwt
+
+    user = User(
+        id=uuid.uuid4(),
+        organization_id=uuid.uuid4(),
+        email="viewer@test.com",
+        role=UserRole.VIEWER,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = user
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=res_user)
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.get("/api/v1/gateway/attacks", headers=make_admin_jwt(user))
+            assert resp.status_code == 200
+            data = resp.json()
+            assert "vectors" in data
+            assert len(data["vectors"]) >= 4
+            codes = [v["owasp_code"] for v in data["vectors"]]
+            assert "ASI01" in codes
+            assert "ASI03" in codes
+            assert "ASI04" in codes
+            assert "ASI05" in codes
+    finally:
+        app.dependency_overrides.clear()
 
 
 from unittest.mock import AsyncMock, MagicMock

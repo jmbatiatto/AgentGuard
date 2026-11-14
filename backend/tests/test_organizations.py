@@ -146,19 +146,17 @@ async def test_api_create_organization_validation_error():
 
 @pytest.mark.asyncio
 async def test_api_list_organizations():
-    """Valida endpoint GET /api/v1/organizations con paginación."""
+    """Valida endpoint GET /api/v1/organizations con aislamiento multi-tenant."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     now = datetime.now(timezone.utc)
-    fake_list = [
-        Organization(id=uuid.uuid4(), name=f"Tenant {i}", created_at=now)
-        for i in range(2)
-    ]
+    fake_org = Organization(id=org_id, name="Tenant 0", created_at=now)
 
-    with patch.object(organization_service, "list_all", new_callable=AsyncMock) as mock_list:
-        mock_list.return_value = fake_list
+    with patch.object(organization_service, "get_by_id", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = fake_org
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -167,7 +165,7 @@ async def test_api_list_organizations():
             assert response.status_code == 200
             data = response.json()
             assert isinstance(data, list)
-            assert len(data) == 2
+            assert len(data) == 1
             assert data[0]["name"] == "Tenant 0"
 
     app.dependency_overrides.clear()
@@ -177,10 +175,10 @@ async def test_api_list_organizations():
 async def test_api_get_organization_found():
     """Valida endpoint GET /api/v1/organizations/{id} cuando existe."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    fake_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, fake_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    fake_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
     fake_org = Organization(id=fake_id, name="Acme Cloud", created_at=now)
 
@@ -203,13 +201,13 @@ async def test_api_get_organization_found():
 async def test_api_get_organization_not_found():
     """Valida endpoint GET /api/v1/organizations/{id} cuando NO existe (404)."""
     mock_db = AsyncMock()
-    headers = _setup_admin_auth(mock_db)
+    random_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, random_id)
     app.dependency_overrides[get_db] = lambda: mock_db
 
     with patch.object(organization_service, "get_by_id", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = None
 
-        random_id = uuid.uuid4()
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get(f"/api/v1/organizations/{random_id}", headers=headers)

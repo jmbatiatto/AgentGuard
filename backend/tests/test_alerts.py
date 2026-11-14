@@ -14,9 +14,9 @@ from app.models.user import User
 from tests.conftest import make_admin_jwt
 
 
-def _make_auth(org_id=None):
+def _make_auth(org_id=None, user_id=None):
     user = User(
-        id=uuid.uuid4(),
+        id=user_id or uuid.uuid4(),
         organization_id=org_id or uuid.uuid4(),
         email="admin@test.com",
         role=UserRole.ADMIN,
@@ -71,9 +71,10 @@ async def test_get_alert_by_id_found():
     """Valida la obtención de una alerta existente por su ID."""
     mock_db = AsyncMock()
     fake_id = uuid.uuid4()
+    org_id = uuid.uuid4()
     fake_alert = Alert(
         id=fake_id,
-        organization_id=uuid.uuid4(),
+        organization_id=org_id,
         title="Incidente detectado",
         severity=AlertSeverity.HIGH,
         status=AlertStatus.OPEN,
@@ -82,7 +83,7 @@ async def test_get_alert_by_id_found():
 
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = fake_alert
-    res_user, headers = _make_auth()
+    res_user, headers = _make_auth(org_id)
     mock_db.execute = AsyncMock(side_effect=[res_user, mock_result])
     app.dependency_overrides[get_db] = lambda: mock_db
 
@@ -123,9 +124,10 @@ async def test_update_alert_status():
     mock_db = AsyncMock()
     fake_id = uuid.uuid4()
     user_id = uuid.uuid4()
+    org_id = uuid.uuid4()
     fake_alert = Alert(
         id=fake_id,
-        organization_id=uuid.uuid4(),
+        organization_id=org_id,
         title="Incidente resuelto",
         severity=AlertSeverity.CRITICAL,
         status=AlertStatus.OPEN,
@@ -134,7 +136,7 @@ async def test_update_alert_status():
 
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = fake_alert
-    res_user, headers = _make_auth()
+    res_user, headers = _make_auth(org_id=org_id, user_id=user_id)
     mock_db.execute = AsyncMock(side_effect=[res_user, mock_result])
     mock_db.commit = AsyncMock()
     mock_db.refresh = AsyncMock()
