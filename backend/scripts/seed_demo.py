@@ -60,6 +60,8 @@ ORG_ACME_ID = uuid.UUID("11111111-1111-1111-1111-111111111111")
 USER_ADMIN_ID = uuid.UUID("22222222-2222-2222-2222-222222222201")
 USER_APPROVER_ID = uuid.UUID("22222222-2222-2222-2222-222222222202")
 USER_OPERATOR_ID = uuid.UUID("22222222-2222-2222-2222-222222222203")
+USER_AUDITOR_ID = uuid.UUID("22222222-2222-2222-2222-222222222204")
+USER_VIEWER_ID = uuid.UUID("22222222-2222-2222-2222-222222222205")
 
 AGENT_SALES_ID = uuid.UUID("33333333-3333-3333-3333-333333333301")
 AGENT_FINANCE_ID = uuid.UUID("33333333-3333-3333-3333-333333333302")
@@ -176,7 +178,23 @@ async def seed_data(reset: bool = False) -> None:
             role=UserRole.OPERATOR,
             created_at=now,
         )
-        session.add_all([user_admin, user_approver, user_operator])
+        user_auditor = User(
+            id=USER_AUDITOR_ID,
+            organization_id=ORG_ACME_ID,
+            email="auditor@acmecorp.com",
+            hashed_password=default_pwd_hash,
+            role=UserRole.AUDITOR,
+            created_at=now,
+        )
+        user_viewer = User(
+            id=USER_VIEWER_ID,
+            organization_id=ORG_ACME_ID,
+            email="viewer@acmecorp.com",
+            hashed_password=default_pwd_hash,
+            role=UserRole.VIEWER,
+            created_at=now,
+        )
+        session.add_all([user_admin, user_approver, user_operator, user_auditor, user_viewer])
 
         # 3. Agentes de IA
         agent_sales = Agent(
@@ -496,6 +514,9 @@ async def seed_data(reset: bool = False) -> None:
         logger.info(f"  Organización: Acme Corp ({ORG_ACME_ID})")
         logger.info(f"  Admin:        admin@acmecorp.com ({USER_ADMIN_ID})")
         logger.info(f"  Approver:     approver@acmecorp.com ({USER_APPROVER_ID})")
+        logger.info(f"  Operator:     operator@acmecorp.com ({USER_OPERATOR_ID})")
+        logger.info(f"  Auditor:      auditor@acmecorp.com ({USER_AUDITOR_ID})")
+        logger.info(f"  Viewer:       viewer@acmecorp.com ({USER_VIEWER_ID})")
         logger.info(f"  Agente Demo:  Agente de Ventas ({AGENT_SALES_ID})")
         logger.info("  Escenarios Disponibles:")
         logger.info("    - Escenario 1: create_quote < $10,000 -> ALLOW (200 OK)")

@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import get_password_hash
 from app.models.user import User
 from app.schemas.user import UserCreate
 
@@ -14,10 +15,11 @@ class UserService:
 
     @staticmethod
     async def create(db: AsyncSession, user_in: UserCreate) -> User:
-        """Crea un nuevo usuario en la base de datos."""
+        """Crea un nuevo usuario en la base de datos con su contraseña hasheada."""
         user = User(
             organization_id=user_in.organization_id,
             email=user_in.email,
+            hashed_password=get_password_hash(user_in.password),
             role=user_in.role,
         )
         db.add(user)

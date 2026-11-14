@@ -5,9 +5,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_roles
 from app.core.database import get_db
-from app.models.enums import ApprovalStatus
+from app.models.enums import ApprovalStatus, UserRole
 from app.models.user import User
 from app.schemas.approval import ApprovalDetailRead, ApprovalResolveRequest
 from app.services.pep_gateway_service import pep_gateway_service
@@ -94,14 +94,14 @@ async def get_approval(
 async def resolve_approval(
     approval_id: UUID,
     resolve_in: ApprovalResolveRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.APPROVER)),
     db: AsyncSession = Depends(get_db),
 ) -> ApprovalDetailRead:
-    """Resuelve un ticket de aprobación humana y actualiza el estado de la ejecución forense."""
+    """Resuelve un ticket de aprobación humana sellando la identidad real del JWT."""
     resolved = await pep_gateway_service.resolve_approval(
         db=db,
         approval_id=approval_id,
-        approver_user_id=resolve_in.approver_user_id,
+        approver_user_id=current_user.id,
         decision=resolve_in.decision,
         resolution_reason=resolve_in.resolution_reason,
     )

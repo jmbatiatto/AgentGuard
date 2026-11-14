@@ -124,22 +124,35 @@ async def test_approvals_get_by_id_not_found():
 
 @pytest.mark.asyncio
 async def test_approvals_resolve_success():
-    """Valida la resolución exitosa (APPROVED) de una solicitud pendiente."""
+    """Valida la resolución exitosa (APPROVED) sellando el user_id del JWT e ignorando spoofing del body."""
     appr_id = uuid.uuid4()
-    approver_id = uuid.uuid4()
+    jwt_approver_id = uuid.uuid4()
+    spoofed_body_user_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
 
     resolved_approval = Approval(
         id=appr_id,
         execution_id=uuid.uuid4(),
-        assigned_approver_id=approver_id,
+        assigned_approver_id=jwt_approver_id,
         status=ApprovalStatus.APPROVED,
         resolution_reason="Monto verificado con el cliente por teléfono.",
         resolved_at=now,
         created_at=now,
     )
 
-    headers = _setup_user_auth()
+    mock_db = AsyncMock()
+    jwt_user = User(
+        id=jwt_approver_id,
+        organization_id=uuid.uuid4(),
+        email="real.approver@test.com",
+        role=UserRole.APPROVER,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = jwt_user
+    mock_db.execute = AsyncMock(return_value=res_user)
+    app.dependency_overrides[get_db] = lambda: mock_db
+    headers = make_admin_jwt(jwt_user)
+
     try:
         with patch("app.api.approvals.pep_gateway_service.resolve_approval", new_callable=AsyncMock) as mock_res:
             mock_res.return_value = resolved_approval
@@ -149,17 +162,39 @@ async def test_approvals_resolve_success():
                 payload = {
                     "decision": "APPROVED",
                     "resolution_reason": "Monto verificado con el cliente por teléfono.",
-                    "approver_user_id": str(approver_id),
+                    "approver_user_id": str(spoofed_body_user_id),
                 }
                 res = await client.post(f"/api/v1/approvals/{appr_id}/resolve", headers=headers, json=payload)
                 assert res.status_code == 200
+                # Verificar que al servicio llegó el ID del JWT, nunca el spoofeado en JSON
+                assert mock_res.await_args.kwargs["approver_user_id"] == jwt_approver_id
                 data = res.json()
                 assert data["id"] == str(appr_id)
                 assert data["status"] == "APPROVED"
                 assert data["resolution_reason"] == "Monto verificado con el cliente por teléfono."
-                assert data["assigned_approver_id"] == str(approver_id)
+                assert data["assigned_approver_id"] == str(jwt_approver_id)
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_approvals_resolve_forbidden_for_non_approver_roles():
+    """Valida que roles OPERATOR, AUDITOR y VIEWER reciban 403 al intentar resolver HITL."""
+    appr_id = uuid.uuid4()
+    for denied_role in (UserRole.OPERATOR, UserRole.AUDITOR, UserRole.VIEWER):
+        headers = _setup_user_auth(role=denied_role)
+        try:
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                payload = {
+                    "decision": "APPROVED",
+                    "resolution_reason": "Intento sin privilegios de aprobación",
+                }
+                res = await client.post(f"/api/v1/approvals/{appr_id}/resolve", headers=headers, json=payload)
+                assert res.status_code == 403
+                assert "Acceso denegado" in res.json()["detail"]
+        finally:
+            app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio

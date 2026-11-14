@@ -53,14 +53,27 @@ def test_organization_schemas():
 
 
 def test_user_schemas():
-    """Valida creación de usuario con defaults y serialización."""
+    """Valida creación de usuario con defaults, contraseña obligatoria y serialización."""
     org_id = uuid.uuid4()
-    user_in = UserCreate(organization_id=org_id, email="admin@acme.com")
+    user_in = UserCreate(
+        organization_id=org_id,
+        email="admin@acme.com",
+        password="StrongPassword123!",
+    )
     assert user_in.role == UserRole.OPERATOR  # Default
     assert user_in.email == "admin@acme.com"
 
+    # Contraseña demasiado corta (< 8) debe fallar
+    with pytest.raises(ValidationError):
+        UserCreate(organization_id=org_id, email="short@acme.com", password="123")
+
     # Asignación explícita de rol
-    user_admin = UserCreate(organization_id=org_id, email="sec@acme.com", role=UserRole.ADMIN)
+    user_admin = UserCreate(
+        organization_id=org_id,
+        email="sec@acme.com",
+        role=UserRole.ADMIN,
+        password="StrongPassword123!",
+    )
     assert user_admin.role == UserRole.ADMIN
 
     # Read
@@ -235,7 +248,7 @@ def test_gateway_schemas():
 
 
 def test_approval_resolve_schema():
-    """Valida que ApprovalResolveRequest solo admita APPROVED o REJECTED y valide motivo."""
+    """Valida que ApprovalResolveRequest solo admita APPROVED o REJECTED y no exija approver_user_id."""
     user_id = uuid.uuid4()
     req_ok = ApprovalResolveRequest(
         decision=ApprovalStatus.APPROVED,
@@ -244,6 +257,12 @@ def test_approval_resolve_schema():
     )
     assert req_ok.decision == ApprovalStatus.APPROVED
     assert req_ok.resolution_reason == "Cliente VIP verificado manualmente"
+
+    req_jwt_only = ApprovalResolveRequest(
+        decision=ApprovalStatus.REJECTED,
+        resolution_reason="Denegado desde JWT sin campo legado",
+    )
+    assert req_jwt_only.approver_user_id is None
 
     # PENDING no es una resolución permitida
     with pytest.raises(ValidationError):

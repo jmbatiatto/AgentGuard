@@ -27,7 +27,12 @@ async def test_user_service_create():
     mock_db = AsyncMock()
     mock_db.add = MagicMock()
     org_id = uuid.uuid4()
-    user_in = UserCreate(organization_id=org_id, email="alice@corp.com", role=UserRole.ADMIN)
+    user_in = UserCreate(
+        organization_id=org_id,
+        email="alice@corp.com",
+        role=UserRole.ADMIN,
+        password="StrongPassword123!",
+    )
 
     async def mock_refresh(instance):
         instance.id = uuid.uuid4()
@@ -43,6 +48,8 @@ async def test_user_service_create():
     assert result.email == "alice@corp.com"
     assert result.role == UserRole.ADMIN
     assert result.organization_id == org_id
+    assert result.hashed_password is not None
+    assert result.hashed_password != "StrongPassword123!"
 
 
 @pytest.mark.asyncio
@@ -169,6 +176,7 @@ async def test_api_create_user_success():
                     "organization_id": str(org_id),
                     "email": "operator@fintech.com",
                     "role": "OPERATOR",
+                    "password": "StrongPassword123!",
                 },
             )
 
@@ -202,6 +210,7 @@ async def test_api_create_user_organization_not_found():
                 json={
                     "organization_id": str(missing_org_id),
                     "email": "user@nonexistent.com",
+                    "password": "StrongPassword123!",
                 },
             )
 
@@ -242,6 +251,7 @@ async def test_api_create_user_email_conflict():
                 json={
                     "organization_id": str(org_id),
                     "email": "duplicate@health.com",
+                    "password": "StrongPassword123!",
                 },
             )
 

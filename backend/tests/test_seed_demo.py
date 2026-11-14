@@ -32,6 +32,8 @@ from scripts.seed_demo import (
     USER_ADMIN_ID,
     USER_APPROVER_ID,
     USER_OPERATOR_ID,
+    USER_AUDITOR_ID,
+    USER_VIEWER_ID,
     AGENT_SALES_ID,
     TOOL_CRM_ID,
     TOOL_STRIPE_ID,
@@ -79,11 +81,18 @@ async def test_seed_data_fresh_creation():
     assert orgs[0].id == ORG_ACME_ID
     assert orgs[0].name == "Acme Corp"
 
-    # Validar Users
+    # Validar Users (los 5 roles RBAC con contraseña hasheada)
     users = [e for e in added_entities if isinstance(e, User)]
-    assert len(users) == 3
+    assert len(users) == 5
     user_roles = {u.role for u in users}
-    assert user_roles == {UserRole.ADMIN, UserRole.APPROVER, UserRole.OPERATOR}
+    assert user_roles == {
+        UserRole.ADMIN,
+        UserRole.APPROVER,
+        UserRole.OPERATOR,
+        UserRole.AUDITOR,
+        UserRole.VIEWER,
+    }
+    assert all(u.hashed_password for u in users)
 
     # Validar Agents
     agents = [e for e in added_entities if isinstance(e, Agent)]

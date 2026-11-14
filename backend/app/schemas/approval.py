@@ -23,9 +23,9 @@ class ApprovalResolveRequest(BaseSchema):
         max_length=1000,
         description="Motivo documentado y justificado de la decisión del humano",
     )
-    approver_user_id: UUID = Field(
-        ...,
-        description="ID del usuario con rol APPROVER que resuelve la solicitud",
+    approver_user_id: Optional[UUID] = Field(
+        default=None,
+        description="Campo legado opcional; el servidor ignora este valor y sella la identidad desde el JWT verificado",
     )
 
     @field_validator("decision")

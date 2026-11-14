@@ -104,3 +104,31 @@ async def require_admin_user(
         )
 
     return current_user
+
+
+def require_roles(*allowed_roles: UserRole):
+    """Genera una dependencia FastAPI fail-closed que exige JWT humano y uno de los roles permitidos."""
+
+    async def _role_guard(
+        x_agent_id: Optional[UUID] = Header(default=None, alias="X-Agent-Id"),
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        if x_agent_id is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="AI Agents are not permitted to manage governance policies or rules",
+            )
+
+        if current_user.role not in allowed_roles:
+            allowed_names = ", ".join(r.value for r in allowed_roles)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"Acceso denegado: El rol '{current_user.role.value}' no está autorizado "
+                    f"para esta operación (requiere: {allowed_names})"
+                ),
+            )
+
+        return current_user
+
+    return _role_guard

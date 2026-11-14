@@ -24,6 +24,12 @@ class UserCreate(BaseSchema):
         default=UserRole.OPERATOR,
         description="Rol de autorización dentro de la plataforma",
     )
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+        description="Contraseña inicial obligatoria del usuario (mínimo 8 caracteres)",
+    )
 
 
 class UserUpdate(BaseSchema):
