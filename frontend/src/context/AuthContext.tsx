@@ -107,6 +107,7 @@ export interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   registerOrg: (data: RegisterOrgData) => Promise<RegisterOrgResponse>;
   logout: () => void;
+  refreshOrganization: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -166,12 +167,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? prev
           : {
               id: orgId,
-              name: orgId === DEMO_IDS.ORG_ACME_ID ? 'Acme Corp' : 'Organización Activa',
+              name: 'Organización Activa',
               created_at: new Date().toISOString(),
             }
       );
     }
   }, []);
+
+  const refreshOrganization = useCallback(async () => {
+    if (currentOrganizationId) {
+      await syncOrganization(currentOrganizationId);
+    }
+  }, [currentOrganizationId, syncOrganization]);
 
   // Hidratación y validación de sesión JWT al inicializar
   useEffect(() => {
@@ -306,10 +313,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     (currentOrganizationId
       ? {
           id: currentOrganizationId,
-          name:
-            currentOrganizationId === DEMO_IDS.ORG_ACME_ID
-              ? 'Acme Corp (Principal)'
-              : 'Organización Activa',
+          name: 'Organización Activa',
           created_at: new Date().toISOString(),
         }
       : null);
@@ -326,6 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         registerOrg,
         logout,
+        refreshOrganization,
       }}
     >
       {children}

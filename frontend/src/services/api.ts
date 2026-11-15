@@ -28,6 +28,7 @@ import type {
   OrganizationSettings,
   Organization,
   SiemWebhookTestResult,
+  SystemHealth,
   User,
   AuthCredentials,
   RegisterData,
@@ -212,14 +213,22 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Healthcheck básico del backend FastAPI
+   * Healthcheck del backend FastAPI y telemetría de servicios (DB, Redis)
    */
-  async checkHealth(): Promise<{ status: string; isOnline: boolean }> {
+  async checkHealth(): Promise<SystemHealth> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/health`, { method: 'GET', signal: AbortSignal.timeout(2000) });
       if (res.ok) {
         const data = await res.json();
-        return { status: data.status || 'healthy', isOnline: true };
+        return {
+          status: data.status || 'healthy',
+          isOnline: true,
+          app: data.app,
+          version: data.version,
+          environment: data.environment,
+          timestamp: data.timestamp,
+          services: data.services,
+        };
       }
       return { status: 'offline', isOnline: false };
     } catch {
@@ -1447,6 +1456,7 @@ class AgentGuardApiClient {
         siem_webhook_enabled: typeof data.siem_webhook_enabled === 'boolean' ? data.siem_webhook_enabled : false,
         siem_webhook_secret: data.siem_webhook_secret || null,
         siem_webhook_events: Array.isArray(data.siem_webhook_events) ? data.siem_webhook_events : ['ALERT_CRITICAL', 'POLICY_VIOLATION'],
+        siem_format: data.siem_format || 'splunk',
       };
     } catch (err) {
       throw handleNetworkError(err);
@@ -1482,7 +1492,33 @@ class AgentGuardApiClient {
         siem_webhook_enabled: typeof data.siem_webhook_enabled === 'boolean' ? data.siem_webhook_enabled : false,
         siem_webhook_secret: data.siem_webhook_secret || null,
         siem_webhook_events: Array.isArray(data.siem_webhook_events) ? data.siem_webhook_events : ['ALERT_CRITICAL', 'POLICY_VIOLATION'],
+        siem_format: data.siem_format || 'splunk',
       };
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
+
+  /**
+   * Actualiza los datos de la organización (ej. nombre de workspace)
+   */
+  async updateOrganization(
+    orgId: string = this.getActiveOrganizationId(),
+    data: { name: string }
+  ): Promise<Organization> {
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/organizations/${orgId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+      return await res.json();
     } catch (err) {
       throw handleNetworkError(err);
     }
@@ -1510,7 +1546,7 @@ class AgentGuardApiClient {
    */
   async testSiemWebhook(
     orgId: string = this.getActiveOrganizationId(),
-    payload?: { webhook_url?: string; secret?: string }
+    payload?: { webhook_url?: string; secret?: string; siem_format?: 'splunk' | 'datadog' | 'elastic' | 'slack' }
   ): Promise<SiemWebhookTestResult> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/organizations/${orgId}/settings/webhooks/test`, {

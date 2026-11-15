@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import type { UserMember, UserRole, GatewayApiKey, OrganizationSettings } from '../types/domain';
+import type { UserMember, UserRole, GatewayApiKey, OrganizationSettings, SystemHealth } from '../types/domain';
 import { ROLE_LABELS, ROLE_DESCRIPTIONS } from '../constants/labels';
 import {
   Shield,
@@ -31,9 +31,10 @@ import { useAuth } from '../context/AuthContext';
 
 export const SettingsView: React.FC = () => {
   const { toast } = useToast();
-  const { currentOrganizationId, currentOrganization, currentUser } = useAuth();
+  const { currentOrganizationId, currentOrganization, currentUser, refreshOrganization } = useAuth();
   const activeOrgId = currentOrganizationId || '';
   const [activeTab, setActiveTab] = useState<'general' | 'apikeys' | 'team' | 'security' | 'siem'>('general');
+  const [healthStatus, setHealthStatus] = useState<SystemHealth | null>(null);
 
   // Feedback Toast delegado al ToastContext global
   const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
@@ -72,7 +73,6 @@ export const SettingsView: React.FC = () => {
 
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
-  const [newKeyRole, setNewKeyRole] = useState('gateway_client');
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [codeSnippetLang, setCodeSnippetLang] = useState<'python' | 'langchain' | 'curl'>('python');
@@ -163,6 +163,21 @@ export const SettingsView: React.FC = () => {
       setIsLoadingUsers(false);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .checkHealth()
+      .then(h => {
+        if (isMounted) setHealthStatus(h);
+      })
+      .catch(() => {
+        if (isMounted) setHealthStatus({ status: 'offline', isOnline: false });
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (currentOrganization?.name) {
@@ -283,17 +298,50 @@ export const SettingsView: React.FC = () => {
     setIsLoadingSettings(true);
     try {
       const data = await api.getOrganizationSettings(activeOrgId);
-      setFailClosed(data.fail_closed);
-      setMaskSensitive(data.mask_sensitive);
-      setMaxAutonomousAmount(data.max_autonomous_amount);
-      setRetentionDays(data.retention_days);
-      if (data.siem_webhook_url) setWebhookUrl(data.siem_webhook_url);
-      if (data.siem_webhook_secret) setWebhookSecret(data.siem_webhook_secret);
+      setFailClosed(data.fail_closed ?? true);
+      setMaskSensitive(data.mask_sensitive ?? true);
+      setMaxAutonomousAmount(data.max_autonomous_amount ?? 5000);
+      setRetentionDays(data.retention_days ?? 90);
+      if (data.siem_webhook_url !== undefined) setWebhookUrl(data.siem_webhook_url || '');
+      if (data.siem_webhook_secret !== undefined) setWebhookSecret(data.siem_webhook_secret || '');
       if (typeof data.siem_webhook_enabled === 'boolean') setSiemEnabled(data.siem_webhook_enabled);
+      if (Array.isArray(data.siem_webhook_events)) {
+        setSiemEvents(data.siem_webhook_events);
+      }
+      if (data.siem_format) {
+        setSiemFormat(data.siem_format as any);
+      }
     } catch {
       showToast('Error al sincronizar configuración de gobernanza', 'error');
     } finally {
       setIsLoadingSettings(false);
+    }
+  };
+
+  const handleSaveGeneral = async () => {
+    if (!currentUser.canManageTeam || !activeOrgId) {
+      showToast('Solo usuarios con rol ADMIN pueden modificar la configuración general.', 'error');
+      return;
+    }
+    const trimmedName = orgName.trim();
+    if (!trimmedName) {
+      showToast('El nombre de la organización no puede estar vacío.', 'error');
+      return;
+    }
+
+    setIsUpdatingSettings(true);
+    try {
+      if (currentOrganization?.name !== trimmedName) {
+        await api.updateOrganization(activeOrgId, { name: trimmedName });
+      }
+      await api.updateOrganizationSettings(activeOrgId, { retention_days: retentionDays });
+      await refreshOrganization();
+      showToast('Configuración del workspace y organización guardada con éxito', 'success');
+    } catch (err: any) {
+      const msg = err?.message || 'Error al guardar la configuración del workspace';
+      showToast(msg, 'error');
+    } finally {
+      setIsUpdatingSettings(false);
     }
   };
 
@@ -305,18 +353,27 @@ export const SettingsView: React.FC = () => {
       showToast('Solo usuarios con rol ADMIN pueden modificar la postura de gobernanza.', 'error');
       return;
     }
+    if (
+      update.max_autonomous_amount !== undefined &&
+      (!Number.isFinite(update.max_autonomous_amount) || update.max_autonomous_amount < 0)
+    ) {
+      showToast('El umbral autónomo debe ser un monto válido mayor o igual a 0.', 'error');
+      return;
+    }
     setIsUpdatingSettings(true);
     try {
-      const res = await api.updateOrganizationSettings(activeOrgId, update);
+      const payload: Partial<OrganizationSettings> = { ...update, fail_closed: true };
+      const res = await api.updateOrganizationSettings(activeOrgId, payload);
       if (res) {
-        if (update.fail_closed !== undefined) setFailClosed(res.fail_closed);
+        setFailClosed(true);
         if (update.mask_sensitive !== undefined) setMaskSensitive(res.mask_sensitive);
         if (update.max_autonomous_amount !== undefined) setMaxAutonomousAmount(res.max_autonomous_amount);
         if (update.retention_days !== undefined) setRetentionDays(res.retention_days);
         showToast(successMessage, 'success');
       }
-    } catch {
-      showToast('Error al actualizar la configuración de gobernanza en el servidor', 'error');
+    } catch (err: any) {
+      showToast(err?.message || 'Error al actualizar la configuración de gobernanza en el servidor', 'error');
+      await fetchSettings();
     } finally {
       setIsUpdatingSettings(false);
     }
@@ -325,10 +382,11 @@ export const SettingsView: React.FC = () => {
   // -------------------------------------------------------------
   // TAB 5: SIEM & Webhooks Egress
   // -------------------------------------------------------------
-  const [webhookUrl, setWebhookUrl] = useState('https://siem-collector.acmecorp.internal/v1/security-events');
+  const [webhookUrl, setWebhookUrl] = useState('');
   const [webhookSecret, setWebhookSecret] = useState('');
-  const [siemEnabled, setSiemEnabled] = useState(true);
+  const [siemEnabled, setSiemEnabled] = useState(false);
   const [siemFormat, setSiemFormat] = useState<'splunk' | 'datadog' | 'elastic' | 'slack'>('splunk');
+  const [siemEvents, setSiemEvents] = useState<string[]>(['ALERT_CRITICAL', 'POLICY_VIOLATION']);
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [webhookTestStatus, setWebhookTestStatus] = useState<string | null>(null);
 
@@ -337,12 +395,18 @@ export const SettingsView: React.FC = () => {
       showToast('Solo usuarios con rol ADMIN pueden probar conectores SIEM.', 'error');
       return;
     }
+    const trimmedUrl = webhookUrl.trim();
+    if (!trimmedUrl) {
+      showToast('Ingresa la URL del endpoint Webhook antes de realizar la prueba', 'error');
+      return;
+    }
     setIsTestingWebhook(true);
     setWebhookTestStatus(null);
     try {
       const res = await api.testSiemWebhook(activeOrgId, {
-        webhook_url: webhookUrl,
-        secret: webhookSecret || undefined,
+        webhook_url: trimmedUrl,
+        secret: webhookSecret.trim() || undefined,
+        siem_format: siemFormat,
       });
       if (res.status === 'success') {
         setWebhookTestStatus(`${res.status_code || 200} OK — ${res.message}`);
@@ -368,14 +432,15 @@ export const SettingsView: React.FC = () => {
     setIsUpdatingSettings(true);
     try {
       await api.updateOrganizationSettings(activeOrgId, {
-        siem_webhook_url: webhookUrl,
+        siem_webhook_url: webhookUrl.trim() || null,
+        siem_webhook_secret: webhookSecret.trim() || null,
         siem_webhook_enabled: siemEnabled,
-        siem_webhook_secret: webhookSecret,
-        siem_webhook_events: ['ALERT_CRITICAL', 'POLICY_VIOLATION'],
+        siem_webhook_events: siemEvents,
+        siem_format: siemFormat,
       });
       showToast('Configuración del SIEM guardada con éxito', 'success');
     } catch (err: any) {
-      showToast(err.detail || 'Error al guardar la integración SIEM', 'error');
+      showToast(err.detail || err.message || 'Error al guardar la integración SIEM', 'error');
     } finally {
       setIsUpdatingSettings(false);
     }
@@ -443,13 +508,15 @@ export const SettingsView: React.FC = () => {
                 <span style={{
                   fontSize: '11px',
                   padding: '2px 8px',
-                  backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
-                  color: '#818CF8',
+                  backgroundColor: healthStatus?.isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  border: `1px solid ${healthStatus?.isOnline ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                  color: healthStatus?.isOnline ? 'var(--success-text)' : 'var(--danger-text)',
                   borderRadius: '12px',
                   fontWeight: 600,
                 }}>
-                  Enterprise Tier
+                  {healthStatus?.isOnline
+                    ? `Entorno: ${healthStatus.environment || 'local'} (${healthStatus.status === 'healthy' ? 'Operativo' : 'Degradado'})`
+                    : 'API Desconectada'}
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
@@ -492,10 +559,20 @@ export const SettingsView: React.FC = () => {
             </div>
             <div style={{ height: '32px', width: '1px', backgroundColor: 'var(--border-subtle)' }} />
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Motor PDP</span>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--brand-primary)' }}>
-                PostgreSQL 16 + Redis 7
-              </span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Motor PDP / Bus RT</span>
+              {(() => {
+                const dbOk = healthStatus?.services?.database === 'connected';
+                const redisOk = healthStatus?.services?.redis === 'connected';
+                return (
+                  <span style={{
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: (dbOk && redisOk) ? 'var(--brand-primary)' : 'var(--warning-text)',
+                  }}>
+                    PostgreSQL {dbOk ? 'Conectado' : (healthStatus?.services?.database || 'Sin conexión')} • Redis {redisOk ? 'Conectado' : (healthStatus?.services?.redis || 'Sin conexión')}
+                  </span>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -639,23 +716,20 @@ export const SettingsView: React.FC = () => {
                   backgroundColor: 'var(--bg-app)',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: '8px',
-                  color: 'var(--text-muted)',
+                  color: 'var(--text-secondary)',
                   fontSize: '13px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
                 }}>
                   <Database size={15} color="var(--brand-primary)" />
-                  US-East (Virginia) • PostgreSQL 16 Multi-Tenant
+                  Persistencia PostgreSQL 16 (Org ID) • Entorno: {healthStatus?.environment || 'local'}
                 </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
                 <button
-                  onClick={() => handleUpdateGovernance(
-                    { retention_days: retentionDays },
-                    'Configuración del workspace y retención guardados correctamente'
-                  )}
+                  onClick={handleSaveGeneral}
                   disabled={isLoadingSettings || isUpdatingSettings}
                   style={{
                     padding: '9px 18px',
@@ -1317,7 +1391,9 @@ def execute_guarded_tool(action_name: str, **kwargs):
                     Denegación por Defecto (Fail-Closed)
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    {failClosed ? 'Bloqueo garantizado de accesos no especificados (Postura Activa)' : 'Modo permisivo experimental (No recomendado)'}
+                    {failClosed
+                      ? 'Bloqueo garantizado de accesos no especificados (Postura Inmutable Activa)'
+                      : 'Postura inmutable activa: toda acción no autorizada explícitamente se deniega'}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1325,26 +1401,20 @@ def execute_guarded_tool(action_name: str, **kwargs):
                     fontSize: '11px',
                     fontWeight: 700,
                     padding: '4px 10px',
-                    backgroundColor: failClosed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                    border: `1px solid ${failClosed ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
-                    color: failClosed ? 'var(--danger-text)' : '#F59E0B',
+                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: 'var(--danger-text)',
                     borderRadius: '12px',
                   }}>
-                    {failClosed ? 'BLOQUEADO POR REGLA' : 'MODO PERMISIVO'}
+                    ACTIVO (Inmutable)
                   </span>
                   <input
                     type="checkbox"
-                    checked={failClosed}
-                    disabled={isLoadingSettings || isUpdatingSettings}
-                    onChange={e => {
-                      const val = e.target.checked;
-                      setFailClosed(val);
-                      handleUpdateGovernance(
-                        { fail_closed: val },
-                        `Postura Fail-Closed ${val ? 'activada' : 'desactivada'}`
-                      );
-                    }}
-                    style={{ width: '18px', height: '18px', cursor: (isLoadingSettings || isUpdatingSettings) ? 'not-allowed' : 'pointer' }}
+                    checked={true}
+                    disabled={true}
+                    readOnly
+                    title="La postura Fail-Closed es obligatoria e inmutable en AgentGuard"
+                    style={{ width: '18px', height: '18px', cursor: 'not-allowed' }}
                   />
                 </div>
               </div>
@@ -1476,6 +1546,33 @@ def execute_guarded_tool(action_name: str, **kwargs):
                 Exporta instantáneamente alertas críticas (Prompt Injection, Intentos de Exfiltración y Abuso de Privilegios) hacia tu centro de operaciones de seguridad.
               </p>
 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px',
+                backgroundColor: 'var(--bg-app)',
+                borderRadius: '8px',
+                border: '1px solid var(--border-subtle)',
+                marginBottom: '20px',
+              }}>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Habilitar Despacho Automático al SIEM
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    {siemEnabled ? 'Egress activo: los incidentes seleccionados se enviarán en tiempo real' : 'Egress deshabilitado'}
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={siemEnabled}
+                  disabled={isLoadingSettings || isUpdatingSettings}
+                  onChange={e => setSiemEnabled(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: (isLoadingSettings || isUpdatingSettings) ? 'not-allowed' : 'pointer' }}
+                />
+              </div>
+
               <div style={{ marginBottom: '18px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                   Plataforma SIEM Destino
@@ -1489,6 +1586,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
                   ].map(p => (
                     <button
                       key={p.id}
+                      type="button"
                       onClick={() => setSiemFormat(p.id as any)}
                       style={{
                         padding: '10px',
@@ -1509,10 +1607,11 @@ def execute_guarded_tool(action_name: str, **kwargs):
 
               <div style={{ marginBottom: '18px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                  Webhook Endpoint URL
+                  URL del Endpoint Webhook
                 </label>
                 <input
-                  type="text"
+                  type="url"
+                  placeholder="https://siem.tu-empresa.com/v1/security-events"
                   value={webhookUrl}
                   onChange={e => setWebhookUrl(e.target.value)}
                   style={{
@@ -1525,6 +1624,77 @@ def execute_guarded_tool(action_name: str, **kwargs):
                     fontSize: '13px',
                   }}
                 />
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Secreto HMAC-SHA256 (Opcional)
+                </label>
+                <input
+                  type="password"
+                  placeholder="whsec_••••••••••••••••••••••••"
+                  value={webhookSecret}
+                  onChange={e => setWebhookSecret(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                    fontSize: '13px',
+                  }}
+                />
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                  Se utiliza para firmar el encabezado <code>X-AgentGuard-Signature</code> y verificar autenticidad en destino.
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '22px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  Eventos e Incidentes Suscritos
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                  {[
+                    { id: 'ALERT_CRITICAL', label: 'Alertas Críticas (OWASP LLM)' },
+                    { id: 'POLICY_VIOLATION', label: 'Violaciones de Política (DENY)' },
+                    { id: 'HIGH', label: 'Riesgo Alto (Escalado HITL)' },
+                    { id: 'CRITICAL', label: 'Riesgo Crítico (Bloqueos PDP)' },
+                  ].map(evt => {
+                    const isChecked = siemEvents.includes(evt.id);
+                    return (
+                      <label
+                        key={evt.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '10px 12px',
+                          backgroundColor: 'var(--bg-app)',
+                          border: `1px solid ${isChecked ? 'var(--brand-primary)' : 'var(--border-subtle)'}`,
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          color: 'var(--text-primary)',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setSiemEvents(prev => [...prev, evt.id]);
+                            } else {
+                              setSiemEvents(prev => prev.filter(item => item !== evt.id));
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px' }}
+                        />
+                        {evt.label}
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '24px' }}>
@@ -1729,26 +1899,20 @@ def execute_guarded_tool(action_name: str, **kwargs):
                   />
                 </div>
 
-                <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                    Rol Asignado
-                  </label>
-                  <select
-                    value={newKeyRole}
-                    onChange={e => setNewKeyRole(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      backgroundColor: 'var(--bg-app)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: '8px',
-                      color: 'var(--text-primary)',
-                      fontSize: '13px',
-                    }}
-                  >
-                    <option value="gateway_client">Cliente Gateway (Ejecución de Acciones)</option>
-                    <option value="auditor_reader">Lector de Auditoría (Solo Trazas)</option>
-                  </select>
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '12px 14px',
+                  backgroundColor: 'var(--bg-app)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.5,
+                }}>
+                  <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
+                    Autenticación Exclusiva del Data Plane:
+                  </strong>
+                  Esta API Key autentica agentes y frameworks en el Data Plane (<code>POST /api/v1/gateway/execute</code>). No concede acceso a endpoints administrativos del Control Plane.
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -1821,7 +1985,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
               Invitar Miembro a la Organización
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Crea un nuevo usuario en PostgreSQL bajo el tenant <code>Acme Corp</code>.
+              Crea un nuevo usuario en PostgreSQL bajo el tenant <code>{orgName || 'la organización actual'}</code>.
             </p>
 
             <form onSubmit={handleCreateUser}>
@@ -1832,7 +1996,7 @@ def execute_guarded_tool(action_name: str, **kwargs):
                 <input
                   type="email"
                   required
-                  placeholder="ejemplo@acmecorp.com"
+                  placeholder="usuario@empresa.com"
                   value={newUserEmail}
                   onChange={e => setNewUserEmail(e.target.value)}
                   style={{

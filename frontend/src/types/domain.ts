@@ -194,6 +194,20 @@ export interface OrganizationSettings {
   siem_webhook_enabled?: boolean;
   siem_webhook_secret?: string | null;
   siem_webhook_events?: string[];
+  siem_format?: 'splunk' | 'datadog' | 'elastic' | 'slack';
+}
+
+export interface SystemHealth {
+  status: string;
+  isOnline: boolean;
+  app?: string;
+  version?: string;
+  environment?: string;
+  timestamp?: string;
+  services?: {
+    database: string;
+    redis: string;
+  };
 }
 
 export interface Organization {
