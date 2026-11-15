@@ -10,6 +10,7 @@ from app.schemas.organization import (
     OrganizationCreate,
     OrganizationSettings,
     OrganizationSettingsUpdate,
+    OrganizationUpdate,
 )
 from app.services.audit_service import audit_service
 
@@ -18,6 +19,7 @@ DEFAULT_ORGANIZATION_SETTINGS: Dict[str, Any] = {
     "mask_sensitive": True,
     "max_autonomous_amount": 5000.0,
     "retention_days": 90,
+    "siem_format": "splunk",
     "siem_webhook_url": None,
     "siem_webhook_enabled": False,
     "siem_webhook_secret": None,
@@ -35,6 +37,45 @@ class OrganizationService:
         db.add(org)
         await db.commit()
         await db.refresh(org)
+        return org
+
+    @staticmethod
+    async def update(
+        db: AsyncSession,
+        org_id: UUID,
+        update_data: OrganizationUpdate,
+        actor_id: Optional[UUID] = None,
+        actor_type: ActorType = ActorType.USER,
+    ) -> Optional[Organization]:
+        """Actualiza el nombre de la organización y emite auditoría forense inmutable."""
+        org = await OrganizationService.get_by_id(db=db, org_id=org_id)
+        if not org:
+            return None
+
+        previous_name = org.name
+        org.name = update_data.name.strip()
+
+        await db.commit()
+        await db.refresh(org)
+
+        audit_actor_id = actor_id or org.id
+        audit_actor_type = actor_type or (ActorType.USER if actor_id else ActorType.SYSTEM)
+
+        await audit_service.log_audit_event(
+            db=db,
+            organization_id=org.id,
+            actor_type=audit_actor_type,
+            actor_id=audit_actor_id,
+            event_type="ORGANIZATION_UPDATED",
+            entity_type="organization",
+            entity_id=org.id,
+            metadata={
+                "previous_name": previous_name,
+                "name": org.name,
+            },
+            description=f"Nombre de la organización actualizado de '{previous_name}' a '{org.name}'",
+        )
+
         return org
 
     @staticmethod

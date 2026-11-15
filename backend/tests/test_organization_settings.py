@@ -57,6 +57,7 @@ async def test_service_get_settings_defaults():
     assert settings.mask_sensitive is True
     assert settings.max_autonomous_amount == 5000.0
     assert settings.retention_days == 90
+    assert settings.siem_format == "splunk"
 
 
 @pytest.mark.asyncio
@@ -465,5 +466,185 @@ async def test_api_admin_user_same_tenant_allowed():
             data = res.json()
             assert data["retention_days"] == 60
             assert data["fail_closed"] is True
+    finally:
+        app.dependency_overrides.clear()
+
+
+# ==============================================================================
+# 4. Pruebas de Persistencia y Validación de siem_format y Webhooks SIEM
+# ==============================================================================
+
+@pytest.mark.asyncio
+async def test_service_update_settings_siem_format():
+    """Valida la persistencia de siem_format y la auditoría forense."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    org = Organization(id=org_id, name="Acme Corp SIEM", settings={})
+
+    res_mock = MagicMock()
+    res_mock.scalar_one_or_none.return_value = org
+    mock_db.execute.return_value = res_mock
+
+    with patch("app.services.organization_service.audit_service.log_audit_event", new_callable=AsyncMock) as mock_audit:
+        update_data = OrganizationSettingsUpdate(siem_format="datadog")
+        updated = await organization_service.update_settings(
+            db=mock_db,
+            org_id=org_id,
+            update_data=update_data,
+        )
+
+        assert updated is not None
+        assert updated.siem_format == "datadog"
+        assert org.settings["siem_format"] == "datadog"
+        assert mock_db.commit.called
+        assert mock_audit.called
+        assert mock_audit.call_args.kwargs["metadata"]["updated_fields"] == {"siem_format": "datadog"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("fmt", ["splunk", "datadog", "elastic", "slack"])
+async def test_api_patch_settings_siem_formats_all_valid(fmt: str):
+    """Valida que todos los formatos soportados de SIEM sean aceptados con 200 OK."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    org = Organization(id=org_id, name="Acme Corp", settings={})
+
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    res_mock = MagicMock()
+    res_mock.scalar_one_or_none.return_value = org
+    mock_db.execute.side_effect = [res_user, res_mock]
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            with patch("app.services.organization_service.audit_service.log_audit_event", new_callable=AsyncMock):
+                res = await client.patch(
+                    f"/api/v1/organizations/{org_id}/settings",
+                    json={"siem_format": fmt},
+                    headers=make_admin_jwt(admin_user),
+                )
+                assert res.status_code == 200
+                data = res.json()
+                assert data["siem_format"] == fmt
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_patch_settings_siem_format_invalid_rejected():
+    """Valida que un siem_format desconocido sea rechazado con 422 Unprocessable Entity."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    mock_db.execute.return_value = res_user
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            res = await client.patch(
+                f"/api/v1/organizations/{org_id}/settings",
+                json={"siem_format": "unsupported_system"},
+                headers=make_admin_jwt(admin_user),
+            )
+            assert res.status_code == 422
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_webhook_service_send_event_includes_siem_format_and_header():
+    """Valida inclusión de siem_format en payload y cabecera X-AgentGuard-SIEM-Format."""
+    from app.services.webhook_service import webhook_service
+    import json
+
+    captured_requests = []
+
+    class MockAsyncClient:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+        async def post(self, url, content=None, headers=None):
+            captured_requests.append({"url": url, "content": content, "headers": headers})
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            return mock_resp
+
+    with patch("app.services.webhook_service.httpx.AsyncClient", return_value=MockAsyncClient()):
+        success, code, msg = await webhook_service.send_event(
+            url="https://siem-collector.external.io/events",
+            event_type="test.event",
+            organization_id=uuid.uuid4(),
+            details={"key": "val"},
+            siem_format="elastic",
+        )
+
+    assert success is True
+    assert code == 200
+    assert len(captured_requests) == 1
+    sent_headers = captured_requests[0]["headers"]
+    sent_payload = json.loads(captured_requests[0]["content"].decode("utf-8"))
+
+    assert sent_headers["X-AgentGuard-SIEM-Format"] == "elastic"
+    assert sent_payload["siem_format"] == "elastic"
+
+
+@pytest.mark.asyncio
+async def test_api_test_webhook_endpoint_forwards_siem_format():
+    """Valida que POST /settings/webhooks/test reenvíe siem_format al servicio de webhooks."""
+    from app.services.webhook_service import webhook_service
+    from app.schemas.organization import SiemWebhookTestResponse
+
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    admin_user = User(id=uuid.uuid4(), organization_id=org_id, email="admin@acme.corp", role=UserRole.ADMIN)
+    org = Organization(
+        id=org_id,
+        name="Acme Corp",
+        settings={"siem_webhook_url": "https://siem.corp/v1", "siem_format": "slack"},
+    )
+
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = admin_user
+    res_mock = MagicMock()
+    res_mock.scalar_one_or_none.return_value = org
+    mock_db.execute.side_effect = [res_user, res_mock]
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    fake_response = SiemWebhookTestResponse(
+        status="success",
+        message="OK",
+        target_url="https://siem.corp/v1",
+        status_code=200,
+        timestamp=datetime.now(timezone.utc),
+    )
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            with patch.object(webhook_service, "test_webhook", new_callable=AsyncMock) as mock_test:
+                mock_test.return_value = fake_response
+                res = await client.post(
+                    f"/api/v1/organizations/{org_id}/settings/webhooks/test",
+                    json={"siem_format": "datadog"},
+                    headers=make_admin_jwt(admin_user),
+                )
+                assert res.status_code == 200
+                mock_test.assert_awaited_once_with(
+                    organization_id=org_id,
+                    url="https://siem.corp/v1",
+                    secret=None,
+                    siem_format="datadog",
+                )
     finally:
         app.dependency_overrides.clear()

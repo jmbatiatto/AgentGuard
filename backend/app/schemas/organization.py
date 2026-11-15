@@ -1,9 +1,9 @@
 """Schemas Pydantic v2 para Organizaciones (Tenants) y Gobernanza SIEM."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.schemas.base import BaseSchema
 
@@ -17,6 +17,25 @@ class OrganizationCreate(BaseSchema):
         max_length=255,
         description="Nombre único o razón social del tenant",
     )
+
+
+class OrganizationUpdate(BaseSchema):
+    """Payload para actualizar el nombre o razón social del tenant."""
+
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Nuevo nombre o razón social del tenant",
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        cleaned = v.strip()
+        if not cleaned:
+            raise ValueError("El nombre de la organización no puede estar vacío")
+        return cleaned
 
 
 class OrganizationSettings(BaseSchema):
@@ -39,6 +58,10 @@ class OrganizationSettings(BaseSchema):
         default=90,
         ge=1,
         description="Período de retención en días para depuración de trazas forenses de ejecución",
+    )
+    siem_format: Literal["splunk", "datadog", "elastic", "slack"] = Field(
+        default="splunk",
+        description="Formato o conector destino para el envío de eventos SIEM",
     )
     siem_webhook_url: Optional[str] = Field(
         default=None,
@@ -79,6 +102,10 @@ class OrganizationSettingsUpdate(BaseSchema):
         ge=1,
         description="Nuevo período de retención en días",
     )
+    siem_format: Optional[Literal["splunk", "datadog", "elastic", "slack"]] = Field(
+        default=None,
+        description="Formato o conector destino para el envío de eventos SIEM",
+    )
     siem_webhook_url: Optional[str] = Field(
         default=None,
         description="Nueva URL para webhooks SIEM",
@@ -107,6 +134,10 @@ class SiemWebhookTestRequest(BaseSchema):
     secret: Optional[str] = Field(
         default=None,
         description="Clave secreta opcional para firmar el payload de prueba",
+    )
+    siem_format: Optional[Literal["splunk", "datadog", "elastic", "slack"]] = Field(
+        default=None,
+        description="Formato o conector destino para el envío de eventos SIEM de prueba",
     )
 
 

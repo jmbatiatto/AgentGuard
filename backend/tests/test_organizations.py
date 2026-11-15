@@ -8,10 +8,10 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core.database import get_db
 from app.main import app
-from app.models.enums import UserRole
+from app.models.enums import ActorType, UserRole
 from app.models.organization import Organization
 from app.models.user import User
-from app.schemas.organization import OrganizationCreate
+from app.schemas.organization import OrganizationCreate, OrganizationUpdate
 from app.services.organization_service import organization_service
 from tests.conftest import make_admin_jwt
 
@@ -77,6 +77,60 @@ async def test_organization_service_list_all():
     mock_db.execute.assert_awaited_once()
     assert len(result) == 3
     assert result[0].name == "Tenant 0"
+
+
+@pytest.mark.asyncio
+async def test_organization_service_update_success():
+    """Valida actualización de nombre y registro de auditoría forense ORGANIZATION_UPDATED."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    admin_id = uuid.uuid4()
+    org = Organization(id=org_id, name="Acme Original Corp", created_at=datetime.now(timezone.utc))
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = org
+    mock_db.execute.return_value = mock_result
+
+    with patch("app.services.organization_service.audit_service.log_audit_event", new_callable=AsyncMock) as mock_audit:
+        update_in = OrganizationUpdate(name="Acme Enterprise Holding")
+        result = await organization_service.update(
+            db=mock_db,
+            org_id=org_id,
+            update_data=update_in,
+            actor_id=admin_id,
+            actor_type=ActorType.USER,
+        )
+
+        assert result is not None
+        assert result.name == "Acme Enterprise Holding"
+        assert org.name == "Acme Enterprise Holding"
+        mock_db.commit.assert_awaited_once()
+        mock_db.refresh.assert_awaited_once_with(org)
+
+        mock_audit.assert_awaited_once()
+        call_kwargs = mock_audit.call_args.kwargs
+        assert call_kwargs["organization_id"] == org_id
+        assert call_kwargs["event_type"] == "ORGANIZATION_UPDATED"
+        assert call_kwargs["actor_id"] == admin_id
+        assert call_kwargs["actor_type"] == ActorType.USER
+        assert call_kwargs["metadata"]["previous_name"] == "Acme Original Corp"
+        assert call_kwargs["metadata"]["name"] == "Acme Enterprise Holding"
+
+
+@pytest.mark.asyncio
+async def test_organization_service_update_not_found():
+    """Valida que update retorne None si la organización no existe."""
+    mock_db = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    mock_db.execute.return_value = mock_result
+
+    result = await organization_service.update(
+        db=mock_db,
+        org_id=uuid.uuid4(),
+        update_data=OrganizationUpdate(name="Nonexistent"),
+    )
+    assert result is None
 
 
 # ==============================================================================
@@ -217,3 +271,160 @@ async def test_api_get_organization_not_found():
             assert "no encontrada" in data["detail"]
 
     app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_patch_organization_success():
+    """Valida PATCH /api/v1/organizations/{org_id} exitoso con código 200."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    now = datetime.now(timezone.utc)
+    updated_org = Organization(id=org_id, name="Security Operations Global", created_at=now)
+
+    with patch.object(organization_service, "update", new_callable=AsyncMock) as mock_update:
+        mock_update.return_value = updated_org
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                f"/api/v1/organizations/{org_id}",
+                headers=headers,
+                json={"name": "Security Operations Global"},
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["id"] == str(org_id)
+            assert data["name"] == "Security Operations Global"
+            mock_update.assert_awaited_once()
+
+    app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_patch_organization_cross_tenant_forbidden():
+    """Valida aislamiento multi-tenant: 403 al intentar modificar otra organización."""
+    mock_db = AsyncMock()
+    org_a_id = uuid.uuid4()
+    org_b_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_a_id)
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                f"/api/v1/organizations/{org_b_id}",
+                headers=headers,
+                json={"name": "Attacker Tenant Name"},
+            )
+
+            assert response.status_code == 403
+            data = response.json()
+            assert "No tienes permiso para modificar otra organización" in data["detail"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_patch_organization_ai_agent_blocked():
+    """Valida blindaje Anti-IA: 403 si un agente intenta modificar la organización."""
+    mock_db = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    org_id = uuid.uuid4()
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            headers = {"X-Agent-Id": str(uuid.uuid4())}
+            response = await client.patch(
+                f"/api/v1/organizations/{org_id}",
+                headers=headers,
+                json={"name": "AI Renamed Corp"},
+            )
+
+            assert response.status_code == 403
+            assert "AI Agents are not permitted" in response.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_patch_organization_non_admin_forbidden():
+    """Valida que usuarios no administradores (ej. VIEWER) reciban 403."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    viewer_user = User(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        email="viewer@test.com",
+        role=UserRole.VIEWER,
+    )
+    res_user = MagicMock()
+    res_user.scalar_one_or_none.return_value = viewer_user
+    mock_db.execute = AsyncMock(return_value=res_user)
+    headers = make_admin_jwt(viewer_user)
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                f"/api/v1/organizations/{org_id}",
+                headers=headers,
+                json={"name": "Unauthorized Update"},
+            )
+
+            assert response.status_code == 403
+            assert "privilegios de ADMIN" in response.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_patch_organization_not_found():
+    """Valida respuesta 404 si la organización no existe en la base de datos."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    with patch.object(organization_service, "update", new_callable=AsyncMock) as mock_update:
+        mock_update.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                f"/api/v1/organizations/{org_id}",
+                headers=headers,
+                json={"name": "Missing Corp"},
+            )
+
+            assert response.status_code == 404
+            assert "Organización no encontrada" in response.json()["detail"]
+
+    app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_api_patch_organization_empty_name_validation():
+    """Valida que un nombre vacío o con puros espacios sea rechazado con 422."""
+    mock_db = AsyncMock()
+    org_id = uuid.uuid4()
+    headers = _setup_admin_auth(mock_db, org_id)
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                f"/api/v1/organizations/{org_id}",
+                headers=headers,
+                json={"name": "   "},
+            )
+            assert response.status_code == 422
+    finally:
+        app.dependency_overrides.clear()

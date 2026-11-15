@@ -18,6 +18,7 @@ from app.models.enums import (
     UserRole,
 )
 from app.models.execution import Execution
+from app.models.organization import Organization
 from app.models.policy import PolicyRule
 from app.models.tool import Tool, ToolAction
 from app.models.user import User
@@ -515,3 +516,190 @@ async def test_pep_dispatch_to_tool_fail_closed_http_error_and_exception():
 
     assert res_exc["status"] == "error"
     assert "Connection refused" in res_exc["error"]
+
+
+@pytest.mark.asyncio
+async def test_pep_execute_escalates_to_require_approval_when_amount_exceeds_org_settings():
+    """Valida que un monto superior a max_autonomous_amount de la organización escale ALLOW a REQUIRE_APPROVAL."""
+    mock_db = AsyncMock()
+    mock_db.add = MagicMock()
+
+    org_id = uuid.uuid4()
+    agent_id = uuid.uuid4()
+    tool_id = uuid.uuid4()
+    action_id = uuid.uuid4()
+
+    agent = Agent(id=agent_id, organization_id=org_id, status=AgentStatus.ACTIVE, name="Sales Agent")
+    tool = Tool(id=tool_id, organization_id=org_id, name="CRM", endpoint_url="https://crm.api.corp")
+    action = ToolAction(id=action_id, tool_id=tool_id, action_name="create_quote", risk_level=RiskLevel.LOW)
+    agent_tool = AgentTool(agent_id=agent_id, tool_id=tool_id, enabled=True)
+
+    res_agent = MagicMock()
+    res_agent.scalar_one_or_none.return_value = agent
+    res_tool = MagicMock()
+    res_tool.scalar_one_or_none.return_value = tool
+    res_action = MagicMock()
+    res_action.scalar_one_or_none.return_value = action
+    res_agent_tool = MagicMock()
+    res_agent_tool.scalar_one_or_none.return_value = agent_tool
+
+    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+
+    # Mockear db.get para retornar la configuración del tenant con umbral de $1,000 USD
+    org = Organization(
+        id=org_id,
+        name="Finance Limited",
+        settings={"max_autonomous_amount": 1000.0},
+    )
+    mock_db.get = AsyncMock(return_value=org)
+
+    request = GatewayExecuteRequest(
+        organization_id=org_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        action_name="create_quote",
+        parameters={"amount": 1500, "customer": "Acme Corp"},
+    )
+
+    with patch("app.services.pep_gateway_service.pdp_engine.evaluate") as mock_pdp:
+        # El motor PDP autorizaría la operación, pero el umbral de la org la escala a HITL
+        mock_pdp.return_value = PDPDecisionResult(
+            decision=PolicyDecision.ALLOW,
+            evaluated_policy_rule_id=uuid.uuid4(),
+            reason="Regla base aprobada por política",
+        )
+
+        response = await pep_gateway_service.execute(db=mock_db, request=request)
+
+    assert response.decision == PolicyDecision.REQUIRE_APPROVAL
+    assert response.status == ExecutionStatus.PENDING_APPROVAL
+    assert response.approval_id is not None
+    assert mock_db.add.call_count == 2  # Approval y Execution
+    mock_db.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_pep_execute_mask_sensitive_false_retains_raw_params_in_context():
+    """Valida que mask_sensitive=False en settings conserve los datos crudos y reporte telemetría."""
+    mock_db = AsyncMock()
+    mock_db.add = MagicMock()
+
+    org_id = uuid.uuid4()
+    agent_id = uuid.uuid4()
+    tool_id = uuid.uuid4()
+    action_id = uuid.uuid4()
+
+    agent = Agent(id=agent_id, organization_id=org_id, status=AgentStatus.ACTIVE, name="Sales Agent")
+    tool = Tool(id=tool_id, organization_id=org_id, name="CRM", endpoint_url="https://crm.api.corp")
+    action = ToolAction(id=action_id, tool_id=tool_id, action_name="create_quote", risk_level=RiskLevel.LOW)
+    agent_tool = AgentTool(agent_id=agent_id, tool_id=tool_id, enabled=True)
+
+    res_agent = MagicMock()
+    res_agent.scalar_one_or_none.return_value = agent
+    res_tool = MagicMock()
+    res_tool.scalar_one_or_none.return_value = tool
+    res_action = MagicMock()
+    res_action.scalar_one_or_none.return_value = action
+    res_agent_tool = MagicMock()
+    res_agent_tool.scalar_one_or_none.return_value = agent_tool
+
+    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+
+    # Tenant con sanitización desactivada
+    org = Organization(
+        id=org_id,
+        name="Raw Logging Org",
+        settings={"mask_sensitive": False},
+    )
+    mock_db.get = AsyncMock(return_value=org)
+
+    raw_secret = "sk-live-secret-unmasked-token"
+    request = GatewayExecuteRequest(
+        organization_id=org_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        action_name="create_quote",
+        parameters={"api_key": raw_secret, "amount": 100},
+    )
+
+    with patch("app.services.pep_gateway_service.pdp_engine.evaluate") as mock_pdp:
+        mock_pdp.return_value = PDPDecisionResult(
+            decision=PolicyDecision.ALLOW,
+            evaluated_policy_rule_id=uuid.uuid4(),
+            reason="ALLOW",
+        )
+
+        response = await pep_gateway_service.execute(db=mock_db, request=request)
+
+    assert response.decision == PolicyDecision.ALLOW
+    assert response.security_analysis["owasp_compliance"] == "Masking disabled by tenant settings"
+
+    # Verificar que el request_context persistido en Execution no fue enmascarado
+    added_execution = next(
+        call.args[0] for call in mock_db.add.call_args_list if isinstance(call.args[0], Execution)
+    )
+    assert added_execution.request_context["api_key"] == raw_secret
+
+
+@pytest.mark.asyncio
+async def test_pep_execute_mask_sensitive_true_default_masks_sensitive_data():
+    """Valida que mask_sensitive=True (default) enmascare credenciales según OWASP LLM06."""
+    mock_db = AsyncMock()
+    mock_db.add = MagicMock()
+
+    org_id = uuid.uuid4()
+    agent_id = uuid.uuid4()
+    tool_id = uuid.uuid4()
+    action_id = uuid.uuid4()
+
+    agent = Agent(id=agent_id, organization_id=org_id, status=AgentStatus.ACTIVE, name="Sales Agent")
+    tool = Tool(id=tool_id, organization_id=org_id, name="CRM", endpoint_url="https://crm.api.corp")
+    action = ToolAction(id=action_id, tool_id=tool_id, action_name="create_quote", risk_level=RiskLevel.LOW)
+    agent_tool = AgentTool(agent_id=agent_id, tool_id=tool_id, enabled=True)
+
+    res_agent = MagicMock()
+    res_agent.scalar_one_or_none.return_value = agent
+    res_tool = MagicMock()
+    res_tool.scalar_one_or_none.return_value = tool
+    res_action = MagicMock()
+    res_action.scalar_one_or_none.return_value = action
+    res_agent_tool = MagicMock()
+    res_agent_tool.scalar_one_or_none.return_value = agent_tool
+
+    mock_db.execute.side_effect = [res_agent, res_tool, res_action, res_agent_tool]
+
+    # Tenant con configuración por defecto (mask_sensitive=True)
+    org = Organization(
+        id=org_id,
+        name="Secure Org",
+        settings={"mask_sensitive": True},
+    )
+    mock_db.get = AsyncMock(return_value=org)
+
+    raw_secret = "sk-live-secret-unmasked-token"
+    request = GatewayExecuteRequest(
+        organization_id=org_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        action_name="create_quote",
+        parameters={"api_key": raw_secret, "amount": 100},
+    )
+
+    with patch("app.services.pep_gateway_service.pdp_engine.evaluate") as mock_pdp:
+        mock_pdp.return_value = PDPDecisionResult(
+            decision=PolicyDecision.ALLOW,
+            evaluated_policy_rule_id=uuid.uuid4(),
+            reason="ALLOW",
+        )
+
+        response = await pep_gateway_service.execute(db=mock_db, request=request)
+
+    assert response.decision == PolicyDecision.ALLOW
+    assert response.security_analysis["owasp_compliance"] == "OWASP GenAI LLM06 Sanitized"
+
+    # Verificar que el request_context persistido en Execution fue enmascarado
+    added_execution = next(
+        call.args[0] for call in mock_db.add.call_args_list if isinstance(call.args[0], Execution)
+    )
+    assert added_execution.request_context["api_key"] != raw_secret
+    assert "***" in added_execution.request_context["api_key"]

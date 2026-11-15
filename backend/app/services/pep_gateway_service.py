@@ -7,6 +7,7 @@ persiste trazas forenses inmutables y enruta o bloquea llamadas.
 """
 
 import logging
+import math
 import time
 import uuid
 from datetime import datetime, timezone
@@ -32,9 +33,12 @@ from app.models.enums import (
     UserRole,
 )
 from app.models.execution import Execution
+from app.models.organization import Organization
 from app.models.tool import Tool, ToolAction
 from app.models.user import User
 from app.schemas.gateway import GatewayExecuteRequest, GatewayExecuteResponse
+from app.schemas.organization import OrganizationSettings
+from app.services.organization_service import DEFAULT_ORGANIZATION_SETTINGS
 from app.services.pdp_engine import pdp_engine
 from app.services.sanitizer_service import sanitizer_service
 from app.services.threat_detector import threat_detector
@@ -102,6 +106,28 @@ class PEPGatewayService:
         }
 
     @classmethod
+    async def _load_runtime_org_settings(
+        cls,
+        db: AsyncSession,
+        organization_id: UUID,
+    ) -> OrganizationSettings:
+        """Carga la configuración de gobernanza del tenant usando db.get sin interferir con db.execute."""
+        try:
+            get_fn = getattr(db, "get", None)
+            if callable(get_fn):
+                org = await get_fn(Organization, organization_id)
+                if isinstance(org, Organization) and isinstance(org.settings, dict):
+                    merged = {**DEFAULT_ORGANIZATION_SETTINGS, **org.settings}
+                    try:
+                        return OrganizationSettings(**merged)
+                    except Exception:
+                        return OrganizationSettings(**DEFAULT_ORGANIZATION_SETTINGS)
+        except Exception as exc:
+            logger.debug("Fallback a DEFAULT_ORGANIZATION_SETTINGS al cargar org settings: %s", exc)
+
+        return OrganizationSettings(**DEFAULT_ORGANIZATION_SETTINGS)
+
+    @classmethod
     async def execute(
         cls,
         db: AsyncSession,
@@ -112,8 +138,14 @@ class PEPGatewayService:
         execution_id = uuid.uuid4()
         now = datetime.now(timezone.utc)
 
-        # 1. Sanitizar parámetros de entrada de inmediato
-        sanitized_params = sanitizer_service.sanitize(request.parameters)
+        # 0. Cargar políticas de gobernanza en tiempo de ejecución del tenant
+        org_settings = await cls._load_runtime_org_settings(db, request.organization_id)
+
+        # 1. Sanitizar parámetros de entrada según postura del tenant (OWASP LLM06)
+        if org_settings.mask_sensitive:
+            sanitized_params = sanitizer_service.sanitize(request.parameters)
+        else:
+            sanitized_params = dict(request.parameters or {})
 
         # 1.1. Inspección heurística de vectores de ataque hostiles (OWASP Top 10 for Agentic Applications 2026)
         threat = threat_detector.analyze(
@@ -325,8 +357,27 @@ class PEPGatewayService:
             security_telemetry = {
                 "is_threat": False,
                 "status": "CLEAN",
-                "owasp_compliance": "OWASP GenAI LLM06 Sanitized",
+                "owasp_compliance": (
+                    "OWASP GenAI LLM06 Sanitized"
+                    if org_settings.mask_sensitive
+                    else "Masking disabled by tenant settings"
+                ),
             }
+
+            # Umbral de impacto financiero autónomo del tenant (HITL escalation)
+            if final_decision == PolicyDecision.ALLOW and isinstance(request.parameters, dict):
+                amount_val = request.parameters.get("amount")
+                if amount_val is not None and not isinstance(amount_val, bool):
+                    try:
+                        amount_float = float(amount_val)
+                        if math.isfinite(amount_float) and amount_float > org_settings.max_autonomous_amount:
+                            final_decision = PolicyDecision.REQUIRE_APPROVAL
+                            rejection_reason = (
+                                f"Monto ${amount_float:,.2f} supera el umbral autónomo de la organización "
+                                f"(${org_settings.max_autonomous_amount:,.2f} USD): requiere aprobación humana (HITL)"
+                            )
+                    except (ValueError, TypeError):
+                        pass
 
             match final_decision:
                 case PolicyDecision.ALLOW:
@@ -420,10 +471,10 @@ class PEPGatewayService:
             try:
                 from app.services.organization_service import organization_service
                 from app.services.webhook_service import webhook_service
-                org_settings = await organization_service.get_settings(db=db, org_id=request.organization_id)
-                if org_settings:
+                siem_settings = await organization_service.get_settings(db=db, org_id=request.organization_id)
+                if siem_settings:
                     await webhook_service.dispatch_security_alert_if_enabled(
-                        settings=org_settings,
+                        settings=siem_settings,
                         organization_id=request.organization_id,
                         alert_title=alert.title,
                         alert_description=alert.description,
@@ -446,7 +497,7 @@ class PEPGatewayService:
                 )
             elif final_decision == PolicyDecision.REQUIRE_APPROVAL:
                 simulation_explanation = (
-                    f"La política exige aprobación humana (HITL). Razón: {pdp_result.reason}. En producción genera ticket pendiente."
+                    f"La política exige aprobación humana (HITL). Razón: {rejection_reason or pdp_result.reason}. En producción genera ticket pendiente."
                 )
             else:
                 simulation_explanation = (

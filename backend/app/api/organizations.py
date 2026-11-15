@@ -14,6 +14,7 @@ from app.schemas.organization import (
     OrganizationRead,
     OrganizationSettings,
     OrganizationSettingsUpdate,
+    OrganizationUpdate,
     SiemWebhookTestRequest,
     SiemWebhookTestResponse,
 )
@@ -93,6 +94,40 @@ async def get_organization(
             detail=f"Organización con ID {org_id} no encontrada",
         )
     return org
+
+
+@router.patch(
+    "/{org_id}",
+    response_model=OrganizationRead,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar Organización",
+    description="Actualiza el nombre de la organización y registra evento de auditoría forense.",
+)
+async def update_organization(
+    org_id: UUID,
+    org_in: OrganizationUpdate,
+    current_admin: User = Depends(require_admin_user),
+    db: AsyncSession = Depends(get_db),
+) -> OrganizationRead:
+    """Actualiza los datos básicos de la organización validando pertenencia multi-tenant."""
+    ensure_same_tenant(
+        org_id,
+        current_admin,
+        "No tienes permiso para modificar otra organización",
+    )
+    updated = await organization_service.update(
+        db=db,
+        org_id=org_id,
+        update_data=org_in,
+        actor_id=current_admin.id,
+        actor_type=ActorType.USER,
+    )
+    if updated is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organización no encontrada",
+        )
+    return updated
 
 
 @router.get(
@@ -196,9 +231,16 @@ async def test_organization_siem_webhook(
 
     secret = (payload.secret if payload and payload.secret is not None else current_settings.siem_webhook_secret)
 
+    siem_format = (
+        payload.siem_format
+        if payload and payload.siem_format
+        else getattr(current_settings, "siem_format", "splunk")
+    )
+
     result = await webhook_service.test_webhook(
         organization_id=org_id,
         url=target_url,
         secret=secret,
+        siem_format=siem_format,
     )
     return result

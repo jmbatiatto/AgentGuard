@@ -37,6 +37,7 @@ class WebhookService:
         details: Dict[str, Any],
         secret: Optional[str] = None,
         severity: str = "INFO",
+        siem_format: str = "splunk",
     ) -> Tuple[bool, Optional[int], str]:
         """Envía un evento estructurado al endpoint SIEM configurado.
 
@@ -47,6 +48,7 @@ class WebhookService:
             "event_type": event_type,
             "organization_id": str(organization_id),
             "severity": severity,
+            "siem_format": siem_format,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "source": "AgentGuard PEP/PDP Runtime",
             "details": details,
@@ -56,6 +58,7 @@ class WebhookService:
         headers = {
             "Content-Type": "application/json",
             "User-Agent": "AgentGuard-SIEM-Dispatcher/1.0",
+            "X-AgentGuard-SIEM-Format": siem_format,
         }
 
         if secret:
@@ -90,6 +93,7 @@ class WebhookService:
         organization_id: UUID,
         url: str,
         secret: Optional[str] = None,
+        siem_format: str = "splunk",
     ) -> SiemWebhookTestResponse:
         """Prueba de conectividad inmediata emitiendo un evento ping."""
         success, code, msg = await cls.send_event(
@@ -103,6 +107,7 @@ class WebhookService:
             },
             secret=secret,
             severity="LOW",
+            siem_format=siem_format,
         )
 
         return SiemWebhookTestResponse(
@@ -138,6 +143,8 @@ class WebhookService:
             "threat_analysis": threat_analysis,
         }
 
+        siem_format = getattr(settings, "siem_format", "splunk")
+
         try:
             await cls.send_event(
                 url=settings.siem_webhook_url,
@@ -146,6 +153,7 @@ class WebhookService:
                 details=details,
                 secret=settings.siem_webhook_secret,
                 severity=severity,
+                siem_format=siem_format,
             )
         except Exception as exc:
             logger.error("Error al despachar alerta hacia SIEM: %s", exc)
