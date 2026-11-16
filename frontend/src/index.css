@@ -314,8 +314,8 @@ pre {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 36px;
-  padding: 0 14px;
+  height: 38px;
+  padding: 0 16px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
@@ -449,6 +449,8 @@ pre {
 /* ─── Tailwind CSS v4 + shadcn tokens (auth-ui) ─────────────────── */
 @import "tailwindcss";
 @import "tw-animate-css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
 
 @theme inline {
   --color-destructive-foreground: var(--destructive-foreground);

@@ -7,7 +7,7 @@ import { ResetDemoModal } from './ResetDemoModal';
 
 interface HeaderProps {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   actionButton?: React.ReactNode;
 }
 
@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
   return (
     <header style={{
       height: 'var(--header-height)',
-      padding: '12px 28px 8px 28px',
+      padding: '0 32px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -65,28 +65,30 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
       position: 'relative',
       zIndex: 100,
     }}>
-      {/* View Title & Subtitle */}
-      <div>
+      {/* View Title */}
+      <div className="flex items-center gap-3">
         <h1 style={{
-          fontSize: '18px',
+          fontSize: '19px',
           fontWeight: 700,
           color: 'var(--text-primary)',
-          letterSpacing: '-0.015em',
+          letterSpacing: '-0.02em',
           lineHeight: '1.2',
         }}>
           {title}
         </h1>
-        <p style={{
-          fontSize: '12px',
-          color: 'var(--text-muted)',
-          marginTop: '2px',
-        }}>
-          {subtitle}
-        </p>
+        {subtitle && (
+          <p style={{
+            fontSize: '12px',
+            color: 'var(--text-muted)',
+            marginTop: '2px',
+          }}>
+            {subtitle}
+          </p>
+        )}
       </div>
 
       {/* Right Controls: Action + Reset Demo + Theme Toggle + Operational Status + User RBAC Selector */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3.5">
         {actionButton}
 
         {/* Reset Demo Button */}
@@ -95,9 +97,10 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
           onClick={() => setIsResetModalOpen(true)}
           title="Restablecer base de datos PostgreSQL y políticas al estado inicial de la demo (Factory Reset)"
           aria-label="Restablecer entorno demo"
-          className="h-9 px-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/40 hover:text-amber-600 dark:hover:text-amber-400 flex items-center justify-center gap-2 text-[12px] font-medium transition-all duration-150 cursor-pointer shadow-2xs"
+          className="btn btn-secondary"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
         >
-          <RotateCcw className="w-4 h-4 text-amber-500 shrink-0" />
+          <RotateCcw size={14} className="text-amber-500 shrink-0" />
           <span>Reset Demo</span>
         </button>
 
@@ -106,9 +109,10 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           aria-label="Intercambiar tema claro/oscuro"
-          className="h-9 w-9 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center shrink-0 transition-all duration-150 cursor-pointer shadow-2xs"
+          className="btn btn-secondary"
+          style={{ width: '38px', height: '38px', padding: 0 }}
         >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-sky-600" />}
+          {theme === 'dark' ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-sky-600" />}
         </button>
 
         {/* Organization / Tenant Selector Dropdown (INC-17) */}
@@ -118,17 +122,20 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
             title="Cambiar organización o tenant de trabajo"
             aria-label="Selector de organización activa"
-            className={`h-9 px-3 rounded-lg border flex items-center justify-center gap-2 text-[12px] font-semibold transition-all duration-150 cursor-pointer shadow-2xs ${
-              isOrgDropdownOpen
-                ? 'border-sky-500 bg-sky-50/50 dark:bg-slate-800 text-sky-600 dark:text-sky-400'
-                : 'border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
-            }`}
+            className="btn btn-secondary"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              borderColor: isOrgDropdownOpen ? 'var(--brand-primary)' : undefined,
+              backgroundColor: isOrgDropdownOpen ? 'rgba(56, 189, 248, 0.1)' : undefined,
+            }}
           >
-            <Building2 className="w-4 h-4 text-sky-500 shrink-0" />
-            <span className="max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
+            <Building2 size={14} className="text-sky-500 shrink-0" />
+            <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {currentOrganization?.name || 'Acme Corp'}
             </span>
-            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isOrgDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOrgDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isOrgDropdownOpen && (
@@ -196,11 +203,16 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             id="user-profile-selector"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             title="Cambiar perfil de usuario y contexto de autorización RBAC"
-            className={`h-9 pl-1.5 pr-2.5 rounded-lg border flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer select-none shadow-2xs ${
-              isDropdownOpen
-                ? 'border-sky-500 bg-sky-50/50 dark:bg-slate-800'
-                : 'border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
-            }`}
+            className="btn btn-secondary"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '0 14px 0 8px',
+              userSelect: 'none',
+              borderColor: isDropdownOpen ? 'var(--brand-primary)' : undefined,
+              backgroundColor: isDropdownOpen ? 'rgba(56, 189, 248, 0.1)' : undefined,
+            }}
           >
             {/* User Initials Avatar */}
             <div
@@ -216,7 +228,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
 
             {/* User Info */}
             <div className="text-left flex flex-col justify-center leading-none">
-              <div className="text-[12px] font-semibold text-slate-900 dark:text-slate-100 leading-tight">
+              <div className="text-[12px] font-semibold text-[var(--text-primary)] leading-tight">
                 {currentUser.name}
               </div>
               <div className="flex items-center gap-1 mt-0.5">

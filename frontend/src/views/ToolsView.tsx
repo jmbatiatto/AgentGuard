@@ -256,9 +256,9 @@ export const ToolsView: React.FC = () => {
               width: '100%',
               maxWidth: '480px',
               height: '100%',
-              backgroundColor: '#0F172A',
-              borderLeft: '1px solid #334155',
-              boxShadow: '-10px 0 35px rgba(0, 0, 0, 0.8)',
+              backgroundColor: 'var(--bg-card)',
+              borderLeft: '1px solid var(--border-subtle)',
+              boxShadow: 'var(--shadow-lg)',
               display: 'flex',
               flexDirection: 'column',
               padding: '24px',
@@ -268,7 +268,7 @@ export const ToolsView: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
                   width: '42px',
@@ -286,7 +286,7 @@ export const ToolsView: React.FC = () => {
                   {selectedTool.initials}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#F8FAFC' }}>
+                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {selectedTool.name}
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
@@ -309,7 +309,7 @@ export const ToolsView: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedTool(null)}
-                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', padding: '4px' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
                 title="Cerrar panel"
               >
                 <X size={20} />
@@ -318,20 +318,20 @@ export const ToolsView: React.FC = () => {
 
             {/* Identificador UUID */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Tool UUID
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: '#1E293B',
+                backgroundColor: 'var(--bg-app)',
                 padding: '8px 12px',
                 borderRadius: '8px',
-                border: '1px solid #334155',
+                border: '1px solid var(--border-subtle)',
                 fontFamily: 'monospace',
                 fontSize: '12px',
-                color: '#E2E8F0',
+                color: 'var(--text-primary)',
               }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedTool.id}</span>
                 <button
@@ -346,17 +346,17 @@ export const ToolsView: React.FC = () => {
 
             {/* Endpoint Base URL */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Endpoint Base URL
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: '#1E293B',
+                backgroundColor: 'var(--bg-app)',
                 padding: '8px 12px',
                 borderRadius: '8px',
-                border: '1px solid #334155',
+                border: '1px solid var(--border-subtle)',
                 fontFamily: 'monospace',
                 fontSize: '12px',
                 color: '#38BDF8',
@@ -376,17 +376,17 @@ export const ToolsView: React.FC = () => {
 
             {/* Descripción Funcional */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Descripción del Servicio
               </label>
-              <div style={{ fontSize: '13px', color: '#CBD5E1', lineHeight: '1.5', backgroundColor: '#1E293B', padding: '10px 12px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', backgroundColor: 'var(--bg-app)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                 {selectedTool.description}
               </div>
             </div>
 
             {/* Agentes Autorizados */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Agentes con Acceso Vinculado
               </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -394,10 +394,10 @@ export const ToolsView: React.FC = () => {
                   <span key={idx} style={{
                     fontSize: '12px',
                     padding: '4px 10px',
-                    backgroundColor: '#1E293B',
-                    border: '1px solid #334155',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: '6px',
-                    color: '#F1F5F9',
+                    color: 'var(--text-primary)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
@@ -410,13 +410,13 @@ export const ToolsView: React.FC = () => {
             </div>
 
             {/* Acciones Atómicas (ToolActions) */}
-            <div style={{ borderTop: '1px solid #1E293B', paddingTop: '16px' }}>
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#F8FAFC', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Shield size={14} color="#38BDF8" />
                   <span>Acciones Atómicas ({selectedTool.availableActions.length})</span>
                 </label>
-                <span style={{ fontSize: '11px', color: '#94A3B8' }}>Granularidad PEP</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Granularidad PEP</span>
               </div>
 
               {/* Lista de Acciones con Badges de Riesgo */}
@@ -428,8 +428,8 @@ export const ToolsView: React.FC = () => {
                       <div 
                         key={act.id} 
                         style={{
-                          backgroundColor: '#1E293B',
-                          border: '1px solid #334155',
+                          backgroundColor: 'var(--bg-app)',
+                          border: '1px solid var(--border-subtle)',
                           borderRadius: '8px',
                           padding: '10px 12px',
                           display: 'flex',
@@ -439,11 +439,11 @@ export const ToolsView: React.FC = () => {
                         }}
                       >
                         <div>
-                          <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>
+                          <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                             {act.action_name}
                           </div>
                           {act.description && (
-                            <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                               {act.description}
                             </div>
                           )}
@@ -469,8 +469,8 @@ export const ToolsView: React.FC = () => {
                     <div 
                       key={idx}
                       style={{
-                        backgroundColor: '#1E293B',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--bg-app)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '8px',
                         padding: '10px 12px',
                         display: 'flex',
@@ -478,7 +478,7 @@ export const ToolsView: React.FC = () => {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {actName}
                       </span>
                       <span style={{
@@ -536,11 +536,11 @@ export const ToolsView: React.FC = () => {
                       value={newActionName}
                       onChange={(e) => setNewActionName(e.target.value)}
                       style={{
-                        backgroundColor: '#0F172A',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--bg-card)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '6px',
                         padding: '8px 10px',
-                        color: '#F8FAFC',
+                        color: 'var(--text-primary)',
                         fontSize: '12px',
                         outline: 'none',
                       }}
@@ -549,11 +549,11 @@ export const ToolsView: React.FC = () => {
                       value={newActionRisk}
                       onChange={(e) => setNewActionRisk(e.target.value as any)}
                       style={{
-                        backgroundColor: '#0F172A',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--bg-card)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '6px',
                         padding: '8px 6px',
-                        color: '#F8FAFC',
+                        color: 'var(--text-primary)',
                         fontSize: '11px',
                         fontWeight: 700,
                         outline: 'none',
@@ -572,11 +572,11 @@ export const ToolsView: React.FC = () => {
                     value={newActionDesc}
                     onChange={(e) => setNewActionDesc(e.target.value)}
                     style={{
-                      backgroundColor: '#0F172A',
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-card)',
+                      border: '1px solid var(--border-subtle)',
                       borderRadius: '6px',
                       padding: '8px 10px',
-                      color: '#CBD5E1',
+                      color: 'var(--text-secondary)',
                       fontSize: '12px',
                       outline: 'none',
                     }}
@@ -610,7 +610,7 @@ export const ToolsView: React.FC = () => {
             </div>
 
             {/* Botones de Acción Final */}
-            <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #1E293B', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button
                 onClick={() => {
                   window.location.hash = '#traces';
@@ -663,8 +663,8 @@ export const ToolsView: React.FC = () => {
           padding: '20px',
         }}>
           <div style={{
-            backgroundColor: '#0F172A',
-            border: '1px solid #334155',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
             boxShadow: '0 20px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(56, 189, 248, 0.1)',
             borderRadius: '14px',
             width: '100%',
@@ -674,7 +674,7 @@ export const ToolsView: React.FC = () => {
             {/* Modal Header */}
             <div style={{
               padding: '18px 22px',
-              borderBottom: '1px solid #1E293B',
+              borderBottom: '1px solid var(--border-subtle)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -689,10 +689,10 @@ export const ToolsView: React.FC = () => {
                   <Wrench size={20} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#F8FAFC' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     Conectar Herramienta Externa
                   </h3>
-                  <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Registra una API perimetral protegida e interceptada por el PEP Gateway.
                   </p>
                 </div>
@@ -720,11 +720,11 @@ export const ToolsView: React.FC = () => {
                     onChange={(e) => setName(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#1E293B',
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-app)',
+                      border: '1px solid var(--border-subtle)',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#F8FAFC',
+                      color: 'var(--text-primary)',
                       fontSize: '13px',
                       outline: 'none',
                     }}
@@ -739,11 +739,11 @@ export const ToolsView: React.FC = () => {
                     onChange={(e) => setProtocol(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#1E293B',
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-app)',
+                      border: '1px solid var(--border-subtle)',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#F8FAFC',
+                      color: 'var(--text-primary)',
                       fontSize: '13px',
                       outline: 'none',
                     }}
@@ -767,11 +767,11 @@ export const ToolsView: React.FC = () => {
                   onChange={(e) => setEndpointUrl(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#1E293B',
-                    border: '1px solid #334155',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#F8FAFC',
+                    color: 'var(--text-primary)',
                     fontSize: '13px',
                     outline: 'none',
                   }}
@@ -789,11 +789,11 @@ export const ToolsView: React.FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#1E293B',
-                    border: '1px solid #334155',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#F8FAFC',
+                    color: 'var(--text-primary)',
                     fontSize: '13px',
                     outline: 'none',
                     resize: 'none',
@@ -819,11 +819,11 @@ export const ToolsView: React.FC = () => {
                     onChange={(e) => setActionName(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#1E293B',
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-app)',
+                      border: '1px solid var(--border-subtle)',
                       borderRadius: '6px',
                       padding: '8px 10px',
-                      color: '#F8FAFC',
+                      color: 'var(--text-primary)',
                       fontSize: '12px',
                       outline: 'none',
                     }}
@@ -833,11 +833,11 @@ export const ToolsView: React.FC = () => {
                     onChange={(e) => setRiskLevel(e.target.value as any)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#1E293B',
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-app)',
+                      border: '1px solid var(--border-subtle)',
                       borderRadius: '6px',
                       padding: '8px 10px',
-                      color: '#F8FAFC',
+                      color: 'var(--text-primary)',
                       fontSize: '12px',
                       outline: 'none',
                     }}
@@ -858,7 +858,7 @@ export const ToolsView: React.FC = () => {
                 gap: '12px',
                 marginTop: '6px',
                 paddingTop: '16px',
-                borderTop: '1px solid #1E293B',
+                borderTop: '1px solid var(--border-subtle)',
               }}>
                 <button
                   type="button"
@@ -881,9 +881,8 @@ export const ToolsView: React.FC = () => {
         </div>
       )}
 
-      <Header 
-        title="Herramientas" 
-        subtitle="Controla las herramientas y recursos disponibles para tus agentes."
+      <Header
+        title="Herramientas"
         actionButton={
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             <Plus size={16} strokeWidth={2.5} />

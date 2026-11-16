@@ -49,29 +49,29 @@ export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps
       <div
         id="sidebar-workspace-switcher"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-slate-800/60 cursor-pointer transition-colors duration-200 select-none group"
+        className="flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-[var(--bg-card-hover)] cursor-pointer transition-colors duration-200 select-none group"
       >
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-base shrink-0 shadow-sm shadow-emerald-950/30">
             {currentName.charAt(0).toUpperCase()}
           </div>
           <div className="flex flex-col overflow-hidden min-w-0">
-            <span className="text-[14px] font-semibold leading-tight mb-1 text-white truncate max-w-[130px]">
+            <span className="text-[14px] font-semibold leading-tight mb-1 text-[var(--text-primary)] truncate max-w-[130px]">
               {currentName}
             </span>
-            <span className="text-[12px] font-medium text-slate-400 leading-none">
+            <span className="text-[12px] font-medium text-[var(--text-muted)] leading-none">
               Tenant Activo
             </span>
           </div>
         </div>
-        <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors duration-200 shrink-0" strokeWidth={1.5} />
+        <ChevronDown className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors duration-200 shrink-0" strokeWidth={1.5} />
       </div>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-[52px] left-0 w-full bg-[#111B2A] border border-slate-700/60 rounded-xl shadow-xl z-50 py-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
-            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase border-b border-slate-800 mb-1">
+          <div className="absolute top-[52px] left-0 w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl shadow-xl z-50 py-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
+            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-[var(--text-muted)] uppercase border-b border-[var(--border-subtle)] mb-1">
               Organizaciones (Tenants)
             </div>
             {availableOrganizations.map(org => {
@@ -86,7 +86,7 @@ export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps
                   }}
                   className={`px-3 py-2 mx-1 text-[13px] rounded-lg cursor-pointer transition-colors duration-200 flex items-center justify-between ${isSelected
                       ? 'bg-emerald-500/10 text-emerald-400 font-medium'
-                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
+                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]'
                     }`}
                 >
                   <span className="truncate">{org.name}</span>
@@ -129,8 +129,8 @@ function NavItem({
       <div 
         className={`group flex items-center justify-between px-3.5 py-3 rounded-xl cursor-pointer transition-all duration-200 select-none
           ${isActive 
-            ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white font-medium shadow-sm border border-emerald-500/30' 
-            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border border-transparent'
+            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-medium shadow-2xs border border-emerald-500/30' 
+            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] border border-transparent'
           }
         `}
         style={{ paddingLeft: `${level * 12 + 14}px` }}
@@ -139,7 +139,7 @@ function NavItem({
         <div className="flex items-center gap-3.5 min-w-0">
           <item.icon 
             className={`w-[18px] h-[18px] transition-colors duration-200 shrink-0
-              ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}
+              ${isActive ? 'text-emerald-400' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'}
             `} 
             strokeWidth={isActive ? 2 : 1.7} 
           />
@@ -150,7 +150,7 @@ function NavItem({
 
         <div className="flex items-center gap-2 shrink-0">
           {item.shortcut && (
-            <kbd className="hidden group-hover:inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-medium font-mono text-slate-500 bg-slate-800/80 border border-slate-700/60 rounded-[4px]">
+            <kbd className="hidden group-hover:inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-medium font-mono text-[var(--text-muted)] bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-[4px]">
               {item.shortcut}
             </kbd>
           )}
@@ -175,7 +175,7 @@ function NavItem({
         >
           <div className="overflow-hidden min-h-0 relative flex flex-col gap-1 mt-0.5">
             <div
-              className="absolute top-0 bottom-0 border-l border-slate-700/50"
+              className="absolute top-0 bottom-0 border-l border-[var(--border-subtle)]"
               style={{ left: `${level * 12 + 17.5}px` }}
             />
             {item.children!.map(child => (
@@ -278,10 +278,10 @@ export function SidebarNav({
   };
 
   return (
-    <aside className={`flex flex-col w-[256px] h-screen bg-[#0D1520] border-r border-slate-800/80 px-3.5 pt-6 pb-5 font-sans select-none shrink-0 ${className}`}>
+    <aside className={`flex flex-col w-[256px] h-screen bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] text-[var(--text-primary)] px-3.5 pt-6 pb-5 font-sans select-none shrink-0 ${className}`}>
       {/* Workspace Switcher en tarjeta con borde sutil */}
       <div className="mb-6 px-1">
-        <div className="border border-slate-800 bg-slate-900/50 rounded-xl p-2.5">
+        <div className="border border-[var(--border-subtle)] bg-[var(--bg-card)] rounded-xl p-2.5">
           <WorkspaceSwitcher selected={activeWorkspace} onSelect={onWorkspaceSelect} />
         </div>
       </div>
@@ -291,7 +291,7 @@ export function SidebarNav({
         {navGroups.map((group, idx) => (
           <div key={idx} className="flex flex-col gap-2.5">
             {group.heading && (
-              <span className="px-3 text-[11px] font-bold tracking-widest text-slate-500 uppercase">
+              <span className="px-3 text-[11px] font-bold tracking-widest text-[var(--text-muted)] uppercase">
                 {group.heading}
               </span>
             )}
@@ -310,9 +310,9 @@ export function SidebarNav({
       </div>
 
       {/* Footer: Usuario Autenticado + Configuración y Cerrar sesión */}
-      <div className="mt-auto border-t border-slate-800 pt-3 flex flex-col gap-1.5">
+      <div className="mt-auto border-t border-[var(--border-subtle)] pt-3 flex flex-col gap-1.5">
         {currentUser && (
-          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-slate-900/60 border border-slate-800/80 mb-1">
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] mb-1">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center font-bold text-[11px] shrink-0"
               style={{
@@ -324,10 +324,10 @@ export function SidebarNav({
               {currentUser.avatarInitials}
             </div>
             <div className="flex flex-col min-w-0 overflow-hidden text-left">
-              <span className="text-[12px] font-semibold text-slate-200 truncate">
+              <span className="text-[12px] font-semibold text-[var(--text-primary)] truncate">
                 {currentUser.name}
               </span>
-              <span className="text-[10px] font-medium text-slate-400 truncate">
+              <span className="text-[10px] font-medium text-[var(--text-muted)] truncate">
                 {ROLE_LABELS[currentUser.role] || currentUser.role}
               </span>
             </div>

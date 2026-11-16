@@ -217,18 +217,18 @@ function SignInForm({
     }
   };
   return (
-    <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-8">
-      <div className="flex flex-col items-center gap-3 text-center">
+    <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-6">
+      <div className="flex flex-col items-center gap-2.5 text-center">
         {/* Logo AgentGuard */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+        <div className="flex items-center justify-center gap-3 mb-1">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
             <Shield className="h-6 w-6" />
           </div>
           <span className="text-2xl font-extrabold tracking-tight">AgentGuard</span>
         </div>
         <h1 className="text-xl font-bold text-foreground">Iniciar sesión</h1>
         <p className="text-balance text-sm text-muted-foreground">
-          Ingresá tu correo electrónico para continuar
+          Ingresá tus credenciales para acceder a la consola
         </p>
       </div>
       <div className="grid gap-4">
@@ -253,10 +253,10 @@ function SignInForm({
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
-          placeholder="Contraseña"
+          placeholder="Tu contraseña"
           disabled={isLoading}
         />
-        <Button type="submit" variant="outline" className="mt-2" disabled={isLoading}>
+        <Button type="submit" variant="default" className="mt-2 h-10 w-full font-semibold" disabled={isLoading}>
           {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
         </Button>
       </div>
@@ -289,20 +289,21 @@ function SignUpForm({
     }
   };
   return (
-    <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-8">
-      <div className="flex flex-col items-center gap-3 text-center">
+    <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-6">
+      <div className="flex flex-col items-center gap-2.5 text-center">
         {/* Logo AgentGuard */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+        <div className="flex items-center justify-center gap-3 mb-1">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
             <Shield className="h-6 w-6" />
           </div>
           <span className="text-2xl font-extrabold tracking-tight">AgentGuard</span>
         </div>
         <h1 className="text-xl font-bold text-foreground">Crear cuenta</h1>
         <p className="text-balance text-sm text-muted-foreground">
-          Completá tus datos para registrarte
+          Completá tus datos para dar de alta tu tenant
         </p>
       </div>
+
       <div className="grid gap-4">
         <div className="grid gap-2">
           <Label htmlFor="name-signup">Nombre completo</Label>
@@ -339,28 +340,28 @@ function SignUpForm({
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="new-password"
-          placeholder="Contraseña"
+          placeholder="Mínimo 8 caracteres"
           disabled={isLoading}
         />
 
-        {/* Apartado para registrar a la Empresa / Organización */}
-        <div className="pt-3 mt-1 border-t border-border/80">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+        {/* Apartado espacioso para registrar a la Empresa / Organización */}
+        <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800/90 bg-slate-50/50 dark:bg-slate-900/40 mt-1 shadow-2xs space-y-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-sky-500/10 text-sky-500 shrink-0">
               <Building2 className="h-4 w-4" />
             </div>
             <div>
               <span className="text-xs font-bold text-foreground block">
-                Registrar Empresa / Organización
+                Empresa / Organización
               </span>
               <span className="text-[11px] text-muted-foreground block">
                 Aislamiento multi-tenant para tus agentes de IA
               </span>
             </div>
           </div>
-          <div className="grid gap-3">
-            <div className="grid gap-2">
-              <Label htmlFor="org-name">Nombre de la Empresa</Label>
+          <div className="grid gap-3 pt-1">
+            <div className="grid gap-1.5">
+              <Label htmlFor="org-name" className="text-xs">Nombre de la Empresa</Label>
               <Input
                 id="org-name"
                 name="org_name"
@@ -372,8 +373,8 @@ function SignUpForm({
                 disabled={isLoading}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="org-slug">Slug del Workspace</Label>
+            <div className="grid gap-1.5">
+              <Label htmlFor="org-slug" className="text-xs">Slug del Workspace</Label>
               <Input
                 id="org-slug"
                 name="org_slug"
@@ -388,7 +389,7 @@ function SignUpForm({
           </div>
         </div>
 
-        <Button type="submit" variant="outline" className="mt-2" disabled={isLoading}>
+        <Button type="submit" variant="default" className="mt-2 h-10 w-full font-semibold" disabled={isLoading}>
           {isLoading ? "Creando cuenta..." : "Crear cuenta y Empresa"}
         </Button>
       </div>
@@ -413,58 +414,19 @@ function AuthFormContainer({
   isLoading?: boolean;
 }) {
   return (
-    <div className="mx-auto grid w-[350px] gap-2">
+    <div className="mx-auto w-full max-w-[420px] px-6 sm:px-0 flex flex-col gap-6">
       {isSignIn ? (
         <SignInForm onSuccess={onSuccess} onSignIn={onSignIn} isLoading={isLoading} />
       ) : (
         <SignUpForm onSuccess={onSuccess} onSignUp={onSignUp} isLoading={isLoading} />
       )}
 
-      <div className="text-center text-sm">
+      <div className="text-center text-sm pt-4 border-t border-border/50 text-muted-foreground">
         {isSignIn ? "¿No tenés cuenta?" : "¿Ya tenés cuenta?"}{" "}
-        <Button variant="link" className="pl-1 text-foreground" onClick={onToggle}>
+        <Button variant="link" className="pl-1 text-primary font-semibold hover:underline" onClick={onToggle}>
           {isSignIn ? "Registrarse" : "Iniciar sesión"}
         </Button>
       </div>
-
-      <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-        <span className="relative z-10 bg-background px-2 text-muted-foreground">
-          O continuar con
-        </span>
-      </div>
-
-      <Button
-        variant="outline"
-        type="button"
-        disabled={isLoading}
-        onClick={async () => {
-          if (onSignIn) {
-            await onSignIn({ email: 'admin@acmecorp.com', password: 'demo-password' });
-          } else if (onSuccess) {
-            onSuccess();
-          }
-        }}
-      >
-        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-        Continuar con Google
-      </Button>
     </div>
   );
 }
@@ -487,23 +449,23 @@ export interface AuthUIProps {
 // ─── Contenido por defecto ─────────────────────────────────────────────────────
 const defaultSignInContent: Required<AuthContentProps> = {
   image: {
-    src: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=80",
-    alt: "Centro de datos con luces azules, representando la infraestructura de seguridad",
+    src: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=1200&auto=format&fit=crop&q=80",
+    alt: "Escudo perimetral de ciberseguridad y gobernanza runtime para agentes de IA",
   },
   quote: {
-    text: "La gobernanza determinista que protege cada acción de tus agentes de IA.",
-    author: "AgentGuard — Zero Trust Runtime",
+    text: "La gobernanza determinista que protege cada acción de tus agentes de IA en tiempo real.",
+    author: "AgentGuard — Zero Trust PEP / PDP Gateway",
   },
 };
 
 const defaultSignUpContent: Required<AuthContentProps> = {
   image: {
-    src: "https://images.unsplash.com/photo-1639322537228-f710d846310a?w=1200&auto=format&fit=crop&q=80",
-    alt: "Red de nodos conectados representando la arquitectura de seguridad agéntica",
+    src: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&auto=format&fit=crop&q=80",
+    alt: "Red neuronal de agentes autónomos protegidos bajo políticas Zero Trust",
   },
   quote: {
-    text: "Un nuevo capítulo de seguridad para tus agentes autónomos comienza aquí.",
-    author: "AgentGuard — Motor PDP & Gateway PEP",
+    text: "Despliega agentes autónomos con la tranquilidad de un cortafuegos determinista.",
+    author: "AgentGuard — Motor de Políticas & Aislamiento Multi-tenant",
   },
 };
 

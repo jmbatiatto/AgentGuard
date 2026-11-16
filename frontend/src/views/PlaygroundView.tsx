@@ -736,9 +736,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <Header 
-        title="Playground de simulación" 
-        subtitle="Simula invocaciones de agentes de IA y observa las decisiones del PDP y del PEP en tiempo de ejecución."
+      <Header
+        title="Playground de simulación"
       />
 
       <div style={{ flex: 1, padding: '24px 28px', display: 'flex', gap: '20px', overflow: 'hidden' }}>

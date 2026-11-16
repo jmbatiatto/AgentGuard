@@ -60,15 +60,23 @@ export function AuthView({ onAuthenticated }: AuthViewProps) {
       onSignUp={handleSignUp}
       isLoading={isLoading}
       signInContent={{
+        image: {
+          src: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=1200&auto=format&fit=crop&q=80',
+          alt: 'Escudo perimetral de ciberseguridad y gobernanza runtime para agentes de IA',
+        },
         quote: {
-          text: 'Bienvenido de nuevo. La gobernanza en tiempo real sigue activa.',
-          author: 'AgentGuard — Zero Trust PEP / PDP',
+          text: 'La gobernanza determinista que protege cada acción de tus agentes de IA en tiempo real.',
+          author: 'AgentGuard — Zero Trust PEP / PDP Gateway',
         },
       }}
       signUpContent={{
+        image: {
+          src: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&auto=format&fit=crop&q=80',
+          alt: 'Red neuronal de agentes autónomos protegidos bajo políticas Zero Trust',
+        },
         quote: {
-          text: 'Un nuevo capítulo de seguridad para tus agentes autónomos comienza aquí.',
-          author: 'AgentGuard — Motor de Políticas Deterministas',
+          text: 'Despliega agentes autónomos con la tranquilidad de un cortafuegos determinista.',
+          author: 'AgentGuard — Motor de Políticas & Aislamiento Multi-tenant',
         },
       }}
     />

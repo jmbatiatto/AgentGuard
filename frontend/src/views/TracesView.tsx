@@ -103,9 +103,8 @@ export const TracesView: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <Header 
-        title="Trazas de Ejecución" 
-        subtitle="Registro de auditoría forense inmutable de todas las llamadas a herramientas y decisiones de autorización de agentes."
+      <Header
+        title="Trazas de Ejecución"
         actionButton={
           <button 
             className="btn btn-secondary" 
@@ -399,7 +398,7 @@ export const TracesView: React.FC = () => {
           padding: '20px',
         }}>
           <div style={{
-            backgroundColor: '#0F1522',
+            backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '12px',
             width: '100%',
@@ -408,7 +407,7 @@ export const TracesView: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            boxShadow: 'var(--shadow-lg)',
           }}>
             {/* Modal Header */}
             <div style={{
@@ -435,19 +434,19 @@ export const TracesView: React.FC = () => {
             {/* Modal Content */}
             <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>ID de Traza</div>
                   <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', marginTop: '2px' }}>{selectedTrace.id}</div>
                 </div>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fecha y Hora</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '2px' }}>{new Date(selectedTrace.timestamp).toISOString()}</div>
                 </div>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Agente</div>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>{selectedTrace.agentName}</div>
                 </div>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Decisión y Latencia</div>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: selectedTrace.decision === 'ALLOW' ? '#10B981' : selectedTrace.decision === 'DENY' ? '#EF4444' : '#F59E0B', marginTop: '2px' }}>
                     {DECISION_LABELS[selectedTrace.decision] || selectedTrace.decision} ({selectedTrace.latencyMs.toFixed(1)}ms)
@@ -483,7 +482,7 @@ export const TracesView: React.FC = () => {
                       : 'La acción sensible fue evaluada y rechazada explícitamente por el operador humano.'}
                   </p>
                   {selectedTrace.resolutionReason && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '6px', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '6px', marginTop: '2px' }}>
                       <strong>Motivo de resolución:</strong> {selectedTrace.resolutionReason}
                     </div>
                   )}
@@ -499,7 +498,7 @@ export const TracesView: React.FC = () => {
                 <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                   Acción y Recurso Destino
                 </div>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#38BDF8' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#38BDF8' }}>
                   {selectedTrace.actionName} &rarr; {selectedTrace.resource}
                 </div>
               </div>
@@ -512,12 +511,12 @@ export const TracesView: React.FC = () => {
                 </div>
                 <pre style={{
                   padding: '14px',
-                  backgroundColor: '#070A0F',
-                  border: '1px solid var(--border-subtle)',
+                  backgroundColor: 'var(--json-bg)',
+                  border: '1px solid var(--json-border)',
                   borderRadius: '6px',
                   fontSize: '12px',
                   fontFamily: 'var(--font-mono)',
-                  color: '#A5B4FC',
+                  color: 'var(--json-text)',
                   overflowX: 'auto',
                   maxHeight: '200px',
                 }}>

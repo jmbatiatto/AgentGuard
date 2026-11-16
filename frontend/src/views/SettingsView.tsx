@@ -337,23 +337,28 @@ export const SettingsView: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--bg-app)' }}>
       {/* View Header */}
       <Header
-        title="Configuración del Espacio de Trabajo & Gobernanza"
-        subtitle="Gestión de Tenant Multi-tenant, Llaves de Acceso Gateway PEP, Miembros RBAC y Salida SIEM"
+        title="Configuración & Gobernanza"
         actionButton={
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '6px 14px',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.25)',
-            borderRadius: '20px',
-            fontSize: '12px',
-            fontWeight: 600,
-            color: 'var(--success-text)',
-          }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981' }} />
-            Zero-Trust Enforced
+          <div 
+            className="btn" 
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              padding: '0 16px', 
+              height: '38px', 
+              borderRadius: '8px', 
+              border: '1px solid rgba(16, 185, 129, 0.3)', 
+              backgroundColor: 'rgba(16, 185, 129, 0.1)', 
+              color: 'var(--success-text)', 
+              fontSize: '12px', 
+              fontWeight: 600, 
+              userSelect: 'none',
+              cursor: 'default'
+            }}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10B981] shrink-0" />
+            <span>Zero-Trust Enforced</span>
           </div>
         }
       />

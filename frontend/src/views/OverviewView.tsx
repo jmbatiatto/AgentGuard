@@ -135,11 +135,13 @@ const OverviewSkeleton: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Header
-        title="¿Qué están haciendo tus agentes?"
-        subtitle="Un vistazo a las tareas de tus asistentes y los bloqueos de seguridad del día."
+        title="Vista general"
         actionButton={
-          <div className="h-9 px-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2 text-[12px] font-medium shadow-2xs">
-            <RefreshCw className="w-4 h-4 spin" />
+          <div 
+            className="btn btn-secondary" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}
+          >
+            <RefreshCw size={14} className="animate-spin" />
             <span>Actualizando...</span>
           </div>
         }
@@ -405,14 +407,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
       {/* 1. Header con Copywriting Humano y Cercano */}
       <Header
         title="Vista general"
-        subtitle="Un vistazo a las tareas de tus asistentes y los bloqueos de seguridad del día."
         actionButton={
-          <button
+          <button 
+            className="btn btn-secondary" 
             onClick={loadOverviewData}
+            disabled={isRefreshing}
             title="Actualizar datos en tiempo real"
-            className="h-9 px-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center gap-2 text-[12px] font-medium transition-all duration-150 cursor-pointer shadow-2xs"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'spin' : ''}`} />
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
             <span>Actualizar</span>
           </button>
         }

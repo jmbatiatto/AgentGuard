@@ -46,6 +46,7 @@ htmlcov/
 graphify-out/cache/
 graphify-out/.graphify_*
 graphify-out/20*/
+.kombai/
 
 
 # Teamwork agent runs & ephemeral logs

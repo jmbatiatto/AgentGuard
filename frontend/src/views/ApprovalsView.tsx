@@ -170,9 +170,8 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <Header 
-        title="Aprobaciones" 
-        subtitle="Revisa las acciones que requieren autorización humana."
+      <Header
+        title="Aprobaciones"
       />
 
       {/* Resolution Toast Notification */}
