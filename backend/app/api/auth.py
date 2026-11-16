@@ -98,8 +98,9 @@ async def register(
     db: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
     """Registra una nueva cuenta y organización corporativa, emitiendo un token JWT."""
-    # 1. Validar unicidad de correo
-    existing = await db.execute(select(User).where(User.email == register_data.email))
+    # 1. Validar unicidad de correo (normalizado en minúsculas)
+    email_clean = register_data.email.strip().lower()
+    existing = await db.execute(select(User).where(User.email == email_clean))
     if existing.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -121,7 +122,7 @@ async def register(
     hashed = get_password_hash(register_data.password)
     user = User(
         organization_id=org.id,
-        email=register_data.email,
+        email=email_clean,
         hashed_password=hashed,
         role=UserRole.ADMIN,
         created_at=datetime.now(timezone.utc),

@@ -482,3 +482,33 @@ async def test_api_delete_user_not_found():
             assert "no encontrado" in response.json()["detail"]
 
     app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_user_service_normalizes_email_on_create_and_lookup():
+    """Verifica que crear y buscar usuarios normalice mayúsculas/espacios como el login."""
+    mock_db = AsyncMock()
+    mock_db.add = MagicMock()
+    org_id = uuid.uuid4()
+    user_in = UserCreate(
+        organization_id=org_id,
+        email="  Maria.Operadora@TwoSAS.COM ",
+        role=UserRole.OPERATOR,
+        password="StrongPassword123!",
+    )
+
+    async def mock_refresh(instance):
+        instance.id = uuid.uuid4()
+        instance.created_at = datetime.now(timezone.utc)
+
+    mock_db.refresh.side_effect = mock_refresh
+
+    created = await user_service.create(db=mock_db, user_in=user_in)
+    assert created.email == "maria.operadora@twosas.com"
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = created
+    mock_db.execute.return_value = mock_result
+
+    found = await user_service.get_by_email(db=mock_db, email=" MARIA.OPERADORA@TwoSAS.COM ")
+    assert found is created

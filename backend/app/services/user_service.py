@@ -16,9 +16,10 @@ class UserService:
     @staticmethod
     async def create(db: AsyncSession, user_in: UserCreate) -> User:
         """Crea un nuevo usuario en la base de datos con su contraseña hasheada."""
+        normalized_email = user_in.email.strip().lower()
         user = User(
             organization_id=user_in.organization_id,
-            email=user_in.email,
+            email=normalized_email,
             hashed_password=get_password_hash(user_in.password),
             role=user_in.role,
         )
@@ -37,7 +38,8 @@ class UserService:
     @staticmethod
     async def get_by_email(db: AsyncSession, email: str) -> Optional[User]:
         """Obtiene un usuario por su dirección de correo electrónico única."""
-        stmt = select(User).where(User.email == email)
+        normalized_email = email.strip().lower()
+        stmt = select(User).where(User.email == normalized_email)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
