@@ -31,6 +31,15 @@ node_modules/
 dist/
 .env
 .env.local
+.env.*
+!.env.example
+acme-corp/.env
+
+# SQLite databases & journals
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
 
 
 # Python virtual environments & tests

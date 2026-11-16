@@ -1,0 +1,19 @@
+{
+  "venvPath": "backend",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "executionEnvironments": [
+    {
+      "root": "acme-corp",
+      "extraPaths": [
+        "acme-corp"
+      ]
+    },
+    {
+      "root": "backend",
+      "extraPaths": [
+        "backend"
+      ]
+    }
+  ]
+}

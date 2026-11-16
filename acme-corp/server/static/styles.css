@@ -1,0 +1,691 @@
+/* ==========================================================================
+   ACME CORPORATION — ESTILOS OFICIALES (LOONEY TUNES EDITION)
+   Tema Oscuro de Alto Contraste con Amarillo Peligro ACME y Naranja Cohete
+   ========================================================================== */
+
+:root {
+  --bg-primary: #0b0f19;
+  --bg-card: #151d30;
+  --bg-card-hover: #1c2742;
+  --border-color: #273552;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  
+  --acme-yellow: #facc15;
+  --acme-yellow-hover: #eab308;
+  --acme-orange: #f97316;
+  --acme-orange-hover: #ea580c;
+  
+  --color-allow: #10b981;
+  --color-allow-bg: rgba(16, 185, 129, 0.15);
+  --color-approval: #f59e0b;
+  --color-approval-bg: rgba(245, 158, 11, 0.15);
+  --color-deny: #ef4444;
+  --color-deny-bg: rgba(239, 68, 68, 0.18);
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --transition: all 0.2s ease-in-out;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  line-height: 1.5;
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+.app-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   Encabezado
+   ========================================================================== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.acme-logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 2px solid var(--acme-yellow);
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
+}
+
+.acme-anvil-icon {
+  width: 28px;
+  height: 28px;
+  stroke: var(--acme-yellow);
+}
+
+.acme-brand {
+  font-weight: 900;
+  font-size: 1.2rem;
+  letter-spacing: 1.5px;
+  color: var(--acme-yellow);
+}
+
+.header-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.header-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ==========================================================================
+   Alerta de Base de Datos Purgada (Wiped)
+   ========================================================================== */
+.alert-banner {
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.alert-wiped {
+  background: rgba(239, 68, 68, 0.2);
+  border: 2px solid var(--color-deny);
+  color: #fca5a5;
+  animation: pulse-danger 2s infinite;
+}
+
+@keyframes pulse-danger {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Tarjetas y Contenedores Comunes
+   ========================================================================== */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--acme-yellow);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   Barra de Credenciales
+   ========================================================================== */
+.config-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.credentials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  transition: var(--transition);
+  outline: none;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--acme-yellow);
+  box-shadow: 0 0 6px rgba(250, 204, 21, 0.3);
+}
+
+.credentials-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-msg {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-msg.success { color: var(--color-allow); }
+.status-msg.error { color: var(--color-deny); }
+
+/* ==========================================================================
+   Layout Principal en 2 Columnas
+   ========================================================================== */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   Columna Izquierda: Consola de Ejecución
+   ========================================================================== */
+.mode-selectors-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.control-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.radio-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.radio-option {
+  cursor: pointer;
+  display: block;
+}
+
+.radio-option input[type="radio"] {
+  display: none;
+}
+
+.toggle-pill {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  transition: var(--transition);
+  background: var(--bg-primary);
+}
+
+.radio-option input[type="radio"]:checked + .pill-protected {
+  background: var(--color-allow-bg);
+  border-color: var(--color-allow);
+  color: var(--color-allow);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+
+.radio-option input[type="radio"]:checked + .pill-direct {
+  background: var(--color-deny-bg);
+  border-color: var(--color-deny);
+  color: #f87171;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+}
+
+.radio-option input[type="radio"]:checked + .pill-deterministic {
+  background: rgba(250, 204, 21, 0.15);
+  border-color: var(--acme-yellow);
+  color: var(--acme-yellow);
+}
+
+.radio-option input[type="radio"]:checked + .pill-llm {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: var(--acme-orange);
+  color: var(--acme-orange);
+}
+
+/* Presets */
+.presets-section {
+  margin-bottom: 1.25rem;
+}
+
+.presets-buttons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.preset-card-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-main);
+}
+
+.preset-card-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--acme-yellow);
+}
+
+.preset-card-btn.selected {
+  border-color: var(--acme-yellow);
+  background: rgba(250, 204, 21, 0.08);
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.2);
+}
+
+.preset-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.preset-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.preset-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Prompt */
+.prompt-box {
+  margin-bottom: 1.25rem;
+}
+
+textarea#agent-prompt {
+  width: 100%;
+  resize: vertical;
+  margin-top: 0.4rem;
+}
+
+.prompt-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.6rem;
+}
+
+/* Timeline de Traza */
+.trace-section {
+  margin-top: 1rem;
+}
+
+.timeline-container {
+  max-height: 380px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-right: 0.5rem;
+}
+
+.timeline-item {
+  background: var(--bg-primary);
+  border-left: 3px solid var(--acme-yellow);
+  padding: 0.65rem 0.85rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.timeline-item.success { border-left-color: var(--color-allow); }
+.timeline-item.warning { border-left-color: var(--color-approval); }
+.timeline-item.danger { border-left-color: var(--color-deny); }
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.timeline-detail {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+.final-answer-box {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+  background: rgba(250, 204, 21, 0.08);
+  border: 1px solid var(--acme-yellow);
+  font-size: 0.85rem;
+}
+
+.final-answer-box strong {
+  color: var(--acme-yellow);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+/* ==========================================================================
+   Columna Derecha: Inspector de Base de Datos
+   ========================================================================== */
+.db-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.db-live-tag {
+  font-size: 0.75rem;
+  color: var(--color-allow);
+  font-weight: 700;
+}
+
+.tabs-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+}
+
+.tab-btn.active {
+  color: var(--acme-yellow);
+  border-bottom-color: var(--acme-yellow);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.subtab-title {
+  font-size: 0.85rem;
+  color: var(--acme-yellow);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.table-responsive {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+.data-table th {
+  background-color: #121929;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.6rem 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.data-table tr:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.tampered-row {
+  background: rgba(239, 68, 68, 0.15) !important;
+}
+
+.tampered-badge {
+  color: #f87171;
+  font-weight: 800;
+  font-size: 0.7rem;
+  background: rgba(239, 68, 68, 0.25);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 0.4rem;
+}
+
+/* ==========================================================================
+   Badges y Botones
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badge-success {
+  background-color: var(--color-allow-bg);
+  color: var(--color-allow);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+  background-color: var(--color-approval-bg);
+  color: var(--color-approval);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-danger {
+  background-color: var(--color-deny-bg);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-neutral {
+  background-color: rgba(148, 163, 184, 0.1);
+  color: var(--text-muted);
+}
+
+.indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+.btn-primary {
+  background-color: var(--acme-yellow);
+  color: #000;
+}
+
+.btn-primary:hover {
+  background-color: var(--acme-yellow-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #273552;
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: #334468;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border-color: var(--color-deny);
+  color: #f87171;
+}
+
+.btn-outline-danger:hover {
+  background: var(--color-deny);
+  color: #fff;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--acme-yellow);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem 1rem;
+  font-style: italic;
+}
+
+/* Footer */
+.footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

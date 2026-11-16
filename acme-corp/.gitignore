@@ -1,0 +1,22 @@
+# Secretos y entorno local
+.env
+*.env
+
+# Base de datos SQLite y diarios
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Entornos virtuales Python
+.venv/
+venv/
+env/
+
+# Caché de Python y Pytest
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
