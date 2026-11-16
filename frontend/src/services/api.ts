@@ -109,21 +109,6 @@ export function handleNetworkError(err: any): ApiError {
   return new ApiError(0, 'Error de conexión con el servidor');
 }
 
-// Constantes Deterministas de la Demo Oficial (Acme Corp)
-export const DEMO_IDS = {
-  ORG_ACME_ID: '11111111-1111-1111-1111-111111111111',
-  USER_ADMIN_ID: '22222222-2222-2222-2222-222222222201',
-  USER_APPROVER_ID: '22222222-2222-2222-2222-222222222202',
-  USER_OPERATOR_ID: '22222222-2222-2222-2222-222222222203',
-  AGENT_SALES_ID: '33333333-3333-3333-3333-333333333301',
-  AGENT_FINANCE_ID: '33333333-3333-3333-3333-333333333302',
-  AGENT_SUPPORT_ID: '33333333-3333-3333-3333-333333333303',
-  TOOL_CRM_ID: '44444444-4444-4444-4444-444444444401',
-  TOOL_STRIPE_ID: '44444444-4444-4444-4444-444444444402',
-  TOOL_CATALOG_ID: '44444444-4444-4444-4444-444444444403',
-  TOOL_DB_ID: '44444444-4444-4444-4444-444444444404',
-};
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export interface GatewayExecutionPayload {
@@ -877,7 +862,7 @@ class AgentGuardApiClient {
         
         return {
           id: item.id,
-          agentName: exec.agent_name || (exec.agent_id === DEMO_IDS.AGENT_FINANCE_ID ? 'Finance Copilot' : 'AI Agent'),
+          agentName: exec.agent_name || 'AI Agent',
           agentInitials: (exec.agent_name || 'AI').substring(0, 2).toUpperCase(),
           action: exec.action_name || 'refund.create',
           resource: exec.resource || 'payment/pay_live',
@@ -1416,9 +1401,16 @@ class AgentGuardApiClient {
   }
 
   /**
-   * Restablece los datos de PostgreSQL y Redis al estado inicial de la demo
+   * Restablece los datos de PostgreSQL y Redis al estado inicial de la demo y sincroniza la sesión
    */
-  async resetDemoData(): Promise<{ success: boolean; message: string }> {
+  async resetDemoData(): Promise<{
+    success: boolean;
+    message: string;
+    organization_id?: string;
+    access_token?: string;
+    user?: User;
+    organization?: Organization;
+  }> {
     try {
       const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/demo/reset`, {
         method: 'POST',
@@ -1429,7 +1421,28 @@ class AgentGuardApiClient {
         throw await extractApiError(res);
       }
       const data = await res.json();
-      return { success: true, message: data.message || 'Entorno demo restablecido con éxito' };
+      const resolvedOrgId: string =
+        data.organization?.id || data.user?.organization_id || data.organization_id || '';
+
+      if (typeof window !== 'undefined' && data.access_token && data.user) {
+        localStorage.setItem('agentguard_token', data.access_token);
+        localStorage.setItem('agentguard_user', JSON.stringify(data.user));
+        if (data.user.id) {
+          localStorage.setItem('agentguard_active_user_id', data.user.id);
+        }
+        if (resolvedOrgId) {
+          this.setActiveOrganizationId(resolvedOrgId);
+        }
+      }
+
+      return {
+        success: true,
+        message: data.message || 'Entorno demo restablecido con éxito',
+        organization_id: resolvedOrgId || undefined,
+        access_token: data.access_token,
+        user: data.user,
+        organization: data.organization,
+      };
     } catch (err) {
       throw handleNetworkError(err);
     }

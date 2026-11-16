@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { api, DEMO_IDS } from '../services/api';
+import { api } from '../services/api';
 import { ROLE_DESCRIPTIONS, ROLE_STYLES } from '../constants/labels';
 import type {
   User,
@@ -36,11 +36,15 @@ function normalizeRole(role?: string): UserRole {
   return VALID_ROLES.includes(upper) ? upper : 'VIEWER';
 }
 
-export function formatAuthUser(user: Partial<User> | Partial<AuthUser>): AuthUser {
+export function formatAuthUser(
+  user: Partial<User> | Partial<AuthUser> & { organization_name?: string },
+  orgName?: string
+): AuthUser {
   const email = user.email || '';
   const name = user.name || (email ? email.split('@')[0] : 'Usuario');
   const role: UserRole = normalizeRole(user.role);
   const orgId = user.organization_id || user.organizationId || '';
+  const resolvedOrgName = orgName || (user as any).organization_name || (user as any).organization?.name || '';
   const roleStyle = ROLE_STYLES[role] || ROLE_STYLES.VIEWER;
 
   const initials =
@@ -72,7 +76,7 @@ export function formatAuthUser(user: Partial<User> | Partial<AuthUser>): AuthUse
     canManageAlerts: role === 'ADMIN' || role === 'APPROVER' || role === 'OPERATOR',
     canRunPlayground: role === 'ADMIN' || role === 'OPERATOR',
     canViewAudit: role === 'ADMIN' || role === 'AUDITOR',
-    canResetDemo: role === 'ADMIN' && orgId === DEMO_IDS.ORG_ACME_ID,
+    canResetDemo: role === 'ADMIN' && (email.toLowerCase().endsWith('@acmecorp.com') || resolvedOrgName === 'Acme Corp'),
     created_at: user.created_at,
   };
 }
@@ -108,6 +112,7 @@ export interface AuthContextType {
   registerOrg: (data: RegisterOrgData) => Promise<RegisterOrgResponse>;
   logout: () => void;
   refreshOrganization: () => Promise<void>;
+  applyAuthenticatedSession: (token: string, rawUser: User, explicitOrg?: Organization) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -159,6 +164,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (orgs && orgs.length > 0) {
         const matched = orgs.find((o) => o.id === orgId) || orgs[0];
         setCurrentOrganization(matched);
+        setCurrentUser((prev) => ({
+          ...prev,
+          canResetDemo:
+            prev.role === 'ADMIN' &&
+            (prev.email.toLowerCase().endsWith('@acmecorp.com') || matched.name === 'Acme Corp'),
+        }));
       }
     } catch {
       // Mantiene datos básicos de organización por ID si el detalle falla temporalmente
@@ -237,7 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const applyAuthenticatedSession = useCallback(
     async (token: string, rawUser: User, explicitOrg?: Organization) => {
-      const formatted = formatAuthUser(rawUser);
+      const formatted = formatAuthUser(rawUser, explicitOrg?.name);
       const orgId = explicitOrg?.id || formatted.organization_id || '';
 
       localStorage.setItem(STORAGE_TOKEN_KEY, token);
@@ -331,6 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         registerOrg,
         logout,
         refreshOrganization,
+        applyAuthenticatedSession,
       }}
     >
       {children}

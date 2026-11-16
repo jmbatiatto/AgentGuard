@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RotateCcw, AlertTriangle, CheckCircle2, X, Database, Shield, Bot, Wrench } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface ResetDemoModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface ResetDemoModalProps {
 }
 
 export const ResetDemoModal: React.FC<ResetDemoModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { applyAuthenticatedSession } = useAuth();
   const [isResetting, setIsResetting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -24,6 +26,9 @@ export const ResetDemoModal: React.FC<ResetDemoModalProps> = ({ isOpen, onClose,
     try {
       const res = await api.resetDemoData();
       if (res.success) {
+        if (res.access_token && res.user) {
+          await applyAuthenticatedSession(res.access_token, res.user, res.organization);
+        }
         setIsSuccess(true);
         setStatusMessage(res.message || '¡Entorno demo restablecido con éxito a su estado inicial!');
         if (onSuccess) {
