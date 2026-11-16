@@ -302,6 +302,17 @@
   pre {
     font-family: var(--font-mono);
   }
+
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background-color: rgba(6, 10, 16, 0.78);
+    backdrop-filter: blur(6px);
+  }
 }
 
 @layer components {

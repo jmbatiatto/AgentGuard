@@ -27,6 +27,7 @@ export interface AuthUser extends User {
   canRunPlayground: boolean;
   canViewAudit: boolean;
   canResetDemo: boolean;
+  mustChangePassword: boolean;
 }
 
 const VALID_ROLES: UserRole[] = ['ADMIN', 'APPROVER', 'OPERATOR', 'AUDITOR', 'VIEWER'];
@@ -78,6 +79,8 @@ export function formatAuthUser(
     canViewAudit: role === 'ADMIN' || role === 'AUDITOR',
     canResetDemo: role === 'ADMIN' && (email.toLowerCase().endsWith('@acmecorp.com') || resolvedOrgName === 'Acme Corp'),
     created_at: user.created_at,
+    must_change_password: Boolean(user.mustChangePassword ?? user.must_change_password),
+    mustChangePassword: Boolean(user.mustChangePassword ?? user.must_change_password),
   };
 }
 
@@ -99,6 +102,8 @@ const UNAUTHENTICATED_USER: AuthUser = {
   canRunPlayground: false,
   canViewAudit: false,
   canResetDemo: false,
+  must_change_password: false,
+  mustChangePassword: false,
 };
 
 export interface AuthContextType {
@@ -113,6 +118,7 @@ export interface AuthContextType {
   logout: () => void;
   refreshOrganization: () => Promise<void>;
   applyAuthenticatedSession: (token: string, rawUser: User, explicitOrg?: Organization) => Promise<void>;
+  completePasswordChange: (updatedUser?: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -307,6 +313,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   };
 
+  const completePasswordChange = useCallback((updatedUser?: User) => {
+    setCurrentUser((prev) => {
+      const formatted = updatedUser
+        ? formatAuthUser(
+            {
+              ...updatedUser,
+              must_change_password: false,
+              mustChangePassword: false,
+            },
+            currentOrganization?.name
+          )
+        : {
+            ...prev,
+            must_change_password: false,
+            mustChangePassword: false,
+          };
+      const nextUser: AuthUser = {
+        ...formatted,
+        must_change_password: false,
+        mustChangePassword: false,
+      };
+
+      try {
+        const stored = localStorage.getItem(STORAGE_USER_KEY);
+        const parsed = stored ? JSON.parse(stored) : {};
+        const merged = {
+          ...parsed,
+          ...(updatedUser || {}),
+          must_change_password: false,
+          mustChangePassword: false,
+        };
+        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(merged));
+      } catch {
+        // Fallback en almacenamiento local
+      }
+
+      return nextUser;
+    });
+  }, [currentOrganization?.name]);
+
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_TOKEN_KEY);
     localStorage.removeItem(STORAGE_USER_KEY);
@@ -343,6 +389,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         refreshOrganization,
         applyAuthenticatedSession,
+        completePasswordChange,
       }}
     >
       {children}

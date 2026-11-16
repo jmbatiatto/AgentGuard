@@ -1314,10 +1314,32 @@ def execute_guarded_tool(action_name: str, **kwargs):
                               {initials}
                             </div>
                             <div>
-                              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                                {u.email}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                  {u.email}
+                                </span>
+                                {Boolean(u.mustChangePassword ?? u.must_change_password) && (
+                                  <span
+                                    style={{
+                                      fontSize: '10px',
+                                      fontWeight: 600,
+                                      padding: '2px 8px',
+                                      borderRadius: '10px',
+                                      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                                      border: '1px solid rgba(245, 158, 11, 0.35)',
+                                      color: '#FBBF24',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      lineHeight: '1.2',
+                                    }}
+                                    title="El usuario debe actualizar su contraseña temporal en su próximo ingreso"
+                                  >
+                                    Pendiente cambio de clave
+                                  </span>
+                                )}
                               </div>
-                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                                 ID: {u.id.substring(0, 8)}...
                               </div>
                             </div>

@@ -1155,6 +1155,8 @@ class AgentGuardApiClient {
         email: item.email,
         role: item.role as UserRole,
         createdAt: item.created_at,
+        must_change_password: Boolean(item.must_change_password ?? item.mustChangePassword),
+        mustChangePassword: Boolean(item.must_change_password ?? item.mustChangePassword),
       }));
     } catch (err) {
       throw handleNetworkError(err);
@@ -1192,6 +1194,8 @@ class AgentGuardApiClient {
         email: item.email,
         role: item.role as UserRole,
         createdAt: item.created_at,
+        must_change_password: Boolean(item.must_change_password ?? item.mustChangePassword),
+        mustChangePassword: Boolean(item.must_change_password ?? item.mustChangePassword),
       };
     } catch (err) {
       throw handleNetworkError(err);
@@ -1219,6 +1223,8 @@ class AgentGuardApiClient {
         email: item.email,
         role: item.role as UserRole,
         createdAt: item.created_at,
+        must_change_password: Boolean(item.must_change_password ?? item.mustChangePassword),
+        mustChangePassword: Boolean(item.must_change_password ?? item.mustChangePassword),
       };
     } catch (err) {
       throw handleNetworkError(err);
@@ -1603,6 +1609,8 @@ class AgentGuardApiClient {
         organization_id: userRaw.organization_id,
         organizationId: userRaw.organization_id,
         created_at: userRaw.created_at,
+        must_change_password: Boolean(userRaw.must_change_password ?? userRaw.mustChangePassword),
+        mustChangePassword: Boolean(userRaw.must_change_password ?? userRaw.mustChangePassword),
       };
       return {
         access_token: data.access_token,
@@ -1643,6 +1651,8 @@ class AgentGuardApiClient {
         organization_id: userRaw.organization_id,
         organizationId: userRaw.organization_id,
         created_at: userRaw.created_at,
+        must_change_password: Boolean(userRaw.must_change_password ?? userRaw.mustChangePassword),
+        mustChangePassword: Boolean(userRaw.must_change_password ?? userRaw.mustChangePassword),
       };
       return {
         access_token: resData.access_token,
@@ -1683,6 +1693,8 @@ class AgentGuardApiClient {
         organization_id: userRaw.organization_id,
         organizationId: userRaw.organization_id,
         created_at: userRaw.created_at,
+        must_change_password: Boolean(userRaw.must_change_password ?? userRaw.mustChangePassword),
+        mustChangePassword: Boolean(userRaw.must_change_password ?? userRaw.mustChangePassword),
       };
       return {
         access_token: resData.access_token,
@@ -1720,6 +1732,43 @@ class AgentGuardApiClient {
         organization_id: data.organization_id,
         organizationId: data.organization_id,
         created_at: data.created_at,
+        must_change_password: Boolean(data.must_change_password ?? data.mustChangePassword),
+        mustChangePassword: Boolean(data.must_change_password ?? data.mustChangePassword),
+      };
+    } catch (err) {
+      throw handleNetworkError(err);
+    }
+  }
+
+  /**
+   * Actualiza la contraseña obligatoria o temporal del usuario autenticado (/api/v1/auth/change-password)
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<User> {
+    try {
+      const res = await this.fetchWithAuth(`${this.baseUrl}/api/v1/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) {
+        throw await extractApiError(res);
+      }
+      const data = await res.json();
+      const raw = data.user || data;
+      return {
+        id: raw.id,
+        email: raw.email,
+        name: raw.name || raw.email?.split('@')[0],
+        role: raw.role || 'VIEWER',
+        organization_id: raw.organization_id,
+        organizationId: raw.organization_id,
+        created_at: raw.created_at,
+        must_change_password: Boolean(raw.must_change_password ?? raw.mustChangePassword),
+        mustChangePassword: Boolean(raw.must_change_password ?? raw.mustChangePassword),
       };
     } catch (err) {
       throw handleNetworkError(err);

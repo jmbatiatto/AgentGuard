@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { X, ShieldAlert, WifiOff, RefreshCw } from 'lucide-react';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ToastProvider } from './context/ToastContext';
+import { ToastProvider, useToast } from './context/ToastContext';
 import { ToastContainer } from './components/common/ToastContainer';
+import { ForcePasswordChangeModal } from './components/ForcePasswordChangeModal';
 import { AuthView } from './views/AuthView';
 import { Sidebar } from './components/Sidebar';
 import { OverviewView } from './views/OverviewView';
@@ -34,7 +35,8 @@ const getInitialView = (): NavView => {
 };
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, currentUser, completePasswordChange } = useAuth();
+  const { toast } = useToast();
   const [currentView, setCurrentView] = useState<NavView>(getInitialView);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
   const [securityAlert, setSecurityAlert] = useState<{
@@ -172,6 +174,20 @@ const AppContent: React.FC = () => {
   // ── Dashboard principal (post-login) ──────────────────────────────────────
   return (
     <div className="app-container">
+      {/* Modal bloqueante obligatorio para cambio de contraseña temporal */}
+      <ForcePasswordChangeModal
+        isOpen={Boolean(currentUser.mustChangePassword)}
+        userEmail={currentUser.email}
+        onCompleted={(u) => {
+          completePasswordChange(u);
+          toast.success('Contraseña actualizada. Ya podés operar en AgentGuard.');
+        }}
+        onLogout={() => {
+          logout();
+          window.location.hash = '#auth';
+        }}
+      />
+
       {/* Banner superior de modo degradado / pérdida de conectividad */}
       {isDegradedMode && (
         <div

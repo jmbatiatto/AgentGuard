@@ -139,6 +139,8 @@ export interface UserMember {
   email: string;
   role: UserRole;
   createdAt: string;
+  must_change_password?: boolean;
+  mustChangePassword?: boolean;
 }
 
 export interface GatewayApiKey {
@@ -246,6 +248,8 @@ export interface User {
   canViewAudit?: boolean;
   canResetDemo?: boolean;
   created_at?: string;
+  must_change_password?: boolean;
+  mustChangePassword?: boolean;
 }
 
 export interface AuthCredentials {
