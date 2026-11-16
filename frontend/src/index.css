@@ -4,8 +4,39 @@
    Base navy para dark, off-white frío para light.
    Acentos en escalones 500/400 (dark) y 600/700 (light) para AA.
    ───────────────────────────────────────────────────────────────────────── */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *, .dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: calc(var(--radius) - 2px);
+  --radius-xl: var(--radius);
+}
 
 :root {
+  color-scheme: dark;
   /* Superficies ─────────────────────────────────────────────── */
   --bg-app: #0B121A;
   /* navy muy profundo */
@@ -92,9 +123,32 @@
   /* Dimensiones ─────────────────────────────────────────────── */
   --sidebar-width: 250px;
   --header-height: 72px;
+
+  /* Tokens Semánticos UI (Tailwind v4 + auth-ui) ────────────── */
+  --radius: 0.75rem;
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-card);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: #08111D;
+  --secondary: #1B2836;
+  --secondary-foreground: var(--text-primary);
+  --muted: #15202F;
+  --muted-foreground: var(--text-muted);
+  --accent: var(--bg-card-hover);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--danger);
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(148, 163, 184, 0.22);
+  --input: rgba(148, 163, 184, 0.30);
+  --ring: var(--border-focus);
 }
 
 [data-theme="light"] {
+  color-scheme: light;
   /* Superficies ─────────────────────────────────────────────── */
   --bg-app: #F6FAFC;
   /* off-white ligeramente frío */
@@ -170,66 +224,87 @@
   --shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
   --shadow-lg: 0 12px 24px -6px rgba(15, 23, 42, 0.10), 0 4px 8px -4px rgba(15, 23, 42, 0.05);
   --shadow-glow-primary: 0 0 16px rgba(2, 132, 199, 0.18);
+
+  /* Tokens Semánticos UI (Modo Claro) ───────────────────────── */
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-card);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: #FFFFFF;
+  --secondary: #E2E8F0;
+  --secondary-foreground: var(--text-primary);
+  --muted: #F1F5F9;
+  --muted-foreground: var(--text-muted);
+  --accent: var(--bg-card-hover);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--danger);
+  --destructive-foreground: #FFFFFF;
+  --border: #CBD5E1;
+  --input: #CBD5E1;
+  --ring: var(--border-focus);
 }
 
-/* Reset & Box Sizing ─────────────────────────────────────────── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Base y Tipografía dentro de @layer base (sin pisar @layer utilities) ─── */
+@layer base {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-subtle) transparent;
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  @supports not (scrollbar-color: auto) {
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-strong);
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.015em;
+  }
+
+  code,
+  pre {
+    font-family: var(--font-mono);
+  }
 }
 
-html,
-body,
-#root {
-  width: 100%;
-  height: 100%;
-  background-color: var(--bg-app);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
-}
-
-/* Scrollbars ─────────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong);
-}
-
-/* Typography Helpers ─────────────────────────────────────────── */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.015em;
-}
-
-code,
-pre {
-  font-family: var(--font-mono);
-}
-
+@layer components {
 /* Base Layout ────────────────────────────────────────────────── */
 .app-container {
   display: flex;
@@ -417,6 +492,7 @@ pre {
   border-radius: 10px;
   padding: 18px;
 }
+}
 
 @keyframes spin {
   from {
@@ -443,24 +519,4 @@ pre {
 
 .skeleton-pulse {
   animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* ─── Tailwind CSS v4 + shadcn tokens (auth-ui) ─────────────────── */
-@import "tailwindcss";
-@import "tw-animate-css";
-
-@theme inline {
-  --color-destructive-foreground: var(--destructive-foreground);
-}
-
-:root {
-  --radius: 1rem;
-  --accent: oklch(0.89 0 0);
-  --destructive-foreground: oklch(0.985 0 0);
-}
-
-.dark {
-  --background: oklch(0.14 0.015 240);
-  --accent: oklch(0.24 0.02 240);
-  --destructive-foreground: oklch(0.985 0 0);
 }

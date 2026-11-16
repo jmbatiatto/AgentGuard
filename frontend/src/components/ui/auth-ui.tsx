@@ -95,7 +95,7 @@ Label.displayName = LabelPrimitive.Root.displayName;
 
 // ─── Button ───────────────────────────────────────────────────────────────────
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -256,7 +256,7 @@ function SignInForm({
           placeholder="Contraseña"
           disabled={isLoading}
         />
-        <Button type="submit" variant="outline" className="mt-2" disabled={isLoading}>
+        <Button type="submit" variant="default" className="mt-2 font-semibold" disabled={isLoading}>
           {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
         </Button>
       </div>
@@ -423,7 +423,7 @@ function AuthFormContainer({
           onClick={() => onSelectMode(true)}
           disabled={isLoading}
           className={cn(
-            "rounded-md px-3 py-2 text-sm font-medium transition-all",
+            "rounded-md px-3 py-2 text-sm font-medium transition-all cursor-pointer",
             isSignIn
               ? "bg-background text-foreground shadow-sm border border-border/70"
               : "text-muted-foreground hover:text-foreground"
@@ -438,7 +438,7 @@ function AuthFormContainer({
           onClick={() => onSelectMode(false)}
           disabled={isLoading}
           className={cn(
-            "rounded-md px-3 py-2 text-sm font-medium transition-all",
+            "rounded-md px-3 py-2 text-sm font-medium transition-all cursor-pointer",
             !isSignIn
               ? "bg-background text-foreground shadow-sm border border-border/70"
               : "text-muted-foreground hover:text-foreground"
@@ -571,14 +571,14 @@ export function AuthUI({
   const currentContent = isSignIn && !onboardingSuccess ? finalSignIn : finalSignUp;
 
   return (
-    <div className="w-full min-h-screen md:grid md:grid-cols-2">
+    <div className="w-full h-full min-h-screen md:h-screen md:overflow-hidden md:grid md:grid-cols-2 bg-background text-foreground">
       <style>{`
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear { display: none; }
       `}</style>
 
       {/* Panel izquierdo: formulario o credencial generada */}
-      <div className="flex min-h-screen items-center justify-center p-6 md:h-auto md:p-8 bg-background">
+      <div className="flex min-h-screen md:min-h-0 md:h-full items-center justify-center p-6 md:p-8 bg-background overflow-y-auto">
         {onboardingSuccess ? (
           onboardingSuccess
         ) : (
