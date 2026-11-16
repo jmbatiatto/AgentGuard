@@ -51,7 +51,7 @@ def _mock_user_auth(role: UserRole, org_id: uuid.UUID, alert_obj=None, exec_obj=
     user = User(
         id=uuid.uuid4(),
         organization_id=org_id,
-        email=f"{role.value.lower()}@acmecorp.com",
+        email=f"{role.value.lower()}@othercorp.com",
         role=role,
         created_at=datetime.now(timezone.utc),
     )

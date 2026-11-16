@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import Text, DateTime, ForeignKey, Enum as SQLEnum, UniqueConstraint
+from sqlalchemy import Text, DateTime, ForeignKey, Enum as SQLEnum, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -25,7 +25,7 @@ class Approval(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
     )
     execution_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

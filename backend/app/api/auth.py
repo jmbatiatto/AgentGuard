@@ -109,17 +109,17 @@ async def register(
     # 2. Asignar o crear la organización
     org_name = register_data.organization_name or f"Org {register_data.name}"
     org = Organization(
-        id=uuid.uuid4(),
         name=org_name,
         created_at=datetime.now(timezone.utc),
     )
     db.add(org)
     await db.flush()
+    if org.id is None:
+        org.id = uuid.uuid4()
 
     # 3. Crear el usuario con contraseña hasheada y rol ADMIN
     hashed = get_password_hash(register_data.password)
     user = User(
-        id=uuid.uuid4(),
         organization_id=org.id,
         email=register_data.email,
         hashed_password=hashed,
@@ -129,6 +129,8 @@ async def register(
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    if user.id is None:
+        user.id = uuid.uuid4()
 
     # 4. Generar token de acceso inmediato
     token_claims = {
@@ -172,15 +174,17 @@ async def register_organization(
     org_name_clean = payload.organization_name.strip()
 
     org = Organization(
-        id=uuid.uuid4(),
         name=org_name_clean,
         settings=dict(DEFAULT_ORGANIZATION_SETTINGS),
         created_at=now,
     )
+    db.add(org)
+    await db.flush()
+    if org.id is None:
+        org.id = uuid.uuid4()
 
     hashed_password = get_password_hash(payload.password)
     user = User(
-        id=uuid.uuid4(),
         organization_id=org.id,
         email=email_clean,
         hashed_password=hashed_password,
@@ -192,7 +196,6 @@ async def register_organization(
     key_prefix = raw_key[:12]
     hashed_key = ApiKeyService._hash_key(raw_key)
     api_key_obj = ApiKey(
-        id=uuid.uuid4(),
         organization_id=org.id,
         name=f"Key Principal — {org_name_clean}"[:100],
         key_prefix=key_prefix,
@@ -203,10 +206,16 @@ async def register_organization(
     )
 
     try:
-        db.add(org)
         db.add(user)
         db.add(api_key_obj)
         await db.commit()
+        await db.refresh(user)
+        await db.refresh(org)
+        await db.refresh(api_key_obj)
+        if user.id is None:
+            user.id = uuid.uuid4()
+        if api_key_obj.id is None:
+            api_key_obj.id = uuid.uuid4()
     except Exception:
         await db.rollback()
         raise

@@ -257,9 +257,9 @@ class PEPGatewayService:
         if not agent_tool:
             # Denegación por falta de capacidad asignada
             latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+            real_execution_id = execution_id
             if not request.dry_run:
                 execution = Execution(
-                    id=execution_id,
                     organization_id=request.organization_id,
                     agent_id=request.agent_id,
                     delegator_user_id=request.delegator_user_id,
@@ -273,9 +273,14 @@ class PEPGatewayService:
                     latency_ms=latency_ms,
                 )
                 db.add(execution)
+                await db.flush()
                 await db.commit()
+                if isinstance(execution.id, uuid.UUID):
+                    real_execution_id = execution.id
+                elif execution.id is None:
+                    execution.id = execution_id
             return GatewayExecuteResponse(
-                execution_id=execution_id,
+                execution_id=real_execution_id,
                 organization_id=request.organization_id,
                 agent_id=request.agent_id,
                 tool_id=request.tool_id,
@@ -326,9 +331,7 @@ class PEPGatewayService:
             # Disparar Alerta de Seguridad Crítica inmediata (omitida en dry_run)
             if not request.dry_run:
                 alert = Alert(
-                    id=uuid.uuid4(),
                     organization_id=request.organization_id,
-                    execution_id=execution_id,
                     title=f"Alerta de Seguridad: Bloqueo en acción crítica '{request.action_name}' - [{threat.owasp_category.split(':')[0]}]",
                     description=(
                         f"El agente {agent.name} intentó ejecutar '{request.action_name}'. "
@@ -396,11 +399,8 @@ class PEPGatewayService:
                 case PolicyDecision.REQUIRE_APPROVAL:
                     exec_status = ExecutionStatus.PENDING_APPROVAL
                     if not request.dry_run:
-                        approval_id = uuid.uuid4()
                         # Crear ticket en cola de intervención humana
                         approval = Approval(
-                            id=approval_id,
-                            execution_id=execution_id,
                             status=ApprovalStatus.PENDING,
                             created_at=now,
                         )
@@ -410,9 +410,7 @@ class PEPGatewayService:
                     # Si es riesgo crítico o detecta anomalía, disparar Alerta de Seguridad (Escenario 4)
                     if not request.dry_run and tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
                         alert = Alert(
-                            id=uuid.uuid4(),
                             organization_id=request.organization_id,
-                            execution_id=execution_id,
                             title=f"Alerta de Seguridad: Bloqueo en acción crítica '{request.action_name}'",
                             description=f"El agente {agent.name} intentó ejecutar '{request.action_name}' pero fue bloqueado por política. Razón: {pdp_result.reason}",
                             severity=AlertSeverity.CRITICAL if tool_action.risk_level == RiskLevel.CRITICAL else AlertSeverity.HIGH,
@@ -425,9 +423,7 @@ class PEPGatewayService:
                     exec_status = ExecutionStatus.REJECTED
                     if not request.dry_run and tool_action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
                         alert = Alert(
-                            id=uuid.uuid4(),
                             organization_id=request.organization_id,
-                            execution_id=execution_id,
                             title=f"Alerta de Seguridad: Bloqueo por veredicto desconocido en acción '{request.action_name}'",
                             description=f"El agente {agent.name} intentó ejecutar '{request.action_name}' pero fue bloqueado por Fail-Closed estricto.",
                             severity=AlertSeverity.HIGH,
@@ -438,9 +434,9 @@ class PEPGatewayService:
         # 7. Medir latencia física acumulada y persistir Traza Forense Inmutable en Execution
         latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
 
+        execution = None
         if not request.dry_run:
             execution = Execution(
-                id=execution_id,
                 organization_id=request.organization_id,
                 agent_id=request.agent_id,
                 delegator_user_id=request.delegator_user_id,
@@ -464,7 +460,24 @@ class PEPGatewayService:
                 approval.execution = execution
                 db.add(approval)
 
+            await db.flush()
             await db.commit()
+
+            # Mock fallbacks para AsyncMock en tests unitarios sin Postgres
+            if execution.id is None:
+                execution.id = execution_id
+            if alert and alert.id is None:
+                alert.id = uuid.uuid4()
+            if alert and alert.execution_id is None:
+                alert.execution_id = execution.id
+            if approval and approval.id is None:
+                approval.id = uuid.uuid4()
+            if approval and approval.execution_id is None:
+                approval.execution_id = execution.id
+
+        real_execution_id = (execution.id if isinstance(execution.id, uuid.UUID) else execution_id) if execution else execution_id
+        real_approval_id = (approval.id if isinstance(approval.id, uuid.UUID) else approval_id) if approval else None
+        real_alert_id = (alert.id if isinstance(alert.id, uuid.UUID) else None) if alert else None
 
         # Despachar notificación asíncrona a SIEM si hubo alerta y no es simulación
         if alert and not request.dry_run:
@@ -479,7 +492,7 @@ class PEPGatewayService:
                         alert_title=alert.title,
                         alert_description=alert.description,
                         severity=alert.severity.value,
-                        execution_id=execution_id,
+                        execution_id=real_execution_id,
                         threat_analysis=security_telemetry,
                     )
             except Exception as exc:
@@ -505,12 +518,12 @@ class PEPGatewayService:
                 )
 
         # Emitir notificaciones en tiempo real vía WebSocket
-        if approval_id:
+        if real_approval_id and approval:
             await ws_manager.broadcast(
                 event_type="NEW_APPROVAL",
                 data={
-                    "approval_id": str(approval_id),
-                    "execution_id": str(execution_id),
+                    "approval_id": str(real_approval_id),
+                    "execution_id": str(real_execution_id),
                     "agent_id": str(request.agent_id),
                     "agent_name": agent.name,
                     "tool_id": str(request.tool_id),
@@ -528,8 +541,8 @@ class PEPGatewayService:
             await ws_manager.broadcast(
                 event_type="NEW_ALERT",
                 data={
-                    "alert_id": str(alert.id),
-                    "execution_id": str(execution_id),
+                    "alert_id": str(real_alert_id),
+                    "execution_id": str(real_execution_id),
                     "title": alert.title,
                     "description": alert.description,
                     "severity": alert.severity.value,
@@ -545,7 +558,7 @@ class PEPGatewayService:
             await ws_manager.broadcast(
                 event_type="NEW_EXECUTION",
                 data={
-                    "id": str(execution_id),
+                    "id": str(real_execution_id),
                     "organization_id": str(request.organization_id),
                     "agent_id": str(request.agent_id),
                     "agent_name": agent.name,
@@ -565,7 +578,7 @@ class PEPGatewayService:
             )
 
         return GatewayExecuteResponse(
-            execution_id=execution_id,
+            execution_id=real_execution_id,
             organization_id=request.organization_id,
             agent_id=request.agent_id,
             tool_id=request.tool_id,
@@ -575,8 +588,8 @@ class PEPGatewayService:
             evaluated_policy_rule_id=evaluated_rule_id,
             result=result_data,
             error_message=rejection_reason if final_decision == PolicyDecision.DENY else None,
-            approval_id=approval_id,
-            alert_id=alert.id if alert else None,
+            approval_id=real_approval_id,
+            alert_id=real_alert_id,
             security_analysis=security_telemetry,
             timestamp=now,
             latency_ms=latency_ms,

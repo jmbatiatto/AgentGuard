@@ -1,11 +1,11 @@
 """Schemas Pydantic v2 para el Agent Runtime Gateway (PEP) y Modo Simulación Sandbox."""
 
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from uuid import UUID
 from pydantic import Field
 
-from app.models.enums import PolicyDecision, ExecutionStatus
+from app.models.enums import PolicyDecision, ExecutionStatus, RiskLevel, AgentStatus
 from app.schemas.base import BaseSchema
 
 
@@ -140,3 +140,34 @@ class GatewayExecutionTraceRead(BaseSchema):
 
 
 ExecutionRead = GatewayExecutionTraceRead
+
+
+class GatewayContextAction(BaseSchema):
+    """Acción atómica expuesta por una herramienta con nivel de riesgo tipificado."""
+    id: UUID
+    action_name: str
+    risk_level: RiskLevel
+
+
+class GatewayContextTool(BaseSchema):
+    """Herramienta registrada con sus acciones atómicas disponibles."""
+    id: UUID
+    name: str
+    protocol: str
+    actions: List[GatewayContextAction] = Field(default_factory=list)
+
+
+class GatewayContextAgent(BaseSchema):
+    """Agente de IA registrado en la organización."""
+    id: UUID
+    name: str
+    status: AgentStatus
+
+
+class GatewayContextResponse(BaseSchema):
+    """Contexto de auto-discovery del Data Plane para agentes de IA autorizados."""
+    organization_id: UUID
+    organization_name: str
+    agents: List[GatewayContextAgent] = Field(default_factory=list)
+    tools: List[GatewayContextTool] = Field(default_factory=list)
+

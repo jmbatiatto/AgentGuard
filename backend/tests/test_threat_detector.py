@@ -7,12 +7,6 @@ from uuid import uuid4
 from app.main import app
 from app.models.enums import PolicyDecision, ExecutionStatus, AlertSeverity
 from app.services.threat_detector import threat_detector
-from scripts.seed_demo import (
-    ORG_ACME_ID,
-    AGENT_SALES_ID,
-    TOOL_CRM_ID,
-    ACTION_EXPORT_CUSTOMERS_ID,
-)
 
 
 def test_threat_detector_goal_hijacking():

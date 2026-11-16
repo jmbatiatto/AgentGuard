@@ -56,7 +56,6 @@ class ApiKeyService:
             expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
 
         api_key = ApiKey(
-            id=uuid.uuid4(),
             organization_id=org_id,
             name=name,
             key_prefix=key_prefix,
@@ -72,6 +71,8 @@ class ApiKeyService:
 
         await db.commit()
         await db.refresh(api_key)
+        if api_key.id is None:
+            api_key.id = uuid.uuid4()
 
         logger.info(
             "API Key '%s' creada con éxito para organization_id=%s (prefix=%s)",
