@@ -250,6 +250,19 @@ export const ToolsView: React.FC = () => {
     }
   };
 
+  const getToolStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'Active':
+        return 'Activa';
+      case 'Paused':
+        return 'Pausada';
+      case 'Inactive':
+        return 'Inactiva';
+      default:
+        return status;
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
       {/* Drawer Lateral: Detalle e Inspección de Herramienta */}
@@ -317,7 +330,7 @@ export const ToolsView: React.FC = () => {
                     </span>
                     <span className={selectedTool.status === 'Active' ? 'badge badge-success' : 'badge badge-warning'} style={{ fontSize: '11px', padding: '2px 8px' }}>
                       <span className="badge-dot" />
-                      <span>{selectedTool.status}</span>
+                      <span>{getToolStatusLabel(selectedTool.status)}</span>
                     </span>
                   </div>
                 </div>
@@ -334,7 +347,7 @@ export const ToolsView: React.FC = () => {
             {/* Identificador UUID */}
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                Tool UUID
+                UUID de Herramienta
               </label>
               <div style={{
                 display: 'flex',
@@ -505,7 +518,7 @@ export const ToolsView: React.FC = () => {
                         color: '#38BDF8',
                         border: '1px solid rgba(56, 189, 248, 0.25)',
                       }}>
-                        STANDARD
+                        Estándar
                       </span>
                     </div>
                   ))
@@ -575,10 +588,10 @@ export const ToolsView: React.FC = () => {
                         outline: 'none',
                       }}
                     >
-                      <option value="LOW">LOW</option>
-                      <option value="MEDIUM">MEDIUM</option>
-                      <option value="HIGH">HIGH</option>
-                      <option value="CRITICAL">CRITICAL</option>
+                      <option value="LOW">{RISK_LABELS.LOW}</option>
+                      <option value="MEDIUM">{RISK_LABELS.MEDIUM}</option>
+                      <option value="HIGH">{RISK_LABELS.HIGH}</option>
+                      <option value="CRITICAL">{RISK_LABELS.CRITICAL}</option>
                     </select>
                   </div>
 
@@ -934,7 +947,7 @@ export const ToolsView: React.FC = () => {
             <Search size={15} color="var(--text-muted)" />
             <input 
               type="text" 
-              placeholder="Search tools and actions..."
+              placeholder="Buscar herramientas y acciones..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -957,7 +970,7 @@ export const ToolsView: React.FC = () => {
                 borderRadius: '6px',
               }}
             >
-              <option value="ALL">All agents</option>
+              <option value="ALL">Todos los agentes</option>
               {uniqueAgents.map((ag) => (
                 <option key={ag} value={ag}>{ag}</option>
               ))}
@@ -979,10 +992,10 @@ export const ToolsView: React.FC = () => {
                 borderRadius: '6px',
               }}
             >
-              <option value="ALL">All statuses</option>
-              <option value="Active">Active</option>
-              <option value="Paused">Paused</option>
-              <option value="Inactive">Inactive</option>
+              <option value="ALL">Todos los estados</option>
+              <option value="Active">Activa</option>
+              <option value="Paused">Pausada</option>
+              <option value="Inactive">Inactiva</option>
             </select>
           </div>
         </div>
@@ -1118,7 +1131,7 @@ export const ToolsView: React.FC = () => {
                     <td style={{ padding: '14px 18px' }}>
                       <span className={tool.status === 'Active' ? 'badge badge-success' : 'badge badge-warning'}>
                         <span className="badge-dot" />
-                        <span>{tool.status}</span>
+                        <span>{getToolStatusLabel(tool.status)}</span>
                       </span>
                     </td>
 
