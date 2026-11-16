@@ -480,9 +480,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/PlaygroundView.tsx": {
-    "mtime": 1794786299.3999865,
-    "seen": 1794787168.8457942,
-    "ast_hash": "100a5877cca51f70fbac90d4eb0340fa",
+    "mtime": 1794796419.7911572,
+    "seen": 1794832550.7692711,
+    "ast_hash": "8ac34e270756080db3fb85119f41235e",
     "semantic_hash": ""
   },
   "frontend/src/views/PoliciesView.tsx": {
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "frontend/index.html": {
-    "mtime": 1792363183.3676605,
-    "seen": 1792682881.678428,
-    "ast_hash": "4ab371416a8b0daaab42512f46c5b508",
+    "mtime": 1794831606.2474258,
+    "seen": 1794832550.7708077,
+    "ast_hash": "63b9306381e7cdfe8429095e0ee8ed3c",
     "semantic_hash": ""
   },
   "pnpm-workspace.yaml": {
@@ -726,9 +726,9 @@
     "semantic_hash": ""
   },
   "frontend/src/services/api.ts": {
-    "mtime": 1794786253.6216886,
-    "seen": 1794787168.8457942,
-    "ast_hash": "727505d1673032d330266755c654ff67",
+    "mtime": 1794796419.78218,
+    "seen": 1794832550.7692711,
+    "ast_hash": "656da55d594a3b2b7eed2c654044714d",
     "semantic_hash": ""
   },
   "frontend/src/services/useAgentGuardWebSocket.ts": {
@@ -792,8 +792,8 @@
     "semantic_hash": ""
   },
   "backend/app/api/demo.py": {
-    "mtime": 1794786247.2268,
-    "seen": 1794787168.8457942,
+    "mtime": 1794794900.408213,
+    "seen": 1794832550.7670634,
     "ast_hash": "ac56ec09949ed886ac93afb41a97d793",
     "semantic_hash": ""
   },
@@ -852,9 +852,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ui/auth-ui.tsx": {
-    "mtime": 1794592707.5388453,
-    "seen": 1794592818.653928,
-    "ast_hash": "64ed287f2e054e12d74e4af9e5315600",
+    "mtime": 1794831684.42992,
+    "seen": 1794832550.7692711,
+    "ast_hash": "6a2df432e04408eba208087f8199e31a",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/dashboard-sidebar.tsx": {
