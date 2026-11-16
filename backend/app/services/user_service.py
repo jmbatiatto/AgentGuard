@@ -22,6 +22,7 @@ class UserService:
             email=normalized_email,
             hashed_password=get_password_hash(user_in.password),
             role=user_in.role,
+            must_change_password=True,
         )
         db.add(user)
         await db.commit()

@@ -2,7 +2,7 @@
 
 from typing import Optional
 from uuid import UUID
-from pydantic import EmailStr, Field
+from pydantic import EmailStr, Field, field_validator
 
 from app.models.enums import UserRole
 from app.schemas.base import BaseSchema
@@ -105,6 +105,22 @@ class RegisterOrgResponse(BaseSchema):
     api_key_id: UUID = Field(..., description="ID único de la API Key creada")
 
 
+class ChangePasswordRequest(BaseSchema):
+    """Payload para cambio voluntario u obligatorio de contraseña del usuario autenticado."""
+
+    current_password: str = Field(
+        ...,
+        min_length=1,
+        description="Contraseña actual o temporal asignada",
+    )
+    new_password: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+        description="Nueva contraseña personal (mínimo 8 caracteres)",
+    )
+
+
 class UserMeResponse(BaseSchema):
     """Información del perfil del usuario autenticado actual."""
 
@@ -113,3 +129,12 @@ class UserMeResponse(BaseSchema):
     name: str = Field(..., description="Nombre del usuario")
     role: UserRole = Field(..., description="Rol administrativo o de operación")
     organization_id: UUID = Field(..., description="Identificador de la organización perteneciente")
+    must_change_password: bool = Field(
+        default=False,
+        description="Indica si el usuario debe cambiar su contraseña temporal en el primer ingreso",
+    )
+
+    @field_validator("must_change_password", mode="before")
+    @classmethod
+    def normalize_must_change_password(cls, v: object) -> bool:
+        return bool(v)

@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional, TYPE_CHECKING
-from sqlalchemy import String, DateTime, ForeignKey, Enum as SQLEnum, text
+from sqlalchemy import String, DateTime, ForeignKey, Enum as SQLEnum, text, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,6 +35,12 @@ class User(Base):
     )
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
     hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
     role: Mapped[UserRole] = mapped_column(
         SQLEnum(UserRole, name="user_role_enum", native_enum=True),
         nullable=False,

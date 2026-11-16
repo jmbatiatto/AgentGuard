@@ -143,6 +143,7 @@ async def ensure_canonical_demo_users(
                 if default_pwd_hash is None:
                     default_pwd_hash = get_password_hash("demo-password")
                 existing.hashed_password = default_pwd_hash
+                existing.must_change_password = False
                 updated += 1
             continue
 
@@ -154,6 +155,7 @@ async def ensure_canonical_demo_users(
             hashed_password=default_pwd_hash,
             role=role,
             created_at=now,
+            must_change_password=False,
         )
         session.add(new_user)
         created += 1
@@ -204,6 +206,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
             hashed_password=default_pwd_hash,
             role=UserRole.ADMIN,
             created_at=now,
+            must_change_password=False,
         )
         user_approver = User(
             organization_id=org.id,
@@ -211,6 +214,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
             hashed_password=default_pwd_hash,
             role=UserRole.APPROVER,
             created_at=now,
+            must_change_password=False,
         )
         user_operator = User(
             organization_id=org.id,
@@ -218,6 +222,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
             hashed_password=default_pwd_hash,
             role=UserRole.OPERATOR,
             created_at=now,
+            must_change_password=False,
         )
         user_auditor = User(
             organization_id=org.id,
@@ -225,6 +230,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
             hashed_password=default_pwd_hash,
             role=UserRole.AUDITOR,
             created_at=now,
+            must_change_password=False,
         )
         user_viewer = User(
             organization_id=org.id,
@@ -232,6 +238,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
             hashed_password=default_pwd_hash,
             role=UserRole.VIEWER,
             created_at=now,
+            must_change_password=False,
         )
         demo_users = [user_admin, user_approver, user_operator, user_auditor, user_viewer]
         session.add_all(demo_users)

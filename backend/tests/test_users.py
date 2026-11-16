@@ -50,6 +50,7 @@ async def test_user_service_create():
     assert result.organization_id == org_id
     assert result.hashed_password is not None
     assert result.hashed_password != "StrongPassword123!"
+    assert result.must_change_password is True
 
 
 @pytest.mark.asyncio
@@ -157,6 +158,7 @@ async def test_api_create_user_success():
         email="operator@fintech.com",
         role=UserRole.OPERATOR,
         created_at=now,
+        must_change_password=True,
     )
 
     with patch.object(organization_service, "get_by_id", new_callable=AsyncMock) as mock_get_org, \
@@ -186,6 +188,7 @@ async def test_api_create_user_success():
             assert data["email"] == "operator@fintech.com"
             assert data["role"] == "OPERATOR"
             assert data["organization_id"] == str(org_id)
+            assert data["must_change_password"] is True
 
     app.dependency_overrides.clear()
 

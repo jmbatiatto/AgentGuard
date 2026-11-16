@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.models.enums import UserRole
 from app.schemas.base import BaseSchema
@@ -49,4 +49,13 @@ class UserRead(BaseSchema):
     email: str
     role: UserRole
     created_at: datetime
+    must_change_password: bool = Field(
+        default=False,
+        description="Indica si el usuario debe cambiar su contraseña temporal en el primer ingreso",
+    )
+
+    @field_validator("must_change_password", mode="before")
+    @classmethod
+    def normalize_must_change_password(cls, v: object) -> bool:
+        return bool(v)
 

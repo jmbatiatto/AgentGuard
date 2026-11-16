@@ -386,3 +386,266 @@ async def test_control_plane_rejects_anonymous_and_x_user_id_without_jwt():
         )
         assert res_spoof.status_code == 401
 
+
+# ==============================================================================
+# Pruebas para Flujo must_change_password y /auth/change-password
+# ==============================================================================
+
+@pytest.mark.asyncio
+async def test_login_returns_must_change_password_flag():
+    """Valida que el login reporte must_change_password: True cuando el usuario lo tiene activo."""
+    org_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+    plain_password = "TempPassword123!"
+
+    user = User(
+        id=user_id,
+        organization_id=org_id,
+        email="invited@corp.com",
+        hashed_password=get_password_hash(plain_password),
+        role=UserRole.OPERATOR,
+        created_at=datetime.now(timezone.utc),
+        must_change_password=True,
+    )
+
+    mock_db = AsyncMock()
+    mock_result = MagicMock(spec=Result)
+    mock_result.scalar_one_or_none.return_value = user
+    mock_db.execute.return_value = mock_result
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "invited@corp.com", "password": plain_password},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["user"]["must_change_password"] is True
+
+
+@pytest.mark.asyncio
+async def test_get_me_returns_must_change_password():
+    """Valida que /api/v1/auth/me refleje el estado de must_change_password."""
+    org_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+    user = User(
+        id=user_id,
+        organization_id=org_id,
+        email="mustchange@agentguard.io",
+        role=UserRole.OPERATOR,
+        created_at=datetime.now(timezone.utc),
+        must_change_password=True,
+    )
+
+    token = create_access_token({
+        "sub": str(user_id),
+        "org_id": str(org_id),
+        "role": user.role.value,
+    })
+
+    mock_db = AsyncMock()
+    mock_result = MagicMock(spec=Result)
+    mock_result.scalar_one_or_none.return_value = user
+    mock_db.execute.return_value = mock_result
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["must_change_password"] is True
+
+
+@pytest.mark.asyncio
+async def test_change_password_success():
+    """Valida cambio exitoso de contraseña, actualizando hash y desactivando must_change_password."""
+    org_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+    old_password = "TemporaryPassword123!"
+    new_password = "BrandNewSecurePassword456!"
+
+    user = User(
+        id=user_id,
+        organization_id=org_id,
+        email="user_change@corp.com",
+        hashed_password=get_password_hash(old_password),
+        role=UserRole.OPERATOR,
+        created_at=datetime.now(timezone.utc),
+        must_change_password=True,
+    )
+
+    token = create_access_token({
+        "sub": str(user_id),
+        "org_id": str(org_id),
+        "role": user.role.value,
+    })
+
+    mock_db = AsyncMock()
+    mock_result = MagicMock(spec=Result)
+    mock_result.scalar_one_or_none.return_value = user
+    mock_db.execute.return_value = mock_result
+    mock_db.commit = AsyncMock()
+    mock_db.refresh = AsyncMock()
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "current_password": old_password,
+                "new_password": new_password,
+            },
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "user_change@corp.com"
+    assert data["must_change_password"] is False
+    assert user.must_change_password is False
+    assert mock_db.commit.called
+    assert mock_db.refresh.called
+
+
+@pytest.mark.asyncio
+async def test_change_password_wrong_current_password():
+    """Valida rechazo (400) cuando la contraseña actual no coincide con el hash almacenado."""
+    org_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+    actual_password = "CurrentPassword123!"
+
+    user = User(
+        id=user_id,
+        organization_id=org_id,
+        email="user_wrong@corp.com",
+        hashed_password=get_password_hash(actual_password),
+        role=UserRole.OPERATOR,
+        created_at=datetime.now(timezone.utc),
+        must_change_password=True,
+    )
+
+    token = create_access_token({
+        "sub": str(user_id),
+        "org_id": str(org_id),
+        "role": user.role.value,
+    })
+
+    mock_db = AsyncMock()
+    mock_result = MagicMock(spec=Result)
+    mock_result.scalar_one_or_none.return_value = user
+    mock_db.execute.return_value = mock_result
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "current_password": "IncorrectPassword123!",
+                "new_password": "NewValidPassword456!",
+            },
+        )
+
+    assert response.status_code == 400
+    assert "La contraseña actual es incorrecta" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_change_password_same_password_rejected():
+    """Valida rechazo (400) cuando la nueva contraseña es idéntica a la actual."""
+    org_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+    same_password = "IdenticalPassword123!"
+
+    user = User(
+        id=user_id,
+        organization_id=org_id,
+        email="user_same@corp.com",
+        hashed_password=get_password_hash(same_password),
+        role=UserRole.OPERATOR,
+        created_at=datetime.now(timezone.utc),
+        must_change_password=True,
+    )
+
+    token = create_access_token({
+        "sub": str(user_id),
+        "org_id": str(org_id),
+        "role": user.role.value,
+    })
+
+    mock_db = AsyncMock()
+    mock_result = MagicMock(spec=Result)
+    mock_result.scalar_one_or_none.return_value = user
+    mock_db.execute.return_value = mock_result
+
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "current_password": same_password,
+                "new_password": same_password,
+            },
+        )
+
+    assert response.status_code == 400
+    assert "La nueva contraseña debe ser diferente" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_change_password_missing_token():
+    """Valida rechazo (401) ante ausencia de token Bearer en /auth/change-password."""
+    mock_db = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/change-password",
+            json={
+                "current_password": "AnyPassword123!",
+                "new_password": "NewPassword456!",
+            },
+        )
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_change_password_rejects_x_agent_id():
+    """Valida blindaje anti-IA (403 Forbidden) si un agente intenta cambiar contraseñas."""
+    mock_db = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/change-password",
+            headers={"X-Agent-Id": str(uuid.uuid4())},
+            json={
+                "current_password": "AnyPassword123!",
+                "new_password": "NewPassword456!",
+            },
+        )
+
+    assert response.status_code == 403
+    assert "AI Agents are not permitted" in response.json()["detail"]
+
+

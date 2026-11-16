@@ -18,6 +18,7 @@ from app.models.enums import UserRole
 from app.models.organization import Organization
 from app.models.user import User
 from app.schemas.auth import (
+    ChangePasswordRequest,
     LoginRequest,
     RegisterOrgRequest,
     RegisterOrgResponse,
@@ -126,6 +127,7 @@ async def register(
         hashed_password=hashed,
         role=UserRole.ADMIN,
         created_at=datetime.now(timezone.utc),
+        must_change_password=False,
     )
     db.add(user)
     await db.commit()
@@ -191,6 +193,7 @@ async def register_organization(
         hashed_password=hashed_password,
         role=UserRole.ADMIN,
         created_at=now,
+        must_change_password=False,
     )
 
     raw_key = ApiKeyService._generate_raw_key()
@@ -258,4 +261,39 @@ async def get_me(
         name=name,
         role=current_user.role,
         organization_id=current_user.organization_id,
+        must_change_password=bool(getattr(current_user, "must_change_password", False)),
     )
+
+
+@router.post(
+    "/change-password",
+    response_model=UserRead,
+    status_code=status.HTTP_200_OK,
+    summary="Cambio de Contraseña de Usuario",
+    description="Permite al usuario autenticado actualizar su contraseña temporal u obligatoria.",
+)
+async def change_password(
+    payload: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserRead:
+    """Valida la contraseña actual, actualiza por el nuevo hash y desactiva must_change_password."""
+    if not current_user.hashed_password or not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La contraseña actual es incorrecta",
+        )
+
+    if payload.new_password == payload.current_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La nueva contraseña debe ser diferente a la contraseña actual",
+        )
+
+    current_user.hashed_password = get_password_hash(payload.new_password)
+    current_user.must_change_password = False
+    await db.commit()
+    await db.refresh(current_user)
+
+    return UserRead.model_validate(current_user)
+
