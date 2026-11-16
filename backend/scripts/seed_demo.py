@@ -30,6 +30,7 @@ if str(backend_path) not in sys.path:
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.core.security import get_password_hash
 from app.models.agent import Agent, AgentTool
@@ -280,11 +281,12 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
                 a.id = uuid.uuid4()
 
         # 4. Herramientas Externas (Tools)
+        acme_base = settings.ACME_CORP_API_URL.rstrip("/")
         tool_crm = Tool(
             organization_id=org.id,
             name="CRM & Facturación",
             protocol="REST",
-            endpoint_url="https://crm.api.corp",
+            endpoint_url=f"{acme_base}/crm",
             description="API empresarial de CRM y gestión de facturación a clientes.",
             created_at=now,
         )
@@ -292,7 +294,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
             organization_id=org.id,
             name="Stripe Payments",
             protocol="REST",
-            endpoint_url="https://stripe.api.corp",
+            endpoint_url=f"{acme_base}/stripe",
             description="Pasarela de pagos y reembolsos de transacciones.",
             created_at=now,
         )
@@ -300,7 +302,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
             organization_id=org.id,
             name="Catálogo de Precios",
             protocol="REST",
-            endpoint_url="https://pricing.api.corp",
+            endpoint_url=f"{acme_base}/catalog",
             description="Base de datos de precios de lista y catálogo comercial.",
             created_at=now,
         )
@@ -308,7 +310,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
             organization_id=org.id,
             name="Database Administrator",
             protocol="REST",
-            endpoint_url="https://db.api.corp",
+            endpoint_url=f"{acme_base}/db",
             description="Gestor de base de datos relacional y mantenimiento de esquemas.",
             created_at=now,
         )
@@ -490,7 +492,7 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
                 agent_id=agent_sales.id,
                 tool_id=tool_crm.id,
                 action_name="create_quote",
-                parameters={"amount": 2500, "customer": "Acme Corp"},
+                parameters={"amount": 2500, "customer": "Wile E. Coyote - División Desierto"},
                 resource="quotes/QT-101",
                 delegator_user_id=user_operator.id,
                 dry_run=False,
@@ -505,7 +507,11 @@ async def seed_data(reset: bool = False) -> uuid.UUID:
                 agent_id=agent_sales.id,
                 tool_id=tool_stripe.id,
                 action_name="refund",
-                parameters={"amount": 4500, "customer_id": "cust-302", "reason": "damaged_goods"},
+                parameters={
+                    "amount": 4500,
+                    "customer_id": "cust-302",
+                    "reason": "Patines Cohete ACME fallaron al borde del cañón",
+                },
                 resource="refunds/rf_9921",
                 delegator_user_id=user_operator.id,
                 dry_run=False,

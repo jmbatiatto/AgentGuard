@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     # Conexión a Redis 7
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # Integración Mock Enterprise (ACME Corp API)
+    ACME_CORP_API_URL: str = "http://localhost:9000"
+
     @computed_field
     @property
     def async_database_uri(self) -> str:
