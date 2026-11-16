@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Bot, 
-  Wrench, 
-  ShieldCheck, 
-  Inbox, 
-  Activity, 
-  PlayCircle, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Bot,
+  Wrench,
+  ShieldCheck,
+  Inbox,
+  Activity,
+  PlayCircle,
+  Settings,
   LogOut,
   ChevronDown,
   ChevronRight,
@@ -41,25 +41,25 @@ interface WorkspaceSwitcherProps {
 export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { currentOrganization, availableOrganizations, switchOrganization } = useAuth();
-  
+
   const currentName = currentOrganization?.name || selected || 'Acme Corp';
 
   return (
     <div className="relative">
-      <div 
+      <div
         id="sidebar-workspace-switcher"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-800/60 cursor-pointer transition-colors duration-200 select-none group"
+        className="flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-slate-800/60 cursor-pointer transition-colors duration-200 select-none group"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[13px] shrink-0">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-base shrink-0 shadow-sm shadow-emerald-950/30">
             {currentName.charAt(0).toUpperCase()}
           </div>
           <div className="flex flex-col overflow-hidden min-w-0">
-            <span className="text-[13px] font-semibold leading-none mb-1 text-white truncate max-w-[120px]">
+            <span className="text-[14px] font-semibold leading-tight mb-1 text-white truncate max-w-[130px]">
               {currentName}
             </span>
-            <span className="text-[11px] text-slate-500 leading-none">
+            <span className="text-[12px] font-medium text-slate-400 leading-none">
               Tenant Activo
             </span>
           </div>
@@ -77,18 +77,17 @@ export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps
             {availableOrganizations.map(org => {
               const isSelected = org.id === currentOrganization?.id;
               return (
-                <div 
+                <div
                   key={org.id}
-                  onClick={() => { 
-                    switchOrganization(org.id); 
+                  onClick={() => {
+                    switchOrganization(org.id);
                     if (onSelect) onSelect(org.name);
-                    setIsOpen(false); 
+                    setIsOpen(false);
                   }}
-                  className={`px-3 py-2 mx-1 text-[13px] rounded-lg cursor-pointer transition-colors duration-200 flex items-center justify-between ${
-                    isSelected 
-                      ? 'bg-emerald-500/10 text-emerald-400 font-medium' 
+                  className={`px-3 py-2 mx-1 text-[13px] rounded-lg cursor-pointer transition-colors duration-200 flex items-center justify-between ${isSelected
+                      ? 'bg-emerald-500/10 text-emerald-400 font-medium'
                       : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <span className="truncate">{org.name}</span>
                   {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" strokeWidth={2.5} />}
@@ -102,14 +101,14 @@ export function WorkspaceSwitcher({ selected, onSelect }: WorkspaceSwitcherProps
   );
 }
 
-function NavItem({ 
-  item, 
-  activeId, 
+function NavItem({
+  item,
+  activeId,
   onSelect,
   level = 0
-}: { 
-  item: NavItemData; 
-  activeId: string; 
+}: {
+  item: NavItemData;
+  activeId: string;
   onSelect: (id: string, viewId?: NavView) => void;
   level?: number;
 }) {
@@ -128,32 +127,32 @@ function NavItem({
   return (
     <div className="flex flex-col w-full">
       <div 
-        className={`group flex items-center justify-between py-2 rounded-lg cursor-pointer transition-colors duration-200 select-none border-l-2
+        className={`group flex items-center justify-between px-3.5 py-3 rounded-xl cursor-pointer transition-all duration-200 select-none
           ${isActive 
-            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500' 
-            : 'text-slate-400 hover:bg-slate-800/60 hover:text-white border-transparent'
+            ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-white font-medium shadow-sm border border-emerald-500/30' 
+            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border border-transparent'
           }
         `}
-        style={{ paddingLeft: `${level * 12 + 9}px`, paddingRight: '10px' }}
+        style={{ paddingLeft: `${level * 12 + 14}px` }}
         onClick={handleClick}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-3.5 min-w-0">
           <item.icon 
-            className={`w-[16px] h-[16px] transition-colors duration-200 shrink-0
-              ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-white'}
+            className={`w-[18px] h-[18px] transition-colors duration-200 shrink-0
+              ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}
             `} 
-            strokeWidth={1.5} 
+            strokeWidth={isActive ? 2 : 1.7} 
           />
-          <span className="text-[13px] tracking-wide truncate">
+          <span className="text-[13.5px] tracking-wide truncate">
             {item.title}
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2 shrink-0">
           {item.shortcut && (
-             <kbd className="hidden group-hover:inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-medium font-mono text-slate-500 bg-slate-800/80 border border-slate-700/60 rounded-[4px]">
-               {item.shortcut}
-             </kbd>
+            <kbd className="hidden group-hover:inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-medium font-mono text-slate-500 bg-slate-800/80 border border-slate-700/60 rounded-[4px]">
+              {item.shortcut}
+            </kbd>
           )}
           {item.badge !== undefined && item.badge !== null && item.badge !== 0 && (
             <span className="flex items-center justify-center min-w-[20px] h-5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-500/20 text-emerald-400">
@@ -161,8 +160,8 @@ function NavItem({
             </span>
           )}
           {hasChildren && (
-            <ChevronRight 
-              className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} 
+            <ChevronRight
+              className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
               strokeWidth={2}
             />
           )}
@@ -170,23 +169,22 @@ function NavItem({
       </div>
 
       {hasChildren && (
-        <div 
-          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
-            isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-          }`}
+        <div
+          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+            }`}
         >
           <div className="overflow-hidden min-h-0 relative flex flex-col gap-1 mt-0.5">
-            <div 
+            <div
               className="absolute top-0 bottom-0 border-l border-slate-700/50"
               style={{ left: `${level * 12 + 17.5}px` }}
             />
             {item.children!.map(child => (
-              <NavItem 
-                key={child.id} 
-                item={child} 
-                activeId={activeId} 
-                onSelect={onSelect} 
-                level={level + 1} 
+              <NavItem
+                key={child.id}
+                item={child}
+                activeId={activeId}
+                onSelect={onSelect}
+                level={level + 1}
               />
             ))}
           </div>
@@ -207,7 +205,7 @@ export interface DashboardSidebarProps {
   currentUser?: AuthUser;
 }
 
-export function SidebarNav({ 
+export function SidebarNav({
   className = '',
   currentView = 'overview',
   onNavigate,
@@ -219,6 +217,7 @@ export function SidebarNav({
 }: DashboardSidebarProps) {
   const navGroups: NavGroupData[] = [
     {
+      heading: 'General',
       items: [
         { id: 'home', viewId: 'overview', title: 'Vista General', icon: LayoutDashboard },
         { 
@@ -255,7 +254,7 @@ export function SidebarNav({
       ]
     },
     {
-      heading: 'Desarrolladores',
+      heading: 'Acciones & Dev',
       items: [
         { id: 'playground', viewId: 'playground', title: 'Playground', icon: PlayCircle },
         { id: 'api', viewId: 'settings', title: 'Configuración & RBAC', icon: Terminal },
@@ -279,31 +278,33 @@ export function SidebarNav({
   };
 
   return (
-    <aside className={`flex flex-col w-[240px] h-screen bg-[#0D1520] border-r border-slate-800/80 px-3 pt-5 pb-4 font-sans select-none shrink-0 ${className}`}>
+    <aside className={`flex flex-col w-[256px] h-screen bg-[#0D1520] border-r border-slate-800/80 px-3.5 pt-6 pb-5 font-sans select-none shrink-0 ${className}`}>
       {/* Workspace Switcher en tarjeta con borde sutil */}
-      <div className="mb-10 px-1">
-        <div className="border border-slate-800 bg-slate-900/50 rounded-xl p-3">
+      <div className="mb-6 px-1">
+        <div className="border border-slate-800 bg-slate-900/50 rounded-xl p-2.5">
           <WorkspaceSwitcher selected={activeWorkspace} onSelect={onWorkspaceSelect} />
         </div>
       </div>
 
       {/* Lista de Navegación */}
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-5">
+      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-8 py-2">
         {navGroups.map((group, idx) => (
-          <div key={idx} className="flex flex-col gap-1">
+          <div key={idx} className="flex flex-col gap-2.5">
             {group.heading && (
-              <span className="px-2.5 mb-1 text-[10px] font-semibold tracking-widest text-slate-500 uppercase">
+              <span className="px-3 text-[11px] font-bold tracking-widest text-slate-500 uppercase">
                 {group.heading}
               </span>
             )}
-            {group.items.map(item => (
-              <NavItem 
-                key={item.id} 
-                item={item} 
-                activeId={currentView} 
-                onSelect={handleItemSelect} 
-              />
-            ))}
+            <div className="flex flex-col gap-2">
+              {group.items.map(item => (
+                <NavItem 
+                  key={item.id} 
+                  item={item} 
+                  activeId={currentView} 
+                  onSelect={handleItemSelect} 
+                />
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -333,11 +334,11 @@ export function SidebarNav({
           </div>
         )}
         {bottomItems.map(item => (
-          <NavItem 
-            key={item.id} 
-            item={item} 
-            activeId={currentView} 
-            onSelect={handleItemSelect} 
+          <NavItem
+            key={item.id}
+            item={item}
+            activeId={currentView}
+            onSelect={handleItemSelect}
           />
         ))}
       </div>
