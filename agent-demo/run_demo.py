@@ -19,12 +19,6 @@ import httpx
 from dotenv import load_dotenv
 
 DEFAULT_BASE_URL = "http://localhost:8000"
-DEFAULT_ORG_ID = "11111111-1111-1111-1111-111111111111"
-DEFAULT_AGENT_ID = "33333333-3333-3333-3333-333333333301"
-DEFAULT_DELEGATOR_USER_ID = "22222222-2222-2222-2222-222222222203"
-DEFAULT_TOOL_CRM_ID = "44444444-4444-4444-4444-444444444401"
-DEFAULT_TOOL_STRIPE_ID = "44444444-4444-4444-4444-444444444402"
-DEFAULT_TOOL_CATALOG_ID = "44444444-4444-4444-4444-444444444403"
 
 PLACEHOLDER_KEYS = {
     "",
@@ -135,22 +129,115 @@ def _configure_stdio() -> None:
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
+def discover_gateway_context(base_url: str, api_key: str) -> dict[str, Any]:
+    """Consulta GET /api/v1/gateway/context con X-AgentGuard-Key y retorna el contexto descubierto."""
+    url = f"{base_url}/api/v1/gateway/context"
+    headers = {
+        "X-AgentGuard-Key": api_key,
+        "Accept": "application/json",
+    }
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(url, headers=headers)
+    except httpx.RequestError as exc:
+        print(f"{Colors.RED}[ERROR DE CONEXIÓN] No se pudo contactar a {url}: {exc}{Colors.RESET}")
+        print("Asegurate de que el backend de AgentGuard esté corriendo (por ej. con start_all.bat).")
+        raise SystemExit(1)
+
+    if resp.status_code == 401:
+        print(f"{Colors.RED}[ERROR 401 UNAUTHORIZED] La API Key suministrada no es válida o fue revocada.{Colors.RESET}")
+        print(
+            "Si realizaste un reset de la base de datos o rotaste credenciales, generá una nueva API Key en el Dashboard "
+            "(Configuración -> API Keys) y configurala en agent-demo/.env."
+        )
+        raise SystemExit(1)
+    elif resp.status_code == 403:
+        print(f"{Colors.RED}[ERROR 403 FORBIDDEN] Acceso denegado con la API Key provista.{Colors.RESET}")
+        raise SystemExit(1)
+    elif resp.status_code != 200:
+        print(f"{Colors.RED}[ERROR {resp.status_code}] Falló el descubrimiento de contexto en {url}:{Colors.RESET} {resp.text}")
+        raise SystemExit(1)
+
+    try:
+        data: dict[str, Any] = resp.json()
+    except Exception as exc:
+        print(f"{Colors.RED}[ERROR] Respuesta inválida del servidor (se esperaba JSON): {exc}{Colors.RESET}")
+        raise SystemExit(1)
+
+    return data
+
+
 def load_config() -> DemoConfig:
-    """Carga la configuración desde ``agent-demo/.env`` y variables de entorno."""
+    """Carga la configuración desde variables de entorno y descubre IDs reales vía GET /api/v1/gateway/context."""
     env_path = Path(__file__).resolve().parent / ".env"
     load_dotenv(dotenv_path=env_path)
 
-    delegator_raw = os.getenv("DELEGATOR_USER_ID", DEFAULT_DELEGATOR_USER_ID).strip()
+    base_url = os.getenv("AGENTGUARD_URL", DEFAULT_BASE_URL).strip().rstrip("/")
+    api_key = os.getenv("AGENTGUARD_API_KEY", "").strip()
+
+    if api_key in PLACEHOLDER_KEYS:
+        print(f"{Colors.RED}[ERROR] Falta configurar AGENTGUARD_API_KEY.{Colors.RESET}")
+        print(
+            "Copiá agent-demo/.env.example a agent-demo/.env y colocá una API Key "
+            "válida generada en AgentGuard (Configuración -> API Keys o al registrar la empresa)."
+        )
+        raise SystemExit(1)
+
+    context = discover_gateway_context(base_url, api_key)
+
+    org_id = os.getenv("ORGANIZATION_ID", "").strip() or context.get("organization_id", "")
+    if not org_id:
+        print(f"{Colors.RED}[ERROR] No se pudo resolver 'organization_id' desde el endpoint de contexto ni desde .env.{Colors.RESET}")
+        raise SystemExit(1)
+
+    # Resolución de Agente: override opcional, o 'Agente de Ventas' / primer activo / primer agente
+    agent_id_override = os.getenv("AGENT_ID", "").strip()
+    if agent_id_override:
+        agent_id = agent_id_override
+    else:
+        agents: list[dict[str, Any]] = context.get("agents", [])
+        sales_agent = next((a for a in agents if "ventas" in a.get("name", "").lower()), None)
+        active_agent = next((a for a in agents if a.get("status") == "ACTIVE"), None)
+        chosen_agent = sales_agent or active_agent or (agents[0] if agents else None)
+        if not chosen_agent or not chosen_agent.get("id"):
+            print(f"{Colors.RED}[ERROR] La organización no tiene ningún agente activo registrado en AgentGuard.{Colors.RESET}")
+            raise SystemExit(1)
+        agent_id = chosen_agent["id"]
+
+    # Resolución de Herramientas por acción atómica requerida:
+    tools: list[dict[str, Any]] = context.get("tools", [])
+
+    def find_tool_for_action(action_name: str, preferred_name: str = "") -> str:
+        for t in tools:
+            actions = t.get("actions", [])
+            if any(a.get("action_name") == action_name for a in actions):
+                return t["id"]
+        if preferred_name:
+            norm_preferred = preferred_name.lower()
+            for t in tools:
+                if norm_preferred in t.get("name", "").lower():
+                    return t["id"]
+        if tools:
+            return tools[0]["id"]
+        print(f"{Colors.RED}[ERROR] No se encontraron herramientas registradas en el tenant para la acción '{action_name}'.{Colors.RESET}")
+        raise SystemExit(1)
+
+    tool_crm_id = os.getenv("TOOL_CRM_ID", "").strip() or find_tool_for_action("create_quote", "crm")
+    tool_stripe_id = os.getenv("TOOL_STRIPE_ID", "").strip() or find_tool_for_action("refund", "stripe")
+    tool_catalog_id = os.getenv("TOOL_CATALOG_ID", "").strip() or find_tool_for_action("update_price", "catálogo")
+
+    delegator_raw = os.getenv("DELEGATOR_USER_ID", "").strip()
+    delegator_user_id = delegator_raw or None
 
     return DemoConfig(
-        base_url=os.getenv("AGENTGUARD_URL", DEFAULT_BASE_URL).strip().rstrip("/"),
-        api_key=os.getenv("AGENTGUARD_API_KEY", "").strip(),
-        organization_id=os.getenv("ORGANIZATION_ID", DEFAULT_ORG_ID).strip() or DEFAULT_ORG_ID,
-        agent_id=os.getenv("AGENT_ID", DEFAULT_AGENT_ID).strip() or DEFAULT_AGENT_ID,
-        delegator_user_id=delegator_raw or None,
-        tool_crm_id=os.getenv("TOOL_CRM_ID", DEFAULT_TOOL_CRM_ID).strip() or DEFAULT_TOOL_CRM_ID,
-        tool_stripe_id=os.getenv("TOOL_STRIPE_ID", DEFAULT_TOOL_STRIPE_ID).strip() or DEFAULT_TOOL_STRIPE_ID,
-        tool_catalog_id=os.getenv("TOOL_CATALOG_ID", DEFAULT_TOOL_CATALOG_ID).strip() or DEFAULT_TOOL_CATALOG_ID,
+        base_url=base_url,
+        api_key=api_key,
+        organization_id=org_id,
+        agent_id=agent_id,
+        delegator_user_id=delegator_user_id,
+        tool_crm_id=tool_crm_id,
+        tool_stripe_id=tool_stripe_id,
+        tool_catalog_id=tool_catalog_id,
     )
 
 

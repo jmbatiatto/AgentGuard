@@ -37,18 +37,21 @@ Copiá la plantilla `.env.example` a `.env` y completá `AGENTGUARD_API_KEY` con
 copy .env.example .env
 ```
 
-Variables disponibles en `agent-demo/.env`:
+> [!TIP]
+> **Descubrimiento Dinámico de Contexto:** `agent-demo` consulta automáticamente el endpoint `GET /api/v1/gateway/context` usando tu `AGENTGUARD_API_KEY`. Por tanto, **no necesitas copiar ni sincronizar UUIDs fijos a mano** (organización, agente ni herramientas) tras un reinicio de base de datos o al usar una organización nueva.
 
-| Variable | Descripción | Valor por defecto (`seed_demo.py`) |
+Variables en `agent-demo/.env`:
+
+| Variable | Descripción | Estado / Descubrimiento |
 | :--- | :--- | :--- |
-| `AGENTGUARD_URL` | URL base del backend AgentGuard | `http://localhost:8000` |
-| `AGENTGUARD_API_KEY` | API Key enviada en la cabecera `X-AgentGuard-Key` | *(obligatoria)* |
-| `ORGANIZATION_ID` | UUID de la organización propietaria de la API Key | `11111111-1111-1111-1111-111111111111` |
-| `AGENT_ID` | UUID del agente de IA protegido | `33333333-3333-3333-3333-333333333301` |
-| `DELEGATOR_USER_ID` | UUID del usuario humano delegador (opcional) | `22222222-2222-2222-2222-222222222203` |
-| `TOOL_CRM_ID` | UUID de la herramienta CRM (`create_quote`, `export_customers`) | `44444444-4444-4444-4444-444444444401` |
-| `TOOL_STRIPE_ID` | UUID de la herramienta Stripe (`refund`) | `44444444-4444-4444-4444-444444444402` |
-| `TOOL_CATALOG_ID` | UUID de la herramienta Catálogo (`update_price`) | `44444444-4444-4444-4444-444444444403` |
+| `AGENTGUARD_URL` | URL base del backend AgentGuard | **Obligatoria** (default: `http://localhost:8000`) |
+| `AGENTGUARD_API_KEY` | API Key enviada en cabecera `X-AgentGuard-Key` | **Obligatoria** (`ag_live_...`) |
+| `ORGANIZATION_ID` | UUID de la organización tenant | *Opcional* (descubierto dinámicamente vía API) |
+| `AGENT_ID` | UUID del agente de IA protegido | *Opcional* (descubierto dinámicamente vía API) |
+| `DELEGATOR_USER_ID` | UUID del usuario humano delegador | *Opcional* (no requerido para los 4 escenarios) |
+| `TOOL_CRM_ID` | UUID de la herramienta CRM (`create_quote`) | *Opcional* (descubierto dinámicamente vía API) |
+| `TOOL_STRIPE_ID` | UUID de la herramienta Stripe (`refund`) | *Opcional* (descubierto dinámicamente vía API) |
+| `TOOL_CATALOG_ID` | UUID de la herramienta Catálogo (`update_price`) | *Opcional* (descubierto dinámicamente vía API) |
 
 ## 4. Ejecución
 

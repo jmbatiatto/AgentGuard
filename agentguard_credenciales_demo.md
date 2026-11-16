@@ -2,27 +2,27 @@
 
 **Proyecto:** AgentGuard (Plataforma SaaS B2B Multi-Tenant de Gobernanza y Autorización Contextual en Runtime para Agentes de IA)  
 **Organización Demo:** `Acme Corp`  
-**Tenant UUID (`ORG_ACME_ID`):** `11111111-1111-1111-1111-111111111111`  
+**Persistencia:** PostgreSQL 16 genera todos los `UUID v4` de forma nativa (`gen_random_uuid()`)  
 **Fuente de Verdad:** [`backend/scripts/seed_demo.py`](./backend/scripts/seed_demo.py)
 
 > [!IMPORTANT]
-> Este documento contiene **exclusivamente** las credenciales, roles RBAC y UUIDs del tenant oficial de demostración **Acme Corp** sembrados por `seed_demo.py`. Para cambiar de perfil durante la demo en vivo, cerrá sesión desde el menú superior del usuario (**Cerrar sesión**) e iniciá sesión con JWT real en la pantalla de acceso (`AuthView`).
+> Este documento contiene las credenciales de acceso y roles RBAC del tenant oficial de demostración **Acme Corp**. La plataforma desacopla completamente cualquier UUID fijo: PostgreSQL 16 asigna UUIDs aleatorios nativos en cada siembra o reseteo, y el cliente CLI `agent-demo` los **descubre automáticamente en runtime** vía `GET /api/v1/gateway/context` utilizando únicamente tu `AGENTGUARD_API_KEY`. Para cambiar de perfil durante la demo en vivo, cerrá sesión desde el menú superior del usuario (**Cerrar sesión**) e iniciá sesión con JWT real en la pantalla de acceso (`AuthView`).
 
 ---
 
 ## 1. Credenciales de Usuarios (Acme Corp)
 
-Todos los usuarios sembrados de **Acme Corp** comparten la misma contraseña para agilizar la demostración:
+Todos los usuarios de **Acme Corp** comparten la misma contraseña para agilizar la demostración:
 
 - **Contraseña única para los 5 usuarios:** `demo-password`
 
-| Rol (`UserRole`) | Etiqueta en UI | Email (Login) | Contraseña | User ID (UUID) | Alcance / Para qué usarlo en la Demo |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **`ADMIN`** | Administrador | `admin@acmecorp.com` | `demo-password` | `22222222-2222-2222-2222-222222222201` | Control total de Acme Corp: configurar agentes, herramientas y políticas PDP; gestionar **Equipo & Roles RBAC**; generar/revocar **API Keys Gateway (PEP)**; usar **Playground**; resolver HITL/alertas; ver trazas y auditoría; único habilitado para **Reiniciar Estado Demo (Factory Reset)**. |
-| **`APPROVER`** | Aprobador (HITL) | `approver@acmecorp.com` | `demo-password` | `22222222-2222-2222-2222-222222222202` | Oficial de cumplimiento / bucle humano: resuelve solicitudes `PENDING` en **Aprobaciones** (`POST /api/v1/approvals/{id}/resolve`, sellando su `approver_user_id` desde el JWT) y gestiona estado de alertas (`PATCH /api/v1/alerts/{id}/status`). Ideal para aprobar en vivo el reembolso del **Escenario 3**. |
-| **`OPERATOR`** | Operador | `operator@acmecorp.com` | `demo-password` | `22222222-2222-2222-2222-222222222203` | Operación y pruebas: ejecuta simulaciones en **Playground** (`POST /api/v1/gateway/simulate`), realiza triage de alertas (`PATCH /api/v1/alerts/{id}/status`) y actúa como `DELEGATOR_USER_ID` por defecto en `agent-demo/.env.example`. No puede aprobar HITL ni editar políticas o API Keys. |
-| **`AUDITOR`** | Auditor | `auditor@acmecorp.com` | `demo-password` | `22222222-2222-2222-2222-222222222204` | Cumplimiento y auditoría forense de solo lectura: accede a **Vista General**, **Trazas de Ejecución**, **Aprobaciones** (lectura), alertas y al registro inmutable `GET /api/v1/audit-events`. Bloqueado para aprobar HITL, usar Playground o mutar configuración. |
-| **`VIEWER`** | Visualizador | `viewer@acmecorp.com` | `demo-password` | `22222222-2222-2222-2222-222222222205` | Consulta ejecutiva de solo lectura: visualiza **Vista General**, métricas y listados operativos (`/agents`, `/executions`, `/approvals`, `/alerts`, `/analytics/overview`). Bloqueado en Playground, HITL, triage de alertas, `/api/v1/audit-events` y toda acción de Control Plane. |
+| Rol (`UserRole`) | Etiqueta en UI | Email (Login) | Contraseña | Alcance / Para qué usarlo en la Demo |
+| :--- | :--- | :--- | :--- | :--- |
+| **`ADMIN`** | Administrador | `admin@acmecorp.com` | `demo-password` | Control total de Acme Corp: configurar agentes, herramientas y políticas PDP; gestionar **Equipo & Roles RBAC**; generar/revocar **API Keys Gateway (PEP)**; usar **Playground**; resolver HITL/alertas; ver trazas y auditoría; único habilitado para **Reiniciar Estado Demo (Factory Reset)**. |
+| **`APPROVER`** | Aprobador (HITL) | `approver@acmecorp.com` | `demo-password` | Oficial de cumplimiento / bucle humano: resuelve solicitudes `PENDING` en **Aprobaciones** (`POST /api/v1/approvals/{id}/resolve`, sellando su `approver_user_id` desde el JWT) y gestiona estado de alertas (`PATCH /api/v1/alerts/{id}/status`). Ideal para aprobar en vivo el reembolso del **Escenario 3**. |
+| **`OPERATOR`** | Operador | `operator@acmecorp.com` | `demo-password` | Operación y pruebas: ejecuta simulaciones en **Playground** (`POST /api/v1/gateway/simulate`), realiza triage de alertas (`PATCH /api/v1/alerts/{id}/status`). No puede aprobar HITL ni editar políticas o API Keys. |
+| **`AUDITOR`** | Auditor | `auditor@acmecorp.com` | `demo-password` | Cumplimiento y auditoría forense de solo lectura: accede a **Vista General**, **Trazas de Ejecución**, **Aprobaciones** (lectura), alertas y al registro inmutable `GET /api/v1/audit-events`. Bloqueado para aprobar HITL, usar Playground o mutar configuración. |
+| **`VIEWER`** | Visualizador | `viewer@acmecorp.com` | `demo-password` | Consulta ejecutiva de solo lectura: visualiza **Vista General**, métricas y listados operativos (`/agents`, `/executions`, `/approvals`, `/alerts`, `/analytics/overview`). Bloqueado en Playground, HITL, triage de alertas, `/api/v1/audit-events` y toda acción de Control Plane. |
 
 ---
 
@@ -72,32 +72,32 @@ El backend aplica verificación JWT estricta por tenant (`organization_id`) y re
 
 ---
 
-## 5. IDs Canónicos de Acme Corp (para `agent-demo/.env` y Pruebas)
+## 5. Entidades y Descubrimiento Dinámico de Acme Corp
 
-Estos son los UUIDs fijos sembrados por [`backend/scripts/seed_demo.py`](./backend/scripts/seed_demo.py) y preconfigurados en [`agent-demo/.env.example`](./agent-demo/.env.example):
+PostgreSQL 16 genera todos los identificadores con `gen_random_uuid()`. El cliente CLI `agent-demo` y la interfaz gráfica descubren dinámicamente los UUIDs reales desde la API, eliminando la necesidad de constantes artificiales fijas.
 
 ### Entorno y Agentes
-| Entidad | Nombre | UUID | Notas |
-| :--- | :--- | :--- | :--- |
-| Organización | `Acme Corp` | `11111111-1111-1111-1111-111111111111` | `ORGANIZATION_ID` |
-| Agente Demo Principal | `Agente de Ventas` | `33333333-3333-3333-3333-333333333301` | `AGENT_ID` usado en los 4 escenarios; vinculado a `CRM & Facturación` y `Stripe Payments`. |
-| Agente Secundario | `Finance Copilot` | `33333333-3333-3333-3333-333333333302` | Vinculado a `Stripe Payments`. |
-| Agente Secundario | `Support Assistant` | `33333333-3333-3333-3333-333333333303` | Vinculado a `CRM & Facturación`. |
-| Usuario Delegador Default | `operator@acmecorp.com` | `22222222-2222-2222-2222-222222222203` | `DELEGATOR_USER_ID` en `agent-demo/.env.example`. |
+| Entidad | Nombre | Rol / Asignación en Acme Corp |
+| :--- | :--- | :--- |
+| Organización | `Acme Corp` | Tenant principal de demostración |
+| Agente Demo Principal | `Agente de Ventas` | Agente protegido usado en los 4 escenarios; vinculado a `CRM & Facturación` y `Stripe Payments`. |
+| Agente Secundario | `Finance Copilot` | Vinculado a `Stripe Payments`. |
+| Agente Secundario | `Support Assistant` | Vinculado a `CRM & Facturación`. |
+| Usuario Operador | `operator@acmecorp.com` | Operador autorizado del sistema. |
 
 ### Herramientas, Acciones y Políticas
-| Variable / Entidad | Nombre | UUID | Acciones / Reglas Clave |
-| :--- | :--- | :--- | :--- |
-| `TOOL_CRM_ID` | `CRM & Facturación` | `44444444-4444-4444-4444-444444444401` | `create_quote` (`LOW`), `export_customers` (`CRITICAL`) |
-| `TOOL_STRIPE_ID` | `Stripe Payments` | `44444444-4444-4444-4444-444444444402` | `refund` (`HIGH`) |
-| `TOOL_CATALOG_ID` | `Catálogo de Precios` | `44444444-4444-4444-4444-444444444403` | `update_price` (`HIGH`) — **NO** asignada a `Agente de Ventas` |
-| *(sin env var)* | `Database Administrator` | `44444444-4444-4444-4444-444444444404` | `database.drop` (`CRITICAL`) — **NO** asignada a `Agente de Ventas` |
-| Política Ventas | `Políticas de Operación y Seguridad para Agente de Ventas` | `66666666-6666-6666-6666-666666666601` | `create_quote` (`amount <= 10000`) -> `ALLOW`; `refund` (`amount >= 500`) -> `REQUIRE_APPROVAL`; `refund` (`amount < 500`) -> `ALLOW` |
-| Política Global | `Guardrails Globales de Seguridad` | `66666666-6666-6666-6666-666666666602` | `export_customers` -> `DENY`; `database.drop` -> `DENY` |
+| Herramienta | Protocolo | Acciones Atómicas / Reglas Clave |
+| :--- | :--- | :--- |
+| `CRM & Facturación` | REST | `create_quote` (`LOW`), `export_customers` (`CRITICAL`) |
+| `Stripe Payments` | REST | `refund` (`HIGH`) |
+| `Catálogo de Precios` | REST | `update_price` (`HIGH`) — **NO** asignada a `Agente de Ventas` (principio de privilegio mínimo) |
+| `Database Administrator` | REST | `database.drop` (`CRITICAL`) — **NO** asignada a `Agente de Ventas` (guardrail destructivo) |
+| Política Ventas | PDP | `create_quote` (`amount <= 10000`) -> `ALLOW`<br>`refund` (`amount >= 500`) -> `REQUIRE_APPROVAL`<br>`refund` (`amount < 500`) -> `ALLOW` |
+| Política Global | PDP | `export_customers` -> `DENY` + Alerta CRITICAL (OWASP ASI03)<br>`database.drop` -> `DENY` |
 
 ### Los 4 Escenarios Canónicos de `agent-demo`
 | Escenario | Acción y Payload | HTTP | Decisión PDP | Efecto en Dashboard |
-| :-: | :--- | :-: | :--- | :--- |
+| :-: | :--- | :--- | :--- | :--- |
 | **1** | `create_quote` (`amount: 2500`) | `200 OK` | `ALLOW` | Se ejecuta y registra traza `EXECUTED` en **Trazas de Ejecución**. |
 | **2** | `update_price` (`new_price: 10`) | `403 Forbidden` | `DENY` | Bloqueado por privilegio mínimo (`AgentTool` no asignada al `Agente de Ventas`). |
 | **3** | `refund` (`amount: 4500`) | `202 Accepted` | `REQUIRE_APPROVAL` | Devuelve `approval_id` y abre ticket `PENDING` en **Aprobaciones** para resolver como `approver@acmecorp.com`. |
