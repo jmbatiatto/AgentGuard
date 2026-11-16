@@ -9,6 +9,7 @@ import {
   LogOut,
   Building2,
   ArrowLeftRight,
+  Users,
 } from 'lucide-react';
 import { useTheme } from '../context/useTheme';
 import { useAuth } from '../context/AuthContext';
@@ -53,6 +54,13 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
     setIsDropdownOpen(false);
     logout();
     window.location.hash = '#auth';
+  };
+
+  const handleManageTeam = () => {
+    setIsDropdownOpen(false);
+    sessionStorage.setItem('agentguard_settings_tab', 'team');
+    window.dispatchEvent(new CustomEvent('agentguard:settings-tab', { detail: 'team' }));
+    window.location.hash = '#settings';
   };
 
   return (
@@ -469,7 +477,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
                 </div>
               </div>
 
-              {/* Acciones de cuenta: Cambiar de cuenta + Reset Demo (solo ADMIN Acme) + Cerrar sesión */}
+              {/* Acciones de cuenta: Gestionar equipo (ADMIN) + Cambiar de cuenta + Reset Demo (solo ADMIN Acme) + Cerrar sesión */}
               <div
                 style={{
                   padding: '8px 12px 10px 12px',
@@ -480,6 +488,39 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
                   backgroundColor: 'var(--bg-card)',
                 }}
               >
+                {currentUser.canManageTeam && (
+                  <button
+                    id="btn-dropdown-manage-team"
+                    type="button"
+                    onClick={handleManageTeam}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--success-border)',
+                      backgroundColor: 'var(--success-bg)',
+                      color: 'var(--success-text)',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = 'brightness(1.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = 'none';
+                    }}
+                  >
+                    <Users size={13} />
+                    <span>Gestionar equipo y usuarios</span>
+                  </button>
+                )}
+
                 <button
                   id="btn-dropdown-switch-account"
                   type="button"

@@ -29,11 +29,36 @@ import { SkeletonRow } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 import { useAuth } from '../context/AuthContext';
 
+type SettingsTab = 'general' | 'apikeys' | 'team' | 'security' | 'siem';
+
+const VALID_SETTINGS_TABS: SettingsTab[] = ['general', 'apikeys', 'team', 'security', 'siem'];
+
 export const SettingsView: React.FC = () => {
   const { toast } = useToast();
   const { currentOrganizationId, currentOrganization, currentUser, refreshOrganization } = useAuth();
   const activeOrgId = currentOrganizationId || '';
-  const [activeTab, setActiveTab] = useState<'general' | 'apikeys' | 'team' | 'security' | 'siem'>('general');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    if (typeof window !== 'undefined') {
+      const requested = sessionStorage.getItem('agentguard_settings_tab') as SettingsTab | null;
+      if (requested && VALID_SETTINGS_TABS.includes(requested)) {
+        sessionStorage.removeItem('agentguard_settings_tab');
+        return requested;
+      }
+    }
+    return 'general';
+  });
+
+  useEffect(() => {
+    const handleTabEvent = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail as SettingsTab | undefined;
+      if (detail && VALID_SETTINGS_TABS.includes(detail)) {
+        sessionStorage.removeItem('agentguard_settings_tab');
+        setActiveTab(detail);
+      }
+    };
+    window.addEventListener('agentguard:settings-tab', handleTabEvent);
+    return () => window.removeEventListener('agentguard:settings-tab', handleTabEvent);
+  }, []);
   const [healthStatus, setHealthStatus] = useState<SystemHealth | null>(null);
 
   // Feedback Toast delegado al ToastContext global
