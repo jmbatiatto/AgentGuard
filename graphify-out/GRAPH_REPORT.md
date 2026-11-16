@@ -1,72 +1,72 @@
 # Graph Report - AgentGuard  (2026-11-16)
 
 ## Corpus Check
-- 196 files · ~177,841 words
+- 210 files · ~191,074 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 18 file(s) not represented in the graph (top: .drawio 6, .example 3, .bat 3)
+- Unclassified: 23 file(s) not represented in the graph (top: .drawio 6, (none) 4, .example 4)
 
 ## Summary
-- 2562 nodes · 6994 edges · 149 communities (96 shown, 53 thin omitted)
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 680 edges (avg confidence: 0.94)
+- 2765 nodes · 7420 edges · 177 communities (104 shown, 73 thin omitted)
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 720 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a62f3087`
+- Built from commit: `d38ce735`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- Organization
+- 005_add_hashed_password_to_users.py
 - domain.ts
 - cleanup_overrides
 - 05 — Cuestionario de Decisiones Arquitectónicas y de Producto para el Usuario
 - list_executions
 - _setup_admin_auth
 - App.tsx
-- test_gateway_api.py
+- asyncio
 - test_alerts.py
 - labels.ts
 - frontend/package.json
 - postgres
-- test_policies.py
+- test_gemini_agent.py
 - approvals.py
 - domain.ts
 - UUID
-- make_admin_jwt
+- UUID
 - ThemeContext.ts
 - compilerOptions
 - auth-ui.tsx
-- get_db
+- typing
 - compilerOptions
-- main
-- env.py
-- backend/scripts/seed_demo.py
-- _setup_admin_auth
-- update_organization
+- run_demo.py
+- schemas/organization.py
+- security.py
+- AcmeDatabase
+- get_organization
 - websocket_manager.py
-- api/auth.py
-- pytest
-- ApiKey
+- update_user
+- ToolCreate
+- ensure_same_tenant
 - PolicyService
 - AgentService
 - .oxlintrc.json
-- test_api_keys.py
+- cli.py
 - 🏛️ Registro de Decisiones Arquitectónicas (ADRs) — AgentGuard
 - tsconfig.json
 - 🎯 Guía de Defensa: Diagrama de Casos de Uso del Sistema (UML)
 - 🛡️ Guía de Defensa: Modelo Entidad-Relación Relacional Multi-Tenant (13 Tablas)
 - WebhookService
-- typing
+- create_tool_action
 - 📑 Desglose de Pasos: Semana 1 — Base de Datos & Setup Inicial
-- _setup_admin_auth
+- test_audit_events.py
 - 3. Los 4 Escenarios Demostrables Paso a Paso
 - ApiKey
-- ensure_same_tenant
+- test_agents.py
 - 📐 Guía de Defensa: Modelo Conceptual (Chen) y Diccionario de Atributos
-- generate_diagrams.py
+- PolicyRuleService
 - _setup_user_auth
 - OrganizationService
-- convert_docs_to_docx.py
+- require_admin_user
 - sanitizer_service.py
 - Tool
 - AuditService
@@ -75,27 +75,28 @@
 - CLAUDE.md
 - 04 — Inventario Forense de Código Muerto, Dependencias Redundantes y Archivos Huérfanos
 - copilot-instructions.md
-- AuditEvent
+- server/database.py
+- .get_by_id
 - 🔄 Guía de Defensa: Máquinas de Estados y Ciclo de Vida en Runtime (Protocolo HITL 202 Accepted)
 - Original User Request
 - sqlalchemy
 - get_analytics_overview
-- .matches_conditions
+- PDPEngine
 - 🛡️ AgentGuard — Runtime Authorization & Governance for AI Agents
 - threat_detector.py
 - 🔐 AgentGuard — Guía Rápida de Credenciales y Roles Demo (Acme Corp)
 - BaseSchema
 - dashboard-sidebar.tsx
-- run_demo.py
+- Alcance de la Fase 2:
 - package.json
 - test_health.py
 - approvals.py
-- test_pdp_evaluate_allow
-- health_check
+- create_app
+- app.js
 - 4. Código Interno Muerto, Endpoints Desconectados y Reliquias de Prototipo
 - cleanup_overrides
 - scripts
-- threat_detector.py
+- test_acme_server.py
 - test_organizations.py
 - 🛡️ AgentGuard — Guía Simple y Hoja de Ruta para el Equipo
 - `_MASTER_PROJECT_SNAPSHOT.md` — Fuente de Verdad Consolidada de AgentGuard
@@ -103,43 +104,62 @@
 - _mock_user_auth
 - SanitizerService
 - 1.2 Inventario Individual (39 archivos `.md`)
-- ActorType
-- test_siem_webhook_test_ping_missing_url
-- test_organization_settings.py
+- create_api_key
+- PolicyRuleRead
+- test_agent_service_assign_tool
 - 06 — Propuesta de Evolución Arquitectónica, Optimización de Rendimiento y Mejores Prácticas
 - _AutoYieldOverrides
 - 🧭 2. Flujo del Wizard de Presentación (4 Pasos Guiados)
 - 3. Hallazgos Críticos y Bugs Funcionales en el Frontend
-- 002_add_latency_ms_to_executions.py
-- test_seed_data_already_exists_without_reset
+- downgrade
+- clear_database
 - update_tool
 - vite.config.ts
 - BRIEFING — 2026-11-03 02:34:00 UTC
-- 005_add_hashed_password_to_users.py
-- 2. Reglas Innegociables de Seguridad, Dominio e Idioma
+- 🎭 4. Guión Paso a Paso de los 5 Escenarios Demostrativos
+- README.md
 - pnpm-workspace.yaml
-- 🏗️ Guía de Defensa: Arquitectura de Runtime y Flujo de Intercepción PEP / PDP
 - 006_add_must_change_password_to_users.py
 - scripts
 - dependencies
 - alerts.py
-- reset_demo_data
-- Execution
+- post
 - Bloque A — Seguridad, Identidad y Cumplimiento de Reglas de Dominio
 - Skeleton.tsx
-- asyncio
-- 2. Patrones de Diseño Recomendados para Desacoplar el Dominio
+- test_service_verify_api_key_lifecycle
+- app.py
 - test_auth.py
-- parse_args
-- cleanup_overrides
+- test_register_org_success_atomic_onboarding
+- get_gateway_context
+- asyncio
 - test_tool_actions.py
-- User
+- test_seed_data_fresh_creation
 - test_get_execution_by_id_not_found
+- 03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural
+- 0.1 Backend: Servicios "Dios", Fuga de ORM hacia HTTP y Dominio Impuro
 - clear_overrides
-- pep_gateway_service.py
+- test_analytics_service_get_overview_with_data
+- list_audit_events
+- websocket.py
+- 3. Stubs, Retornos Ficticios y Fallos de Lógica en el Core PEP/PDP
+- env.py
+- Bloque B — Flujo Runtime del Gateway PEP, HITL y Herramientas
+- temp_db
+- api/auth.py
+- 1. Propuesta de Arquitectura Objetivo y Árbol de Directorios (Front & Back)
+- cleanup_overrides
+- test_api_get_attack_catalog
+- 01 — Auditoría Forense de Brecha Documental vs. Implementación Real (`Gap Analysis`)
+- test_tool_action_service_create
+- test_threat_detector_goal_hijacking
+- test_threat_detector_data_exfiltration
+- test_threat_detector_base64_obfuscation
+- test_threat_detector_embedded_base64_obfuscation
+- test_threat_detector_destructive_sql
+- test_threat_detector_clean_parameters
 
 ## God Nodes (most connected - your core abstractions)
-1. `User` - 175 edges
+1. `User` - 173 edges
 2. `make_admin_jwt()` - 91 edges
 3. `Organization` - 85 edges
 4. `UserRole` - 78 edges
@@ -147,53 +167,49 @@
 6. `ToolAction` - 75 edges
 7. `BaseSchema` - 72 edges
 8. `Agent` - 67 edges
-9. `AgentTool` - 62 edges
-10. `AgentGuardApiClient` - 52 edges
+9. `AgentTool` - 64 edges
+10. `Execution` - 52 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `4.2 Estándares de Frontend (`TypeScript 6` / `React 19` / `Vite 8` / `pnpm`)` --references--> `ApiError`  [INFERRED]
-  docs/archive/audit_reports/06_RECOMENDACIONES_ARQUITECTURA_Y_MEJORES_PRACTICAS.md → frontend/src/services/api.ts
-- `12. Alcance de las 4 Pestañas Simuladas de `SettingsView.tsx`` --references--> `SettingsView()`  [INFERRED]
-  docs/archive/audit_reports/05_PREGUNTAS_CLAVE_USUARIO.md → frontend/src/views/SettingsView.tsx
-- `C. Máquina 3: Ciclo de Vida de un Incidente de Seguridad (`Alert.status`)` --references--> `AlertStatus`  [INFERRED]
-  agentguard_estados_ciclo_vida.md → backend/app/models/enums.py
-- `A. Máquina 1: Ciclo de Vida de una Ejecución (`Execution.status`)` --references--> `ExecutionStatus`  [INFERRED]
-  agentguard_estados_ciclo_vida.md → backend/app/models/enums.py
+- `Escenario 2: Alteración no Autorizada de Precios (`attack_price`)` --references--> `AgentTool`  [INFERRED]
+  acme-corp/README.md → backend/app/models/agent.py
 - `🛡️ Certificación de los 4 Escenarios de la Demo ante el Tribunal` --references--> `Alert`  [INFERRED]
   docs/archive/desglose_de_pasos_semana_3_gateway_interceptor_y_pdp.md → backend/app/models/alert.py
+- `Paso 4: Intento de Exfiltración / Inyección de Prompt (DENY + ALERTA SIEM)` --references--> `Alert`  [INFERRED]
+  docs/archive/PROPUESTAS_MEJORAS_FRONTEND.md → backend/app/models/alert.py
+- `Fase 2: Implementación de Endpoints Faltantes en Backend` --references--> `AuditEvent`  [INFERRED]
+  docs/archive/INFORME_MOCKUPS_FRONT_BACK.md → backend/app/models/audit.py
+- `3.2 Re-Despacho HITL Corrupto con Parámetros `"***REDACTED***"` y Pérdida de Resultado` --references--> `Execution`  [INFERRED]
+  docs/archive/audit_reports/03_ESTADO_BACKEND_PENDIENTES.md → backend/app/models/execution.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (149 total, 53 thin omitted)
-
-### Community 0 - "Organization"
-Cohesion: 0.10
-Nodes (4): Base, check_redis_health(), Organization, Policy
+## Communities (177 total, 73 thin omitted)
 
 ### Community 1 - "domain.ts"
 Cohesion: 0.13
 Nodes (6): 3.2 Corrupción de Estado Real por Condición `data.length > 0` y Falsos Éxitos (`api.ts`), AgentGuardApiClient, extractApiError(), handleNetworkError(), AuthResponse, UserMember
 
 ### Community 3 - "05 — Cuestionario de Decisiones Arquitectónicas y de Producto para el Usuario"
-Cohesion: 0.14
-Nodes (13): 05 — Cuestionario de Decisiones Arquitectónicas y de Producto para el Usuario, 10. Activación Real de Redis 7, PostgreSQL RLS y Operadores Contextuales del PDP, 11. Eliminación del Modo *"Wizard-of-Oz"* (`mockData.ts` y Falsos Éxitos en `api.ts`), 12. Alcance de las 4 Pestañas Simuladas de `SettingsView.tsx`, 13. Evolución del `PlaygroundView` y Desarrollo de `agent-demo/`, 14. Gobernanza del Botón `"Reset Demo"` e Idioma Canónico de la Interfaz, 4. Protocolo de Espera y Entrega de Resultados en HITL (`REQUIRE_APPROVAL`), 5. Custodia de Parámetros Originales para Re-Despacho HITL (Problema `"***REDACTED***"`) (+5 more)
+Cohesion: 0.20
+Nodes (9): 05 — Cuestionario de Decisiones Arquitectónicas y de Producto para el Usuario, 10. Activación Real de Redis 7, PostgreSQL RLS y Operadores Contextuales del PDP, 11. Eliminación del Modo *"Wizard-of-Oz"* (`mockData.ts` y Falsos Éxitos en `api.ts`), 12. Alcance de las 4 Pestañas Simuladas de `SettingsView.tsx`, 13. Evolución del `PlaygroundView` y Desarrollo de `agent-demo/`, 14. Gobernanza del Botón `"Reset Demo"` e Idioma Canónico de la Interfaz, 8. Unificación de `UserRole` y Usuarios Semilla (`Lucia Vance`), Bloque C — Modelo de Datos, Estados e Infraestructura (+1 more)
 
 ### Community 4 - "list_executions"
-Cohesion: 0.09
-Nodes (17): get_execution_by_id(), list_executions(), _to_execution_response(), 03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural, 1. Veredicto Ejecutivo del Backend, 2.2 Violaciones de Clave Foránea (`IntegrityError`) No Controladas (`HTTP 500`), 2. Crashes `HTTP 500` Confirmados en Tiempo de Ejecución, 3.1 Falso Éxito Silencioso en `_dispatch_to_tool` (Violación Directa de Fail-Closed) (+9 more)
+Cohesion: 0.19
+Nodes (6): get_execution_by_id(), list_executions(), _to_execution_response(), ExecutionResponse, 3.4 Latencia Forense Ficticia (`latency_ms=21.5`), 5. Deuda Técnica Estructural, Contratos Incompletos y Configuración
 
 ### Community 5 - "_setup_admin_auth"
-Cohesion: 0.15
+Cohesion: 0.12
 Nodes (9): _setup_admin_auth(), test_api_create_tool_organization_not_found(), test_api_create_tool_success(), test_api_get_tool_found(), test_api_get_tool_not_found(), test_api_list_tools(), test_tool_service_create(), test_tool_service_get_by_id() (+1 more)
 
 ### Community 6 - "App.tsx"
 Cohesion: 0.14
 Nodes (38): 2.2 Tabla Maestra de Vistas, Componentes y Estado de Consumo, App(), AppContent(), getInitialView(), EmptyState(), ToastContainer(), ToastItem(), ForcePasswordChangeModal() (+30 more)
 
-### Community 7 - "test_gateway_api.py"
-Cohesion: 0.16
-Nodes (7): test_gateway_execute_endpoint_allow(), test_gateway_execute_endpoint_deny(), test_gateway_execute_endpoint_require_approval(), test_gateway_execute_invalid_api_key_returns_401(), test_gateway_execute_missing_api_key_returns_401(), test_gateway_execute_org_mismatch_returns_403(), test_gateway_execute_validation_error()
+### Community 7 - "asyncio"
+Cohesion: 0.22
+Nodes (4): test_gateway_execute_invalid_api_key_returns_401(), test_gateway_execute_missing_api_key_returns_401(), test_gateway_execute_org_mismatch_returns_403(), test_gateway_execute_validation_error()
 
 ### Community 8 - "test_alerts.py"
 Cohesion: 0.27
@@ -211,9 +227,9 @@ Nodes (19): devDependencies, oxlint@^1.81.0, @types/node@^24.13.3, @types/react@
 Cohesion: 0.06
 Nodes (37): driver, name, PGDATA, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, interval, retries (+29 more)
 
-### Community 12 - "test_policies.py"
-Cohesion: 0.13
-Nodes (9): _setup_admin_auth(), test_api_create_policy_organization_not_found(), test_api_create_policy_success(), test_api_get_policy_found(), test_api_get_policy_not_found(), test_api_list_policies(), test_policy_service_create(), test_policy_service_get_by_id() (+1 more)
+### Community 12 - "test_gemini_agent.py"
+Cohesion: 0.10
+Nodes (13): discover_agentguard_context(), GeminiAgentClient, resolve_agent_id(), resolve_tool_id_for_action(), test_api_agent_run_endpoint(), test_discover_agentguard_context(), test_execute_in_direct_mode_drop_db(), test_execute_in_direct_mode_tampering() (+5 more)
 
 ### Community 13 - "approvals.py"
 Cohesion: 0.05
@@ -224,12 +240,12 @@ Cohesion: 0.13
 Nodes (30): ForcePasswordChangeModalProps, ROLE_DESCRIPTIONS, AuthContext, AuthContextType, AuthProvider(), AuthUser, formatAuthUser(), normalizeRole() (+22 more)
 
 ### Community 16 - "UUID"
-Cohesion: 0.10
-Nodes (19): test_audit_service_log_audit_event(), _setup_admin_auth(), test_api_create_user_email_conflict(), test_api_create_user_organization_not_found(), test_api_create_user_success(), test_api_delete_user(), test_api_delete_user_not_found(), test_api_get_user_found() (+11 more)
+Cohesion: 0.09
+Nodes (18): _setup_admin_auth(), test_api_create_user_email_conflict(), test_api_create_user_organization_not_found(), test_api_create_user_success(), test_api_delete_user(), test_api_delete_user_not_found(), test_api_get_user_found(), test_api_get_user_not_found() (+10 more)
 
-### Community 17 - "make_admin_jwt"
-Cohesion: 0.07
-Nodes (27): UserRole, make_admin_jwt(), MockOverviewRow, MockTimeseriesRow, test_analytics_service_get_overview_empty_state(), test_analytics_service_get_overview_with_data(), test_analytics_service_get_timeseries_empty_state(), test_analytics_service_get_timeseries_with_buckets() (+19 more)
+### Community 17 - "UUID"
+Cohesion: 0.03
+Nodes (94): UserRole, Organization, Policy, User, ensure_canonical_demo_users(), make_admin_jwt(), test_analytics_service_get_overview_empty_state(), test_analytics_service_get_timeseries_empty_state() (+86 more)
 
 ### Community 18 - "ThemeContext.ts"
 Cohesion: 0.39
@@ -243,65 +259,57 @@ Nodes (20): compilerOptions, allowArbitraryExtensions, allowImportingTsExtension
 Cohesion: 0.22
 Nodes (18): AuthContentProps, AuthFormContainer(), AuthUIProps, Button, ButtonProps, buttonVariants, cn(), defaultSignInContent (+10 more)
 
-### Community 21 - "get_db"
-Cohesion: 0.09
-Nodes (7): get_current_user(), require_admin_user(), resolve_tenant_org_id(), websocket_global_endpoint(), websocket_tenant_endpoint(), get_db(), decode_access_token()
+### Community 21 - "typing"
+Cohesion: 0.07
+Nodes (6): upgrade(), get_current_user(), require_roles(), get_db(), ActorType, AlertStatus
 
 ### Community 22 - "compilerOptions"
 Cohesion: 0.12
 Nodes (16): compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, lib, module, moduleDetection, noEmit, noFallthroughCasesInSwitch (+8 more)
 
-### Community 23 - "main"
-Cohesion: 0.21
-Nodes (7): _decision_color(), DemoConfig, main(), run_all_scenarios(), run_interactive_menu(), run_scenario(), validate_config()
+### Community 23 - "run_demo.py"
+Cohesion: 0.06
+Nodes (23): build_payload(), Colors, _configure_stdio(), _decision_color(), DemoConfig, DemoScenario, discover_gateway_context(), load_config() (+15 more)
 
-### Community 25 - "backend/scripts/seed_demo.py"
+### Community 24 - "schemas/organization.py"
+Cohesion: 0.20
+Nodes (4): OrganizationCreate, OrganizationSettings, OrganizationUpdate, SiemWebhookTestRequest
+
+### Community 26 - "AcmeDatabase"
 Cohesion: 0.11
-Nodes (8): do_run_migrations(), run_async_migrations(), run_migrations_offline(), run_migrations_online(), clear_database(), ensure_canonical_demo_users(), main(), _resolve_demo_org()
+Nodes (3): AcmeDatabase, test_database_drop_and_503_wiped(), test_initial_seed_data()
 
-### Community 26 - "_setup_admin_auth"
-Cohesion: 0.12
-Nodes (10): _setup_admin_auth(), test_agent_service_assign_tool(), test_agent_service_create(), mock_refresh(), test_agent_service_get_by_id(), test_api_assign_tool_different_org(), test_api_assign_tool_to_agent_success(), test_api_create_agent_owner_different_org() (+2 more)
-
-### Community 27 - "update_organization"
-Cohesion: 0.09
-Nodes (13): create_organization(), get_organization(), get_organization_settings(), list_organizations(), test_organization_siem_webhook(), update_organization(), update_organization_settings(), OrganizationCreate (+5 more)
+### Community 27 - "get_organization"
+Cohesion: 0.18
+Nodes (8): create_organization(), get_organization(), get_organization_settings(), list_organizations(), test_organization_siem_webhook(), update_organization(), update_organization_settings(), OrganizationRead
 
 ### Community 28 - "websocket_manager.py"
 Cohesion: 0.12
 Nodes (6): WebSocketConnectionManager, test_websocket_endpoint_ping_pong(), test_websocket_manager_broadcast_tenant_isolation(), test_websocket_manager_connect_and_welcome(), test_websocket_manager_disconnect_cleanup(), test_websocket_tenant_endpoint_connect()
 
-### Community 29 - "api/auth.py"
-Cohesion: 0.05
-Nodes (23): change_password(), get_me(), login(), register(), register_organization(), create_user(), delete_user(), get_user() (+15 more)
+### Community 29 - "update_user"
+Cohesion: 0.18
+Nodes (5): create_user(), delete_user(), get_user(), list_users(), update_user()
 
-### Community 30 - "pytest"
-Cohesion: 0.14
-Nodes (8): RuleEffect, test_alert_schema(), test_approval_resolve_schema(), test_gateway_schemas(), test_organization_schemas(), test_policy_and_policy_rule_schemas_fail_closed(), test_tool_and_action_schemas(), test_user_schemas()
-
-### Community 31 - "ApiKey"
-Cohesion: 0.20
-Nodes (5): ApiKey, test_service_revoke_api_key_soft_delete(), test_register_org_api_key_validates_in_gateway_service(), test_register_org_success_atomic_onboarding(), 2. Decisión Tomada
+### Community 31 - "ensure_same_tenant"
+Cohesion: 0.10
+Nodes (14): assign_tool_to_agent(), create_agent(), delete_agent(), get_agent(), list_agent_tools(), list_agents(), update_agent(), ensure_same_tenant() (+6 more)
 
 ### Community 32 - "PolicyService"
-Cohesion: 0.06
-Nodes (5): _invalidate_policy_cache(), PolicyRuleService, PolicyService, ToolService, 2.1 Fallos `sqlalchemy.exc.MissingGreenlet` por Lazy-Loading Implícito tras `db.refresh()`
-
-### Community 35 - "AgentService"
-Cohesion: 0.09
-Nodes (7): delete_agent(), get_agent(), list_agent_tools(), list_agents(), update_agent(), AgentUpdate, AgentService
+Cohesion: 0.08
+Nodes (8): create_policy(), create_policy_rule_in_policy(), delete_policy(), get_policy(), list_policies(), update_policy(), PolicyUpdate, PolicyService
 
 ### Community 36 - ".oxlintrc.json"
 Cohesion: 0.33
 Nodes (5): plugins, rules, react/only-export-components, react/rules-of-hooks, $schema
 
-### Community 37 - "test_api_keys.py"
-Cohesion: 0.10
-Nodes (13): test_api_create_api_key_blocks_ai_agents(), test_api_create_api_key_org_not_found(), test_api_create_api_key_returns_raw_key_once_and_hides_hash(), test_api_get_api_key_by_id_not_found(), test_api_get_api_key_by_id_success(), test_api_list_api_keys_blocks_ai_agents(), test_api_list_api_keys_does_not_leak_plaintext_or_hash(), test_api_multi_tenant_isolation_cross_tenant_forbidden() (+5 more)
+### Community 37 - "cli.py"
+Cohesion: 0.14
+Nodes (8): display_presets_table(), main(), main_async(), print_banner(), get_preset_by_id(), list_presets(), get_agent_presets(), main()
 
 ### Community 38 - "🏛️ Registro de Decisiones Arquitectónicas (ADRs) — AgentGuard"
 Cohesion: 0.11
-Nodes (18): 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema, 1. Decisión Tomada, 1. Decisión Tomada, 1. Decisión Tomada, 1. Decisión Tomada, 2. Asignación por Paquete (+10 more)
+Nodes (19): 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema, 1. Decisión Tomada, 1. Decisión Tomada, 1. Decisión Tomada, 1. Decisión Tomada, 2. Asignación por Paquete (+11 more)
 
 ### Community 45 - "🎯 Guía de Defensa: Diagrama de Casos de Uso del Sistema (UML)"
 Cohesion: 0.17
@@ -311,69 +319,73 @@ Nodes (11): 1. Clasificación de Actores y Frontera del Sistema, 2. Diagrama de 
 Cohesion: 0.15
 Nodes (12): 1. Propósito y Alcance del Diagrama, 2. Diagrama del Modelo Entidad-Relación (Mermaid — 13 Tablas), 3. Decisiones Arquitectónicas y Justificación Técnica, 4. Capacidades Clave de la Persistencia, 5. Preguntas Difíciles del Profesor y Respuestas Recomendadas, A. Estrategia Multi-Tenant: Esquema Compartido con Aislamiento Obligatorio en Capa de Aplicación, B. Uso de `UUID v4` como Clave Primaria en lugar de Enteros Seriales, C. Uso Estratégico de `JSONB` con Índices GIN (+4 more)
 
-### Community 48 - "typing"
-Cohesion: 0.12
-Nodes (7): create_tool_action(), get_tool_action(), list_tool_actions(), ToolActionCreate, ToolActionRead, ToolCreate, ToolUpdate
+### Community 48 - "create_tool_action"
+Cohesion: 0.25
+Nodes (3): create_tool_action(), get_tool_action(), list_tool_actions()
 
 ### Community 49 - "📑 Desglose de Pasos: Semana 1 — Base de Datos & Setup Inicial"
 Cohesion: 0.04
-Nodes (40): lifespan(), ⚙️ AgentGuard — Backend (Python 3.12+ & FastAPI), 🏗️ Arquitectura de la API REST (`/api/v1`), 📋 Especificaciones Históricas Archivadas, 📁 Estructura del Código Fuente, 🧪 Pruebas Automatizadas, 🗄️ Versionado de Base de Datos con Alembic, 1. Levantar Servicios de Infraestructura (Paso 1) (+32 more)
+Nodes (41): lifespan(), ⚙️ AgentGuard — Backend (Python 3.12+ & FastAPI), 🏗️ Arquitectura de la API REST (`/api/v1`), 📋 Especificaciones Históricas Archivadas, 📁 Estructura del Código Fuente, 🧪 Pruebas Automatizadas, 🗄️ Versionado de Base de Datos con Alembic, 1. Levantar Servicios de Infraestructura (Paso 1) (+33 more)
 
-### Community 50 - "_setup_admin_auth"
-Cohesion: 0.19
-Nodes (6): _setup_admin_auth(), test_api_create_policy_rule_policy_not_found(), test_api_get_policy_rule_found(), test_api_get_policy_rule_not_found(), test_api_list_policy_rules(), test_policy_rule_service_create()
+### Community 50 - "test_audit_events.py"
+Cohesion: 0.05
+Nodes (29): AuditEvent, RuleEffect, PolicyRule, PolicyCreate, PolicyRuleCreate, PolicyRuleCreateInPolicy, PolicyRuleUpdate, test_audit_service_get_by_id() (+21 more)
 
 ### Community 51 - "3. Los 4 Escenarios Demostrables Paso a Paso"
 Cohesion: 0.20
 Nodes (9): 1. Guión y Estrategia de Presentación ante el Tribunal, 2. Diagrama de Secuencia Real (Mermaid), 3. Los 4 Escenarios Demostrables Paso a Paso, 4. Cierre Forense en `TracesView` (`GET /api/v1/executions`), Escenario 1: Operación Normal (`ALLOW` — HTTP `200 OK`), Escenario 2: Privilegio Mínimo / Abuso Bloqueado (`DENY` — HTTP `403 Forbidden`), Escenario 3: Operación Sensible con Human-in-the-Loop (`REQUIRE_APPROVAL` — HTTP `202 Accepted`), Escenario 4: Exfiltración de Datos y Alerta Crítica (`DENY + CRITICAL ALERT` — HTTP `403 Forbidden`) (+1 more)
 
-### Community 53 - "ensure_same_tenant"
-Cohesion: 0.09
-Nodes (14): ensure_same_tenant(), create_policy(), create_policy_rule_in_policy(), delete_policy(), get_policy(), list_policies(), update_policy(), create_policy_rule() (+6 more)
+### Community 52 - "ApiKey"
+Cohesion: 0.17
+Nodes (3): ApiKey, ApiKeyService, 2. Decisión Tomada
+
+### Community 53 - "test_agents.py"
+Cohesion: 0.20
+Nodes (7): _setup_admin_auth(), test_agent_service_get_by_id(), test_api_assign_tool_different_org(), test_api_assign_tool_to_agent_success(), test_api_create_agent_owner_different_org(), test_api_create_agent_success(), test_api_list_agent_tools()
 
 ### Community 54 - "📐 Guía de Defensa: Modelo Conceptual (Chen) y Diccionario de Atributos"
 Cohesion: 0.13
 Nodes (14): 1. Propósito y Valor Académico de la Notación Chen, 2. Diagrama Conceptual de Entidad-Relación (Notación Chen), 3. Análisis Semántico de las Relaciones y Cardinalidades, 4. Biblioteca de Atributos: Clasificación por Naturaleza, 5. Preguntas de Cátedra y Respuestas Sugeridas, A. Organización y Usuarios: `PERTENECE_A`, B. Usuario y Agente: `ADMINISTRA (OWNER)`, C. Agente y Herramienta: `AUTORIZADO_EN` (Relación $M:N$) (+6 more)
 
-### Community 55 - "generate_diagrams.py"
-Cohesion: 0.21
-Nodes (5): root(), build_drawio_xml(), add_card(), add_edge(), add_textbox()
+### Community 55 - "PolicyRuleService"
+Cohesion: 0.07
+Nodes (11): check_database_health(), check_redis_health(), health_check(), ping(), root(), _invalidate_policy_cache(), PolicyRuleService, build_drawio_xml() (+3 more)
 
 ### Community 56 - "_setup_user_auth"
-Cohesion: 0.19
+Cohesion: 0.21
 Nodes (7): _setup_user_auth(), test_approvals_get_by_id_not_found(), test_approvals_get_by_id_success(), test_approvals_list_endpoint(), test_approvals_resolve_already_resolved_or_not_found(), test_approvals_resolve_forbidden_for_non_approver_roles(), test_approvals_resolve_success()
 
-### Community 58 - "convert_docs_to_docx.py"
-Cohesion: 0.21
-Nodes (8): add_markdown_to_docx(), build_docx_files(), set_cell_background(), set_cell_margins(), add_markdown_to_docx(), build_domain_docx(), set_cell_background(), set_cell_margins()
+### Community 58 - "require_admin_user"
+Cohesion: 0.22
+Nodes (7): 1. Identidad, Stack Políglota y Equipo, 2. Reglas Innegociables de Seguridad, Dominio e Idioma, 3. Testing, Zero-Regression y Comandos Canónicos en Windows, 4. Protocolo Lean Teamwork v2 (Orquestación Multi-Agente, Velocidad y Economía de Tokens), 🛡️ Reglas Operativas del Proyecto: AgentGuard, require_admin_user(), resolve_tenant_org_id()
 
 ### Community 59 - "sanitizer_service.py"
 Cohesion: 0.13
 Nodes (5): test_sanitize_bearer_token_in_string(), test_sanitize_credit_card_masking(), test_sanitize_empty_context(), test_sanitize_lists_and_tuples(), test_sanitize_sensitive_keys()
 
 ### Community 60 - "Tool"
-Cohesion: 0.06
-Nodes (42): Agent, AgentTool, PolicyRule, Tool, ToolAction, GatewayExecuteRequest, PDPDecisionResult, seed_data() (+34 more)
+Cohesion: 0.05
+Nodes (61): 3. Componentes Clave de Runtime, Base, Agent, AgentTool, Alert, Approval, AgentStatus, AlertSeverity (+53 more)
 
 ### Community 63 - "🤖 AgentGuard — Agent Demo (Cliente CLI Python)"
-Cohesion: 0.17
-Nodes (8): 1. Requisitos previos, 2. Instalación, 3. Configuración (`.env`), 4. Ejecución, 5. Los 4 Escenarios Canónicos, 🤖 AgentGuard — Agent Demo (Cliente CLI Python), 🌐 AgentGuard — Frontend (Dashboard Web SPA SaaS B2B), 🛠️ Comandos Útiles (`pnpm`)
+Cohesion: 0.29
+Nodes (6): 1. Requisitos previos, 2. Instalación, 3. Configuración (`.env`), 4. Ejecución, 5. Los 4 Escenarios Canónicos, 🤖 AgentGuard — Agent Demo (Cliente CLI Python)
 
 ### Community 65 - "04 — Inventario Forense de Código Muerto, Dependencias Redundantes y Archivos Huérfanos"
 Cohesion: 0.18
 Nodes (10): 04 — Inventario Forense de Código Muerto, Dependencias Redundantes y Archivos Huérfanos, 1. Resumen Cuantitativo de Higiene del Repositorio, 2. Archivos Huérfanos Trackeados en Git (Candidatos a Eliminación Directa), 3. Archivos Duplicados y Exportaciones Redundantes en Raíz, 5.1 Paquetes Python sin Uso en [backend/requirements.txt](file:///c:/Users/jonat/Downloads/Codigos/AgentGuard/backend/requirements.txt), 5.2 Scripts Rotos o Redundantes en [package.json](file:///c:/Users/jonat/Downloads/Codigos/AgentGuard/package.json) (Raíz), 5. Dependencias Huérfanas y Scripts de Monorepo Rotos, 6.1 Solapamiento entre 8 Archivos de Instrucciones para Agentes de IA (+2 more)
 
-### Community 67 - "AuditEvent"
-Cohesion: 0.33
-Nodes (3): AuditEvent, test_audit_service_get_by_id(), test_audit_service_list_and_count_events()
+### Community 68 - ".get_by_id"
+Cohesion: 0.12
+Nodes (4): UserCreate, UserUpdate, UserService, test_user_schemas()
 
 ### Community 69 - "🔄 Guía de Defensa: Máquinas de Estados y Ciclo de Vida en Runtime (Protocolo HITL 202 Accepted)"
-Cohesion: 0.20
-Nodes (9): 1. Modelado de Estados en Arquitecturas Asíncronas (`202 Accepted`), 2. Diagramas de Estados Reales (Mermaid), 5. Preguntas Difíciles del Profesor y Respuestas Sugeridas, A. Máquina 1: Ciclo de Vida de una Ejecución (`Execution.status`), B. Máquina 2: Ciclo de Vida de una Aprobación (`Approval.status`), C. Máquina 3: Ciclo de Vida de un Incidente de Seguridad (`Alert.status`), 🔄 Guía de Defensa: Máquinas de Estados y Ciclo de Vida en Runtime (Protocolo HITL 202 Accepted), ❓ P1: *"¿Por qué cambiaron de mantener la conexión HTTP abierta a devolver `202 Accepted` en HITL?"* (+1 more)
+Cohesion: 0.13
+Nodes (11): 1. Modelado de Estados en Arquitecturas Asíncronas (`202 Accepted`), 2. Diagramas de Estados Reales (Mermaid), 3. Análisis Detallado de Transiciones y Respuestas HTTP, 4. Concurrencia y Prevención de Condiciones de Carrera (TOCTOU), 5. Preguntas Difíciles del Profesor y Respuestas Sugeridas, A. Máquina 1: Ciclo de Vida de una Ejecución (`Execution.status`), B. Máquina 2: Ciclo de Vida de una Aprobación (`Approval.status`), C. Máquina 3: Ciclo de Vida de un Incidente de Seguridad (`Alert.status`) (+3 more)
 
 ### Community 70 - "Original User Request"
-Cohesion: 0.08
-Nodes (23): Alcance de la Fase 2:, Contexto y Reglas Obligatorias:, Criterios de Aceptación:, Criterios de Aceptación:, Entregables:, Follow-up — 2026-11-02 21:50:33 UTC, Follow-up — 2026-11-03 01:31:43 UTC, INC-01: Homogeneización de Enums y Localización Integral al Español en la UI (+15 more)
+Cohesion: 0.12
+Nodes (16): Contexto y Reglas Obligatorias:, Criterios de Aceptación:, Criterios de Aceptación:, Entregables:, Follow-up — 2026-11-02 21:50:33 UTC, Follow-up — 2026-11-03 01:31:43 UTC, INC-01: Homogeneización de Enums y Localización Integral al Español en la UI, INC-02: Endpoints Granulares de Reglas, Aislamiento por Empresa y Blindaje Anti-IA (+8 more)
 
 ### Community 72 - "sqlalchemy"
 Cohesion: 0.14
@@ -383,49 +395,53 @@ Nodes (6): downgrade(), upgrade(), downgrade(), upgrade(), downgrade(), upgrade(
 Cohesion: 0.27
 Nodes (4): get_analytics_overview(), get_analytics_timeseries(), _validate_and_parse_org_id(), _verify_tenant_access()
 
-### Community 74 - ".matches_conditions"
-Cohesion: 0.16
-Nodes (4): PDPEngine, test_matches_conditions_destinations(), test_matches_conditions_empty(), test_matches_conditions_numeric()
+### Community 74 - "PDPEngine"
+Cohesion: 0.11
+Nodes (10): 1. El Paradigma de Seguridad: ¿Por qué Fuera del LLM?, 2. Diagrama de Arquitectura de Runtime Real (Mermaid), 4. Preguntas Difíciles del Profesor y Respuestas Recomendadas, 🏗️ Guía de Defensa: Arquitectura de Runtime y Flujo de Intercepción PEP / PDP, ❓ P1: *"¿Cómo garantizan consistencia entre políticas recién modificadas y evaluaciones en tiempo real?"*, ❓ P2: *"¿Qué ocurre si una petición activa `REQUIRE_APPROVAL` y nadie responde?"*, PDPEngine, test_matches_conditions_destinations() (+2 more)
 
 ### Community 75 - "🛡️ AgentGuard — Runtime Authorization & Governance for AI Agents"
-Cohesion: 0.17
-Nodes (12): 🛡️ AgentGuard — Plataforma SaaS B2B Multi-Tenant de Gobernanza en Runtime para Agentes de IA, 🚀 Arranque Rápido Local, 🏛️ Contexto Institucional y Equipo, 📄 Documentos Oficiales y Decisiones de Arquitectura, 🗂️ Estructura del Monorepositorio, 🤖 Guía y Reglas para Agentes de IA (`AGENTS.md`), 👥 Integrantes y Roles, 🎬 La Secuencia de la Demo Principal (En Vivo) (+4 more)
+Cohesion: 0.15
+Nodes (13): 🛡️ AgentGuard — Plataforma SaaS B2B Multi-Tenant de Gobernanza en Runtime para Agentes de IA, 🚀 Arranque Rápido Local, 🏛️ Contexto Institucional y Equipo, 📄 Documentos Oficiales y Decisiones de Arquitectura, 🗂️ Estructura del Monorepositorio, 🚀 Flujo SaaS B2B: Alta Autogestionada y "Proteger Agente en 3 Clics", 🤖 Guía y Reglas para Agentes de IA (`AGENTS.md`), 👥 Integrantes y Roles (+5 more)
+
+### Community 76 - "threat_detector.py"
+Cohesion: 0.23
+Nodes (3): ThreatAnalysisResult, ThreatDetectorService, 5. Deuda Técnica y Riesgos Detectados
 
 ### Community 77 - "🔐 AgentGuard — Guía Rápida de Credenciales y Roles Demo (Acme Corp)"
 Cohesion: 0.18
 Nodes (10): 1. Credenciales de Usuarios (Acme Corp), 2. Matriz Resumida de Permisos por Rol (RBAC), 3. Paso Obligatorio Antes de Correr `agent-demo`: Generar `X-AgentGuard-Key`, 4. Guión Sugerido de Logins para la Demo en Vivo, 5. Entidades y Descubrimiento Dinámico de Acme Corp, 6. Comandos de Reinicio (Factory Reset) de Acme Corp, 🔐 AgentGuard — Guía Rápida de Credenciales y Roles Demo (Acme Corp), Entorno y Agentes (+2 more)
 
 ### Community 78 - "BaseSchema"
-Cohesion: 0.04
-Nodes (32): assign_tool_to_agent(), create_agent(), execute_gateway_action(), get_attack_catalog(), get_gateway_context(), simulate_gateway_action(), AgentCreate, AgentRead (+24 more)
+Cohesion: 0.07
+Nodes (21): AlertUpdateRequest, AnalyticsOverviewResponse, AnalyticsTimeseriesResponse, TimeseriesPoint, ApiKeyCreate, ApiKeyCreatedResponse, ApiKeyResponse, ApprovalDetailRead (+13 more)
 
 ### Community 79 - "dashboard-sidebar.tsx"
 Cohesion: 0.17
 Nodes (13): 2.1 Arquitectura de Ruteo y Navegación Hash, 2. Inventario Exhaustivo de Vistas y Componentes del Frontend, SidebarProps, DashboardSidebarProps, NavGroupData, NavItem(), NavItemData, SidebarNav() (+5 more)
 
-### Community 80 - "run_demo.py"
-Cohesion: 0.12
-Nodes (7): build_payload(), Colors, _configure_stdio(), DemoScenario, discover_gateway_context(), load_config(), _mask_api_key()
+### Community 80 - "Alcance de la Fase 2:"
+Cohesion: 0.29
+Nodes (7): Alcance de la Fase 2:, INC-05: Router y Servicios para la Tabla Formal `audit_events`, INC-06: Router de Analítica y Series Temporales (`/analytics/overview` y `/timeseries`), INC-07: Conexión de Métricas Reales en `OverviewView.tsx`, INC-08: Modelo, Migración y Router de API Keys PEP (`/api/v1/api-keys`), INC-09: Conexión de Gestión de API Keys en `SettingsView.tsx`, INC-10: Persistencia de Configuración de Gobernanza de la Organización
 
 ### Community 81 - "package.json"
 Cohesion: 0.12
 Nodes (20): dependencies, class-variance-authority@^0.7.1, clsx@^2.1.1, @radix-ui/react-label@^2.1.17, @radix-ui/react-slot@^1.5.0, tailwind-merge@^3.7.0, tw-animate-css@^1.4.0, description (+12 more)
 
 ### Community 82 - "test_health.py"
-Cohesion: 0.28
-Nodes (3): test_health_endpoint(), test_ping_endpoint(), test_root_endpoint()
+Cohesion: 0.10
+Nodes (5): Settings, test_health_endpoint(), test_ping_endpoint(), test_root_endpoint(), test_settings_secret_key_production_fail_fast()
 
 ### Community 83 - "approvals.py"
-Cohesion: 0.16
-Nodes (5): get_approval(), list_approvals(), resolve_approval(), require_roles(), ApprovalDetailRead
+Cohesion: 0.24
+Nodes (3): get_approval(), list_approvals(), resolve_approval()
 
-### Community 84 - "test_pdp_evaluate_allow"
-Cohesion: 0.22
-Nodes (4): test_pdp_evaluate_allow(), test_pdp_evaluate_deny_fail_closed(), test_pdp_evaluate_priority_tie_deny_wins(), test_pdp_evaluate_require_approval()
+### Community 84 - "create_app"
+Cohesion: 0.14
+Nodes (13): create_app(), catalog_update_price(), crm_create_quote(), crm_export_customers(), db_drop(), discover_context(), get_state(), health_check() (+5 more)
 
-### Community 85 - "health_check"
-Cohesion: 0.25
-Nodes (3): check_database_health(), health_check(), ping()
+### Community 85 - "app.js"
+Cohesion: 0.17
+Nodes (18): dom, escapeHtml(), loadPresets(), refreshCompanyState(), renderCatalogTable(), renderCustomersTable(), renderEventsTable(), renderPresets() (+10 more)
 
 ### Community 86 - "4. Código Interno Muerto, Endpoints Desconectados y Reliquias de Prototipo"
 Cohesion: 0.33
@@ -435,53 +451,57 @@ Nodes (6): 4.1 Tipos, Esquemas y Configuraciones con `0` Consumidores, 4.2 Par E
 Cohesion: 0.17
 Nodes (12): scripts, build:frontend, dev:backend, dev:frontend, lint:frontend, start, start:all, start:backend (+4 more)
 
+### Community 89 - "test_acme_server.py"
+Cohesion: 0.15
+Nodes (6): app_with_temp_db(), temp_db(), test_catalog_update_price_and_tampering(), test_crm_create_quote_endpoint(), test_crm_export_customers_endpoint(), test_stripe_refund_endpoint()
+
 ### Community 90 - "test_organizations.py"
-Cohesion: 0.10
-Nodes (16): _setup_admin_auth(), test_api_create_organization_success(), test_api_create_organization_validation_error(), test_api_get_organization_found(), test_api_get_organization_not_found(), test_api_list_organizations(), test_api_patch_organization_ai_agent_blocked(), test_api_patch_organization_cross_tenant_forbidden() (+8 more)
+Cohesion: 0.09
+Nodes (14): _setup_admin_auth(), test_api_create_organization_success(), test_api_create_organization_validation_error(), test_api_get_organization_found(), test_api_get_organization_not_found(), test_api_list_organizations(), test_api_patch_organization_ai_agent_blocked(), test_api_patch_organization_cross_tenant_forbidden() (+6 more)
 
 ### Community 91 - "🛡️ AgentGuard — Guía Simple y Hoja de Ruta para el Equipo"
 Cohesion: 0.15
 Nodes (12): 1. La Idea Explicada "Para un Nene de 5 Años" 🧒, 🌐 1. La Página Web (Frontend), 2. ¿Dónde Encaja Cada Pieza Técnica? 🧩, ⚙️ 2. La API REST (Backend), 🤖 3. El Agente de IA (Sin Complicarse), 3. La Demostración en Clase: "SIN vs. CON AgentGuard" 🎬, 4. Cronograma Paso a Paso (De Hoy al 30 de Noviembre) 📅, 🔌 4. ¿Y MCP? (Decisión del Equipo: Eliminado por Pragmatismo) (+4 more)
 
 ### Community 92 - "`_MASTER_PROJECT_SNAPSHOT.md` — Fuente de Verdad Consolidada de AgentGuard"
-Cohesion: 0.12
-Nodes (16): 1.1 Qué problema resuelve, 1.2 Roles y realidad SaaS B2B vs. solicitud PaaS Superadmin, 1. Propósito y Modelo de Negocio (SaaS B2B vs. PaaS Multi-tenant), 2.1 Stack políglota verificado, 2.2 Topología PEP / PDP y aislamiento multi-tenant, 2.3 Controles de seguridad para agentes IA (Implementado vs. Solo en papel), 2. Arquitectura y Stack Tecnológico, 3.1 Esquema PostgreSQL real (13 tablas, migraciones `001`–`005`) (+8 more)
+Cohesion: 0.11
+Nodes (17): 1.1 Qué problema resuelve, 1.2 Roles y realidad SaaS B2B vs. solicitud PaaS Superadmin, 1.3 Flujo principal operativo vs. onboarding en "pocos clics", 1. Propósito y Modelo de Negocio (SaaS B2B vs. PaaS Multi-tenant), 2.1 Stack políglota verificado, 2.2 Topología PEP / PDP y aislamiento multi-tenant, 2.3 Controles de seguridad para agentes IA (Implementado vs. Solo en papel), 2. Arquitectura y Stack Tecnológico (+9 more)
 
 ### Community 94 - "_mock_user_auth"
 Cohesion: 0.19
 Nodes (8): _mock_user_auth(), test_anti_ai_agent_header_blocked_on_all_control_plane_routes(), test_rbac_matrix_admin_only_mutations_and_settings(), test_rbac_matrix_alerts_triage(), test_rbac_matrix_approvals_resolve(), test_rbac_matrix_audit_events(), test_rbac_matrix_gateway_simulate(), test_rbac_matrix_operational_reads_allowed_for_all_roles()
 
 ### Community 96 - "1.2 Inventario Individual (39 archivos `.md`)"
-Cohesion: 0.13
-Nodes (14): 1.1 Árbol Documental del Repositorio, 1.2 Inventario Individual (39 archivos `.md`), 1.3 Bloque Aparte: Logs Históricos de Ejecución (`.agents/teamwork/*/*`), 1.4 Artefactos No-Markdown Relacionados, 1. Inventario Completo de Archivos Markdown (`.md`), 2.1 Mapa de Duplicaciones Principales (7 grupos), 2. Mapa de Duplicaciones y Contradicciones, 3. Propuesta de Poda y Estructura Oficial Recomendada (+6 more)
+Cohesion: 0.12
+Nodes (15): 1.1 Árbol Documental del Repositorio, 1.2 Inventario Individual (39 archivos `.md`), 1.3 Bloque Aparte: Logs Históricos de Ejecución (`.agents/teamwork/*/*`), 1.4 Artefactos No-Markdown Relacionados, 1. Inventario Completo de Archivos Markdown (`.md`), 2.1 Mapa de Duplicaciones Principales (7 grupos), 2.2 Mapa de Contradicciones (Doc vs. Doc y Doc vs. Código/Graphify), 2. Mapa de Duplicaciones y Contradicciones (+7 more)
 
-### Community 97 - "ActorType"
-Cohesion: 0.08
-Nodes (12): create_api_key(), get_api_key(), list_api_keys(), revoke_api_key(), get_audit_event(), list_audit_events(), ActorType, ApiKeyCreatedResponse (+4 more)
+### Community 97 - "create_api_key"
+Cohesion: 0.18
+Nodes (4): create_api_key(), get_api_key(), list_api_keys(), revoke_api_key()
 
-### Community 98 - "test_siem_webhook_test_ping_missing_url"
-Cohesion: 0.20
-Nodes (5): test_list_organizations_success(), test_siem_webhook_settings_update(), mock_execute(), test_siem_webhook_test_ping_missing_url(), test_siem_webhook_test_ping_success()
+### Community 98 - "PolicyRuleRead"
+Cohesion: 0.14
+Nodes (8): create_policy_rule(), delete_policy_rule(), get_policy_rule(), list_policy_rules(), update_policy_rule(), PolicyRead, PolicyRuleRead, 2.1 Fallos `sqlalchemy.exc.MissingGreenlet` por Lazy-Loading Implícito tras `db.refresh()`
 
-### Community 99 - "test_organization_settings.py"
-Cohesion: 0.06
-Nodes (20): OrganizationSettingsUpdate, test_api_admin_user_same_tenant_allowed(), test_api_anti_ia_shield_blocks_agent_on_get(), test_api_anti_ia_shield_blocks_agent_on_patch(), test_api_get_settings_not_found(), test_api_get_settings_success(), test_api_multi_tenant_isolation_get_cross_tenant_denied(), test_api_multi_tenant_isolation_patch_cross_tenant_denied() (+12 more)
+### Community 99 - "test_agent_service_assign_tool"
+Cohesion: 0.33
+Nodes (3): test_agent_service_assign_tool(), test_agent_service_create(), mock_refresh()
 
 ### Community 100 - "06 — Propuesta de Evolución Arquitectónica, Optimización de Rendimiento y Mejores Prácticas"
-Cohesion: 0.14
-Nodes (13): 06 — Propuesta de Evolución Arquitectónica, Optimización de Rendimiento y Mejores Prácticas, 0.2 Frontend: Vistas Monolíticas, Cliente HTTP "Mágico" y Sockets Duplicados, 0. Diagnóstico del Acoplamiento Actual (Estado *As-Is*), 1.1 Diagrama de Capas y Regla de Dependencia (Arquitectura Hexagonal / Clean), 1.2 Árbol de Directorios Objetivo — Backend (`backend/`), 1.3 Árbol de Directorios Objetivo — Frontend (`frontend/src/`), 1. Propuesta de Arquitectura Objetivo y Árbol de Directorios (Front & Back), 3.2 Cuellos de Botella en Frontend (Renderizado, Red, Estado y Memoria) (+5 more)
+Cohesion: 0.18
+Nodes (10): 06 — Propuesta de Evolución Arquitectónica, Optimización de Rendimiento y Mejores Prácticas, 2.2 *Specification / Strategy Registry* para Operadores del Motor PDP, 2.3 *Claim-Check Pattern* Cifrado para HITL (`HitlPayloadVault`), 2.4 *Strategy + Circuit Breaker* para Despacho de Herramientas (`LiveRestDispatcher` vs. `SandboxMockDispatcher`), 2. Patrones de Diseño Recomendados para Desacoplar el Dominio, 3.2 Cuellos de Botella en Frontend (Renderizado, Red, Estado y Memoria), 3. Detección de Cuellos de Botella de Rendimiento y Estrategias de Optimización, 4.1 Estándares de Backend (`Python 3.12+` / `FastAPI` / `SQLAlchemy 2.0` / `Pydantic v2`) (+2 more)
 
 ### Community 102 - "🧭 2. Flujo del Wizard de Presentación (4 Pasos Guiados)"
 Cohesion: 0.20
 Nodes (9): 📌 1. Objetivo y Visión General, 🧭 2. Flujo del Wizard de Presentación (4 Pasos Guiados), 💡 3. Componentes y Estados Sugeridos para la Implementación en React, 🤝 4. Distribución de Tareas del Equipo, 🎨 Especificación de Mejoras de Frontend: Presenter Tour & Live Demo Runner, Paso 1: Cotización Legítima (ALLOW), Paso 2: Abuso de Privilegio / Falta de Capacidad (DENY), Paso 3: Operación Financiera Sensible (REQUIRE_APPROVAL - HITL) (+1 more)
 
 ### Community 103 - "3. Hallazgos Críticos y Bugs Funcionales en el Frontend"
-Cohesion: 0.17
-Nodes (11): 02 — Diagnóstico Forense del Frontend y "Alma Máter" del Proyecto, 1. Veredicto General del Frontend, 2. Mapa de Estado por Pantalla y Componente, 3.1 Crash Fatal (White Screen of Death) en `TracesView` al Recibir Eventos WebSocket, 3.3 Pérdida de Datos Reales en el Mapeo DTO -> Dominio (`api.ts`), 3.4 Inconsistencias Matemáticas y Doble Conteo en `OverviewView` y `App`, 3.5 Usuario RBAC Fantasma (`Lucia Vance`) que Provoca Errores FK en Base de Datos, 3.6 Defectos de CSS, Tematización y Clases Inexistentes (+3 more)
+Cohesion: 0.15
+Nodes (12): 02 — Diagnóstico Forense del Frontend y "Alma Máter" del Proyecto, 1. Veredicto General del Frontend, 2. Mapa de Estado por Pantalla y Componente, 3.1 Crash Fatal (White Screen of Death) en `TracesView` al Recibir Eventos WebSocket, 3.3 Pérdida de Datos Reales en el Mapeo DTO -> Dominio (`api.ts`), 3.4 Inconsistencias Matemáticas y Doble Conteo en `OverviewView` y `App`, 3.5 Usuario RBAC Fantasma (`Lucia Vance`) que Provoca Errores FK en Base de Datos, 3.6 Defectos de CSS, Tematización y Clases Inexistentes (+4 more)
 
-### Community 105 - "test_seed_data_already_exists_without_reset"
-Cohesion: 0.17
-Nodes (6): test_api_reset_demo_reissues_jwt_for_new_db_uuids(), test_api_reset_demo_success(), test_clear_database_executes_cascaded_deletes(), test_seed_data_already_exists_without_reset(), test_seed_data_syncs_missing_canonical_users_without_reset(), 6. Diagnóstico de la Suite de Pruebas (`backend/tests/`)
+### Community 105 - "clear_database"
+Cohesion: 0.29
+Nodes (3): clear_database(), _resolve_demo_org(), test_clear_database_executes_cascaded_deletes()
 
 ### Community 106 - "update_tool"
 Cohesion: 0.17
@@ -495,13 +515,13 @@ Nodes (5): devDependencies, tailwindcss@^4.3.3, @tailwindcss/vite@^4.3.3, tailwi
 Cohesion: 0.22
 Nodes (8): Artifact Index, BRIEFING — 2026-11-03 02:34:00 UTC, 🔒 Key Constraints, Mission, 🔒 My Identity, Project Status, User Context, Victory Audit Status
 
-### Community 111 - "2. Reglas Innegociables de Seguridad, Dominio e Idioma"
-Cohesion: 0.40
-Nodes (5): 1. Identidad, Stack Políglota y Equipo, 2. Reglas Innegociables de Seguridad, Dominio e Idioma, 3. Testing, Zero-Regression y Comandos Canónicos en Windows, 4. Protocolo Lean Teamwork v2 (Orquestación Multi-Agente, Velocidad y Economía de Tokens), 🛡️ Reglas Operativas del Proyecto: AgentGuard
+### Community 109 - "🎭 4. Guión Paso a Paso de los 5 Escenarios Demostrativos"
+Cohesion: 0.12
+Nodes (16): 🌟 1. Propósito y Arquitectura de la Demostración, 🚀 2. Instalación y Puesta en Marcha, ⚙️ 3. Configuración de Variables de Entorno (`.env`), 🎭 4. Guión Paso a Paso de los 5 Escenarios Demostrativos, 💻 5. Uso mediante CLI (Línea de Comandos), 🧪 6. Pruebas Automatizadas, 💥 ACME Corporation — Laboratorio Autónomo (Looney Tunes Edition), Detalle de Ejecución: (+8 more)
 
-### Community 113 - "🏗️ Guía de Defensa: Arquitectura de Runtime y Flujo de Intercepción PEP / PDP"
-Cohesion: 0.29
-Nodes (6): 1. El Paradigma de Seguridad: ¿Por qué Fuera del LLM?, 2. Diagrama de Arquitectura de Runtime Real (Mermaid), 4. Preguntas Difíciles del Profesor y Respuestas Recomendadas, 🏗️ Guía de Defensa: Arquitectura de Runtime y Flujo de Intercepción PEP / PDP, ❓ P1: *"¿Cómo garantizan consistencia entre políticas recién modificadas y evaluaciones en tiempo real?"*, ❓ P2: *"¿Qué ocurre si una petición activa `REQUIRE_APPROVAL` y nadie responde?"*
+### Community 111 - "README.md"
+Cohesion: 0.33
+Nodes (3): 🌐 AgentGuard — Frontend (Dashboard Web SPA SaaS B2B), 🛠️ Comandos Útiles (`pnpm`), 🧭 Las 9 Vistas de la Aplicación (`src/views/`)
 
 ### Community 115 - "scripts"
 Cohesion: 0.40
@@ -512,12 +532,12 @@ Cohesion: 0.40
 Nodes (5): dependencies, lucide-react@^1.57.0, react@^19.2.8, react-dom@^19.2.8, react-dom
 
 ### Community 117 - "alerts.py"
-Cohesion: 0.22
-Nodes (4): get_alert_by_id(), list_alerts(), update_alert_status(), AlertRead
+Cohesion: 0.18
+Nodes (5): get_alert_by_id(), list_alerts(), update_alert_status(), AlertRead, test_alert_schema()
 
-### Community 119 - "Execution"
-Cohesion: 0.05
-Nodes (23): 3. Componentes Clave de Runtime, 3. Análisis Detallado de Transiciones y Respuestas HTTP, 4. Concurrencia y Prevención de Condiciones de Carrera (TOCTOU), Alert, Approval, Execution, AnalyticsService, PEPGatewayService (+15 more)
+### Community 118 - "post"
+Cohesion: 0.14
+Nodes (5): reset_demo_data(), execute_gateway_action(), simulate_gateway_action(), test_webhook_service_send_event_includes_siem_format_and_header(), post()
 
 ### Community 120 - "Bloque A — Seguridad, Identidad y Cumplimiento de Reglas de Dominio"
 Cohesion: 0.50
@@ -527,47 +547,79 @@ Nodes (4): 1. Modelo de Autenticación y Autorización Real (Humanos en Dashboar
 Cohesion: 0.11
 Nodes (21): 1. Observation, 2. Logic Chain, 3. Caveats, 4. Conclusion, 5. Verification Method, Master Handoff Report — Sentinel (Fase 1, Fase 2 y Fase 3), Alcance de la Fase 3:, INC-11: Refactorización de `api.ts` (Propagación Explícita de Errores y `ApiError`) (+13 more)
 
-### Community 122 - "asyncio"
-Cohesion: 0.22
-Nodes (4): test_gateway_context_invalid_api_key_returns_401(), test_gateway_context_missing_header_returns_401(), test_gateway_context_org_not_found_returns_404(), test_gateway_context_success_isolated_by_org()
-
-### Community 123 - "2. Patrones de Diseño Recomendados para Desacoplar el Dominio"
-Cohesion: 0.50
-Nodes (4): 2.2 *Specification / Strategy Registry* para Operadores del Motor PDP, 2.3 *Claim-Check Pattern* Cifrado para HITL (`HitlPayloadVault`), 2.4 *Strategy + Circuit Breaker* para Despacho de Herramientas (`LiveRestDispatcher` vs. `SandboxMockDispatcher`), 2. Patrones de Diseño Recomendados para Desacoplar el Dominio
+### Community 123 - "app.py"
+Cohesion: 0.21
+Nodes (7): AgentDiscoverRequest, AgentRunRequest, DropDatabaseRequest, ExportCustomersRequest, QuoteRequest, RefundRequest, UpdatePriceRequest
 
 ### Community 124 - "test_auth.py"
 Cohesion: 0.07
 Nodes (22): create_access_token(), get_password_hash(), cleanup_overrides(), test_anti_ai_shielding_in_control_plane(), test_change_password_missing_token(), test_change_password_rejects_x_agent_id(), test_change_password_same_password_rejected(), test_change_password_success() (+14 more)
 
+### Community 126 - "get_gateway_context"
+Cohesion: 0.15
+Nodes (6): get_attack_catalog(), get_gateway_context(), GatewayContextAction, GatewayContextAgent, GatewayContextResponse, GatewayContextTool
+
 ### Community 128 - "test_tool_actions.py"
-Cohesion: 0.13
-Nodes (11): _setup_admin_auth(), test_api_create_tool_action_duplicate_conflict(), test_api_create_tool_action_success(), test_api_create_tool_action_tool_not_found(), test_api_get_tool_action_found(), test_api_get_tool_action_not_found(), test_api_list_tool_actions(), test_tool_action_service_create() (+3 more)
+Cohesion: 0.15
+Nodes (10): _setup_admin_auth(), test_api_create_tool_action_duplicate_conflict(), test_api_create_tool_action_success(), test_api_create_tool_action_tool_not_found(), test_api_get_tool_action_found(), test_api_get_tool_action_not_found(), test_api_list_tool_actions(), test_tool_action_service_get_by_id() (+2 more)
 
-### Community 129 - "User"
-Cohesion: 0.08
-Nodes (18): User, test_register_org_duplicate_email_returns_400(), test_api_patch_organization_non_admin_forbidden(), test_create_rule_in_policy_anti_ai_blocked(), test_create_rule_in_policy_cross_tenant_rejected(), test_create_rule_in_policy_non_admin_forbidden(), test_create_rule_in_policy_success(), test_create_rule_target_agent_from_different_org() (+10 more)
+### Community 129 - "test_seed_data_fresh_creation"
+Cohesion: 0.50
+Nodes (3): test_seed_data_fresh_creation(), mock_add(), mock_add_all()
 
-### Community 146 - "pep_gateway_service.py"
+### Community 131 - "03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural"
+Cohesion: 0.18
+Nodes (10): 03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural, 1. Veredicto Ejecutivo del Backend, 2.2 Violaciones de Clave Foránea (`IntegrityError`) No Controladas (`HTTP 500`), 2. Crashes `HTTP 500` Confirmados en Tiempo de Ejecución, 4.1 Ausencia Total de Autenticación y Control de Acceso (RBAC) en APIs, 4.2 Fugas de Aislamiento Multi-Tenant (Violación de Regla 2 de `AGENTS.md`), 4.3 Condición de Carrera TOCTOU y Expiración Pasiva en Aprobaciones HITL, 4.4 Defectos en `SanitizerService` y Configuraciones Ignoradas (+2 more)
+
+### Community 145 - "0.1 Backend: Servicios "Dios", Fuga de ORM hacia HTTP y Dominio Impuro"
+Cohesion: 0.22
+Nodes (3): 0.1 Backend: Servicios "Dios", Fuga de ORM hacia HTTP y Dominio Impuro, 0.2 Frontend: Vistas Monolíticas, Cliente HTTP "Mágico" y Sockets Duplicados, 0. Diagnóstico del Acoplamiento Actual (Estado *As-Is*)
+
+### Community 149 - "test_analytics_service_get_overview_with_data"
+Cohesion: 0.29
+Nodes (4): MockOverviewRow, MockTimeseriesRow, test_analytics_service_get_overview_with_data(), test_analytics_service_get_timeseries_with_buckets()
+
+### Community 152 - "3. Stubs, Retornos Ficticios y Fallos de Lógica en el Core PEP/PDP"
+Cohesion: 0.50
+Nodes (4): 3.1 Falso Éxito Silencioso en `_dispatch_to_tool` (Violación Directa de Fail-Closed), 3.2 Re-Despacho HITL Corrupto con Parámetros `"***REDACTED***"` y Pérdida de Resultado, 3.3 Bug de Orden de Validación en el Pipeline del Gateway (Supresión de Alertas OWASP y Trazas), 3. Stubs, Retornos Ficticios y Fallos de Lógica en el Core PEP/PDP
+
+### Community 153 - "env.py"
+Cohesion: 0.20
+Nodes (4): do_run_migrations(), run_async_migrations(), run_migrations_offline(), run_migrations_online()
+
+### Community 154 - "Bloque B — Flujo Runtime del Gateway PEP, HITL y Herramientas"
+Cohesion: 0.50
+Nodes (4): 4. Protocolo de Espera y Entrega de Resultados en HITL (`REQUIRE_APPROVAL`), 5. Custodia de Parámetros Originales para Re-Despacho HITL (Problema `"***REDACTED***"`), 6. Política de Despacho a Herramientas Externas (`_dispatch_to_tool`: Sandbox Mock vs. REST Real), Bloque B — Flujo Runtime del Gateway PEP, HITL y Herramientas
+
+### Community 156 - "api/auth.py"
 Cohesion: 0.09
-Nodes (21): AgentStatus, AlertSeverity, AlertStatus, ApprovalStatus, ExecutionStatus, PolicyDecision, RiskLevel, make_api_key_pair() (+13 more)
+Nodes (14): change_password(), get_me(), login(), register(), register_organization(), verify_password(), ChangePasswordRequest, LoginRequest (+6 more)
+
+### Community 157 - "1. Propuesta de Arquitectura Objetivo y Árbol de Directorios (Front & Back)"
+Cohesion: 0.50
+Nodes (4): 1.1 Diagrama de Capas y Regla de Dependencia (Arquitectura Hexagonal / Clean), 1.2 Árbol de Directorios Objetivo — Backend (`backend/`), 1.3 Árbol de Directorios Objetivo — Frontend (`frontend/src/`), 1. Propuesta de Arquitectura Objetivo y Árbol de Directorios (Front & Back)
+
+### Community 160 - "01 — Auditoría Forense de Brecha Documental vs. Implementación Real (`Gap Analysis`)"
+Cohesion: 0.50
+Nodes (3): 01 — Auditoría Forense de Brecha Documental vs. Implementación Real (`Gap Analysis`), 1. Resumen Ejecutivo de Divergencia Arquitectónica, 3. Análisis Específico de Contradicciones Internas en la Documentación
 
 ## Knowledge Gaps
-- **53 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **73 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useToast()` connect `App.tsx` to `Skeleton.tsx`, `domain.ts`, `labels.ts`, `2. Reglas Innegociables de Seguridad, Dominio e Idioma`?**
-  _High betweenness centrality (0.106) - this node is a cross-community bridge._
-- **Are the 82 inferred relationships involving `User` (e.g. with `create_api_key()` and `get_api_key()`) actually correct?**
-  _`User` has 82 INFERRED edges - model-reasoned connections that need verification._
-- **Should `Organization` be split into smaller, more focused modules?**
-  _Cohesion score 0.09964297306069458 - nodes in this community are weakly interconnected._
-- **Why does `2. Reglas Innegociables de Seguridad, Dominio e Idioma` connect `2. Reglas Innegociables de Seguridad, Dominio e Idioma` to `Skeleton.tsx`, `Tool`, `get_db`, `App.tsx`?**
-  _High betweenness centrality (0.103) - this node is a cross-community bridge._
-- **Are the 20 inferred relationships involving `Organization` (e.g. with `reset_demo_data()` and `get_gateway_context()`) actually correct?**
-  _`Organization` has 20 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `useToast()` connect `App.tsx` to `Skeleton.tsx`, `require_admin_user`, `labels.ts`, `domain.ts`?**
+  _High betweenness centrality (0.112) - this node is a cross-community bridge._
+- **Are the 80 inferred relationships involving `User` (e.g. with `create_api_key()` and `get_api_key()`) actually correct?**
+  _`User` has 80 INFERRED edges - model-reasoned connections that need verification._
 - **Should `domain.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.12719298245614036 - nodes in this community are weakly interconnected._
-- **Why does `User` connect `User` to `Organization`, `test_tool_actions.py`, `_setup_admin_auth`, `test_alerts.py`, `test_policies.py`, `UUID`, `make_admin_jwt`, `pep_gateway_service.py`, `get_db`, `backend/scripts/seed_demo.py`, `_setup_admin_auth`, `update_organization`, `api/auth.py`, `ApiKey`, `test_api_keys.py`, `typing`, `_setup_admin_auth`, `ensure_same_tenant`, `_setup_user_auth`, `Tool`, `.get_by_id`, `BaseSchema`, `approvals.py`, `test_organizations.py`, `_mock_user_auth`, `ActorType`, `test_siem_webhook_test_ping_missing_url`, `test_organization_settings.py`, `test_seed_data_already_exists_without_reset`, `alerts.py`, `reset_demo_data`, `Execution`, `test_auth.py`?**
-  _High betweenness centrality (0.085) - this node is a cross-community bridge._
+- **Why does `2. Reglas Innegociables de Seguridad, Dominio e Idioma` connect `require_admin_user` to `Skeleton.tsx`, `Tool`, `App.tsx`?**
+  _High betweenness centrality (0.107) - this node is a cross-community bridge._
+- **Are the 20 inferred relationships involving `Organization` (e.g. with `reset_demo_data()` and `get_gateway_context()`) actually correct?**
+  _`Organization` has 20 INFERRED edges - model-reasoned connections that need verification._
+- **Should `_setup_admin_auth` be split into smaller, more focused modules?**
+  _Cohesion score 0.12105263157894737 - nodes in this community are weakly interconnected._
+- **Why does `AgentTool` connect `Tool` to `test_seed_data_fresh_creation`, `03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural`, `typing`, `3. Stubs, Retornos Ficticios y Fallos de Lógica en el Core PEP/PDP`, `ToolCreate`, `ensure_same_tenant`, `AgentService`, `📑 Desglose de Pasos: Semana 1 — Base de Datos & Setup Inicial`, `test_audit_events.py`, `test_agents.py`, `📐 Guía de Defensa: Modelo Conceptual (Chen) y Diccionario de Atributos`, `require_admin_user`, `AuditService`, `🤖 AgentGuard — Agent Demo (Cliente CLI Python)`, `🔄 Guía de Defensa: Máquinas de Estados y Ciclo de Vida en Runtime (Protocolo HITL 202 Accepted)`, `🛡️ AgentGuard — Runtime Authorization & Governance for AI Agents`, `🔐 AgentGuard — Guía Rápida de Credenciales y Roles Demo (Acme Corp)`, ``_MASTER_PROJECT_SNAPSHOT.md` — Fuente de Verdad Consolidada de AgentGuard`, `🧭 2. Flujo del Wizard de Presentación (4 Pasos Guiados)`, `3. Hallazgos Críticos y Bugs Funcionales en el Frontend`, `🎭 4. Guión Paso a Paso de los 5 Escenarios Demostrativos`, `README.md`?**
+  _High betweenness centrality (0.088) - this node is a cross-community bridge._

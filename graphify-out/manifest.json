@@ -84,9 +84,9 @@
     "semantic_hash": "7a1dcd4e546326e349135dbe60729c47"
   },
   "backend/app/core/config.py": {
-    "mtime": 1793724596.2867923,
-    "seen": 1794587637.779278,
-    "ast_hash": "e281c6f88d5676fb952110e64241e9b9",
+    "mtime": 1794856948.4976501,
+    "seen": 1794861653.8150089,
+    "ast_hash": "d81e57e63bf4c1f11c7a4aeedabcadc0",
     "semantic_hash": ""
   },
   "backend/app/core/database.py": {
@@ -492,9 +492,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/ToolsView.tsx": {
-    "mtime": 1794691558.256222,
-    "seen": 1794696418.1132112,
-    "ast_hash": "d4ebc8ca857f45183d09f3ae3e2a74fb",
+    "mtime": 1794861962.3736966,
+    "seen": 1794862381.962822,
+    "ast_hash": "21491d42b3d889f80612213acd4058b8",
     "semantic_hash": ""
   },
   "frontend/src/views/TracesView.tsx": {
@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "backend/scripts/seed_demo.py": {
-    "mtime": 1794837752.4451804,
-    "seen": 1794838790.2355032,
-    "ast_hash": "9e80df96393e888f3cebfc34eb72f191",
+    "mtime": 1794857012.3843112,
+    "seen": 1794861653.8150089,
+    "ast_hash": "e74c48a2025dcdf674be5bed5e163d51",
     "semantic_hash": ""
   },
   "backend/tests/test_seed_demo.py": {
@@ -1209,6 +1209,102 @@
     "mtime": 1794838749.0625887,
     "seen": 1794838790.236504,
     "ast_hash": "70b4c664893496cf0acb46c8792917f0",
+    "semantic_hash": ""
+  },
+  "acme-corp/agent/__init__.py": {
+    "mtime": 1794860911.0715544,
+    "seen": 1794861653.8140075,
+    "ast_hash": "ae85fc463fe40249485fdb35ea95a333",
+    "semantic_hash": ""
+  },
+  "acme-corp/agent/cli.py": {
+    "mtime": 1794861467.034652,
+    "seen": 1794861653.8140075,
+    "ast_hash": "1e141db47e5ab1feb5e182677c7cb747",
+    "semantic_hash": ""
+  },
+  "acme-corp/agent/gemini_client.py": {
+    "mtime": 1794861963.4020915,
+    "seen": 1794862381.962822,
+    "ast_hash": "a01278ce9ba255c2a0318017cee40dc5",
+    "semantic_hash": ""
+  },
+  "acme-corp/agent/presets.py": {
+    "mtime": 1794861963.8863845,
+    "seen": 1794862381.962822,
+    "ast_hash": "46593c6802d351e175ac7aeced77151e",
+    "semantic_hash": ""
+  },
+  "acme-corp/run.py": {
+    "mtime": 1794862393.1928558,
+    "seen": 1794862570.3265111,
+    "ast_hash": "4987e35be0c9536a477af33beb17dad5",
+    "semantic_hash": ""
+  },
+  "acme-corp/server/__init__.py": {
+    "mtime": 1794857078.5564957,
+    "seen": 1794861653.8140075,
+    "ast_hash": "a2fb3b06cd0de91dc1df0b68e427ff83",
+    "semantic_hash": ""
+  },
+  "acme-corp/server/app.py": {
+    "mtime": 1794861964.6987255,
+    "seen": 1794862381.962822,
+    "ast_hash": "298241fec9a90ad03266f77f37c73b40",
+    "semantic_hash": ""
+  },
+  "acme-corp/server/config.py": {
+    "mtime": 1794857089.1663468,
+    "seen": 1794861653.8140075,
+    "ast_hash": "4b0b6b05ac84dd18d9ed8d519bdb3f3a",
+    "semantic_hash": ""
+  },
+  "acme-corp/server/database.py": {
+    "mtime": 1794861182.7118163,
+    "seen": 1794861653.8140075,
+    "ast_hash": "8b72a6a6788dff07e65be707ea0c49d3",
+    "semantic_hash": ""
+  },
+  "acme-corp/server/static/app.js": {
+    "mtime": 1794861965.469298,
+    "seen": 1794862381.962822,
+    "ast_hash": "228ad25a3c3122ade00d5479c201c0b6",
+    "semantic_hash": ""
+  },
+  "acme-corp/tests/test_acme_server.py": {
+    "mtime": 1794861120.621856,
+    "seen": 1794861653.8140075,
+    "ast_hash": "7f5bdbf124ceec6e591f4a1d837e753b",
+    "semantic_hash": ""
+  },
+  "acme-corp/tests/test_gemini_agent.py": {
+    "mtime": 1794861966.0705304,
+    "seen": 1794862381.962822,
+    "ast_hash": "79329e68b795b3d9e0258b062ab1e69f",
+    "semantic_hash": ""
+  },
+  "acme-corp/README.md": {
+    "mtime": 1794862441.5633152,
+    "seen": 1794862570.3302844,
+    "ast_hash": "a3db35047684c574b7399908c6a8c93a",
+    "semantic_hash": ""
+  },
+  "acme-corp/requirements.txt": {
+    "mtime": 1794857068.3230784,
+    "seen": 1794861653.8160052,
+    "ast_hash": "d5d1caaff0e747dd6a188bcc945cac7e",
+    "semantic_hash": ""
+  },
+  "acme-corp/server/static/index.html": {
+    "mtime": 1794861965.9690835,
+    "seen": 1794862381.9648407,
+    "ast_hash": "ac929c3ebc45d465e5a987eac88b5aee",
+    "semantic_hash": ""
+  },
+  "pyrightconfig.json": {
+    "mtime": 1794862283.5830173,
+    "seen": 1794862381.9648407,
+    "ast_hash": "eb9791ce1b8377b4790f829be3010dec",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {
