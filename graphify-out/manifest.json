@@ -270,15 +270,15 @@
     "semantic_hash": ""
   },
   "backend/app/services/policy_rule_service.py": {
-    "mtime": 1794624735.1540246,
-    "seen": 1794691361.6934378,
-    "ast_hash": "feeb35ed0564d768b59af339c1e95160",
+    "mtime": 1794933850.2013392,
+    "seen": 1794934054.7696288,
+    "ast_hash": "490fd7f14000d270518009717f5d4034",
     "semantic_hash": ""
   },
   "backend/app/services/policy_service.py": {
-    "mtime": 1793653629.4071584,
-    "seen": 1793659151.9649823,
-    "ast_hash": "fab068693cefbba43a4847dd1618c26f",
+    "mtime": 1794933883.8468385,
+    "seen": 1794934054.7696288,
+    "ast_hash": "1082d5ac885ddd02c768a34fbf710ac0",
     "semantic_hash": ""
   },
   "backend/app/services/sanitizer_service.py": {
@@ -294,9 +294,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/tool_service.py": {
-    "mtime": 1793625755.8920166,
-    "seen": 1793649774.6029642,
-    "ast_hash": "a9d87a25a3cfc1f57401c2387d127b31",
+    "mtime": 1794933873.0757492,
+    "seen": 1794934054.7696288,
+    "ast_hash": "10f81eac4d2914e2b4b4ee39769d5dd7",
     "semantic_hash": ""
   },
   "backend/app/services/user_service.py": {
@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_policies.py": {
-    "mtime": 1794626765.737775,
-    "seen": 1794691361.6934378,
-    "ast_hash": "410a0814972690d2547fb18c1fc797f0",
+    "mtime": 1794933661.4502656,
+    "seen": 1794934054.7696288,
+    "ast_hash": "3cdba9092a062b916fcc51bbe94eec78",
     "semantic_hash": ""
   },
   "backend/tests/test_policy_rules.py": {
@@ -390,9 +390,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_tools.py": {
-    "mtime": 1794590712.9679177,
-    "seen": 1794591443.2007244,
-    "ast_hash": "839a23d570dcffdaca5546676a55f6a0",
+    "mtime": 1794933651.068579,
+    "seen": 1794934054.7696288,
+    "ast_hash": "3ea2c63ff85ede8458a0b88709d29317",
     "semantic_hash": ""
   },
   "backend/tests/test_users.py": {
@@ -738,15 +738,15 @@
     "semantic_hash": ""
   },
   "scripts/start-all.ps1": {
-    "mtime": 1794923440.8920138,
-    "seen": 1794924264.4837418,
-    "ast_hash": "b71281392a10bd7e8951d801d45cca97",
+    "mtime": 1794927178.538273,
+    "seen": 1794928687.2365954,
+    "ast_hash": "3e451bc586e847d78a975fa6ef4a225b",
     "semantic_hash": ""
   },
   "scripts/stop-all.ps1": {
-    "mtime": 1792693858.980302,
-    "seen": 1792694163.6834195,
-    "ast_hash": "9bbdb2dffea9ffafaaf8b2575afa199e",
+    "mtime": 1794927181.450377,
+    "seen": 1794928687.2365954,
+    "ast_hash": "2cc7f31780e1620e3c8199c36fc1f33f",
     "semantic_hash": ""
   },
   "backend/app/api/executions.py": {
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_policy_rules_management.py": {
-    "mtime": 1794590708.757802,
-    "seen": 1794591443.2007244,
-    "ast_hash": "acbdad69fafcc739678c5b77f7f107af",
+    "mtime": 1794933889.6031315,
+    "seen": 1794934054.7696288,
+    "ast_hash": "a15349364bb46e7171fd09eab12d578d",
     "semantic_hash": ""
   },
   "conftest.py": {
@@ -1248,9 +1248,9 @@
     "semantic_hash": ""
   },
   "acme-corp/server/app.py": {
-    "mtime": 1794866907.079658,
-    "seen": 1794867937.7342227,
-    "ast_hash": "37edb5c34513a62e1452ee3905ab57fb",
+    "mtime": 1794928609.91958,
+    "seen": 1794928687.234581,
+    "ast_hash": "06ff60aec464ea873197aa8f2ad11de4",
     "semantic_hash": ""
   },
   "acme-corp/server/config.py": {
@@ -1278,9 +1278,9 @@
     "semantic_hash": ""
   },
   "acme-corp/tests/test_gemini_agent.py": {
-    "mtime": 1794867394.3845794,
-    "seen": 1794867937.7342227,
-    "ast_hash": "3a222f737c7f2d0bc02f22d455f85911",
+    "mtime": 1794933174.9181583,
+    "seen": 1794934054.7676096,
+    "ast_hash": "8c09d700840cb933580902f97eae5c69",
     "semantic_hash": ""
   },
   "acme-corp/README.md": {
@@ -1308,9 +1308,9 @@
     "semantic_hash": ""
   },
   "acme-corp/agent/onboarding.py": {
-    "mtime": 1794869018.676934,
-    "seen": 1794923404.4923172,
-    "ast_hash": "98f8dc1c1b4f8ac0001bff6a681f9dad",
+    "mtime": 1794933174.1485825,
+    "seen": 1794934054.7676096,
+    "ast_hash": "78ed7cc5ef7889d20e065ebfcac0be23",
     "semantic_hash": ""
   },
   ".vscode/settings.json": {

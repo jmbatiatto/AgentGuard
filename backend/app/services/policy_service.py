@@ -15,8 +15,7 @@ from app.schemas.policy_rule import PolicyRuleCreateInPolicy, PolicyRuleUpdate
 class PolicyService:
     """Gestiona operaciones CRUD sobre la entidad Policy con aislamiento multi-tenant."""
 
-    @staticmethod
-    async def create(db: AsyncSession, policy_in: PolicyCreate) -> Policy:
+    async def create(self, db: AsyncSession, policy_in: PolicyCreate) -> Policy:
         """Crea un nuevo contenedor de políticas en la base de datos."""
         policy = Policy(
             organization_id=policy_in.organization_id,
@@ -28,7 +27,8 @@ class PolicyService:
         db.add(policy)
         await db.commit()
         await db.refresh(policy)
-        return policy
+        loaded = await self.get_by_id(db=db, policy_id=policy.id)
+        return loaded if isinstance(loaded, Policy) else policy
 
     @staticmethod
     async def get_by_id(db: AsyncSession, policy_id: UUID) -> Optional[Policy]:
@@ -68,10 +68,9 @@ class PolicyService:
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
-    @staticmethod
-    async def update(db: AsyncSession, policy_id: UUID, policy_in: PolicyUpdate) -> Optional[Policy]:
+    async def update(self, db: AsyncSession, policy_id: UUID, policy_in: PolicyUpdate) -> Optional[Policy]:
         """Actualiza atributos de una política (ej. toggle de activación o prioridad)."""
-        policy = await PolicyService.get_by_id(db=db, policy_id=policy_id)
+        policy = await self.get_by_id(db=db, policy_id=policy_id)
         if not policy:
             return None
 
@@ -86,7 +85,8 @@ class PolicyService:
 
         await db.commit()
         await db.refresh(policy)
-        return policy
+        loaded = await self.get_by_id(db=db, policy_id=policy.id)
+        return loaded if isinstance(loaded, Policy) else policy
 
     @staticmethod
     async def delete(db: AsyncSession, policy_id: UUID) -> bool:

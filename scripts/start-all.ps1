@@ -169,9 +169,27 @@ Write-Host ""
 # ------------------------------------------------------------------------------
 Write-Host "[4/6] Levantando Backend API con Uvicorn en http://localhost:8000..." -ForegroundColor Yellow
 
-$port8000InUse = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
-if ($port8000InUse) {
-    Write-Host "[OK] El puerto 8000 ya esta en uso (Backend ya corriendo o proceso previo)." -ForegroundColor Green
+$port8000Listeners = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 }
+$backendAlreadyHealthy = $false
+if ($port8000Listeners) {
+    try {
+        $probe8000 = Invoke-RestMethod -Uri "http://localhost:8000/health" -Method Get -TimeoutSec 2 -ErrorAction Stop
+        if ($probe8000.app) {
+            $backendAlreadyHealthy = $true
+        }
+    } catch {}
+
+    if (-not $backendAlreadyHealthy) {
+        Write-Host "[!] Se detecto un proceso colgado en puerto 8000 sin responder /health; liberando puerto..." -ForegroundColor Yellow
+        $port8000Listeners | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object {
+            Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue
+        }
+        Start-Sleep -Milliseconds 600
+    }
+}
+
+if ($backendAlreadyHealthy) {
+    Write-Host "[OK] Backend AgentGuard ya esta corriendo y saludable en http://localhost:8000." -ForegroundColor Green
 } else {
     $backendStartCmd = "Set-Location '$backendDir'; & '$venvPython' -m uvicorn app.main:app --reload --port 8000"
     Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendStartCmd
@@ -205,9 +223,9 @@ Write-Host ""
 # ------------------------------------------------------------------------------
 Write-Host "[5/6] Levantando Frontend Vite en http://localhost:5173..." -ForegroundColor Yellow
 
-$port5173InUse = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue
-if ($port5173InUse) {
-    Write-Host "[OK] El puerto 5173 ya esta en uso (Frontend ya corriendo o proceso previo)." -ForegroundColor Green
+$port5173Listeners = Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 }
+if ($port5173Listeners) {
+    Write-Host "[OK] El puerto 5173 ya esta escuchando (Frontend ya corriendo)." -ForegroundColor Green
 } else {
     $pkgRun = if ($pnpmCmd) { "pnpm run dev" } else { "npm run dev" }
     $frontendStartCmd = "Set-Location '$frontendDir'; $pkgRun"

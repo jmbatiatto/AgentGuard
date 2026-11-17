@@ -293,3 +293,41 @@ async def test_api_get_tool_not_found():
             assert "no encontrada" in response.json()["detail"]
 
     app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_tool_service_create_reloads_relationships_via_get_by_id():
+    """Verifica que ToolService.create recargue relaciones vía get_by_id para evitar MissingGreenlet al serializar."""
+    mock_db = AsyncMock()
+    mock_db.add = MagicMock()
+    org_id = uuid.uuid4()
+    created_id = uuid.uuid4()
+
+    async def mock_refresh(instance):
+        instance.id = created_id
+        instance.created_at = datetime.now(timezone.utc)
+
+    mock_db.refresh.side_effect = mock_refresh
+
+    reloaded_tool = Tool(
+        id=created_id,
+        organization_id=org_id,
+        name="BI & Ventas ACME",
+        protocol="REST",
+        endpoint_url="http://localhost:9000/bi",
+        created_at=datetime.now(timezone.utc),
+    )
+
+    with patch.object(tool_service, "get_by_id", new_callable=AsyncMock, return_value=reloaded_tool) as mock_get:
+        result = await tool_service.create(
+            db=mock_db,
+            tool_in=ToolCreate(
+                organization_id=org_id,
+                name="BI & Ventas ACME",
+                protocol="REST",
+                endpoint_url="http://localhost:9000/bi",
+            ),
+        )
+
+    mock_get.assert_awaited_once_with(db=mock_db, tool_id=created_id)
+    assert result is reloaded_tool

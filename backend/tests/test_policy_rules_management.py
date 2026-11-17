@@ -308,7 +308,7 @@ async def test_update_policy_rule_success():
     res_rule = MagicMock()
     res_rule.scalar_one_or_none.return_value = rule
 
-    mock_db.execute.side_effect = [res_user, res_rule]
+    mock_db.execute.side_effect = [res_user, res_rule, res_rule]
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
@@ -387,7 +387,7 @@ async def test_update_policy_rule_cross_tenant_rejected():
     res_rule = MagicMock()
     res_rule.scalar_one_or_none.return_value = None  # Regla de otra empresa -> filtrada por JOIN tenant
 
-    mock_db.execute.side_effect = [res_user, res_rule]
+    mock_db.execute.side_effect = [res_user, res_rule, res_rule]
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
@@ -421,7 +421,7 @@ async def test_delete_policy_rule_individual_success():
     res_rule = MagicMock()
     res_rule.scalar_one_or_none.return_value = rule
 
-    mock_db.execute.side_effect = [res_user, res_rule]
+    mock_db.execute.side_effect = [res_user, res_rule, res_rule]
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:
@@ -507,7 +507,7 @@ async def test_delete_policy_rule_cross_tenant_rejected():
     res_rule = MagicMock()
     res_rule.scalar_one_or_none.return_value = None  # No pertenece a org_1
 
-    mock_db.execute.side_effect = [res_user, res_rule]
+    mock_db.execute.side_effect = [res_user, res_rule, res_rule]
     app.dependency_overrides[get_db] = lambda: mock_db
 
     try:

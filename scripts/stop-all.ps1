@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # AgentGuard - Script de Parada Limpia (Full-Stack Stopper)
 # Detiene los procesos de Backend (puerto 8000), Frontend (puerto 5173) y Docker
 # ==============================================================================
@@ -15,9 +15,9 @@ Write-Host "          [STOP] AGENTGUARD - DETENIENDO SERVICIOS LOCALES          
 Write-Host "====================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. Detener procesos en puerto 8000 (Backend / Uvicorn)
+# 1. Detener procesos escuchando en puerto 8000 (Backend / Uvicorn)
 Write-Host "[*] Liberando puerto 8000 (Backend FastAPI)..." -ForegroundColor Yellow
-$pids8000 = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+$pids8000 = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 } | Select-Object -ExpandProperty OwningProcess -Unique
 foreach ($p in $pids8000) {
     try {
         Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
@@ -25,9 +25,9 @@ foreach ($p in $pids8000) {
     } catch {}
 }
 
-# 2. Detener procesos en puerto 5173 (Frontend / Vite)
+# 2. Detener procesos escuchando en puerto 5173 (Frontend / Vite)
 Write-Host "[*] Liberando puerto 5173 (Frontend Vite)..." -ForegroundColor Yellow
-$pids5173 = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+$pids5173 = Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 } | Select-Object -ExpandProperty OwningProcess -Unique
 foreach ($p in $pids5173) {
     try {
         Stop-Process -Id $p -Force -ErrorAction SilentlyContinue

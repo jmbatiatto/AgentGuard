@@ -65,7 +65,7 @@ async def bootstrap_acme_in_agentguard(
     admin_email = "admin@acmecorp.com"
     admin_password = "demo-password"
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=25.0) as client:
         # -------------------------------------------------------------------
         # 1. Autenticación o Registro de la Organización y Usuario CEO
         # -------------------------------------------------------------------
@@ -125,21 +125,35 @@ async def bootstrap_acme_in_agentguard(
         auth_headers = {"Authorization": f"Bearer {jwt_token}"}
 
         # -------------------------------------------------------------------
-        # 2. Reseed inicial si corresponde (alta nueva o forzado)
+        # 2. Reseed inicial si corresponde (alta nueva, forzado u org incompleta)
         # -------------------------------------------------------------------
-        if is_new_registration or force_reset:
+        should_reset = is_new_registration or force_reset
+        if not should_reset:
             try:
-                reset_resp = await client.post(f"{base_url}/api/v1/demo/reset", headers=auth_headers)
-                if reset_resp.status_code == 200:
-                    reset_data = reset_resp.json()
-                    new_token = reset_data.get("access_token")
-                    if new_token:
-                        jwt_token = new_token
-                        auth_headers = {"Authorization": f"Bearer {jwt_token}"}
-                    if reset_data.get("organization_id"):
-                        org_id = reset_data.get("organization_id")
+                tools_probe = await client.get(f"{base_url}/api/v1/tools", headers=auth_headers)
+                if tools_probe.status_code == 200 and isinstance(tools_probe.json(), list) and len(tools_probe.json()) == 0:
+                    logger.info("La organización Acme Corp no posee herramientas base; ejecutando /demo/reset...")
+                    should_reset = True
             except Exception as exc:
-                logger.warning("Fallo al ejecutar /demo/reset durante onboarding: %s", exc)
+                logger.warning("No se pudo verificar herramientas existentes de Acme Corp: %s", exc)
+
+        if should_reset:
+            reset_resp = await client.post(f"{base_url}/api/v1/demo/reset", headers=auth_headers)
+            if reset_resp.status_code == 200:
+                reset_data = reset_resp.json()
+                new_token = reset_data.get("access_token")
+                if new_token:
+                    jwt_token = new_token
+                    auth_headers = {"Authorization": f"Bearer {jwt_token}"}
+                # /demo/reset regenera UUIDs de organización, usuario y API keys
+                reset_user = reset_data.get("user") if isinstance(reset_data.get("user"), dict) else {}
+                user_id = reset_user.get("id")
+                org_id = reset_data.get("organization_id") or org_id
+                initial_api_key = None
+            else:
+                raise RuntimeError(
+                    f"Error al ejecutar /demo/reset durante onboarding ({reset_resp.status_code}): {reset_resp.text}"
+                )
 
         # -------------------------------------------------------------------
         # 3. Asegurar Perfil y Tenant del Administrador

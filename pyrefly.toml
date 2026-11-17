@@ -1,0 +1,6 @@
+# Configuración de Pyrefly (Meta) para el workspace multi-módulo AgentGuard
+project-includes = ["backend", "acme-corp"]
+project-excludes = ["**/node_modules", "**/__pycache__", "**/.venv", "**/frontend"]
+search-path = ["acme-corp", "backend", "."]
+python-interpreter-path = "backend/.venv/Scripts/python.exe"
+python-version = "3.12"

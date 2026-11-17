@@ -20,8 +20,9 @@ Expone:
    - POST /api/agent/run
 """
 
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -143,31 +144,102 @@ def get_db_instance(request: Request) -> AcmeDatabase:
 # ---------------------------------------------------------------------------
 # Factoría de Aplicación FastAPI
 # ---------------------------------------------------------------------------
-def create_app(db_path: Optional[Union[str, Path]] = None) -> FastAPI:
+async def ensure_acme_onboarded_if_needed(
+    agentguard_url: Optional[str] = None,
+    acme_public_url: Optional[str] = None,
+) -> bool:
+    """Verifica si ACME está vinculado con una API Key válida y ejecuta auto-onboarding si falta o expiró."""
+    base_url = (agentguard_url or settings.AGENTGUARD_URL).rstrip("/")
+    acme_url = (acme_public_url or settings.ACME_PUBLIC_URL).rstrip("/")
+
+    async with httpx.AsyncClient(timeout=4.0) as probe_client:
+        probe_resp = await probe_client.get(f"{base_url}/health")
+        if probe_resp.status_code != 200:
+            logger.debug("AgentGuard respondió HTTP %s en /health; se omite auto-onboarding.", probe_resp.status_code)
+            return False
+
+        current_key = (settings.AGENTGUARD_API_KEY or "").strip()
+        needs_onboard = not current_key
+
+        if current_key:
+            ctx_resp = await probe_client.get(
+                f"{base_url}/api/v1/gateway/context",
+                headers={"X-AgentGuard-Key": current_key},
+            )
+            if ctx_resp.status_code == 200:
+                ctx_data = ctx_resp.json() if isinstance(ctx_resp.json(), dict) else {}
+                agents = ctx_data.get("agents", [])
+                has_consultante = any(
+                    isinstance(a, dict) and "consultante" in (a.get("name") or "").lower()
+                    for a in agents
+                )
+                if has_consultante:
+                    return False
+                logger.info("Falta el agente 'Consultante BI' en AgentGuard; completando onboarding de ACME...")
+                needs_onboard = True
+            else:
+                logger.info(
+                    "La API Key local de ACME ya no es válida en AgentGuard (HTTP %s). "
+                    "Limpiando clave obsoleta y re-vinculando organización ACME...",
+                    ctx_resp.status_code,
+                )
+                settings.AGENTGUARD_API_KEY = None
+                needs_onboard = True
+
+    if needs_onboard:
+        logger.info("AgentGuard detectado activo. Ejecutando vinculación inicial del CEO ACME...")
+        res = await bootstrap_acme_in_agentguard(
+            agentguard_url=base_url,
+            acme_public_url=acme_url,
+            force_reset=False,
+        )
+        logger.info(
+            "ACME Corporation vinculada en AgentGuard (%s, clave %s).",
+            res.get("organization_id"),
+            res.get("api_key_masked"),
+        )
+        return True
+
+    return False
+
+
+def create_app(
+    db_path: Optional[Union[str, Path]] = None,
+    enable_auto_onboard: Optional[bool] = None,
+) -> FastAPI:
     """Crea y configura la aplicación FastAPI para ACME Corporation."""
     active_db = AcmeDatabase(db_path=db_path) if db_path else acme_db
+    should_auto_onboard = (db_path is None) if enable_auto_onboard is None else enable_auto_onboard
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # Startup: asegurar inicialización de tablas SQLite
         active_db.init_db()
 
-        # Intento de auto-onboarding silencioso y best-effort si no hay clave cargada
-        if not (settings.AGENTGUARD_API_KEY and settings.AGENTGUARD_API_KEY.strip()):
-            try:
-                async with httpx.AsyncClient(timeout=2.5) as probe_client:
-                    probe_resp = await probe_client.get(f"{settings.AGENTGUARD_URL.rstrip('/')}/health")
-                    if probe_resp.status_code == 200:
-                        logger.info("AgentGuard detectado activo. Ejecutando vinculación inicial del CEO ACME...")
-                        await bootstrap_acme_in_agentguard(
-                            agentguard_url=settings.AGENTGUARD_URL,
-                            acme_public_url=settings.ACME_PUBLIC_URL,
-                            force_reset=False,
-                        )
-            except Exception as exc:
-                logger.debug("Auto-onboarding omitido en startup (AgentGuard no disponible aún): %s", exc)
+        onboard_task: Optional[asyncio.Task[Any]] = None
+        if should_auto_onboard:
+            async def _auto_onboard_when_ready() -> None:
+                try:
+                    # Esperar breve margen para que Uvicorn quede escuchando en :9000 antes del /demo/reset
+                    await asyncio.sleep(0.8)
+                    await ensure_acme_onboarded_if_needed(
+                        agentguard_url=settings.AGENTGUARD_URL,
+                        acme_public_url=settings.ACME_PUBLIC_URL,
+                    )
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    logger.warning("Auto-onboarding omitido en startup: %s", exc)
 
-        yield
+            onboard_task = asyncio.create_task(_auto_onboard_when_ready())
+
+        try:
+            yield
+        finally:
+            if onboard_task is not None and not onboard_task.done():
+                onboard_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await onboard_task
         # Shutdown
 
     app = FastAPI(

@@ -14,8 +14,7 @@ from app.schemas.tool import ToolCreate, ToolUpdate
 class ToolService:
     """Gestiona operaciones CRUD sobre la entidad Tool con aislamiento multi-tenant."""
 
-    @staticmethod
-    async def create(db: AsyncSession, tool_in: ToolCreate) -> Tool:
+    async def create(self, db: AsyncSession, tool_in: ToolCreate) -> Tool:
         """Crea una nueva herramienta externa en la base de datos."""
         tool = Tool(
             organization_id=tool_in.organization_id,
@@ -27,7 +26,8 @@ class ToolService:
         db.add(tool)
         await db.commit()
         await db.refresh(tool)
-        return tool
+        loaded = await self.get_by_id(db=db, tool_id=tool.id)
+        return loaded if isinstance(loaded, Tool) else tool
 
     @staticmethod
     async def get_by_id(db: AsyncSession, tool_id: UUID) -> Optional[Tool]:
@@ -67,10 +67,9 @@ class ToolService:
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
-    @staticmethod
-    async def update(db: AsyncSession, tool_id: UUID, tool_in: ToolUpdate) -> Optional[Tool]:
+    async def update(self, db: AsyncSession, tool_id: UUID, tool_in: ToolUpdate) -> Optional[Tool]:
         """Actualiza atributos de una herramienta externa existente."""
-        tool = await ToolService.get_by_id(db=db, tool_id=tool_id)
+        tool = await self.get_by_id(db=db, tool_id=tool_id)
         if not tool:
             return None
 
@@ -85,7 +84,8 @@ class ToolService:
 
         await db.commit()
         await db.refresh(tool)
-        return tool
+        loaded = await self.get_by_id(db=db, tool_id=tool.id)
+        return loaded if isinstance(loaded, Tool) else tool
 
     @staticmethod
     async def delete(db: AsyncSession, tool_id: UUID) -> bool:

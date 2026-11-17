@@ -291,3 +291,41 @@ async def test_api_get_policy_not_found():
             assert "no encontrada" in response.json()["detail"]
 
     app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_policy_service_create_reloads_relationships_via_get_by_id():
+    """Verifica que PolicyService.create recargue reglas vía get_by_id para evitar MissingGreenlet al serializar."""
+    mock_db = AsyncMock()
+    mock_db.add = MagicMock()
+    org_id = uuid.uuid4()
+    created_id = uuid.uuid4()
+
+    async def mock_refresh(instance):
+        instance.id = created_id
+        instance.created_at = datetime.now(timezone.utc)
+
+    mock_db.refresh.side_effect = mock_refresh
+
+    reloaded_policy = Policy(
+        id=created_id,
+        organization_id=org_id,
+        name="Gobernanza Consultante BI (Solo Lectura)",
+        priority=150,
+        is_active=True,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    with patch.object(policy_service, "get_by_id", new_callable=AsyncMock, return_value=reloaded_policy) as mock_get:
+        result = await policy_service.create(
+            db=mock_db,
+            policy_in=PolicyCreate(
+                organization_id=org_id,
+                name="Gobernanza Consultante BI (Solo Lectura)",
+                priority=150,
+                is_active=True,
+            ),
+        )
+
+    mock_get.assert_awaited_once_with(db=mock_db, policy_id=created_id)
+    assert result is reloaded_policy

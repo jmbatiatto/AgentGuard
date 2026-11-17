@@ -22,7 +22,8 @@ from agent.gemini_client import (
     resolve_tool_id_for_action,
 )
 from agent.onboarding import bootstrap_acme_in_agentguard
-from server.app import create_app
+from server.app import create_app, ensure_acme_onboarded_if_needed
+from server.config import settings
 from server.database import AcmeDatabase
 
 
@@ -336,12 +337,15 @@ async def test_resolve_tool_id_matches_agentguard_action_name_and_accented_names
 
 @pytest.mark.asyncio
 async def test_bootstrap_acme_in_agentguard_mocked():
-    """Prueba la suite completa de onboarding automático del CEO de ACME en AgentGuard."""
-    org_id = str(uuid.uuid4())
-    user_id = str(uuid.uuid4())
+    """Prueba el onboarding completo y verifica que tras /demo/reset use los UUIDs y API Key regenerados."""
+    pre_reset_org_id = str(uuid.uuid4())
+    pre_reset_user_id = str(uuid.uuid4())
+    post_reset_org_id = str(uuid.uuid4())
+    post_reset_user_id = str(uuid.uuid4())
     tool_id = str(uuid.uuid4())
     agent_id = str(uuid.uuid4())
     policy_id = str(uuid.uuid4())
+    captured_agent_payload = {}
 
     async def mock_handler(request):
         url_str = str(request.url)
@@ -356,22 +360,31 @@ async def test_bootstrap_acme_in_agentguard_mocked():
                 201,
                 json={
                     "access_token": "mock_jwt_token_123",
-                    "api_key": "ag_live_key_new_ceo_12345678",
-                    "user": {"id": user_id, "organization_id": org_id},
-                    "organization": {"id": org_id, "name": "Acme Corp"},
+                    "api_key": "ag_live_key_pre_reset_deleted_9999",
+                    "user": {"id": pre_reset_user_id, "organization_id": pre_reset_org_id},
+                    "organization": {"id": pre_reset_org_id, "name": "Acme Corp"},
                 },
             )
 
         elif "/api/v1/demo/reset" in url_str:
-            return Response(200, json={"status": "success", "access_token": "mock_jwt_token_reset"})
+            return Response(
+                200,
+                json={
+                    "status": "success",
+                    "access_token": "mock_jwt_token_reset",
+                    "organization_id": post_reset_org_id,
+                    "user": {"id": post_reset_user_id, "organization_id": post_reset_org_id},
+                },
+            )
 
         elif "/api/v1/auth/me" in url_str:
-            return Response(200, json={"id": user_id, "organization_id": org_id})
+            return Response(200, json={"id": post_reset_user_id, "organization_id": post_reset_org_id})
 
         elif "/api/v1/agents" in url_str and method == "GET":
             return Response(200, json=[])
 
         elif "/api/v1/agents" in url_str and method == "POST":
+            captured_agent_payload.update(json.loads(request.content))
             return Response(201, json={"id": agent_id, "name": "Consultante BI", "status": "ACTIVE"})
 
         elif f"/api/v1/tools/{tool_id}" in url_str and method == "GET":
@@ -399,23 +412,134 @@ async def test_bootstrap_acme_in_agentguard_mocked():
         elif "/api/v1/policy-rules" in url_str and method == "POST":
             return Response(201, json={"id": str(uuid.uuid4()), "status": "CREATED"})
 
+        elif "/api/v1/api-keys" in url_str and method == "POST":
+            req_json = json.loads(request.content)
+            assert req_json["organization_id"] == post_reset_org_id
+            return Response(201, json={"api_key": "ag_live_key_post_reset_5678"})
+
         elif "/tools" in url_str and method in ("GET", "POST"):
             return Response(201 if method == "POST" else 200, json=[])
 
         elif "/api/v1/gateway/context" in url_str:
-            return Response(200, json={"organization_id": org_id})
+            return Response(401, json={"detail": "Clave obsoleta"})
 
         return Response(200, json={})
 
     original_client = httpx.AsyncClient
+    original_key = settings.AGENTGUARD_API_KEY
     transport = httpx.MockTransport(mock_handler)
-    with patch("agent.onboarding.httpx.AsyncClient", side_effect=lambda *args, **kwargs: original_client(transport=transport)):
-        result = await bootstrap_acme_in_agentguard(
+    persist_mock = MagicMock()
+    try:
+        with (
+            patch(
+                "agent.onboarding.httpx.AsyncClient",
+                side_effect=lambda *args, **kwargs: original_client(transport=transport),
+            ),
+            patch("agent.onboarding.persist_api_key_to_env", persist_mock),
+        ):
+            result = await bootstrap_acme_in_agentguard(
+                agentguard_url="http://mock-agentguard:8000",
+                acme_public_url="http://mock-acme:9000",
+                force_reset=True,
+            )
+    finally:
+        settings.AGENTGUARD_API_KEY = original_key
+
+    assert captured_agent_payload["owner_user_id"] == post_reset_user_id
+    assert captured_agent_payload["organization_id"] == post_reset_org_id
+    persist_mock.assert_called_once_with("ag_live_key_post_reset_5678")
+    assert result["status"] == "success"
+    assert result["organization_id"] == post_reset_org_id
+    assert result["organization_name"] == "Acme Corp"
+    assert result["api_key_masked"] == "ag_live_key_...5678"
+
+
+@pytest.mark.asyncio
+async def test_ensure_acme_onboarded_relinks_on_stale_api_key():
+    """Verifica que si .env conserva una clave obsoleta (HTTP 401), ACME re-vincula al CEO automáticamente."""
+    original_key = settings.AGENTGUARD_API_KEY
+    settings.AGENTGUARD_API_KEY = "ag_live_stale_key_from_wiped_docker_db"
+
+    def mock_handler(request: httpx.Request) -> Response:
+        url_str = str(request.url)
+        if url_str.endswith("/health"):
+            return Response(200, json={"status": "healthy"})
+        if "/api/v1/gateway/context" in url_str:
+            return Response(401, json={"detail": "API Key inválida o expirada"})
+        return Response(404, json={})
+
+    original_client = httpx.AsyncClient
+    transport = httpx.MockTransport(mock_handler)
+    bootstrap_mock = AsyncMock(
+        return_value={
+            "status": "success",
+            "organization_id": str(uuid.uuid4()),
+            "api_key_masked": "ag_live_new_...1234",
+        }
+    )
+
+    try:
+        with (
+            patch(
+                "server.app.httpx.AsyncClient",
+                side_effect=lambda *args, **kwargs: original_client(transport=transport),
+            ),
+            patch("server.app.bootstrap_acme_in_agentguard", bootstrap_mock),
+        ):
+            ran = await ensure_acme_onboarded_if_needed(
+                agentguard_url="http://mock-agentguard:8000",
+                acme_public_url="http://mock-acme:9000",
+            )
+
+        assert ran is True
+        bootstrap_mock.assert_awaited_once_with(
             agentguard_url="http://mock-agentguard:8000",
             acme_public_url="http://mock-acme:9000",
-            force_reset=True,
+            force_reset=False,
         )
+        assert settings.AGENTGUARD_API_KEY is None
+    finally:
+        settings.AGENTGUARD_API_KEY = original_key
 
-    assert result["status"] == "success"
-    assert result["organization_name"] == "Acme Corp"
-    assert "ag_live_" in result["api_key_masked"]
+
+@pytest.mark.asyncio
+async def test_ensure_acme_onboarded_skips_when_key_valid_and_consultante_present():
+    """Verifica que no se re-ejecuta el onboarding si la API Key actual responde 200 con Consultante BI."""
+    original_key = settings.AGENTGUARD_API_KEY
+    settings.AGENTGUARD_API_KEY = "ag_live_valid_existing_key"
+
+    def mock_handler(request: httpx.Request) -> Response:
+        url_str = str(request.url)
+        if url_str.endswith("/health"):
+            return Response(200, json={"status": "healthy"})
+        if "/api/v1/gateway/context" in url_str:
+            return Response(
+                200,
+                json={
+                    "organization_id": str(uuid.uuid4()),
+                    "agents": [{"id": str(uuid.uuid4()), "name": "Consultante BI"}],
+                },
+            )
+        return Response(404, json={})
+
+    original_client = httpx.AsyncClient
+    transport = httpx.MockTransport(mock_handler)
+    bootstrap_mock = AsyncMock()
+
+    try:
+        with (
+            patch(
+                "server.app.httpx.AsyncClient",
+                side_effect=lambda *args, **kwargs: original_client(transport=transport),
+            ),
+            patch("server.app.bootstrap_acme_in_agentguard", bootstrap_mock),
+        ):
+            ran = await ensure_acme_onboarded_if_needed(
+                agentguard_url="http://mock-agentguard:8000",
+                acme_public_url="http://mock-acme:9000",
+            )
+
+        assert ran is False
+        bootstrap_mock.assert_not_awaited()
+    finally:
+        settings.AGENTGUARD_API_KEY = original_key

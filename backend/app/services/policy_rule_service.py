@@ -51,7 +51,8 @@ class PolicyRuleService:
         db.add(rule)
         await db.commit()
         await db.refresh(rule)
-        return rule
+        loaded = await cls.get_by_id(db=db, rule_id=rule.id)
+        return loaded if isinstance(loaded, PolicyRule) else rule
 
     @staticmethod
     async def get_by_id(db: AsyncSession, rule_id: UUID) -> Optional[PolicyRule]:
@@ -219,12 +220,13 @@ class PolicyRuleService:
                     )
             rule.target_agent_id = rule_in.target_agent_id
 
+        org_id = rule.policy.organization_id if rule.policy else organization_id
         await db.commit()
         await db.refresh(rule)
 
-        org_id = rule.policy.organization_id if rule.policy else organization_id
         await _invalidate_policy_cache(org_id)
-        return rule
+        loaded = await cls.get_by_id(db=db, rule_id=rule.id)
+        return loaded if isinstance(loaded, PolicyRule) else rule
 
     update = update_rule
 
