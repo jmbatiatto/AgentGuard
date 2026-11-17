@@ -3,13 +3,17 @@
 Orquesta el ciclo de vida del agente autónomo de IA:
 1. Descubrimiento de contexto y catálogo en AgentGuard (PEP/PDP).
 2. Razonamiento LLM con Google Gemini (Function Calling / Tools) o disparo determinístico.
-3. Despacho comparativo:
+3. Soporte polifacético para:
+   - Agente de Ventas (operaciones comerciales, cotizaciones, reembolsos, precios, seguridad).
+   - Asistente "Consultante BI" (consultas analíticas, gráficos de torta y protección contra borrado).
+4. Despacho comparativo:
    - Modo Protegido: Intercepción por el Gateway de AgentGuard (X-AgentGuard-Key).
    - Modo Directo: Ejecución directa sin salvaguardas (demostración de vulnerabilidad y catástrofe).
 """
 
 import json
 import logging
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
@@ -154,6 +158,70 @@ GEMINI_FUNCTION_DECLARATIONS = [
             "required": ["query"],
         },
     },
+    # Herramientas del Caso de Uso BI & Consultante
+    {
+        "name": "query_sales",
+        "description": "Consulta el registro histórico de ventas de ACME Corp aplicando filtros opcionales de monto mínimo, período o categoría.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "min_amount": {
+                    "type": "NUMBER",
+                    "description": "Monto mínimo en USD para filtrar registros (ej. 1000.0).",
+                },
+                "max_amount": {
+                    "type": "NUMBER",
+                    "description": "Monto máximo en USD para filtrar registros.",
+                },
+                "period": {
+                    "type": "STRING",
+                    "description": "Período fiscal de consulta: 'last_month' o 'current_month'.",
+                },
+                "category": {
+                    "type": "STRING",
+                    "description": "Categoría de producto (ej. Propulsión, Impacto Pesado, Explosivos, Movilidad).",
+                },
+            },
+        },
+    },
+    {
+        "name": "generate_pie_chart",
+        "description": "Genera y renderiza una gráfica de torta con la distribución de ventas en USD y porcentaje por producto.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "min_amount": {
+                    "type": "NUMBER",
+                    "description": "Monto mínimo para el conjunto de datos del gráfico.",
+                },
+                "period": {
+                    "type": "STRING",
+                    "description": "Período fiscal: 'last_month' o 'current_month'.",
+                },
+            },
+        },
+    },
+    {
+        "name": "delete_sales",
+        "description": "Elimina registros de ventas de la base de datos de ACME según condiciones de monto y período.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "max_amount": {
+                    "type": "NUMBER",
+                    "description": "Monto máximo de ventas a eliminar de la base de datos (ej. 1000.0).",
+                },
+                "min_amount": {
+                    "type": "NUMBER",
+                    "description": "Monto mínimo de ventas a eliminar.",
+                },
+                "period": {
+                    "type": "STRING",
+                    "description": "Período fiscal de los registros a eliminar.",
+                },
+            },
+        },
+    },
 ]
 
 
@@ -162,13 +230,7 @@ async def discover_agentguard_context(
     agentguard_api_key: str,
     timeout: float = 6.0,
 ) -> Dict[str, Any]:
-    """Consulta el endpoint /gateway/context de AgentGuard para auto-descubrir IDs.
-
-    Permite resolver dinámicamente:
-    - organization_id
-    - agent_id (Agente de Ventas)
-    - tool_id según la acción solicitada
-    """
+    """Consulta el endpoint /gateway/context de AgentGuard para auto-descubrir IDs."""
     clean_url = agentguard_url.rstrip("/")
     endpoint = f"{clean_url}/api/v1/gateway/context"
     headers = {"X-AgentGuard-Key": agentguard_api_key}
@@ -185,6 +247,8 @@ async def discover_agentguard_context(
 def resolve_tool_id_for_action(context: Dict[str, Any], action_name: str) -> Optional[str]:
     """Encuentra el UUID de la herramienta que contiene una determinada acción."""
     canonical_action = "database.drop" if action_name in ("database_drop", "database.drop") else action_name
+    if canonical_action == "generate_pie_chart":
+        canonical_action = "query_sales"
 
     for tool in context.get("tools", []):
         for act in tool.get("actions", []):
@@ -192,7 +256,7 @@ def resolve_tool_id_for_action(context: Dict[str, Any], action_name: str) -> Opt
             if act_name == canonical_action:
                 return tool.get("id")
 
-    # Mapeos por convención tolerantes a tildes en caso de discrepancia de nombres
+    # Mapeos por convención tolerantes a tildes
     action_to_tool_patterns = {
         "create_quote": ("crm", "factur"),
         "export_customers": ("crm", "factur"),
@@ -200,6 +264,9 @@ def resolve_tool_id_for_action(context: Dict[str, Any], action_name: str) -> Opt
         "update_price": ("catalog", "catálogo", "precio"),
         "database.drop": ("db", "database", "administrador", "base"),
         "database_drop": ("db", "database", "administrador", "base"),
+        "query_sales": ("bi", "venta", "sales"),
+        "delete_sales": ("bi", "venta", "sales"),
+        "generate_pie_chart": ("bi", "venta", "sales"),
     }
     patterns = action_to_tool_patterns.get(canonical_action, ())
     for tool in context.get("tools", []):
@@ -210,11 +277,24 @@ def resolve_tool_id_for_action(context: Dict[str, Any], action_name: str) -> Opt
     return None
 
 
-def resolve_agent_id(context: Dict[str, Any]) -> Optional[str]:
-    """Obtiene el ID del agente de ventas principal o el primer agente disponible."""
+def resolve_agent_id(context: Dict[str, Any], action_name: Optional[str] = None) -> Optional[str]:
+    """Obtiene el ID del agente adecuado según la acción solicitada.
+
+    Para acciones BI ('query_sales', 'delete_sales', 'generate_pie_chart'): selecciona 'Consultante BI'.
+    Para acciones de ventas/seguridad ('create_quote', 'update_price', etc.): selecciona 'Agente de Ventas'.
+    """
     agents = context.get("agents", [])
     if not agents:
         return None
+
+    bi_actions = ("query_sales", "delete_sales", "generate_pie_chart")
+    is_bi = bool(action_name and str(action_name).strip() in bi_actions)
+
+    if is_bi:
+        for ag in agents:
+            name_lower = ag.get("name", "").lower()
+            if "consultante" in name_lower or "bi" in name_lower:
+                return ag.get("id")
 
     for ag in agents:
         name_lower = ag.get("name", "").lower()
@@ -246,11 +326,7 @@ class GeminiAgentClient:
         action_name: str,
         parameters: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Ejecuta una acción DIRECTAMENTE contra la base de datos SQLite de ACME Corp.
-
-        OMITE por completo a AgentGuard. Simula el comportamiento de un sistema sin gobernanza,
-        donde un agente comprometido puede alterar precios, filtrar datos o borrar la base.
-        """
+        """Ejecuta una acción DIRECTAMENTE contra la base de datos SQLite de ACME Corp."""
         canonical_action = "database.drop" if action_name in ("database_drop", "database.drop") else action_name
 
         try:
@@ -302,6 +378,30 @@ class GeminiAgentClient:
                 )
                 return {"status": "wiped", "direct_execution": True, "result": res}
 
+            elif canonical_action in ("query_sales", "generate_pie_chart"):
+                min_amt = parameters.get("min_amount")
+                max_amt = parameters.get("max_amount")
+                period = parameters.get("period", "last_month")
+                category = parameters.get("category")
+                res = self.db.query_sales_records(
+                    min_amount=min_amt,
+                    max_amount=max_amt,
+                    period=period,
+                    category=category,
+                )
+                return {"status": "success", "direct_execution": True, "result": res}
+
+            elif canonical_action == "delete_sales":
+                max_amt = parameters.get("max_amount")
+                min_amt = parameters.get("min_amount")
+                period = parameters.get("period")
+                res = self.db.delete_sales_records(
+                    max_amount=max_amt,
+                    min_amount=min_amt,
+                    period=period,
+                )
+                return {"status": "success", "direct_execution": True, "result": res}
+
             else:
                 return {
                     "status": "error",
@@ -338,6 +438,8 @@ class GeminiAgentClient:
             }
 
         canonical_action = "database.drop" if action_name in ("database_drop", "database.drop") else action_name
+        if canonical_action == "generate_pie_chart":
+            canonical_action = "query_sales"
 
         # 1. Descubrir contexto en AgentGuard
         try:
@@ -353,7 +455,7 @@ class GeminiAgentClient:
             }
 
         org_id = context.get("organization_id")
-        agent_id = resolve_agent_id(context)
+        agent_id = resolve_agent_id(context, action_name=canonical_action)
         tool_id = resolve_tool_id_for_action(context, canonical_action)
 
         if not org_id or not agent_id or not tool_id:
@@ -374,6 +476,8 @@ class GeminiAgentClient:
                 "refund": f"stripe:refunds:{parameters.get('transaction_id', 'tx_demo')}",
                 "update_price": f"catalog:prices:{parameters.get('product_id', 'ACME-ROCKET-01')}",
                 "database.drop": "db:schema:drop",
+                "query_sales": "bi:sales:query",
+                "delete_sales": "bi:sales:delete",
             }
             resource = resource_map.get(canonical_action, f"acme:{canonical_action}")
 
@@ -420,16 +524,19 @@ class GeminiAgentClient:
         mode: str = "protected",
         use_llm: bool = True,
         override_parameters: Optional[Dict[str, Any]] = None,
+        context_sales: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """Ejecuta el ciclo de vida completo del agente en modo protegido o directo.
 
-        Retorna una traza estructurada con todos los pasos para la consola web y CLI.
+        Retorna una traza estructurada con todos los pasos para la consola web y CLI,
+        incluyendo ui_payload con datos de tabla, gráfico de torta y oferta de filtro local.
         """
         steps: List[Dict[str, Any]] = []
         llm_tool_calls: List[Dict[str, Any]] = []
         gateway_verdicts: List[Dict[str, Any]] = []
         acme_results: List[Dict[str, Any]] = []
         final_answer = ""
+        ui_payload: Dict[str, Any] = {}
 
         # 1. Resolver preset y prompt
         preset = get_preset_by_id(preset_id) if preset_id else None
@@ -438,15 +545,76 @@ class GeminiAgentClient:
         parameters = override_parameters or (preset["default_parameters"].copy() if preset else {})
         resource = preset.get("default_resource") if preset else None
 
+        # Si el usuario ingresó un prompt libre personalizado sin Gemini (modo guiado BI), inferir intención BI
+        should_infer_bi_intent = (
+            not use_llm
+            and preset_id not in ("legit_quote", "attack_price", "hitl_refund", "attack_exfil", "attack_drop_db")
+            and (preset is None or (prompt is not None and prompt.strip() != preset.get("prompt", "").strip()))
+        )
+        prompt_lower = (user_prompt or "").lower()
+        if should_infer_bi_intent:
+            extracted_amount: Optional[float] = None
+            num_match = re.search(r"\$?\s*(\d{1,3}(?:[.,]\d{3})+|\d+(?:\.\d+)?)", prompt_lower)
+            if num_match:
+                raw_num = num_match.group(1)
+                if "," in raw_num and "." not in raw_num:
+                    raw_num = raw_num.replace(",", "")
+                elif "," in raw_num and "." in raw_num:
+                    raw_num = raw_num.replace(",", "")
+                try:
+                    extracted_amount = float(raw_num)
+                except ValueError:
+                    extracted_amount = None
+
+            if "torta" in prompt_lower or "gráfico" in prompt_lower or "grafica" in prompt_lower:
+                action_name = "generate_pie_chart"
+                parameters = {
+                    "min_amount": extracted_amount if extracted_amount is not None else 1000.0,
+                    "period": "last_month",
+                }
+            elif ("borrá" in prompt_lower or "borrar" in prompt_lower or "eliminar" in prompt_lower or "borra" in prompt_lower) and (
+                "venta" in prompt_lower or "registro" in prompt_lower or "menos de" in prompt_lower or "menor" in prompt_lower
+            ):
+                action_name = "delete_sales"
+                parameters = {
+                    **({"period": "last_month"} if "mes pasado" in prompt_lower else {}),
+                    "max_amount": extracted_amount if extracted_amount is not None else 1000.0,
+                }
+            elif "ventas" in prompt_lower and "agente de ventas" not in prompt_lower and (
+                extracted_amount is not None
+                or any(k in prompt_lower for k in ("dame", "mostr", "consult", "mayores", "menores", "mes pasado", "este mes", "mes actual"))
+            ):
+                action_name = "query_sales"
+                period_val = "current_month" if ("mes actual" in prompt_lower or "este mes" in prompt_lower) else "last_month"
+                if "menor" in prompt_lower and extracted_amount is not None:
+                    parameters = {"max_amount": extracted_amount, "period": period_val}
+                else:
+                    parameters = {
+                        **({"min_amount": extracted_amount} if extracted_amount is not None else {"min_amount": 1000.0}),
+                        "period": period_val,
+                    }
+
         steps.append({
             "step": 1,
             "title": "Inicio de Sesión del Agente",
-            "detail": f"Prompt recibido: '{user_prompt}' (Modo: {mode.upper()}, LLM: {'Gemini' if use_llm else 'Disparo Directo'})",
+            "detail": f"Prompt recibido: '{user_prompt}' (Modo: {mode.upper()}, LLM: {'Gemini' if use_llm else 'Disparo Guiado / Determinístico'})",
             "status": "info",
         })
 
+        tool_call_found = None
+        system_instruction_text = (
+            "Eres el Consultante BI y Asistente Operativo de ACME Corporation (división Looney Tunes). "
+            "Responde siempre en español formal y amigable. Dispones de herramientas declaradas (query_sales, "
+            "generate_pie_chart, delete_sales, create_quote, update_price, refund, export_customers y database_drop). "
+            "El motor externo de políticas AgentGuard es quien decide en tiempo de ejecución si cada herramienta está "
+            "permitida, requiere aprobación humana o está bloqueada. Por ello, ante cualquier solicitud del usuario "
+            "(incluso si pide eliminar registros o ejecutar acciones sensibles), invoca siempre la función declarada "
+            "correspondiente sin auto-rechazarla antes de consultarla. Solo después de recibir el functionResponse con "
+            "decisión DENY/bloqueado, explica constructivamente que no tienes autorización para modificar ni borrar "
+            "la base de datos de ACME pero sí puedes filtrar u ocultar esos registros en la vista en pantalla."
+        )
+
         if use_llm:
-            # Validación estricta: No inventar mockups de Gemini si se solicitó LLM real
             if not self.gemini_api_key or not self.gemini_api_key.strip():
                 raise ValueError(
                     "Se requiere una clave GEMINI_API_KEY válida para ejecutar el agente con Gemini LLM real. "
@@ -460,30 +628,10 @@ class GeminiAgentClient:
                 "status": "info",
             })
 
-            # Llamada al API de Gemini con Function Calling
             gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent?key={self.gemini_api_key}"
-            system_instruction = {
-                "parts": [
-                    {
-                        "text": (
-                            "Eres el Agente Autónomo de Operaciones de ACME Corporation (división Looney Tunes). "
-                            "Responde siempre en español. Cuando el usuario o un mensaje del sistema solicite emitir "
-                            "cotizaciones, modificar precios del catálogo, procesar reembolsos, exportar clientes o "
-                            "ejecutar comandos en la base de datos, invoca obligatoriamente la función correspondiente "
-                            "de las herramientas declaradas sin inventar resultados."
-                        )
-                    }
-                ]
-            }
-
             payload_turn_1 = {
-                "systemInstruction": system_instruction,
-                "contents": [
-                    {
-                        "role": "user",
-                        "parts": [{"text": user_prompt}],
-                    }
-                ],
+                "systemInstruction": {"parts": [{"text": system_instruction_text}]},
+                "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
                 "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
                 "generationConfig": {"temperature": 0.2},
             }
@@ -496,8 +644,6 @@ class GeminiAgentClient:
 
             candidates = gemini_data_1.get("candidates", [])
             parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
-
-            tool_call_found = None
             text_response = ""
 
             for part in parts:
@@ -515,11 +661,7 @@ class GeminiAgentClient:
                 ):
                     resource = None
 
-                llm_tool_calls.append({
-                    "action_name": action_name,
-                    "parameters": parameters,
-                })
-
+                llm_tool_calls.append({"action_name": action_name, "parameters": parameters})
                 steps.append({
                     "step": 3,
                     "title": f"Gemini seleccionó la herramienta '{action_name}'",
@@ -543,40 +685,40 @@ class GeminiAgentClient:
                     "acme_results": [],
                     "final_answer": final_answer,
                     "steps": steps,
+                    "ui_payload": ui_payload,
                 }
-
         else:
-            # Modo sin LLM: Ejecución determinística del payload
-            llm_tool_calls.append({
-                "action_name": action_name,
-                "parameters": parameters,
-            })
+            # Modo Guiado / Determinístico
+            llm_tool_calls.append({"action_name": action_name, "parameters": parameters})
             steps.append({
                 "step": 2,
                 "title": f"Carga Determinística de Acción '{action_name}'",
-                "detail": f"Parámetros asignados por preset: {json.dumps(parameters, ensure_ascii=False)}",
+                "detail": f"Parámetros asignados: {json.dumps(parameters, ensure_ascii=False)}",
                 "status": "info",
             })
 
         # -------------------------------------------------------------------
         # Despacho: Modo Protegido (AgentGuard) vs Modo Directo (Sin Protección)
         # -------------------------------------------------------------------
+        is_pie_chart_shortcut = action_name == "generate_pie_chart"
+        effective_dispatch_action = "query_sales" if is_pie_chart_shortcut else action_name
+
         if mode == "protected":
             steps.append({
                 "step": 4,
                 "title": "Intercepción en Tiempo de Ejecución (AgentGuard PEP/PDP)",
-                "detail": f"Enviando solicitud a {self.agentguard_url}/api/v1/gateway/execute con X-AgentGuard-Key...",
+                "detail": f"Enviando solicitud a {self.agentguard_url}/api/v1/gateway/execute con X-AgentGuard-Key para '{effective_dispatch_action}'...",
                 "status": "info",
             })
 
             gw_result = await self.execute_in_protected_mode(
-                action_name=action_name,
+                action_name=effective_dispatch_action,
                 parameters=parameters,
                 resource=resource,
             )
             gateway_verdicts.append(gw_result)
-
             decision = gw_result.get("decision", "DENY")
+
             if decision == "ALLOW":
                 steps.append({
                     "step": 5,
@@ -585,6 +727,30 @@ class GeminiAgentClient:
                     "status": "success",
                 })
                 function_response_payload = {"status": "success", "data": gw_result.get("result")}
+
+                # Si fue una consulta de ventas o gráfico de torta, reutilizar el resultado devuelto por AgentGuard si ya trae 'sales'
+                if effective_dispatch_action == "query_sales":
+                    gw_res_data = gw_result.get("result")
+                    if isinstance(gw_res_data, dict) and isinstance(gw_res_data.get("sales"), list):
+                        sales_data = gw_res_data
+                    else:
+                        sales_data = self.db.query_sales_records(
+                            min_amount=parameters.get("min_amount"),
+                            max_amount=parameters.get("max_amount"),
+                            period=parameters.get("period", "last_month"),
+                            category=parameters.get("category"),
+                            log_event=False,
+                        )
+                    ui_payload = {
+                        "table_data": sales_data.get("sales", []),
+                        "pie_chart": sales_data.get("pie_chart", []),
+                        "total_records": sales_data.get("total_records", 0),
+                        "total_amount": sales_data.get("total_amount", 0.0),
+                        "period": sales_data.get("period"),
+                        "filters": sales_data.get("filters"),
+                        "is_chart_view": is_pie_chart_shortcut,
+                    }
+
             elif decision == "REQUIRE_APPROVAL":
                 steps.append({
                     "step": 5,
@@ -600,7 +766,9 @@ class GeminiAgentClient:
                     "decision": "REQUIRE_APPROVAL",
                     "message": "Operación suspendida sujeta a revisión de un supervisor humano en la bandeja de AgentGuard.",
                 }
+
             else:
+                # DENY
                 steps.append({
                     "step": 5,
                     "title": "Veredicto AgentGuard: DENY (403 Forbidden)",
@@ -615,6 +783,24 @@ class GeminiAgentClient:
                     "decision": "DENY",
                     "error": gw_result.get("error_message") or "Acción denegada por AgentGuard.",
                 }
+
+                # Caso estelar: delete_sales bloqueado por AgentGuard para el administrativo
+                if effective_dispatch_action == "delete_sales":
+                    # Conservar datos de ventas del mes pasado sin duplicar evento en bitácora
+                    threshold_val = float(parameters.get("max_amount") or 1000.0)
+                    last_sales = self.db.query_sales_records(
+                        period=parameters.get("period") or "last_month",
+                        log_event=False,
+                    )
+                    ui_payload = {
+                        "table_data": last_sales.get("sales", []),
+                        "pie_chart": last_sales.get("pie_chart", []),
+                        "offer_local_filter": {
+                            "max_amount": threshold_val,
+                            "min_amount": threshold_val,
+                        },
+                        "blocked_reason": "Política de solo lectura del Consultante BI en AgentGuard",
+                    }
 
         else:
             # Modo Directo: Sin protección alguna
@@ -655,6 +841,14 @@ class GeminiAgentClient:
                     ),
                     "status": "danger",
                 })
+            elif action_name == "delete_sales":
+                deleted_cnt = direct_res.get("result", {}).get("deleted_count", 0)
+                steps.append({
+                    "step": 5,
+                    "title": "¡REGISTROS ELIMINADOS EN SQLITE REAL!",
+                    "detail": f"Al no mediar protección de AgentGuard, se eliminaron {deleted_cnt} ventas de la base de datos.",
+                    "status": "danger",
+                })
             else:
                 steps.append({
                     "step": 5,
@@ -665,8 +859,21 @@ class GeminiAgentClient:
 
             function_response_payload = direct_res
 
+            # Si fue query_sales o generate_pie_chart en directo, actualizar ui_payload
+            if effective_dispatch_action == "query_sales" and "result" in direct_res:
+                q_res = direct_res["result"]
+                ui_payload = {
+                    "table_data": q_res.get("sales", []),
+                    "pie_chart": q_res.get("pie_chart", []),
+                    "total_records": q_res.get("total_records", 0),
+                    "total_amount": q_res.get("total_amount", 0.0),
+                    "period": q_res.get("period"),
+                    "filters": q_res.get("filters"),
+                    "is_chart_view": is_pie_chart_shortcut,
+                }
+
         # -------------------------------------------------------------------
-        # Cierre del Ciclo: Síntesis Final (Turno 2 con Gemini o síntesis local)
+        # Cierre del Ciclo: Síntesis Final
         # -------------------------------------------------------------------
         if use_llm and tool_call_found:
             steps.append({
@@ -676,10 +883,9 @@ class GeminiAgentClient:
                 "status": "info",
             })
 
-            # Segundo turno: Function Response
             canonical_tool_name = tool_call_found.get("name")
             payload_turn_2 = {
-                "systemInstruction": system_instruction,
+                "systemInstruction": {"parts": [{"text": system_instruction_text}]},
                 "contents": [
                     {"role": "user", "parts": [{"text": user_prompt}]},
                     {"role": "model", "parts": [{"functionCall": tool_call_found}]},
@@ -716,11 +922,25 @@ class GeminiAgentClient:
             if mode == "protected":
                 dec = gateway_verdicts[0].get("decision") if gateway_verdicts else "UNKNOWN"
                 if dec == "ALLOW":
-                    final_answer = (
-                        f"✅ Operación autorizada exitosamente por AgentGuard bajo política comercial. "
-                        f"La acción '{action_name}' fue ejecutada en el servicio destino con latencia "
-                        f"{gateway_verdicts[0].get('latency_ms', 0)} ms."
-                    )
+                    if effective_dispatch_action == "query_sales":
+                        cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
+                        tot = ui_payload.get("total_amount", 0.0)
+                        final_answer = (
+                            f"✅ ¡Hola! Aquí tienes las {cnt} ventas mayores a $1,000 del mes pasado registradas en ACME Corp. "
+                            f"El monto total facturado asciende a ${tot:,.2f} USD. "
+                            f"He desplegado el desglose en la tabla interactiva y los datos están listos para ser graficados."
+                        )
+                    elif is_pie_chart_shortcut:
+                        final_answer = (
+                            "📊 ¡Gráfico generado exitosamente! He preparado la distribución de ventas por producto "
+                            "en una gráfica circular interactiva con los porcentajes reales correspondientes."
+                        )
+                    else:
+                        final_answer = (
+                            f"✅ Operación autorizada exitosamente por AgentGuard bajo política comercial. "
+                            f"La acción '{action_name}' fue ejecutada en el servicio destino con latencia "
+                            f"{gateway_verdicts[0].get('latency_ms', 0)} ms."
+                        )
                 elif dec == "REQUIRE_APPROVAL":
                     final_answer = (
                         f"⏳ Operación suspendida sujeta a gobernanza humana (HITL). "
@@ -728,11 +948,19 @@ class GeminiAgentClient:
                         f"Ticket registrado en la bandeja de aprobación de AgentGuard."
                     )
                 else:
-                    final_answer = (
-                        f"🛡️ Bloqueo de seguridad preventivo emitido por AgentGuard (PDP). "
-                        f"La acción '{action_name}' fue rechazada por política estricta. "
-                        f"Detalle: {gateway_verdicts[0].get('error_message', 'Acceso denegado')}."
-                    )
+                    # DENY
+                    if effective_dispatch_action == "delete_sales":
+                        final_answer = (
+                            "🛡️ Puedo filtrar u ocultar esos registros en esta pantalla y actualizar tu gráfico de torta, "
+                            "pero no tengo autorización para escribir ni borrar datos en la base de datos de ACME "
+                            "(bloqueado por política de seguridad en AgentGuard)."
+                        )
+                    else:
+                        final_answer = (
+                            f"🛡️ Bloqueo de seguridad preventivo emitido por AgentGuard (PDP). "
+                            f"La acción '{action_name}' fue rechazada por política estricta. "
+                            f"Detalle: {gateway_verdicts[0].get('error_message', 'Acceso denegado')}."
+                        )
             else:
                 if acme_results and acme_results[0].get("is_database_wiped"):
                     final_answer = (
@@ -742,7 +970,7 @@ class GeminiAgentClient:
                 elif acme_results and acme_results[0].get("status") == "wiped":
                     final_answer = (
                         "💥 PELIGRO CRÍTICO: La acción destructiva se ejecutó directamente sin pasar por AgentGuard. "
-                        "Todas las tablas de productos, clientes, cotizaciones y reembolsos fueron eliminadas de la base de datos."
+                        "Todas las tablas de productos, clientes, cotizaciones, reembolsos y ventas fueron eliminadas de la base de datos."
                     )
                 elif acme_results and acme_results[0].get("result", {}).get("is_tampered"):
                     res_tamper = acme_results[0]["result"]
@@ -751,6 +979,15 @@ class GeminiAgentClient:
                         f"fue rebajado a ${res_tamper['new_price']} USD (Precio Base: ${res_tamper['base_price']} USD). "
                         f"Se ha provocado un sabotaje directo en el catálogo oficial de ACME."
                     )
+                elif action_name == "delete_sales":
+                    cnt = acme_results[0].get("result", {}).get("deleted_count", 0)
+                    final_answer = (
+                        f"💥 ALERTA: En Modo Directo (sin AgentGuard), se eliminaron {cnt} registros de ventas "
+                        f"directamente de SQLite. ¡Los datos han desaparecido de la base de datos real!"
+                    )
+                elif effective_dispatch_action == "query_sales":
+                    cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
+                    final_answer = f"⚡ Consulta de ventas ejecutada directamente sobre SQLite ({cnt} registros recuperados)."
                 else:
                     final_answer = (
                         f"⚡ Acción '{action_name}' ejecutada directamente en ACME Corp omitiendo salvaguardas de gobernanza. "
@@ -761,16 +998,17 @@ class GeminiAgentClient:
             "step": 7 if use_llm else 6,
             "title": "Conclusión del Agente",
             "detail": final_answer,
-            "status": "success" if "✅" in final_answer else ("warning" if "⏳" in final_answer else "info"),
+            "status": "success" if "✅" in final_answer or "📊" in final_answer else ("warning" if "⏳" in final_answer else "info"),
         })
 
         return {
             "mode": mode,
             "use_llm": use_llm,
-            "model_used": self.gemini_model if use_llm else "N/A (Disparo Determinístico)",
+            "model_used": self.gemini_model if use_llm else "N/A (Disparo Guiado / Determinístico)",
             "llm_tool_calls": llm_tool_calls,
             "gateway_verdicts": gateway_verdicts,
             "acme_results": acme_results,
             "final_answer": final_answer,
             "steps": steps,
+            "ui_payload": ui_payload,
         }

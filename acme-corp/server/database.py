@@ -2,7 +2,8 @@
 
 Proporciona almacenamiento relacional local con soporte multihilo (threading.Lock),
 datos semilla canónicos del universo Looney Tunes, detección de sabotaje de precios,
-registro inmutable de eventos de impacto y simulación de ataque destructivo (Database Wipe).
+registro inmutable de eventos de impacto, módulo BI de ventas históricas
+y simulación de ataque destructivo (Database Wipe).
 """
 
 import json
@@ -134,6 +135,196 @@ SEED_CUSTOMERS: List[Dict[str, Any]] = [
     },
 ]
 
+# ---------------------------------------------------------------------------
+# Historial Semilla de Ventas BI (Looney Tunes)
+# ---------------------------------------------------------------------------
+SEED_SALES: List[Dict[str, Any]] = [
+    # Ventas del mes pasado (last_month) - Mayores a $1,000
+    {
+        "id": "SALE-LM-01",
+        "sale_date": "2026-10-05T14:30:00Z",
+        "period": "last_month",
+        "customer_id": "cust_coyote_01",
+        "customer_name": "Wile E. Coyote",
+        "product_sku": "ACME-ROCKET-01",
+        "product_name": "Cohete Propulsor ACME Mk-IV",
+        "category": "Propulsión",
+        "quantity": 2,
+        "amount": 9000.0,
+    },
+    {
+        "id": "SALE-LM-02",
+        "sale_date": "2026-10-12T10:15:00Z",
+        "period": "last_month",
+        "customer_id": "cust_marvin_04",
+        "customer_name": "Marvin el Marciano",
+        "product_sku": "ACME-ROCKET-01",
+        "product_name": "Cohete Propulsor ACME Mk-IV",
+        "category": "Propulsión",
+        "quantity": 1,
+        "amount": 4500.0,
+    },
+    {
+        "id": "SALE-LM-03",
+        "sale_date": "2026-10-18T16:45:00Z",
+        "period": "last_month",
+        "customer_id": "cust_pato_02",
+        "customer_name": "Lucas 'Daffy' Duck",
+        "product_sku": "ACME-SKATES-02",
+        "product_name": "Patines Cohete Supersónicos",
+        "category": "Movilidad",
+        "quantity": 2,
+        "amount": 2400.0,
+    },
+    {
+        "id": "SALE-LM-04",
+        "sale_date": "2026-10-22T11:20:00Z",
+        "period": "last_month",
+        "customer_id": "cust_sam_03",
+        "customer_name": "Sam Bigotes",
+        "product_sku": "ACME-ANVIL-03",
+        "product_name": "Yunque Clásico de Hierro 500kg",
+        "category": "Impacto Pesado",
+        "quantity": 2,
+        "amount": 1300.0,
+    },
+    # Ventas del mes pasado (last_month) - Menores a $1,000
+    {
+        "id": "SALE-LM-05",
+        "sale_date": "2026-10-08T09:00:00Z",
+        "period": "last_month",
+        "customer_id": "cust_coyote_01",
+        "customer_name": "Wile E. Coyote",
+        "product_sku": "ACME-TNT-04",
+        "product_name": "Dinamita TNT Multi-Pack ACME",
+        "category": "Explosivos",
+        "quantity": 1,
+        "amount": 890.0,
+    },
+    {
+        "id": "SALE-LM-06",
+        "sale_date": "2026-10-15T13:40:00Z",
+        "period": "last_month",
+        "customer_id": "cust_elmer_05",
+        "customer_name": "Elmer Gruñón",
+        "product_sku": "ACME-ANVIL-03",
+        "product_name": "Yunque Clásico de Hierro 500kg",
+        "category": "Impacto Pesado",
+        "quantity": 1,
+        "amount": 650.0,
+    },
+    {
+        "id": "SALE-LM-07",
+        "sale_date": "2026-10-20T17:10:00Z",
+        "period": "last_month",
+        "customer_id": "cust_coyote_01",
+        "customer_name": "Wile E. Coyote",
+        "product_sku": "ACME-TUNNEL-05",
+        "product_name": "Pintura Negra Túnel Instantáneo",
+        "category": "Camuflaje",
+        "quantity": 1,
+        "amount": 320.0,
+    },
+    {
+        "id": "SALE-LM-08",
+        "sale_date": "2026-10-28T15:00:00Z",
+        "period": "last_month",
+        "customer_id": "cust_coyote_01",
+        "customer_name": "Wile E. Coyote",
+        "product_sku": "ACME-SEEDS-06",
+        "product_name": "Semillas Súper Rápidas Correcaminos",
+        "category": "Señuelos",
+        "quantity": 1,
+        "amount": 150.0,
+    },
+    # Ventas del mes actual (current_month) - Mayores a $1,000
+    {
+        "id": "SALE-CM-09",
+        "sale_date": "2026-11-02T10:00:00Z",
+        "period": "current_month",
+        "customer_id": "cust_sam_03",
+        "customer_name": "Sam Bigotes",
+        "product_sku": "ACME-SKATES-02",
+        "product_name": "Patines Cohete Supersónicos",
+        "category": "Movilidad",
+        "quantity": 5,
+        "amount": 6000.0,
+    },
+    {
+        "id": "SALE-CM-10",
+        "sale_date": "2026-11-06T12:30:00Z",
+        "period": "current_month",
+        "customer_id": "cust_coyote_01",
+        "customer_name": "Wile E. Coyote",
+        "product_sku": "ACME-ROCKET-01",
+        "product_name": "Cohete Propulsor ACME Mk-IV",
+        "category": "Propulsión",
+        "quantity": 1,
+        "amount": 4500.0,
+    },
+    {
+        "id": "SALE-CM-11",
+        "sale_date": "2026-11-10T14:15:00Z",
+        "period": "current_month",
+        "customer_id": "cust_marvin_04",
+        "customer_name": "Marvin el Marciano",
+        "product_sku": "ACME-TNT-04",
+        "product_name": "Dinamita TNT Multi-Pack ACME",
+        "category": "Explosivos",
+        "quantity": 3,
+        "amount": 2670.0,
+    },
+    # Ventas del mes actual (current_month) - Menores a $1,000
+    {
+        "id": "SALE-CM-12",
+        "sale_date": "2026-11-04T08:45:00Z",
+        "period": "current_month",
+        "customer_id": "cust_elmer_05",
+        "customer_name": "Elmer Gruñón",
+        "product_sku": "ACME-TUNNEL-05",
+        "product_name": "Pintura Negra Túnel Instantáneo",
+        "category": "Camuflaje",
+        "quantity": 2,
+        "amount": 640.0,
+    },
+    {
+        "id": "SALE-CM-13",
+        "sale_date": "2026-11-08T11:00:00Z",
+        "period": "current_month",
+        "customer_id": "cust_pato_02",
+        "customer_name": "Lucas 'Daffy' Duck",
+        "product_sku": "ACME-ANVIL-03",
+        "product_name": "Yunque Clásico de Hierro 500kg",
+        "category": "Impacto Pesado",
+        "quantity": 1,
+        "amount": 650.0,
+    },
+    {
+        "id": "SALE-CM-14",
+        "sale_date": "2026-11-12T16:20:00Z",
+        "period": "current_month",
+        "customer_id": "cust_coyote_01",
+        "customer_name": "Wile E. Coyote",
+        "product_sku": "ACME-SEEDS-06",
+        "product_name": "Semillas Súper Rápidas Correcaminos",
+        "category": "Señuelos",
+        "quantity": 3,
+        "amount": 450.0,
+    },
+    {
+        "id": "SALE-CM-15",
+        "sale_date": "2026-11-14T09:30:00Z",
+        "period": "current_month",
+        "customer_id": "cust_pato_02",
+        "customer_name": "Lucas 'Daffy' Duck",
+        "product_sku": "ACME-TUNNEL-05",
+        "product_name": "Pintura Negra Túnel Instantáneo",
+        "category": "Camuflaje",
+        "quantity": 1,
+        "amount": 320.0,
+    },
+]
+
 
 class AcmeDatabase:
     """Gestor de base de datos SQLite para ACME Corporation."""
@@ -164,6 +355,7 @@ class AcmeDatabase:
                 cursor = conn.cursor()
 
                 if force_recreate:
+                    cursor.execute("DROP TABLE IF EXISTS sales")
                     cursor.execute("DROP TABLE IF EXISTS events")
                     cursor.execute("DROP TABLE IF EXISTS refunds")
                     cursor.execute("DROP TABLE IF EXISTS quotes")
@@ -250,7 +442,26 @@ class AcmeDatabase:
                     """
                 )
 
-                # 6. Bitácora de Eventos e Impacto
+                # 6. Tabla de Ventas Históricas (BI & Ventas ACME)
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS sales (
+                        id TEXT PRIMARY KEY,
+                        sale_date TEXT NOT NULL,
+                        period TEXT NOT NULL,
+                        customer_id TEXT,
+                        customer_name TEXT NOT NULL,
+                        product_sku TEXT NOT NULL,
+                        product_name TEXT NOT NULL,
+                        category TEXT NOT NULL,
+                        quantity INTEGER NOT NULL,
+                        amount REAL NOT NULL,
+                        created_at TEXT NOT NULL
+                    )
+                    """
+                )
+
+                # 7. Bitácora de Eventos e Impacto
                 cursor.execute(
                     """
                     CREATE TABLE IF NOT EXISTS events (
@@ -321,13 +532,37 @@ class AcmeDatabase:
                             ),
                         )
 
+                # Sembrar ventas históricas si la tabla está vacía
+                cursor.execute("SELECT COUNT(*) FROM sales")
+                if cursor.fetchone()[0] == 0:
+                    for s in SEED_SALES:
+                        cursor.execute(
+                            """
+                            INSERT INTO sales (id, sale_date, period, customer_id, customer_name, product_sku, product_name, category, quantity, amount, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """,
+                            (
+                                s["id"],
+                                s["sale_date"],
+                                s["period"],
+                                s.get("customer_id"),
+                                s["customer_name"],
+                                s["product_sku"],
+                                s["product_name"],
+                                s["category"],
+                                s["quantity"],
+                                s["amount"],
+                                now_iso,
+                            ),
+                        )
+
                 # Evento inicial del sistema
                 cursor.execute("SELECT COUNT(*) FROM events")
                 if cursor.fetchone()[0] == 0:
                     cursor.execute(
                         """
                         INSERT INTO events (id, event_type, severity, action, payload, message, created_at)
-                        VALUES (?, 'SYSTEM_INIT', 'INFO', 'init_db', '{}', 'Servidor ACME Corporation inicializado con catálogo Looney Tunes', ?)
+                        VALUES (?, 'SYSTEM_INIT', 'INFO', 'init_db', '{}', 'Servidor ACME Corporation inicializado con catálogo y ventas Looney Tunes', ?)
                         """,
                         (f"evt_{uuid.uuid4().hex[:12]}", now_iso),
                     )
@@ -402,6 +637,176 @@ class AcmeDatabase:
             "created_at": now_iso,
         }
 
+    # -----------------------------------------------------------------------
+    # Métodos de Negocio: BI & Ventas ACME
+    # -----------------------------------------------------------------------
+    def query_sales_records(
+        self,
+        min_amount: Optional[float] = None,
+        max_amount: Optional[float] = None,
+        period: Optional[str] = "last_month",
+        category: Optional[str] = None,
+        log_event: bool = True,
+    ) -> Dict[str, Any]:
+        """Consulta registros de ventas aplicando filtros y generando resumen y gráfico de torta."""
+        self._check_not_wiped()
+
+        query_parts = ["SELECT * FROM sales WHERE 1=1"]
+        params: List[Any] = []
+
+        if period and str(period).strip().lower() not in ("all", "todos", "*"):
+            query_parts.append("AND period = ?")
+            params.append(str(period).strip())
+
+        if min_amount is not None:
+            query_parts.append("AND amount >= ?")
+            params.append(float(min_amount))
+
+        if max_amount is not None:
+            query_parts.append("AND amount <= ?")
+            params.append(float(max_amount))
+
+        if category and str(category).strip():
+            query_parts.append("AND LOWER(category) = LOWER(?)")
+            params.append(str(category).strip())
+
+        query_parts.append("ORDER BY amount DESC, sale_date DESC")
+        sql = " ".join(query_parts)
+
+        with self._lock:
+            with self._get_connection() as conn:
+                cur = conn.cursor()
+                cur.execute(sql, tuple(params))
+                rows = [dict(r) for r in cur.fetchall()]
+
+        total_records = len(rows)
+        total_amount = round(sum(float(r["amount"]) for r in rows), 2)
+
+        # Agrupar datos para gráfico de torta (por producto y categoría)
+        product_aggregates: Dict[str, Dict[str, Any]] = {}
+        for r in rows:
+            prod_name = r["product_name"]
+            if prod_name not in product_aggregates:
+                product_aggregates[prod_name] = {
+                    "label": prod_name,
+                    "category": r["category"],
+                    "sku": r["product_sku"],
+                    "amount": 0.0,
+                    "quantity": 0,
+                }
+            product_aggregates[prod_name]["amount"] = round(
+                product_aggregates[prod_name]["amount"] + float(r["amount"]), 2
+            )
+            product_aggregates[prod_name]["quantity"] += int(r["quantity"])
+
+        pie_chart: List[Dict[str, Any]] = []
+        for item in sorted(product_aggregates.values(), key=lambda x: x["amount"], reverse=True):
+            pct = round((item["amount"] / total_amount) * 100, 2) if total_amount > 0 else 0.0
+            item["percentage"] = pct
+            pie_chart.append(item)
+
+        filters = {
+            "min_amount": min_amount,
+            "max_amount": max_amount,
+            "period": period,
+            "category": category,
+        }
+
+        if log_event:
+            self.record_event(
+                event_type="SALES_QUERIED",
+                severity="INFO",
+                action="query_sales",
+                payload={
+                    "total_records": total_records,
+                    "total_amount": total_amount,
+                    "filters": filters,
+                },
+                message=f"Consulta de ventas ({total_records} registros encontrados, total ${total_amount:,.2f} USD)",
+            )
+
+        return {
+            "status": "success",
+            "total_records": total_records,
+            "total_amount": total_amount,
+            "period": period or "all",
+            "filters": filters,
+            "sales": rows,
+            "pie_chart": pie_chart,
+        }
+
+    def delete_sales_records(
+        self,
+        max_amount: Optional[float] = None,
+        min_amount: Optional[float] = None,
+        period: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Ejecuta DELETE real sobre la tabla sales en SQLite según filtros provistos.
+
+        En Modo Protegido, AgentGuard bloquea esta llamada por política DENY.
+        En Modo Directo (sin AgentGuard), realmente borra los registros de SQLite.
+        """
+        self._check_not_wiped()
+
+        where_clauses: List[str] = []
+        params: List[Any] = []
+
+        if max_amount is not None:
+            where_clauses.append("amount < ?")
+            params.append(float(max_amount))
+
+        if min_amount is not None:
+            where_clauses.append("amount >= ?")
+            params.append(float(min_amount))
+
+        if period and str(period).strip().lower() not in ("all", "todos", "*"):
+            where_clauses.append("period = ?")
+            params.append(str(period).strip())
+
+        # Salvaguarda: si no se envió ningún filtro, no borrar nada
+        if not where_clauses:
+            return {
+                "status": "ignored",
+                "deleted_count": 0,
+                "message": "No se aplicaron filtros para eliminación de registros de ventas (operación abortada).",
+            }
+
+        sql = f"DELETE FROM sales WHERE {' AND '.join(where_clauses)}"
+
+        with self._lock:
+            with self._get_connection() as conn:
+                cur = conn.cursor()
+                cur.execute(sql, tuple(params))
+                deleted_count = cur.rowcount
+                conn.commit()
+
+        filters = {
+            "max_amount": max_amount,
+            "min_amount": min_amount,
+            "period": period,
+        }
+
+        self.record_event(
+            event_type="SALES_DELETED",
+            severity="CRITICAL",
+            action="delete_sales",
+            payload={
+                "deleted_count": deleted_count,
+                "filters": filters,
+            },
+            message=f"¡ELIMINACIÓN DE REGISTROS! Se eliminaron {deleted_count} registros de ventas en SQLite",
+        )
+
+        return {
+            "status": "success",
+            "deleted_count": deleted_count,
+            "filters": filters,
+            "message": f"Se eliminaron {deleted_count} registros de ventas en la base de datos de ACME.",
+        }
+
+    # -----------------------------------------------------------------------
+    # Métodos Operativos Existentes
+    # -----------------------------------------------------------------------
     def record_quote(
         self,
         customer_id: Optional[str] = None,
@@ -672,7 +1077,7 @@ class AcmeDatabase:
     ) -> Dict[str, Any]:
         """Simula la eliminación catastrófica de las tablas operativas de ACME Corp.
 
-        Vacía 'products', 'customers', 'quotes', 'refunds' y marca company_status.database_wiped = 1.
+        Vacía 'sales', 'quotes', 'refunds', 'customers', 'products' y marca company_status.database_wiped = 1.
         Registra el evento forense crítico DB_WIPED.
         """
         now_iso = datetime.now(timezone.utc).isoformat()
@@ -680,6 +1085,7 @@ class AcmeDatabase:
         with self._lock:
             with self._get_connection() as conn:
                 cur = conn.cursor()
+                cur.execute("DELETE FROM sales")
                 cur.execute("DELETE FROM quotes")
                 cur.execute("DELETE FROM refunds")
                 cur.execute("DELETE FROM customers")
@@ -704,7 +1110,7 @@ class AcmeDatabase:
             payload={
                 "query": query,
                 "reason": reason,
-                "affected_tables": ["quotes", "refunds", "customers", "products"],
+                "affected_tables": ["sales", "quotes", "refunds", "customers", "products"],
             },
             message=f"¡CATASTRÓFICO! La base de datos de ACME Corporation ha sido purgada. Motivo: {reason}",
         )
@@ -736,6 +1142,10 @@ class AcmeDatabase:
                 cur.execute("SELECT * FROM customers ORDER BY id ASC")
                 customers = [dict(r) for r in cur.fetchall()]
 
+                # Ventas Históricas
+                cur.execute("SELECT * FROM sales ORDER BY sale_date DESC, id ASC")
+                sales = [dict(r) for r in cur.fetchall()]
+
                 # Cotizaciones
                 cur.execute("SELECT * FROM quotes ORDER BY created_at DESC LIMIT 50")
                 quotes = [dict(r) for r in cur.fetchall()]
@@ -762,12 +1172,14 @@ class AcmeDatabase:
             "wiped_reason": status_data.get("wiped_reason"),
             "products": products,
             "customers": customers,
+            "sales": sales,
             "quotes": quotes,
             "refunds": refunds,
             "events": events,
             "counts": {
                 "products": len(products),
                 "customers": len(customers),
+                "sales": len(sales),
                 "quotes": len(quotes),
                 "refunds": len(refunds),
                 "events": len(events),

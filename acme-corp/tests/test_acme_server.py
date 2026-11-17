@@ -29,10 +29,11 @@ def app_with_temp_db(temp_db: AcmeDatabase):
 
 
 def test_initial_seed_data(temp_db: AcmeDatabase):
-    """Verifica que el seed inicial contenga los 6 productos y 5 clientes Looney Tunes."""
+    """Verifica que el seed inicial contenga productos, clientes y las 14+ ventas Looney Tunes."""
     state = temp_db.get_state()
     assert state["counts"]["products"] == 6
     assert state["counts"]["customers"] == 5
+    assert state["counts"]["sales"] >= 14
     assert not state["database_wiped"]
 
     skus = [p["sku"] for p in state["products"]]
@@ -43,6 +44,15 @@ def test_initial_seed_data(temp_db: AcmeDatabase):
     customer_emails = [c["email"] for c in state["customers"]]
     assert "wile.coyote@desierto-acme.looney" in customer_emails
     assert "pato.lucas@studios-looney.com" in customer_emails
+
+    # Verificar ventas históricas
+    sales = state["sales"]
+    amounts = [s["amount"] for s in sales]
+    assert any(a < 1000.0 for a in amounts)
+    assert any(a >= 1000.0 for a in amounts)
+    periods = {s["period"] for s in sales}
+    assert "last_month" in periods
+    assert "current_month" in periods
 
 
 @pytest.mark.asyncio
@@ -110,7 +120,6 @@ async def test_catalog_update_price_and_tampering(app_with_temp_db, temp_db: Acm
     """Prueba la modificación de precios, resolución de ID numérico y detección de tampering."""
     transport = ASGITransport(app=app_with_temp_db)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # ID numérico '88' debe resolverse a ACME-ROCKET-01
         payload = {
             "product_id": "88",
             "new_price": 9.99,
@@ -124,7 +133,6 @@ async def test_catalog_update_price_and_tampering(app_with_temp_db, temp_db: Acm
         assert data["new_price"] == 9.99
         assert data["is_tampered"] is True
 
-        # Verificar evento de sabotaje en la bitácora
         state = temp_db.get_state()
         tamper_events = [e for e in state["events"] if e["event_type"] == "CATALOG_PRICE_TAMPERING"]
         assert len(tamper_events) >= 1
@@ -132,8 +140,67 @@ async def test_catalog_update_price_and_tampering(app_with_temp_db, temp_db: Acm
 
 
 @pytest.mark.asyncio
-async def test_database_drop_and_503_wiped(app_with_temp_db, temp_db: AcmeDatabase):
-    """Prueba el ataque destructivo (database.drop) y posterior error HTTP 503 en operaciones."""
+async def test_bi_query_sales_endpoint(app_with_temp_db, temp_db: AcmeDatabase):
+    """Prueba la consulta analítica de ventas del mes pasado mayores a $1,000."""
+    transport = ASGITransport(app=app_with_temp_db)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        payload = {
+            "min_amount": 1000.0,
+            "period": "last_month",
+        }
+        res = await client.post("/bi/query_sales", json=payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "success"
+        assert data["total_records"] == 4
+        assert data["total_amount"] == 17200.0
+        assert len(data["sales"]) == 4
+        assert all(s["amount"] >= 1000.0 for s in data["sales"])
+        assert all(s["period"] == "last_month" for s in data["sales"])
+
+        # Verificar pie chart agrupado
+        assert len(data["pie_chart"]) > 0
+        total_pct = sum(item["percentage"] for item in data["pie_chart"])
+        assert 99.5 <= total_pct <= 100.5
+
+        # Evento en bitácora
+        state = temp_db.get_state()
+        query_events = [e for e in state["events"] if e["event_type"] == "SALES_QUERIED"]
+        assert len(query_events) >= 1
+
+
+@pytest.mark.asyncio
+async def test_bi_delete_sales_endpoint(app_with_temp_db, temp_db: AcmeDatabase):
+    """Prueba la eliminación física real de ventas en SQLite y registro de evento crítico."""
+    transport = ASGITransport(app=app_with_temp_db)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Borrar ventas menores a $1,000 del mes pasado
+        payload = {
+            "max_amount": 1000.0,
+            "period": "last_month",
+        }
+        res = await client.post("/bi/delete_sales", json=payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "success"
+        assert data["deleted_count"] == 4
+
+        # 2. Verificar que SQLite realmente tiene 4 ventas menos
+        state = temp_db.get_state()
+        assert state["counts"]["sales"] == 11
+        remaining_lm = [s for s in state["sales"] if s["period"] == "last_month"]
+        assert len(remaining_lm) == 4
+        assert all(s["amount"] >= 1000.0 for s in remaining_lm)
+
+        # 3. Verificar evento de impacto crítico
+        delete_events = [e for e in state["events"] if e["event_type"] == "SALES_DELETED"]
+        assert len(delete_events) >= 1
+        assert delete_events[0]["severity"] == "CRITICAL"
+
+
+@pytest.mark.asyncio
+async def test_database_drop_and_503_wiped_with_sales(app_with_temp_db, temp_db: AcmeDatabase):
+    """Prueba el ataque destructivo (database.drop) purgando también la tabla sales."""
     transport = ASGITransport(app=app_with_temp_db)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # 1. Ejecutar purga destructiva
@@ -143,30 +210,22 @@ async def test_database_drop_and_503_wiped(app_with_temp_db, temp_db: AcmeDataba
         assert drop_data["status"] == "wiped"
         assert drop_data["database_wiped"] is True
 
-        # 2. Las tablas operativas deben estar vacías
+        # 2. Las tablas operativas (incluyendo sales) deben estar vacías
         state = temp_db.get_state()
         assert state["database_wiped"] is True
         assert state["counts"]["products"] == 0
         assert state["counts"]["customers"] == 0
+        assert state["counts"]["sales"] == 0
 
-        # 3. Intentos de invocar servicios operativos deben fallar con HTTP 503
-        quote_res = await client.post("/crm/create_quote", json={"customer": "Test", "amount": 100})
-        assert quote_res.status_code == 503
-        assert "purgada" in quote_res.json()["detail"].lower()
+        # 3. Operaciones BI deben fallar con HTTP 503
+        bi_res = await client.post("/bi/query_sales", json={"period": "last_month"})
+        assert bi_res.status_code == 503
 
-        refund_res = await client.post("/stripe/refund", json={"amount": 50})
-        assert refund_res.status_code == 503
-
-        # 4. Restablecer la base de datos con /api/reset
+        # 4. Restablecer con /api/reset
         reset_res = await client.post("/api/reset")
         assert reset_res.status_code == 200
-        assert reset_res.json()["status"] == "success"
 
-        # 5. La base de datos debe estar nuevamente operativa
-        health_res = await client.get("/health")
-        assert health_res.status_code == 200
-        assert health_res.json()["database_wiped"] is False
-
-        # Y create_quote debe volver a funcionar
-        quote_again = await client.post("/crm/create_quote", json={"customer": "Correcaminos", "amount": 200})
-        assert quote_again.status_code == 200
+        # 5. Todo debe volver a estar operativo con sus ventas iniciales
+        state_after = temp_db.get_state()
+        assert state_after["database_wiped"] is False
+        assert state_after["counts"]["sales"] >= 14

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ACME Corporation — Laboratorio Autónomo Looney Tunes</title>
+  <title>ACME Corporation — Portal Empresarial & Copiloto BI (Looney Tunes)</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <div class="app-container">
-    <!-- Encabezado Principal ACME -->
+    <!-- Encabezado Principal Corporativo ACME -->
     <header class="header">
       <div class="header-left">
         <div class="acme-logo-badge">
@@ -19,21 +19,36 @@
           <span class="acme-brand">ACME CORP</span>
         </div>
         <div>
-          <h1 class="header-title">Laboratorio Autónomo de Gobernanza IA</h1>
-          <p class="header-subtitle">Demostración en Vivo: Modo Protegido (AgentGuard PDP) vs Modo Directo (Sin Protección)</p>
+          <h1 class="header-title">Portal Empresarial & Sistema de Gestión (Looney Tunes)</h1>
+          <p class="header-subtitle">Gestión Comercial, Copiloto BI para Administrativos & Gobernanza en Tiempo Real con AgentGuard</p>
         </div>
       </div>
       <div class="header-right">
+        <!-- Badge / Botón de Vinculación con AgentGuard -->
+        <div id="agentguard-status-container" class="agentguard-status-box">
+          <span id="agentguard-status-badge" class="badge badge-neutral">
+            <span class="indicator-dot"></span>
+            <span id="agentguard-status-text">Comprobando vinculación...</span>
+          </span>
+          <button id="btn-onboard-agentguard" class="btn btn-sm btn-primary hidden" title="Contratar y vincular automáticamente con AgentGuard">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Vincular AgentGuard
+          </button>
+        </div>
+
+        <!-- Estado de SQLite y Botón de Reset -->
         <div id="company-status-badge" class="badge badge-success">
           <span class="indicator-dot"></span>
-          <span id="company-status-text">Base de Datos Operativa</span>
+          <span id="company-status-text">SQLite Operativa</span>
         </div>
-        <button id="btn-reset-db" class="btn btn-outline-danger" title="Restaura la base de datos a sus valores iniciales">
+        <button id="btn-reset-db" class="btn btn-outline-danger" title="Restaura la base de datos de ACME a sus valores de fábrica">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
             <path d="M3 3v5h5"/>
           </svg>
-          Restablecer ACME Corp
+          Restablecer ACME
         </button>
       </div>
     </header>
@@ -48,123 +63,272 @@
         </svg>
         <div>
           <strong>¡BASE DE DATOS ELIMINADA (CATASTRÓFICO)!</strong>
-          <p id="wiped-alert-reason">Un comando destructivo en Modo Directo purgó todas las tablas operativas. Presiona "Restablecer ACME Corp" para regenerar los datos.</p>
+          <p id="wiped-alert-reason">Un comando destructivo en Modo Directo purgó todas las tablas operativas. Presiona "Restablecer ACME" para regenerar los datos.</p>
         </div>
       </div>
     </div>
 
-    <!-- Barra de Configuración y Credenciales -->
+    <!-- Barra Colapsable de Configuración y Credenciales -->
     <section class="credentials-bar card">
-      <div class="section-header">
-        <span class="section-title">Parámetros de Conexión & Credenciales</span>
-        <span class="config-note">Credenciales de sesión (se limpian al cerrar la pestaña o usan `.env` si está definido)</span>
+      <div class="section-header" id="config-toggle-header" style="cursor: pointer;">
+        <div class="flex-align-center gap-sm">
+          <span class="section-title">⚙️ Parámetros de Conexión & Configuración del Copiloto</span>
+          <span id="config-toggle-icon" class="badge badge-neutral">Mostrar / Ocultar</span>
+        </div>
+        <span class="config-note">Opciones avanzadas para modo guiado, llaves y modelo de IA</span>
       </div>
-      <div class="credentials-grid">
-        <div class="form-group">
-          <label for="gemini-key">Google Gemini API Key:</label>
-          <input type="password" id="gemini-key" placeholder="AIzaSy..." autocomplete="off">
+      <div id="config-body" class="config-collapsible hidden">
+        <div class="credentials-grid">
+          <div class="form-group">
+            <label for="gemini-key">Google Gemini API Key (Opcional):</label>
+            <input type="password" id="gemini-key" placeholder="AIzaSy... (o usa .env)" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="gemini-model">Modelo Gemini:</label>
+            <select id="gemini-model">
+              <option value="gemini-2.5-flash">gemini-2.5-flash (Recomendado)</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="agentguard-url">AgentGuard URL:</label>
+            <input type="text" id="agentguard-url" value="http://localhost:8000">
+          </div>
+          <div class="form-group">
+            <label for="agentguard-key">X-AgentGuard-Key (Data Plane):</label>
+            <input type="password" id="agentguard-key" placeholder="ag_live_... (o autogenerar)" autocomplete="off">
+          </div>
         </div>
-        <div class="form-group">
-          <label for="gemini-model">Modelo Gemini:</label>
-          <select id="gemini-model">
-            <option value="gemini-2.5-flash">gemini-2.5-flash (Recomendado)</option>
-            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="agentguard-url">AgentGuard URL:</label>
-          <input type="text" id="agentguard-url" value="http://localhost:8000">
-        </div>
-        <div class="form-group">
-          <label for="agentguard-key">X-AgentGuard-Key (Data Plane):</label>
-          <input type="password" id="agentguard-key" placeholder="ag_live_..." autocomplete="off">
-        </div>
-      </div>
-      <div class="credentials-actions">
-        <button id="btn-test-connection" class="btn btn-secondary">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-          Probar Conexión AgentGuard
-        </button>
-        <span id="connection-status-msg" class="status-msg"></span>
-      </div>
-    </section>
-
-    <!-- Contenido Principal: Dos Columnas (Consola de Ejecución + Inspector de Base de Datos) -->
-    <div class="main-layout">
-      <!-- Columna Izquierda: Disparador de Escenarios Looney Tunes y Traza -->
-      <section class="execution-pane card">
-        <div class="section-header">
-          <span class="section-title">Consola de Ejecución del Agente Looney Tunes</span>
-        </div>
-
-        <!-- Selectores de Modo y Motor -->
-        <div class="mode-selectors-grid">
+        <div class="mode-selectors-grid" style="margin-top: 0.75rem;">
           <div class="control-box">
-            <label class="control-label">Modo de Intercepción:</label>
+            <label class="control-label">Modo de Protección:</label>
             <div class="radio-toggle">
               <label class="radio-option">
                 <input type="radio" name="agent-mode" value="protected" checked>
-                <span class="toggle-pill pill-protected">🛡️ Modo Protegido (AgentGuard)</span>
+                <span class="toggle-pill pill-protected">🛡️ Modo Protegido (AgentGuard PEP)</span>
               </label>
               <label class="radio-option">
                 <input type="radio" name="agent-mode" value="direct">
-                <span class="toggle-pill pill-direct">⚠️ Modo Directo (Sin Protección)</span>
+                <span class="toggle-pill pill-direct">⚠️ Modo Directo (Sin Protección / Vulnerable)</span>
               </label>
             </div>
           </div>
-
           <div class="control-box">
-            <label class="control-label">Motor de Decisión:</label>
+            <label class="control-label">Motor de Inteligencia:</label>
             <div class="radio-toggle">
               <label class="radio-option">
                 <input type="radio" name="agent-engine" value="deterministic" checked>
-                <span class="toggle-pill pill-deterministic">⚡ Disparo Rápido de Payload</span>
+                <span class="toggle-pill pill-deterministic">⚡ Modo Guiado / Rápido</span>
               </label>
               <label class="radio-option">
                 <input type="radio" name="agent-engine" value="llm">
-                <span class="toggle-pill pill-llm">🤖 Gemini LLM Real (Function Calling)</span>
+                <span class="toggle-pill pill-llm">🤖 Gemini LLM Real</span>
               </label>
             </div>
           </div>
         </div>
+        <div class="credentials-actions" style="margin-top: 0.75rem;">
+          <button id="btn-test-connection" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Probar Conexión AgentGuard
+          </button>
+          <span id="connection-status-msg" class="status-msg"></span>
+        </div>
+      </div>
+    </section>
 
-        <!-- Botones de Presets Oficiales -->
-        <div class="presets-section">
-          <label class="control-label">Escenarios de Demostración (Presets):</label>
-          <div class="presets-buttons-grid" id="presets-container">
-            <!-- Cargados dinámicamente vía app.js -->
-          </div>
+    <!-- Layout Principal: Dos Columnas (Panel de Operaciones/BI + Inspector SQLite) -->
+    <div class="main-layout">
+      <!-- Columna Izquierda: Pestañas de Interacción (Copiloto BI vs Operaciones Comerciales) -->
+      <section class="execution-pane card">
+        <!-- Navegación de Vistas Principales -->
+        <div class="app-views-nav">
+          <button id="nav-btn-bi" class="view-nav-btn active" data-view="view-bi">
+            <span class="view-icon">📊</span>
+            <div class="view-text">
+              <strong>Asistente "Consultante BI"</strong>
+              <small>Para Personal Administrativo</small>
+            </div>
+          </button>
+          <button id="nav-btn-security" class="view-nav-btn" data-view="view-security">
+            <span class="view-icon">🛡️</span>
+            <div class="view-text">
+              <strong>Operaciones Comerciales & Seguridad</strong>
+              <small>Cotizaciones, Precios & Ataques</small>
+            </div>
+          </button>
         </div>
 
-        <!-- Campo de Prompt Libre / Personalizado -->
-        <div class="prompt-box">
-          <label for="agent-prompt" class="control-label">Instrucción / Prompt para el Agente:</label>
-          <textarea id="agent-prompt" rows="3" placeholder="Seleccione un preset arriba o redacte una instrucción libre..."></textarea>
-          <div class="prompt-actions">
-            <button id="btn-run-agent" class="btn btn-primary">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
-              Ejecutar Escenario
+        <!-- ===================================================================
+             VISTA 1: ASISTENTE CONSULTANTE BI (Caso de Uso Estrella Administrativo)
+             =================================================================== -->
+        <div id="view-bi" class="view-container active">
+          <div class="bi-intro-box">
+            <div class="bi-intro-header">
+              <h3>Hola, soy el Consultante BI de ACME</h3>
+              <span class="badge badge-success">Perfil de Solo Lectura</span>
+            </div>
+            <p>Te ayudo a analizar ventas históricas, comparar períodos y graficar datos sin riesgo operativo. Utiliza los pasos guiados o escribe tu consulta:</p>
+          </div>
+
+          <!-- Botones de Flujo Paso a Paso para el Administrativo -->
+          <div class="bi-steps-flow">
+            <button id="btn-step-1" class="bi-step-card" data-step="1">
+              <div class="step-num">Paso 1</div>
+              <div class="step-body">
+                <strong>"Dame todas las ventas mayores a $1,000 del mes pasado"</strong>
+                <small>Consulta y extrae datos de SQLite con filtro</small>
+              </div>
+              <span class="badge badge-success">ALLOW</span>
             </button>
-            <span id="run-spinner" class="spinner hidden"></span>
+
+            <button id="btn-step-2" class="bi-step-card" data-step="2">
+              <div class="step-num">Paso 2</div>
+              <div class="step-body">
+                <strong>"Ahora esos datos hacemelos en una gráfica de torta"</strong>
+                <small>Genera distribución porcentual interactiva</small>
+              </div>
+              <span class="badge badge-success">GRÁFICO</span>
+            </button>
+
+            <button id="btn-step-3" class="bi-step-card" data-step="3">
+              <div class="step-num">Paso 3</div>
+              <div class="step-body">
+                <strong>"Ahora borrá de la base las ventas menores a $1,000"</strong>
+                <small>Solicitud de mutación en SQLite</small>
+              </div>
+              <span class="badge badge-danger">DENY (AgentGuard)</span>
+            </button>
+          </div>
+
+          <!-- Chat Conversacional Interactivo del Administrativo -->
+          <div class="chat-input-bar">
+            <input type="text" id="bi-chat-input" placeholder="Pregúntale algo al Consultante BI o haz clic en un paso arriba...">
+            <button id="btn-bi-send" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              Consultar
+            </button>
+          </div>
+
+          <!-- Mensaje / Respuesta del Consultante BI -->
+          <div id="bi-response-card" class="bi-assistant-card hidden">
+            <div class="bi-assistant-header">
+              <div class="flex-align-center gap-sm">
+                <span class="bi-avatar">🦆</span>
+                <strong>Consultante BI (ACME Corp):</strong>
+              </div>
+              <span id="bi-verdict-tag" class="badge badge-success">ALLOW</span>
+            </div>
+            <p id="bi-assistant-text" class="bi-assistant-speech"></p>
+
+            <!-- Propuesta de Filtro Local si AgentGuard bloqueó delete_sales -->
+            <div id="bi-offer-filter-box" class="bi-offer-filter-box hidden">
+              <div class="offer-header">
+                <strong>💡 Solución Segura: Filtro Visual en Pantalla</strong>
+                <span class="badge badge-success">DB 100% Protegida</span>
+              </div>
+              <p>AgentGuard ha protegido la base de datos impidiendo el borrado. ¿Deseas ocultar temporalmente las ventas menores a $1,000 en esta pantalla y recalcular tu gráfico de torta?</p>
+              <button id="btn-apply-local-filter" class="btn btn-primary btn-sm">
+                🔍 Ocultar &lt; $1,000 de esta vista (sin tocar la DB)
+              </button>
+            </div>
+          </div>
+
+          <!-- Área de Visualización Viva dentro del Consultante -->
+          <div class="bi-live-display">
+            <!-- Pestañas internas de visualización -->
+            <div class="bi-display-tabs">
+              <button id="bi-tab-table-btn" class="bi-display-tab active">📋 Tabla de Resultados</button>
+              <button id="bi-tab-chart-btn" class="bi-display-tab">🥧 Gráfica de Torta SVG</button>
+              <span id="local-filter-active-badge" class="badge badge-warning hidden" style="margin-left: auto;">
+                Filtro Visual Activo: Ocultando &lt; $1,000
+                <button id="btn-remove-local-filter" class="btn-link" title="Quitar filtro">✕</button>
+              </span>
+            </div>
+
+            <!-- Panel 1: Tabla de Resultados -->
+            <div id="bi-display-table-panel" class="bi-display-panel active">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>SKU</th>
+                      <th>Producto</th>
+                      <th>Categoría</th>
+                      <th>Cliente</th>
+                      <th>Período</th>
+                      <th>Cant.</th>
+                      <th>Monto USD</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bi-table-body">
+                    <tr><td colspan="7" class="text-center" style="color: var(--text-muted);">Usa los botones del Paso 1 o 2 para cargar y visualizar ventas.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Panel 2: Gráfica de Torta SVG Real -->
+            <div id="bi-display-chart-panel" class="bi-display-panel">
+              <div class="pie-chart-container">
+                <div class="pie-chart-svg-wrap">
+                  <svg id="pie-chart-svg" viewBox="0 0 200 200" width="180" height="180">
+                    <circle cx="100" cy="100" r="80" fill="#1e293b"/>
+                  </svg>
+                </div>
+                <div id="pie-chart-legend" class="pie-chart-legend">
+                  <span class="legend-empty">Ejecuta el Paso 2 para ver la gráfica de torta.</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Visor de Traza Paso a Paso -->
-        <div class="trace-section">
-          <div class="section-header">
-            <span class="section-title">Traza Forense de la Decisión</span>
-            <span id="trace-summary-badge" class="badge badge-neutral">En Espera</span>
+        <!-- ===================================================================
+             VISTA 2: OPERACIONES COMERCIALES & PRUEBAS DE SEGURIDAD
+             =================================================================== -->
+        <div id="view-security" class="view-container">
+          <!-- Botones de Presets Oficiales -->
+          <div class="presets-section">
+            <label class="control-label">Escenarios de Demostración y Pruebas:</label>
+            <div class="presets-buttons-grid" id="presets-container">
+              <!-- Cargados dinámicamente vía app.js -->
+            </div>
           </div>
-          <div id="trace-timeline" class="timeline-container">
-            <div class="empty-state">Seleccione un escenario y presione "Ejecutar Escenario" para observar la deliberación paso a paso.</div>
+
+          <!-- Campo de Prompt Libre / Personalizado -->
+          <div class="prompt-box">
+            <label for="agent-prompt" class="control-label">Instrucción / Prompt para el Agente:</label>
+            <textarea id="agent-prompt" rows="3" placeholder="Seleccione un preset arriba o redacte una instrucción libre..."></textarea>
+            <div class="prompt-actions">
+              <button id="btn-run-agent" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Ejecutar Escenario
+              </button>
+              <span id="run-spinner" class="spinner hidden"></span>
+            </div>
           </div>
-          <div id="final-answer-box" class="final-answer-box hidden">
-            <strong>Respuesta Final del Agente:</strong>
-            <p id="final-answer-text"></p>
+
+          <!-- Visor de Traza Paso a Paso -->
+          <div class="trace-section">
+            <div class="section-header">
+              <span class="section-title">Traza Forense de la Decisión</span>
+              <span id="trace-summary-badge" class="badge badge-neutral">En Espera</span>
+            </div>
+            <div id="trace-timeline" class="timeline-container">
+              <div class="empty-state">Seleccione un escenario y presione "Ejecutar Escenario" para observar la deliberación paso a paso.</div>
+            </div>
+            <div id="final-answer-box" class="final-answer-box hidden">
+              <strong>Respuesta Final del Agente:</strong>
+              <p id="final-answer-text"></p>
+            </div>
           </div>
         </div>
       </section>
@@ -186,16 +350,39 @@
           </button>
         </div>
 
-        <!-- Pestañas del Inspector -->
+        <!-- Pestañas del Inspector Relacional -->
         <div class="tabs-nav">
-          <button class="tab-btn active" data-tab="tab-catalog">Catálogo de Productos (<span id="count-products">0</span>)</button>
+          <button class="tab-btn active" data-tab="tab-sales">Ventas Históricas (<span id="count-sales">0</span>)</button>
+          <button class="tab-btn" data-tab="tab-catalog">Catálogo (<span id="count-products">0</span>)</button>
           <button class="tab-btn" data-tab="tab-customers">Clientes CRM (<span id="count-customers">0</span>)</button>
-          <button class="tab-btn" data-tab="tab-quotes">Cotizaciones & Reembolsos (<span id="count-quotes">0</span>)</button>
-          <button class="tab-btn" data-tab="tab-events">Bitácora de Impacto (<span id="count-events">0</span>)</button>
+          <button class="tab-btn" data-tab="tab-quotes">Cotizaciones (<span id="count-quotes">0</span>)</button>
+          <button class="tab-btn" data-tab="tab-events">Bitácora (<span id="count-events">0</span>)</button>
         </div>
 
         <!-- Contenidos de las Pestañas -->
-        <div class="tab-content active" id="tab-catalog">
+        <!-- Pestaña 1: Ventas Históricas (sales) -->
+        <div class="tab-content active" id="tab-sales">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Período</th>
+                  <th>Cliente</th>
+                  <th>Producto</th>
+                  <th>Cant.</th>
+                  <th>Monto USD</th>
+                </tr>
+              </thead>
+              <tbody id="sales-table-body">
+                <tr><td colspan="6" class="text-center">Cargando ventas históricas...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pestaña 2: Catálogo de Productos -->
+        <div class="tab-content" id="tab-catalog">
           <div class="table-responsive">
             <table class="data-table">
               <thead>
@@ -215,6 +402,7 @@
           </div>
         </div>
 
+        <!-- Pestaña 3: Clientes CRM -->
         <div class="tab-content" id="tab-customers">
           <div class="table-responsive">
             <table class="data-table">
@@ -234,6 +422,7 @@
           </div>
         </div>
 
+        <!-- Pestaña 4: Cotizaciones y Reembolsos -->
         <div class="tab-content" id="tab-quotes">
           <h4 class="subtab-title">Cotizaciones Emitidas</h4>
           <div class="table-responsive">
@@ -274,6 +463,7 @@
           </div>
         </div>
 
+        <!-- Pestaña 5: Bitácora de Eventos e Impacto -->
         <div class="tab-content" id="tab-events">
           <div class="table-responsive">
             <table class="data-table">
@@ -298,7 +488,7 @@
     <!-- Pie de Página -->
     <footer class="footer">
       <span>AgentGuard © 2026 — Autorización contextual y observabilidad en tiempo de ejecución para agentes de IA.</span>
-      <span>Entorno de demostración ACME Corporation (Looney Tunes Edition).</span>
+      <span>ACME Corporation — Sistema de Información Empresarial (Looney Tunes Edition).</span>
     </footer>
   </div>
 

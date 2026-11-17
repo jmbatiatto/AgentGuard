@@ -7,20 +7,25 @@ Expone:
    - POST /stripe/refund
    - POST /catalog/update_price
    - POST /db/database.drop
-2. Consola web de simulación y control:
-   - GET / (UI Web en español)
+   - POST /bi/query_sales (Módulo BI y Ventas Históricas)
+   - POST /bi/delete_sales (Módulo BI y Ventas Históricas)
+2. Consola web de gestión empresarial, Copiloto BI y control:
+   - GET / (Portal Empresarial ACME Corporation en español)
    - GET /health
    - GET /api/state
    - POST /api/reset
+   - POST /api/agent/onboard (Onboarding Automático del CEO en AgentGuard)
    - GET /api/agent/presets
    - POST /api/agent/discover
    - POST /api/agent/run
 """
 
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+import httpx
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -31,10 +36,12 @@ from agent.gemini_client import (
     GeminiAgentClient,
     discover_agentguard_context,
 )
+from agent.onboarding import bootstrap_acme_in_agentguard
 from agent.presets import list_presets
 from server.config import ROOT_DIR, settings
 from server.database import AcmeDatabase, DatabaseWipedError, acme_db
 
+logger = logging.getLogger("acme.app")
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
@@ -85,6 +92,26 @@ class DropDatabaseRequest(BaseModel):
     reason: Optional[str] = "Ataque Destructivo Forzado"
 
 
+class QuerySalesRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    min_amount: Optional[float] = None
+    max_amount: Optional[float] = None
+    period: Optional[str] = "last_month"
+    category: Optional[str] = None
+
+
+class DeleteSalesRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    max_amount: Optional[float] = None
+    min_amount: Optional[float] = None
+    period: Optional[str] = None
+
+
+class OnboardRequest(BaseModel):
+    force_reset: bool = Field(default=False, description="Fuerza un re-seeding demo en AgentGuard")
+    agentguard_url: Optional[str] = None
+
+
 class AgentDiscoverRequest(BaseModel):
     agentguard_url: Optional[str] = None
     agentguard_api_key: Optional[str] = Field(
@@ -122,18 +149,34 @@ def create_app(db_path: Optional[Union[str, Path]] = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        # Startup: asegurar inicialización
+        # Startup: asegurar inicialización de tablas SQLite
         active_db.init_db()
+
+        # Intento de auto-onboarding silencioso y best-effort si no hay clave cargada
+        if not (settings.AGENTGUARD_API_KEY and settings.AGENTGUARD_API_KEY.strip()):
+            try:
+                async with httpx.AsyncClient(timeout=2.5) as probe_client:
+                    probe_resp = await probe_client.get(f"{settings.AGENTGUARD_URL.rstrip('/')}/health")
+                    if probe_resp.status_code == 200:
+                        logger.info("AgentGuard detectado activo. Ejecutando vinculación inicial del CEO ACME...")
+                        await bootstrap_acme_in_agentguard(
+                            agentguard_url=settings.AGENTGUARD_URL,
+                            acme_public_url=settings.ACME_PUBLIC_URL,
+                            force_reset=False,
+                        )
+            except Exception as exc:
+                logger.debug("Auto-onboarding omitido en startup (AgentGuard no disponible aún): %s", exc)
+
         yield
-        # Shutdown si se requiere
+        # Shutdown
 
     app = FastAPI(
-        title="ACME Corporation (Looney Tunes) - Entorno Autónomo",
+        title="ACME Corporation (Looney Tunes) — Sistema Interno & Copiloto BI",
         description=(
-            "Servidor externo para demostración de autorización y gobernanza en tiempo real (PEP/PDP) "
-            "con AgentGuard y el Agente Autónomo de Google Gemini."
+            "Portal empresarial de ACME Corporation integrado con AgentGuard (PEP/PDP) "
+            "y asistente autónomo para personal administrativo y operaciones de catálogo."
         ),
-        version="1.0.0",
+        version="2.0.0",
         lifespan=lifespan,
     )
 
@@ -246,6 +289,42 @@ def create_app(db_path: Optional[Union[str, Path]] = None) -> FastAPI:
         )
 
     # -----------------------------------------------------------------------
+    # Endpoints BI y Ventas Históricas
+    # -----------------------------------------------------------------------
+    @app.post(
+        "/bi/query_sales",
+        tags=["Servicios ACME - BI & Ventas"],
+        summary="Consulta analítica de ventas históricas",
+    )
+    async def bi_query_sales(payload: QuerySalesRequest, request: Request):
+        db = get_db_instance(request)
+        if db.is_wiped():
+            raise DatabaseWipedError("La base de datos de ACME Corporation ha sido purgada.")
+
+        return db.query_sales_records(
+            min_amount=payload.min_amount,
+            max_amount=payload.max_amount,
+            period=payload.period or "last_month",
+            category=payload.category,
+        )
+
+    @app.post(
+        "/bi/delete_sales",
+        tags=["Servicios ACME - BI & Ventas"],
+        summary="Eliminación de registros de ventas en SQLite",
+    )
+    async def bi_delete_sales(payload: DeleteSalesRequest, request: Request):
+        db = get_db_instance(request)
+        if db.is_wiped():
+            raise DatabaseWipedError("La base de datos de ACME Corporation ha sido purgada.")
+
+        return db.delete_sales_records(
+            max_amount=payload.max_amount,
+            min_amount=payload.min_amount,
+            period=payload.period,
+        )
+
+    # -----------------------------------------------------------------------
     # Endpoints de la Consola Web y Control de Demostración
     # -----------------------------------------------------------------------
     @app.get("/health", tags=["Sistema"])
@@ -256,16 +335,22 @@ def create_app(db_path: Optional[Union[str, Path]] = None) -> FastAPI:
             "status": "warning" if is_wiped else "ok",
             "app": "ACME Corporation (Looney Tunes)",
             "database_wiped": is_wiped,
-            "version": "1.0.0",
+            "version": "2.0.0",
         }
 
     @app.get("/api/state", tags=["Consola Web"])
     async def get_state(request: Request):
         db = get_db_instance(request)
         state = db.get_state()
+        has_ag_key = bool(settings.AGENTGUARD_API_KEY and settings.AGENTGUARD_API_KEY.strip())
+        key_raw = (settings.AGENTGUARD_API_KEY or "").strip()
+        prefix = f"{key_raw[:12]}***" if len(key_raw) > 12 else ("ag_live_***" if has_ag_key else "")
+
         state.update({
             "has_env_gemini_key": bool(settings.GEMINI_API_KEY and settings.GEMINI_API_KEY.strip()),
-            "has_env_agentguard_key": bool(settings.AGENTGUARD_API_KEY and settings.AGENTGUARD_API_KEY.strip()),
+            "has_env_agentguard_key": has_ag_key,
+            "has_effective_agentguard_key": has_ag_key,
+            "agentguard_api_key_prefix": prefix,
             "default_agentguard_url": settings.AGENTGUARD_URL,
             "default_gemini_model": settings.GEMINI_MODEL,
         })
@@ -275,6 +360,28 @@ def create_app(db_path: Optional[Union[str, Path]] = None) -> FastAPI:
     async def reset_database(request: Request):
         db = get_db_instance(request)
         return db.reset_db()
+
+    @app.post("/api/agent/onboard", tags=["Consola Web"])
+    async def onboard_agentguard(payload: OnboardRequest):
+        """Ejecuta el onboarding automático del CEO de ACME en AgentGuard bajo demanda."""
+        target_url = payload.agentguard_url or settings.AGENTGUARD_URL
+        try:
+            result = await bootstrap_acme_in_agentguard(
+                agentguard_url=target_url,
+                acme_public_url=settings.ACME_PUBLIC_URL,
+                force_reset=payload.force_reset,
+            )
+            return result
+        except RuntimeError as re:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Fallo al conectar o configurar AgentGuard en {target_url}: {re}",
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Error inesperado durante la vinculación con AgentGuard: {exc}",
+            )
 
     @app.get("/api/agent/presets", tags=["Consola Web"])
     async def get_agent_presets():
@@ -287,7 +394,7 @@ def create_app(db_path: Optional[Union[str, Path]] = None) -> FastAPI:
         if not api_key:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Debe proveer una X-AgentGuard-Key válida o configurarla en acme-corp/.env",
+                detail="Debe proveer una X-AgentGuard-Key válida o presionar 'Vincular AgentGuard' para generarla automáticamente.",
             )
         try:
             return await discover_agentguard_context(
@@ -304,14 +411,13 @@ def create_app(db_path: Optional[Union[str, Path]] = None) -> FastAPI:
     async def run_agent(payload: AgentRunRequest, request: Request):
         db = get_db_instance(request)
 
-        # Si se solicita Gemini real y no se suministra API key ni en payload ni en .env
         gemini_key = payload.gemini_api_key or settings.GEMINI_API_KEY
         if payload.use_llm and (not gemini_key or not gemini_key.strip()):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
                     "Se requiere una clave GEMINI_API_KEY válida para ejecutar el agente con Gemini LLM real. "
-                    "Configure su clave en el encabezado o desactive 'Gemini LLM Real' para disparar el payload directo."
+                    "Configure su clave en el encabezado o active el modo guiado sin Gemini."
                 ),
             )
 
