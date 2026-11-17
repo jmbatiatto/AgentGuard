@@ -23,6 +23,15 @@ from server.config import settings
 from server.database import AcmeDatabase, DatabaseWipedError, acme_db
 
 logger = logging.getLogger("acme.agent")
+GEMINI_FALLBACK_MODELS: Tuple[str, ...] = ("gemini-3.8-flash", "gemini-3.5-flash-lite")
+
+
+def _build_generation_config(model_name: str) -> Dict[str, Any]:
+    """Configura temperatura determinista y pensamiento rápido ('low') en modelos Gemini 3."""
+    config: Dict[str, Any] = {"temperature": 0.2}
+    if model_name.startswith("gemini-3"):
+        config["thinkingConfig"] = {"thinkingLevel": "low"}
+    return config
 
 # ---------------------------------------------------------------------------
 # Declaración de Herramientas para Gemini Function Calling (OpenAPI 3.0 schema)
@@ -496,12 +505,22 @@ class GeminiAgentClient:
             "resource": resource,
         }
 
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            resp = await client.post(execute_url, headers=headers, json=payload)
-            try:
-                body = resp.json()
-            except Exception:
-                body = {"raw": resp.text}
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(execute_url, headers=headers, json=payload)
+                try:
+                    body = resp.json()
+                except Exception:
+                    body = {"raw": resp.text}
+        except httpx.HTTPError as exc:
+            detail = str(exc).strip() or type(exc).__name__
+            return {
+                "status_code": 504 if isinstance(exc, httpx.TimeoutException) else 502,
+                "status": "error",
+                "decision": "DENY",
+                "error": f"Fallo al despachar ejecución en AgentGuard ({type(exc).__name__}): {detail}",
+                "error_message": f"No se recibió respuesta a tiempo del Gateway de AgentGuard ({detail}).",
+            }
 
         return {
             "status_code": resp.status_code,
@@ -602,6 +621,9 @@ class GeminiAgentClient:
         })
 
         tool_call_found = None
+        model_turn_parts: List[Dict[str, Any]] = []
+        active_gemini_model = self.gemini_model
+        gemini_url = ""
         system_instruction_text = (
             "Eres el Consultante BI y Asistente Operativo de ACME Corporation (división Looney Tunes). "
             "Responde siempre en español formal y amigable. Dispones de herramientas declaradas (query_sales, "
@@ -628,28 +650,62 @@ class GeminiAgentClient:
                 "status": "info",
             })
 
-            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent?key={self.gemini_api_key}"
-            payload_turn_1 = {
-                "systemInstruction": {"parts": [{"text": system_instruction_text}]},
-                "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
-                "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
-                "generationConfig": {"temperature": 0.2},
-            }
+            candidate_models: List[str] = [self.gemini_model] + [
+                m for m in GEMINI_FALLBACK_MODELS if m != self.gemini_model
+            ]
 
-            async with httpx.AsyncClient(timeout=20.0) as client:
-                resp_1 = await client.post(gemini_url, json=payload_turn_1)
-                if resp_1.status_code != 200:
+            gemini_data_1: Dict[str, Any] = {}
+            async with httpx.AsyncClient(timeout=45.0) as client:
+                for idx, candidate_model in enumerate(candidate_models):
+                    gemini_url = (
+                        f"https://generativelanguage.googleapis.com/v1beta/models/"
+                        f"{candidate_model}:generateContent?key={self.gemini_api_key}"
+                    )
+                    payload_turn_1 = {
+                        "systemInstruction": {"parts": [{"text": system_instruction_text}]},
+                        "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
+                        "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
+                        "generationConfig": _build_generation_config(candidate_model),
+                    }
+                    try:
+                        resp_1 = await client.post(gemini_url, json=payload_turn_1)
+                    except httpx.TimeoutException as tex:
+                        if idx < len(candidate_models) - 1:
+                            logger.warning(
+                                "Tiempo de espera agotado con '%s' (%s); reintentando con '%s'...",
+                                candidate_model,
+                                type(tex).__name__,
+                                candidate_models[idx + 1],
+                            )
+                            continue
+                        raise RuntimeError(
+                            f"Tiempo de espera agotado al consultar Google Gemini ({candidate_model}). "
+                            "Reintentá o seleccioná el modelo 'gemini-3.5-flash-lite'."
+                        ) from tex
+
+                    if resp_1.status_code == 200:
+                        active_gemini_model = candidate_model
+                        gemini_data_1 = resp_1.json()
+                        break
+                    if resp_1.status_code in (404, 429, 503) and idx < len(candidate_models) - 1:
+                        logger.warning(
+                            "Modelo Gemini '%s' no disponible (HTTP %s); reintentando con '%s'...",
+                            candidate_model,
+                            resp_1.status_code,
+                            candidate_models[idx + 1],
+                        )
+                        continue
                     raise RuntimeError(f"Error de Gemini API ({resp_1.status_code}): {resp_1.text}")
-                gemini_data_1 = resp_1.json()
 
             candidates = gemini_data_1.get("candidates", [])
-            parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+            raw_parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+            model_turn_parts = [p for p in raw_parts if isinstance(p, dict)]
             text_response = ""
 
-            for part in parts:
-                if "functionCall" in part:
+            for part in model_turn_parts:
+                if "functionCall" in part and tool_call_found is None:
                     tool_call_found = part["functionCall"]
-                elif "text" in part:
+                elif "text" in part and not part.get("thought"):
                     text_response += part["text"]
 
             if tool_call_found:
@@ -662,9 +718,14 @@ class GeminiAgentClient:
                     resource = None
 
                 llm_tool_calls.append({"action_name": action_name, "parameters": parameters})
+                fallback_note = (
+                    f" [Fallback automático a {active_gemini_model}]"
+                    if active_gemini_model != self.gemini_model
+                    else ""
+                )
                 steps.append({
                     "step": 3,
-                    "title": f"Gemini seleccionó la herramienta '{action_name}'",
+                    "title": f"Gemini seleccionó la herramienta '{action_name}'{fallback_note}",
                     "detail": f"Argumentos determinados por el LLM: {json.dumps(parameters, ensure_ascii=False)}",
                     "status": "warning",
                 })
@@ -679,7 +740,7 @@ class GeminiAgentClient:
                 return {
                     "mode": mode,
                     "use_llm": True,
-                    "model_used": self.gemini_model,
+                    "model_used": active_gemini_model,
                     "llm_tool_calls": [],
                     "gateway_verdicts": [],
                     "acme_results": [],
@@ -888,7 +949,7 @@ class GeminiAgentClient:
                 "systemInstruction": {"parts": [{"text": system_instruction_text}]},
                 "contents": [
                     {"role": "user", "parts": [{"text": user_prompt}]},
-                    {"role": "model", "parts": [{"functionCall": tool_call_found}]},
+                    {"role": "model", "parts": model_turn_parts or [{"functionCall": tool_call_found}]},
                     {
                         "role": "function",
                         "parts": [
@@ -902,20 +963,23 @@ class GeminiAgentClient:
                     },
                 ],
                 "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
-                "generationConfig": {"temperature": 0.2},
+                "generationConfig": _build_generation_config(active_gemini_model),
             }
 
             try:
-                async with httpx.AsyncClient(timeout=20.0) as client:
+                async with httpx.AsyncClient(timeout=45.0) as client:
                     resp_2 = await client.post(gemini_url, json=payload_turn_2)
                     if resp_2.status_code == 200:
                         cand_2 = resp_2.json().get("candidates", [])
                         parts_2 = cand_2[0].get("content", {}).get("parts", []) if cand_2 else []
-                        final_answer = "".join(p.get("text", "") for p in parts_2)
+                        final_answer = "".join(
+                            p.get("text", "") for p in parts_2 if isinstance(p, dict) and not p.get("thought")
+                        )
                     else:
                         final_answer = f"Gemini respondió con error HTTP {resp_2.status_code} en la síntesis."
             except Exception as exc:
-                final_answer = f"No se pudo completar el turno 2 de Gemini: {exc}"
+                detail = str(exc).strip() or type(exc).__name__
+                final_answer = f"No se pudo completar el turno 2 de Gemini ({type(exc).__name__}): {detail}"
 
         else:
             # Síntesis determinística estructurada en español
@@ -1004,7 +1068,7 @@ class GeminiAgentClient:
         return {
             "mode": mode,
             "use_llm": use_llm,
-            "model_used": self.gemini_model if use_llm else "N/A (Disparo Guiado / Determinístico)",
+            "model_used": active_gemini_model if use_llm else "N/A (Disparo Guiado / Determinístico)",
             "llm_tool_calls": llm_tool_calls,
             "gateway_verdicts": gateway_verdicts,
             "acme_results": acme_results,

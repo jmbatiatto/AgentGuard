@@ -134,13 +134,22 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadSavedCredentials() {
+  const legacyModels = new Set(["gemini-2.5-flash", "gemini-2.0-flash"]);
+  const rawSavedModel = sessionStorage.getItem("acme_gemini_model") || "";
   const savedGeminiKey = sessionStorage.getItem("acme_gemini_key") || "";
-  const savedGeminiModel = sessionStorage.getItem("acme_gemini_model") || "gemini-2.5-flash";
+  const savedGeminiModel = (!rawSavedModel || legacyModels.has(rawSavedModel))
+    ? "gemini-3.8-flash"
+    : rawSavedModel;
   const savedAgUrl = sessionStorage.getItem("acme_agentguard_url") || "http://localhost:8000";
   const savedAgKey = sessionStorage.getItem("acme_agentguard_key") || "";
 
   if (savedGeminiKey && dom.geminiKey) dom.geminiKey.value = savedGeminiKey;
-  if (savedGeminiModel && dom.geminiModel) dom.geminiModel.value = savedGeminiModel;
+  if (dom.geminiModel && [...dom.geminiModel.options].some((opt) => opt.value === savedGeminiModel)) {
+    dom.geminiModel.value = savedGeminiModel;
+    if (rawSavedModel && legacyModels.has(rawSavedModel)) {
+      sessionStorage.setItem("acme_gemini_model", savedGeminiModel);
+    }
+  }
   if (savedAgUrl && dom.agentguardUrl) dom.agentguardUrl.value = savedAgUrl;
   if (savedAgKey && dom.agentguardKey) dom.agentguardKey.value = savedAgKey;
 }

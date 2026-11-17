@@ -497,7 +497,7 @@ async def test_ensure_acme_onboarded_relinks_on_stale_api_key():
             acme_public_url="http://mock-acme:9000",
             force_reset=False,
         )
-        assert settings.AGENTGUARD_API_KEY is None
+        assert getattr(settings, "AGENTGUARD_API_KEY") is None
     finally:
         settings.AGENTGUARD_API_KEY = original_key
 
@@ -543,3 +543,146 @@ async def test_ensure_acme_onboarded_skips_when_key_valid_and_consultante_presen
         bootstrap_mock.assert_not_awaited()
     finally:
         settings.AGENTGUARD_API_KEY = original_key
+
+
+@pytest.mark.asyncio
+async def test_run_scenario_gemini3_fallback_and_thought_signature(temp_db: AcmeDatabase):
+    """Verifica fallback 404 a gemini-3.8-flash y preservación de thoughtSignature en Turno 2."""
+    captured_turn2_payload = {}
+    called_models = []
+
+    def mock_handler(request: httpx.Request) -> Response:
+        url_str = str(request.url)
+        body = json.loads(request.content)
+        if "models/gemini-2.5-flash:generateContent" in url_str:
+            called_models.append("gemini-2.5-flash")
+            return Response(404, json={"error": {"code": 404, "status": "NOT_FOUND"}})
+        if "models/gemini-3.8-flash:generateContent" in url_str:
+            called_models.append("gemini-3.8-flash")
+            if len(body["contents"]) == 1:
+                return Response(
+                    200,
+                    json={
+                        "candidates": [
+                            {
+                                "content": {
+                                    "role": "model",
+                                    "parts": [
+                                        {"thought": True, "text": "Razonamiento interno"},
+                                        {
+                                            "functionCall": {
+                                                "name": "query_sales",
+                                                "args": {"min_amount": 1000.0, "period": "last_month"},
+                                            },
+                                            "thoughtSignature": "sig_gemini3_opaque_xyz",
+                                        },
+                                    ],
+                                }
+                            }
+                        ]
+                    },
+                )
+            captured_turn2_payload.update(body)
+            return Response(
+                200,
+                json={
+                    "candidates": [
+                        {
+                            "content": {
+                                "role": "model",
+                                "parts": [
+                                    {"thought": True, "text": "Pensando síntesis"},
+                                    {"text": "Se encontraron 4 ventas mayores a $1,000."},
+                                ],
+                            }
+                        }
+                    ]
+                },
+            )
+        return Response(500, json={})
+
+    original_client = httpx.AsyncClient
+    transport = httpx.MockTransport(mock_handler)
+    client = GeminiAgentClient(
+        gemini_api_key="test-gemini-key",
+        gemini_model="gemini-2.5-flash",
+        db=temp_db,
+    )
+
+    with patch(
+        "agent.gemini_client.httpx.AsyncClient",
+        side_effect=lambda *args, **kwargs: original_client(transport=transport),
+    ):
+        trace = await client.run_scenario(
+            prompt="Dame las ventas mayores a 1000 del mes pasado",
+            mode="direct",
+            use_llm=True,
+        )
+
+    assert called_models == ["gemini-2.5-flash", "gemini-3.8-flash", "gemini-3.8-flash"]
+    assert trace["model_used"] == "gemini-3.8-flash"
+    assert trace["final_answer"] == "Se encontraron 4 ventas mayores a $1,000."
+    model_parts_turn2 = captured_turn2_payload["contents"][1]["parts"]
+    assert any(p.get("thoughtSignature") == "sig_gemini3_opaque_xyz" for p in model_parts_turn2)
+
+
+@pytest.mark.asyncio
+async def test_run_scenario_gemini_timeout_fallback_and_nonempty_error(temp_db: AcmeDatabase):
+    """Verifica fallback automático ante ReadTimeout('') en gemini-3.8-flash y detalle claro ante timeout total."""
+    seen_configs = []
+
+    def mock_handler(request: httpx.Request) -> Response:
+        url_str = str(request.url)
+        body = json.loads(request.content)
+        seen_configs.append(body.get("generationConfig"))
+        if "models/gemini-3.8-flash:generateContent" in url_str:
+            raise httpx.ReadTimeout("", request=request)
+        if "models/gemini-3.5-flash-lite:generateContent" in url_str:
+            return Response(
+                200,
+                json={
+                    "candidates": [
+                        {
+                            "content": {
+                                "role": "model",
+                                "parts": [{"text": "Respuesta rápida vía fallback lite."}],
+                            }
+                        }
+                    ]
+                },
+            )
+        return Response(500, json={})
+
+    original_client = httpx.AsyncClient
+    transport = httpx.MockTransport(mock_handler)
+    client = GeminiAgentClient(
+        gemini_api_key="test-gemini-key",
+        gemini_model="gemini-3.8-flash",
+        db=temp_db,
+    )
+
+    with patch(
+        "agent.gemini_client.httpx.AsyncClient",
+        side_effect=lambda *args, **kwargs: original_client(transport=transport),
+    ):
+        trace = await client.run_scenario(
+            prompt="Dame un resumen",
+            mode="direct",
+            use_llm=True,
+        )
+
+    assert trace["model_used"] == "gemini-3.5-flash-lite"
+    assert trace["final_answer"] == "Respuesta rápida vía fallback lite."
+    assert seen_configs[0] == {"temperature": 0.2, "thinkingConfig": {"thinkingLevel": "low"}}
+
+    # Ahora verificar que si todos expiran con ReadTimeout(""), /api/agent/run devuelve mensaje legible
+    app = create_app(db_path=temp_db.db_path)
+    with patch("server.app.GeminiAgentClient.run_scenario", side_effect=httpx.ReadTimeout("")):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api_client:
+            resp = await api_client.post(
+                "/api/agent/run",
+                json={"prompt": "test", "mode": "protected", "use_llm": True, "gemini_api_key": "k"},
+            )
+
+    assert resp.status_code == 504
+    assert "Tiempo de espera agotado" in resp.json()["detail"]

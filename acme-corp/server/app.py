@@ -515,10 +515,18 @@ def create_app(
             )
         except ValueError as ve:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+        except httpx.TimeoutException as tex:
+            detail_msg = str(tex).strip() or type(tex).__name__
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail=f"Tiempo de espera agotado al consultar Gemini o AgentGuard ({detail_msg}).",
+            )
         except Exception as exc:
+            logger.exception("Error inesperado durante la ejecución del agente")
+            detail_msg = str(exc).strip() or repr(exc)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error durante la ejecución del agente: {exc}",
+                detail=f"Error durante la ejecución del agente ({type(exc).__name__}): {detail_msg}",
             )
 
     # -----------------------------------------------------------------------
