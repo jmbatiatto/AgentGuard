@@ -5,6 +5,8 @@
 # Base de datos SQLite y diarios
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 
