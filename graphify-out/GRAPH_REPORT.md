@@ -1,9 +1,9 @@
 # Graph Report - AgentGuard  (2026-11-17)
 
 ## Corpus Check
-- 212 files · ~196,419 words
+- 212 files · ~196,428 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 23 file(s) not represented in the graph (top: .drawio 6, (none) 4, .example 4)
+- Unclassified: 26 file(s) not represented in the graph (top: .drawio 6, (none) 4, .example 4)
 
 ## Summary
 - 2816 nodes · 7567 edges · 166 communities (94 shown, 72 thin omitted)
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2ad6c64a`
+- Built from commit: `b58ec936`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -147,8 +147,8 @@
 1. `User` - 173 edges
 2. `make_admin_jwt()` - 91 edges
 3. `Organization` - 85 edges
-4. `ToolAction` - 74 edges
-5. `Tool` - 74 edges
+4. `Tool` - 74 edges
+5. `ToolAction` - 74 edges
 6. `BaseSchema` - 72 edges
 7. `Agent` - 67 edges
 8. `UserRole` - 67 edges
@@ -156,12 +156,12 @@
 10. `AgentGuardApiClient` - 52 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `3.1 Crash Fatal (White Screen of Death) en `TracesView` al Recibir Eventos WebSocket` --references--> `TracesView()`  [INFERRED]
+  docs/archive/audit_reports/02_ESTADO_FRONTEND_ALMA_MATER.md → frontend/src/views/TracesView.tsx
 - `🛡️ Certificación de los 4 Escenarios de la Demo ante el Tribunal` --references--> `Alert`  [INFERRED]
   docs/archive/desglose_de_pasos_semana_3_gateway_interceptor_y_pdp.md → backend/app/models/alert.py
 - `Paso 4: Intento de Exfiltración / Inyección de Prompt (DENY + ALERTA SIEM)` --references--> `Alert`  [INFERRED]
   docs/archive/PROPUESTAS_MEJORAS_FRONTEND.md → backend/app/models/alert.py
-- `C. Contexto y Métricas en Aprobaciones Humanas (HITL)` --references--> `ApprovalDetailRead`  [INFERRED]
-  docs/archive/INFORME_MOCKUPS_FRONT_BACK.md → backend/app/schemas/approval.py
 - `5. Especificación Detallada del Caso de Uso Crítico: UC05` --references--> `Approval`  [INFERRED]
   agentguard_casos_de_uso.md → backend/app/models/approval.py
 - `4.1 Estándares de Backend (`Python 3.12+` / `FastAPI` / `SQLAlchemy 2.0` / `Pydantic v2`)` --references--> `Approval`  [INFERRED]
@@ -554,17 +554,17 @@ Nodes (4): 1. Modelo de Autenticación y Autorización Real (Humanos en Dashboar
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useToast()` connect `App.tsx` to `OverviewView.tsx`, `ApiError`, `domain.ts`, `README.md`?**
-  _High betweenness centrality (0.111) - this node is a cross-community bridge._
+- **Why does `2. Reglas Innegociables de Seguridad, Dominio e Idioma` connect `README.md` to `App.tsx`, `Tool`, `ApiError`, `ensure_same_tenant`?**
+  _High betweenness centrality (0.091) - this node is a cross-community bridge._
 - **Are the 59 inferred relationships involving `User` (e.g. with `create_api_key()` and `get_api_key()`) actually correct?**
   _`User` has 59 INFERRED edges - model-reasoned connections that need verification._
 - **Should `enums.py` be split into smaller, more focused modules?**
   _Cohesion score 0.09227614490772386 - nodes in this community are weakly interconnected._
-- **Why does `2. Reglas Innegociables de Seguridad, Dominio e Idioma` connect `README.md` to `App.tsx`, `Tool`, `ApiError`, `ensure_same_tenant`?**
-  _High betweenness centrality (0.109) - this node is a cross-community bridge._
+- **Why does `AgentTool` connect `Tool` to `enums.py`, `AgentService`, `_to_execution_response`, `06 — Propuesta de Evolución Arquitectónica, Optimización de Rendimiento y Mejores Prácticas`, `🧭 2. Flujo del Wizard de Presentación (4 Pasos Guiados)`, `3. Hallazgos Críticos y Bugs Funcionales en el Frontend`, `update_tool`, `enums.py`, `🛡️ AgentGuard — Runtime Authorization & Governance for AI Agents`, `🔐 AgentGuard — Guía Rápida de Credenciales y Roles Demo (Acme Corp)`, `💥 ACME Corporation — Portal Empresarial & Copiloto BI (Looney Tunes Edition)`, `README.md`, `📑 Desglose de Pasos: Semana 1 — Base de Datos & Setup Inicial`, `test_agents.py`, `📐 Guía de Defensa: Modelo Conceptual (Chen) y Diccionario de Atributos`, `Execution`, `ensure_same_tenant`, `🤖 AgentGuard — Agent Demo (Cliente CLI Python)`?**
+  _High betweenness centrality (0.089) - this node is a cross-community bridge._
 - **Are the 19 inferred relationships involving `Organization` (e.g. with `reset_demo_data()` and `get_gateway_context()`) actually correct?**
   _`Organization` has 19 INFERRED edges - model-reasoned connections that need verification._
 - **Should `domain.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.1305194805194805 - nodes in this community are weakly interconnected._
-- **Why does `AgentTool` connect `Tool` to `enums.py`, `AgentService`, `_to_execution_response`, `06 — Propuesta de Evolución Arquitectónica, Optimización de Rendimiento y Mejores Prácticas`, `🧭 2. Flujo del Wizard de Presentación (4 Pasos Guiados)`, `3. Hallazgos Críticos y Bugs Funcionales en el Frontend`, `update_tool`, `enums.py`, `🛡️ AgentGuard — Runtime Authorization & Governance for AI Agents`, `🔐 AgentGuard — Guía Rápida de Credenciales y Roles Demo (Acme Corp)`, `💥 ACME Corporation — Portal Empresarial & Copiloto BI (Looney Tunes Edition)`, `README.md`, `📑 Desglose de Pasos: Semana 1 — Base de Datos & Setup Inicial`, `test_agents.py`, `📐 Guía de Defensa: Modelo Conceptual (Chen) y Diccionario de Atributos`, `Execution`, `ensure_same_tenant`, `🤖 AgentGuard — Agent Demo (Cliente CLI Python)`?**
-  _High betweenness centrality (0.079) - this node is a cross-community bridge._
+- **Why does `useToast()` connect `App.tsx` to `OverviewView.tsx`, `ApiError`, `domain.ts`, `README.md`?**
+  _High betweenness centrality (0.088) - this node is a cross-community bridge._

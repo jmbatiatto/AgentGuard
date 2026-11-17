@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/OverviewView.tsx": {
-    "mtime": 1794691548.3144448,
-    "seen": 1794696418.1132112,
-    "ast_hash": "9d584da48570cc69beaea23b7ccc9236",
+    "mtime": 1794938657.6322114,
+    "seen": 1794938934.350422,
+    "ast_hash": "a4f220b68ea1e8ea0cd2c285e7a67e72",
     "semantic_hash": ""
   },
   "frontend/src/views/PlaygroundView.tsx": {
@@ -498,9 +498,9 @@
     "semantic_hash": ""
   },
   "frontend/src/views/TracesView.tsx": {
-    "mtime": 1794690470.9129202,
-    "seen": 1794691361.6934378,
-    "ast_hash": "46d40f4a129e766281be0cf496a14016",
+    "mtime": 1794938652.0148344,
+    "seen": 1794938934.350422,
+    "ast_hash": "f73bf3217cb107e66b03236fe8bf0b44",
     "semantic_hash": ""
   },
   "frontend/tsconfig.app.json": {
@@ -840,8 +840,8 @@
     "semantic_hash": ""
   },
   "backend/tests/test_policy_rules_management.py": {
-    "mtime": 1794933889.6031315,
-    "seen": 1794934054.7696288,
+    "mtime": 1794934134.9791172,
+    "seen": 1794938934.350422,
     "ast_hash": "a15349364bb46e7171fd09eab12d578d",
     "semantic_hash": ""
   },

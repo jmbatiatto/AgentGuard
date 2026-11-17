@@ -366,22 +366,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
     },
     onNewExecution: (execData) => {
       const newExec: ExecutionTrace = {
-        id: execData.execution_id || `exec_${Date.now()}`,
+        id: execData.id || execData.execution_id || `exec_${Date.now()}`,
         organizationId: execData.organization_id || currentOrganizationId || '',
         agentId: execData.agent_id,
-        agentName: execData.agent_id?.includes('sales') ? 'Agente de Ventas' : 'Agente IA',
+        agentName: execData.agent_name || (execData.agent_id?.includes('sales') ? 'Agente de Ventas' : 'Agente IA'),
         toolId: execData.tool_id,
-        toolName: 'Integración de Herramienta',
-        actionName: execData.action_name,
-        resource: 'runtime/execution',
-        requestContext: {},
+        toolName: execData.tool_name || 'Integración de Herramienta',
+        actionName: execData.action_name || 'execute',
+        resource: execData.resource || 'runtime/execution',
+        requestContext: execData.request_context || {},
         decision: execData.decision,
         status: execData.status || 'EXECUTED',
-        timestamp: new Date().toISOString(),
-        latencyMs: execData.evaluation_latency_ms || 14.5,
+        evaluatedPolicyRuleId: execData.evaluated_policy_rule_id,
+        timestamp: execData.timestamp || new Date().toISOString(),
+        latencyMs: execData.latency_ms ?? execData.evaluation_latency_ms ?? 0,
+        approvalStatus: execData.status === 'PENDING_APPROVAL' ? 'PENDING' : null,
       };
 
-      setRecentExecutions(prev => [newExec, ...prev.slice(0, 4)]);
+      setRecentExecutions(prev => [newExec, ...prev.filter(e => e.id !== newExec.id)].slice(0, 5));
       setStats(prev => prev ? {
         ...prev,
         totalExecutions: prev.totalExecutions + 1,

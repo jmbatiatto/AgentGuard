@@ -58,7 +58,7 @@ export const TracesView: React.FC = () => {
         approvalStatus: newTraceData.status === 'PENDING_APPROVAL' ? 'PENDING' : null,
       };
 
-      setTraces(prev => [formattedTrace, ...prev]);
+      setTraces(prev => [formattedTrace, ...prev.filter(t => t.id !== formattedTrace.id)]);
     },
     onResolvedApproval: (data) => {
       setTraces(prev => prev.map(t => {
@@ -402,8 +402,8 @@ export const TracesView: React.FC = () => {
           padding: '20px',
         }}>
           <div style={{
-            backgroundColor: '#0F1522',
-            border: '1px solid var(--border-subtle)',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-strong)',
             borderRadius: '12px',
             width: '100%',
             maxWidth: '680px',
@@ -411,7 +411,7 @@ export const TracesView: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            boxShadow: 'var(--shadow-lg)',
           }}>
             {/* Modal Header */}
             <div style={{
@@ -422,7 +422,7 @@ export const TracesView: React.FC = () => {
               justifyContent: 'space-between',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Terminal size={18} color="#38BDF8" />
+                <Terminal size={18} color="var(--brand-primary)" />
                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   Auditoría Forense de Traza
                 </h3>
@@ -438,21 +438,21 @@ export const TracesView: React.FC = () => {
             {/* Modal Content */}
             <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--workspace-box-bg)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>ID de Traza</div>
-                  <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', marginTop: '2px' }}>{selectedTrace.id}</div>
+                  <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', marginTop: '2px', wordBreak: 'break-all' }}>{selectedTrace.id}</div>
                 </div>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--workspace-box-bg)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fecha y Hora</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '2px' }}>{new Date(selectedTrace.timestamp).toISOString()}</div>
                 </div>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--workspace-box-bg)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Agente</div>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>{selectedTrace.agentName}</div>
                 </div>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--workspace-box-bg)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Decisión y Latencia</div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: selectedTrace.decision === 'ALLOW' ? '#10B981' : selectedTrace.decision === 'DENY' ? '#EF4444' : '#F59E0B', marginTop: '2px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: selectedTrace.decision === 'ALLOW' ? 'var(--success)' : selectedTrace.decision === 'DENY' ? 'var(--danger)' : 'var(--warning)', marginTop: '2px' }}>
                     {DECISION_LABELS[selectedTrace.decision] || selectedTrace.decision} ({selectedTrace.latencyMs.toFixed(1)}ms)
                   </div>
                 </div>
@@ -462,15 +462,15 @@ export const TracesView: React.FC = () => {
               {selectedTrace.decision === 'REQUIRE_APPROVAL' && (
                 <div style={{
                   padding: '12px 16px',
-                  backgroundColor: selectedTrace.status === 'EXECUTED' ? 'rgba(16, 185, 129, 0.08)' : selectedTrace.status === 'PENDING_APPROVAL' ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                  backgroundColor: selectedTrace.status === 'EXECUTED' ? 'var(--success-bg)' : selectedTrace.status === 'PENDING_APPROVAL' ? 'var(--warning-bg)' : 'var(--danger-bg)',
                   borderRadius: '8px',
-                  border: selectedTrace.status === 'EXECUTED' ? '1px solid rgba(16, 185, 129, 0.25)' : selectedTrace.status === 'PENDING_APPROVAL' ? '1px solid rgba(245, 158, 11, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)',
+                  border: selectedTrace.status === 'EXECUTED' ? '1px solid var(--success-border)' : selectedTrace.status === 'PENDING_APPROVAL' ? '1px solid var(--warning-border)' : '1px solid var(--danger-border)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '6px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: selectedTrace.status === 'EXECUTED' ? '#34D399' : selectedTrace.status === 'PENDING_APPROVAL' ? '#FBBF24' : '#F87171' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: selectedTrace.status === 'EXECUTED' ? 'var(--success-text)' : selectedTrace.status === 'PENDING_APPROVAL' ? 'var(--warning-text)' : 'var(--danger-text)' }}>
                       <UserCheck size={15} />
                       <span>Gobernanza Human-in-the-Loop (HITL)</span>
                     </div>
@@ -486,7 +486,7 @@ export const TracesView: React.FC = () => {
                       : 'La acción sensible fue evaluada y rechazada explícitamente por el operador humano.'}
                   </p>
                   {selectedTrace.resolutionReason && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '6px', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '6px', marginTop: '2px' }}>
                       <strong>Motivo de resolución:</strong> {selectedTrace.resolutionReason}
                     </div>
                   )}
@@ -502,7 +502,7 @@ export const TracesView: React.FC = () => {
                 <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                   Acción y Recurso Destino
                 </div>
-                <div style={{ padding: '10px', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#38BDF8' }}>
+                <div style={{ padding: '10px', backgroundColor: 'var(--code-pill-bg)', border: '1px solid var(--code-pill-border)', borderRadius: '6px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--code-pill-text)' }}>
                   {selectedTrace.actionName} &rarr; {selectedTrace.resource}
                 </div>
               </div>
@@ -515,12 +515,12 @@ export const TracesView: React.FC = () => {
                 </div>
                 <pre style={{
                   padding: '14px',
-                  backgroundColor: '#070A0F',
-                  border: '1px solid var(--border-subtle)',
+                  backgroundColor: 'var(--json-bg)',
+                  border: '1px solid var(--json-border)',
                   borderRadius: '6px',
                   fontSize: '12px',
                   fontFamily: 'var(--font-mono)',
-                  color: '#A5B4FC',
+                  color: 'var(--json-text)',
                   overflowX: 'auto',
                   maxHeight: '200px',
                 }}>
@@ -529,7 +529,7 @@ export const TracesView: React.FC = () => {
               </div>
 
               {selectedTrace.evaluatedPolicyRuleId && (
-                <div style={{ padding: '10px 14px', backgroundColor: 'rgba(2, 132, 199, 0.08)', borderRadius: '6px', border: '1px solid rgba(2, 132, 199, 0.2)', fontSize: '12px', color: '#38BDF8' }}>
+                <div style={{ padding: '10px 14px', backgroundColor: 'var(--info-bg)', borderRadius: '6px', border: '1px solid var(--info-border)', fontSize: '12px', color: 'var(--info-text)' }}>
                   ID de Regla de Política Evaluada: <span style={{ fontFamily: 'var(--font-mono)' }}>{selectedTrace.evaluatedPolicyRuleId}</span>
                 </div>
               )}
