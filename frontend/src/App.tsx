@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, ShieldAlert, WifiOff, RefreshCw } from 'lucide-react';
 import { ThemeProvider } from './context/ThemeProvider';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -35,10 +35,10 @@ const getInitialView = (): NavView => {
 };
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, logout, currentUser, completePasswordChange } = useAuth();
+  const { isAuthenticated, isLoading, logout, currentUser, completePasswordChange } = useAuth();
   const { toast } = useToast();
   const [currentView, setCurrentView] = useState<NavView>(getInitialView);
-  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
   const [securityAlert, setSecurityAlert] = useState<{
     id?: string;
     title: string;
@@ -50,23 +50,47 @@ const AppContent: React.FC = () => {
   const [isDegradedMode, setIsDegradedMode] = useState<boolean>(false);
   const [isCheckingHealth, setIsCheckingHealth] = useState<boolean>(false);
 
-  const checkConnectivity = async () => {
-    setIsCheckingHealth(true);
+  const performConnectivityProbe = useCallback(async () => {
     try {
       const health = await api.checkHealth();
       setIsDegradedMode(!health.isOnline);
+      const savedBootId = sessionStorage.getItem('agentguard_server_boot_id');
+      if (
+        sessionStorage.getItem('agentguard_token') &&
+        health.isOnline &&
+        health.boot_id &&
+        savedBootId &&
+        health.boot_id !== savedBootId
+      ) {
+        logout();
+        window.location.hash = '#auth';
+      }
     } catch {
       setIsDegradedMode(true);
+    }
+  }, [logout]);
+
+  const checkConnectivity = useCallback(async () => {
+    setIsCheckingHealth(true);
+    try {
+      await performConnectivityProbe();
     } finally {
       setIsCheckingHealth(false);
     }
-  };
+  }, [performConnectivityProbe]);
 
   useEffect(() => {
-    checkConnectivity();
-    const interval = setInterval(checkConnectivity, 20000);
-    return () => clearInterval(interval);
-  }, []);
+    const initialTimer = setTimeout(() => {
+      void performConnectivityProbe();
+    }, 0);
+    const interval = setInterval(() => {
+      void performConnectivityProbe();
+    }, 20000);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
+  }, [performConnectivityProbe]);
 
   const handleNavigate = (view: NavView) => {
     setCurrentView(view);
@@ -99,7 +123,9 @@ const AppContent: React.FC = () => {
 
   // Inicializar contador real desde backend si está autenticado
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      return;
+    }
     let isMounted = true;
     api
       .getApprovals('PENDING')
@@ -115,6 +141,8 @@ const AppContent: React.FC = () => {
       isMounted = false;
     };
   }, [isAuthenticated]);
+
+  const effectivePendingApprovalsCount = isAuthenticated ? pendingApprovalsCount : 0;
 
   const handleTriggerAlert = (alert: {
     id?: string;
@@ -159,6 +187,27 @@ const AppContent: React.FC = () => {
   const handleTriggerApprovalFromPlayground = () => {
     setPendingApprovalsCount((prev) => prev + 1);
   };
+
+  // ── Verificación inicial de sesión (evita destellos antes de confirmar auth) ──
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#020617',
+          color: '#94A3B8',
+          fontSize: '14px',
+          gap: '10px',
+        }}
+      >
+        <RefreshCw size={18} className="animate-spin" color="#38BDF8" />
+        <span>Verificando sesión en AgentGuard...</span>
+      </div>
+    );
+  }
 
   // ── Pantalla de autenticación ──────────────────────────────────────────────
   if (!isAuthenticated || window.location.hash === '#auth') {
@@ -344,8 +393,9 @@ const AppContent: React.FC = () => {
       <Sidebar
         currentView={currentView}
         onNavigate={handleNavigate}
-        pendingApprovalsCount={pendingApprovalsCount}
+        pendingApprovalsCount={effectivePendingApprovalsCount}
         onLogout={() => {
+          setPendingApprovalsCount(0);
           logout();
           window.location.hash = '#auth';
         }}
@@ -356,7 +406,7 @@ const AppContent: React.FC = () => {
         {currentView === 'overview' && (
           <OverviewView
             onNavigate={handleNavigate}
-            pendingApprovalsCount={pendingApprovalsCount}
+            pendingApprovalsCount={effectivePendingApprovalsCount}
           />
         )}
         {currentView === 'agents' && <AgentsView />}

@@ -649,3 +649,32 @@ async def test_change_password_rejects_x_agent_id():
     assert "AI Agents are not permitted" in response.json()["detail"]
 
 
+@pytest.mark.asyncio
+async def test_token_from_previous_server_boot_rejected():
+    """Tokens emitidos antes de un reinicio del servidor (distinto boot_id) son rechazados con 401."""
+    from app.core.security import decode_access_token
+
+    stale_token = create_access_token(
+        data={
+            "sub": str(uuid.uuid4()),
+            "org_id": str(uuid.uuid4()),
+            "role": UserRole.ADMIN.value,
+            "boot_id": "stale_previous_boot_id_12345",
+        }
+    )
+
+    assert decode_access_token(stale_token) is None
+
+    mock_db = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {stale_token}"},
+        )
+
+    assert response.status_code == 401
+
+

@@ -127,38 +127,24 @@ const STORAGE_TOKEN_KEY = 'agentguard_token';
 const STORAGE_USER_KEY = 'agentguard_user';
 const STORAGE_ACTIVE_ID_KEY = 'agentguard_active_user_id';
 const STORAGE_ACTIVE_ORG_KEY = 'agentguard_active_org';
+const STORAGE_BOOT_ID_KEY = 'agentguard_server_boot_id';
+
+function clearLegacyAndSessionAuthStorage(): void {
+  if (typeof window === 'undefined') return;
+  [STORAGE_TOKEN_KEY, STORAGE_USER_KEY, STORAGE_ACTIVE_ID_KEY, STORAGE_ACTIVE_ORG_KEY].forEach((k) => {
+    localStorage.removeItem(k);
+    sessionStorage.removeItem(k);
+  });
+  sessionStorage.removeItem(STORAGE_BOOT_ID_KEY);
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return Boolean(localStorage.getItem(STORAGE_TOKEN_KEY));
-  });
-
+  // Arranque fail-closed: siempre inicia sin autenticar hasta verificar sesión contra el servidor vivo
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
-
-  const [currentUser, setCurrentUser] = useState<AuthUser>(() => {
-    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-    const storedUser = localStorage.getItem(STORAGE_USER_KEY);
-    if (token && storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        return formatAuthUser(parsed);
-      } catch {
-        // Fallback fail-closed
-      }
-    }
-    return UNAUTHENTICATED_USER;
-  });
-
-  const [currentOrganizationId, setCurrentOrganizationId] = useState<string>(() => {
-    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-    if (!token) return '';
-    return (
-      localStorage.getItem(STORAGE_ACTIVE_ORG_KEY) ||
-      currentUser.organization_id ||
-      ''
-    );
-  });
+  const [currentUser, setCurrentUser] = useState<AuthUser>(UNAUTHENTICATED_USER);
+  const [currentOrganizationId, setCurrentOrganizationId] = useState<string>('');
 
   const syncOrganization = useCallback(async (orgId: string) => {
     if (!orgId) {
@@ -197,10 +183,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [currentOrganizationId, syncOrganization]);
 
-  // Hidratación y validación de sesión JWT al inicializar
+  // Hidratación y validación estricta de sesión JWT contra el boot_id actual del servidor
   useEffect(() => {
-    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-    if (!token) {
+    // Limpiar sesiones persistentes antiguas de localStorage para exigir login al abrir o reiniciar
+    [STORAGE_TOKEN_KEY, STORAGE_USER_KEY, STORAGE_ACTIVE_ID_KEY, STORAGE_ACTIVE_ORG_KEY].forEach((k) => {
+      localStorage.removeItem(k);
+    });
+
+    const token = sessionStorage.getItem(STORAGE_TOKEN_KEY);
+    if (!token || window.location.hash === '#auth') {
+      clearLegacyAndSessionAuthStorage();
       setIsAuthenticated(false);
       setCurrentUser(UNAUTHENTICATED_USER);
       setCurrentOrganization(null);
@@ -211,41 +203,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     let isMounted = true;
-    api
-      .getMe()
-      .then(async (user) => {
+    (async () => {
+      try {
+        const health = await api.checkHealth();
+        const savedBootId = sessionStorage.getItem(STORAGE_BOOT_ID_KEY);
+        if (!health.isOnline || (health.boot_id && savedBootId && health.boot_id !== savedBootId)) {
+          throw new Error('Servidor reiniciado o fuera de línea; requiere nuevo inicio de sesión.');
+        }
+
+        const user = await api.getMe();
         if (!isMounted) return;
         const formatted = formatAuthUser(user);
         const orgId = formatted.organization_id || '';
-        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(STORAGE_ACTIVE_ID_KEY, formatted.id);
+        sessionStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
+        sessionStorage.setItem(STORAGE_ACTIVE_ID_KEY, formatted.id);
+        if (health.boot_id) {
+          sessionStorage.setItem(STORAGE_BOOT_ID_KEY, health.boot_id);
+        }
         if (orgId) {
-          localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgId);
+          sessionStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgId);
           api.setActiveOrganizationId(orgId);
           setCurrentOrganizationId(orgId);
         }
         setCurrentUser(formatted);
         setIsAuthenticated(true);
         await syncOrganization(orgId);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!isMounted) return;
-        console.warn('Token de autenticación expirado o inválido:', err);
-        localStorage.removeItem(STORAGE_TOKEN_KEY);
-        localStorage.removeItem(STORAGE_USER_KEY);
-        localStorage.removeItem(STORAGE_ACTIVE_ID_KEY);
-        localStorage.removeItem(STORAGE_ACTIVE_ORG_KEY);
+        console.warn('Sesión invalidada (reinicio o token vencido):', err);
+        clearLegacyAndSessionAuthStorage();
         api.setActiveOrganizationId('');
         setIsAuthenticated(false);
         setCurrentUser(UNAUTHENTICATED_USER);
         setCurrentOrganization(null);
         setCurrentOrganizationId('');
-      })
-      .finally(() => {
+      } finally {
         if (isMounted) {
           setIsLoading(false);
         }
-      });
+      }
+    })();
 
     return () => {
       isMounted = false;
@@ -257,12 +254,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const formatted = formatAuthUser(rawUser, explicitOrg?.name);
       const orgId = explicitOrg?.id || formatted.organization_id || '';
 
-      localStorage.setItem(STORAGE_TOKEN_KEY, token);
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(rawUser));
-      localStorage.setItem(STORAGE_ACTIVE_ID_KEY, formatted.id);
+      sessionStorage.setItem(STORAGE_TOKEN_KEY, token);
+      sessionStorage.setItem(STORAGE_USER_KEY, JSON.stringify(rawUser));
+      sessionStorage.setItem(STORAGE_ACTIVE_ID_KEY, formatted.id);
       if (orgId) {
-        localStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgId);
+        sessionStorage.setItem(STORAGE_ACTIVE_ORG_KEY, orgId);
         api.setActiveOrganizationId(orgId);
+      }
+      try {
+        const health = await api.checkHealth();
+        if (health.boot_id) {
+          sessionStorage.setItem(STORAGE_BOOT_ID_KEY, health.boot_id);
+        }
+      } catch {
+        // Ignorado si health tarda momentáneamente
       }
 
       setCurrentOrganizationId(orgId);
@@ -336,7 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       try {
-        const stored = localStorage.getItem(STORAGE_USER_KEY);
+        const stored = sessionStorage.getItem(STORAGE_USER_KEY);
         const parsed = stored ? JSON.parse(stored) : {};
         const merged = {
           ...parsed,
@@ -344,9 +349,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           must_change_password: false,
           mustChangePassword: false,
         };
-        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(merged));
+        sessionStorage.setItem(STORAGE_USER_KEY, JSON.stringify(merged));
       } catch {
-        // Fallback en almacenamiento local
+        // Fallback en almacenamiento de sesión
       }
 
       return nextUser;
@@ -354,10 +359,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [currentOrganization?.name]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_TOKEN_KEY);
-    localStorage.removeItem(STORAGE_USER_KEY);
-    localStorage.removeItem(STORAGE_ACTIVE_ID_KEY);
-    localStorage.removeItem(STORAGE_ACTIVE_ORG_KEY);
+    clearLegacyAndSessionAuthStorage();
     api.setActiveOrganizationId('');
     setIsAuthenticated(false);
     setCurrentOrganizationId('');

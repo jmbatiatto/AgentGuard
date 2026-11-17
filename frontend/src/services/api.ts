@@ -143,8 +143,11 @@ export interface GatewayExecutionResult {
     decoded_payload?: string | null;
   } | null;
   timestamp: string;
+  latency_ms?: number;
   evaluation_latency_ms?: number;
   isLiveBackend?: boolean;
+  is_simulation?: boolean;
+  simulation_explanation?: string | null;
 }
 
 class AgentGuardApiClient {
@@ -156,37 +159,35 @@ class AgentGuardApiClient {
 
   /**
    * Interceptor de autenticacion HTTP: Inyecta Authorization: Bearer <token>
-   * si existe una sesion activa en localStorage.
-   */
-  /**
-   * Retorna el ID de organizacion activa persistida en la sesion
+   * si existe una sesion activa en sessionStorage.
    */
   public getActiveOrganizationId(): string {
-    return (typeof window !== 'undefined' ? localStorage.getItem('agentguard_active_org') : null) || '';
+    return (typeof window !== 'undefined' ? sessionStorage.getItem('agentguard_active_org') : null) || '';
   }
 
   /**
-   * Asigna y persiste el ID de organizacion activa para la sesion
+   * Asigna y persiste el ID de organizacion activa para la sesion actual
    */
   public setActiveOrganizationId(orgId: string): void {
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('agentguard_active_org');
       if (orgId) {
-        localStorage.setItem('agentguard_active_org', orgId);
+        sessionStorage.setItem('agentguard_active_org', orgId);
       } else {
-        localStorage.removeItem('agentguard_active_org');
+        sessionStorage.removeItem('agentguard_active_org');
       }
     }
   }
 
   /**
-   * Retorna el ID de usuario activo persistido en la sesion
+   * Retorna el ID de usuario activo persistido en la sesion actual
    */
   public getActiveUserId(): string {
-    return (typeof window !== 'undefined' ? localStorage.getItem('agentguard_active_user_id') : null) || '';
+    return (typeof window !== 'undefined' ? sessionStorage.getItem('agentguard_active_user_id') : null) || '';
   }
 
   private async fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('agentguard_token') : null;
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('agentguard_token') : null;
     const headers = new Headers(init?.headers);
     if (token && !headers.has('Authorization')) {
       headers.set('Authorization', `Bearer ${token}`);
@@ -211,6 +212,7 @@ class AgentGuardApiClient {
           app: data.app,
           version: data.version,
           environment: data.environment,
+          boot_id: data.boot_id,
           timestamp: data.timestamp,
           services: data.services,
         };
@@ -1431,10 +1433,10 @@ class AgentGuardApiClient {
         data.organization?.id || data.user?.organization_id || data.organization_id || '';
 
       if (typeof window !== 'undefined' && data.access_token && data.user) {
-        localStorage.setItem('agentguard_token', data.access_token);
-        localStorage.setItem('agentguard_user', JSON.stringify(data.user));
+        sessionStorage.setItem('agentguard_token', data.access_token);
+        sessionStorage.setItem('agentguard_user', JSON.stringify(data.user));
         if (data.user.id) {
-          localStorage.setItem('agentguard_active_user_id', data.user.id);
+          sessionStorage.setItem('agentguard_active_user_id', data.user.id);
         }
         if (resolvedOrgId) {
           this.setActiveOrganizationId(resolvedOrgId);

@@ -17,6 +17,7 @@ import redis.asyncio as aioredis
 
 from app.core.config import settings
 from app.core.database import engine
+from app.core.security import SERVER_BOOT_ID
 from app.api import api_router
 
 # Configuración básica de logging
@@ -129,6 +130,7 @@ async def health_check() -> Dict[str, Any]:
         "app": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
+        "boot_id": SERVER_BOOT_ID,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "services": {
             "database": db_status,

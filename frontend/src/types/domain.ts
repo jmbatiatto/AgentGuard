@@ -205,6 +205,7 @@ export interface SystemHealth {
   app?: string;
   version?: string;
   environment?: string;
+  boot_id?: string;
   timestamp?: string;
   services?: {
     database: string;
