@@ -2,6 +2,7 @@
   "venvPath": "backend",
   "venv": ".venv",
   "pythonVersion": "3.12",
+  "reportMissingTypeStubs": false,
   "executionEnvironments": [
     {
       "root": "acme-corp",
