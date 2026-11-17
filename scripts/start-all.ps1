@@ -1,10 +1,11 @@
-﻿# ==============================================================================
+# ==============================================================================
 # AgentGuard - Orquestador Completo de Desarrollo Local (Full-Stack Starter)
 # Levanta secuencialmente: Docker (Postgres/Redis) -> Backend (FastAPI) -> Frontend (Vite) -> Abre Navegador
 # ==============================================================================
 
 param(
-    [switch]$Reset
+    [switch]$Reset,
+    [switch]$SeedAcme
 )
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -118,21 +119,26 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "[OK] Esquema de base de datos sincronizado (13 tablas operativas)." -ForegroundColor Green
 
-# Ejecutar Seeder oficial de Acme Corp (sincroniza los 5 roles RBAC sin borrar datos existentes)
-$seedScript = Join-Path $backendDir "scripts\seed_demo.py"
-$seedArgs = @($seedScript)
-if ($Reset) {
-    Write-Host "[*] Reiniciando datos semilla de la demo (--reset)..." -ForegroundColor Yellow
-    $seedArgs += "--reset"
+# Seeder oficial de Acme Corp (precarga unicamente bajo demanda explicita con -SeedAcme o -Reset)
+if ($SeedAcme -or $Reset) {
+    $seedScript = Join-Path $backendDir "scripts\seed_demo.py"
+    $seedArgs = @($seedScript)
+    if ($Reset) {
+        Write-Host "[*] Reiniciando datos semilla de la demo (--reset)..." -ForegroundColor Yellow
+        $seedArgs += "--reset"
+    } else {
+        Write-Host "[*] Verificando y sincronizando datos semilla de Acme Corp (5 roles RBAC)..." -ForegroundColor Gray
+    }
+    & $venvPython @seedArgs
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[!] Error al ejecutar el seeder demo (codigo $LASTEXITCODE)." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "[OK] Semillas y usuarios RBAC sincronizados correctamente." -ForegroundColor Green
 } else {
-    Write-Host "[*] Verificando y sincronizando datos semilla de Acme Corp (5 roles RBAC)..." -ForegroundColor Gray
+    Write-Host "[+] AgentGuard inicia limpio a la espera de registro de clientes o alta automatica de Acme Corp." -ForegroundColor Cyan
+    Write-Host "    (Pasa -SeedAcme o -Reset si deseas precargar los datos de prueba de Acme Corp)" -ForegroundColor Gray
 }
-& $venvPython @seedArgs
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[!] Error al ejecutar el seeder demo (codigo $LASTEXITCODE)." -ForegroundColor Red
-    exit 1
-}
-Write-Host "[OK] Semillas y usuarios RBAC sincronizados correctamente." -ForegroundColor Green
 Write-Host ""
 
 # ------------------------------------------------------------------------------
@@ -232,11 +238,11 @@ if ($frontendReady) {
 Write-Host ""
 
 # ------------------------------------------------------------------------------
-# 6. Abrir Navegador Web Automaticamente
+# 6. Abrir Navegador Web Automaticamente (siempre en pantalla de Login)
 # ------------------------------------------------------------------------------
-Write-Host "[6/6] Abriendo AgentGuard en tu navegador web predeterminado..." -ForegroundColor Green
+Write-Host "[6/6] Abriendo AgentGuard en tu navegador web predeterminado (Login)..." -ForegroundColor Green
 Start-Sleep -Seconds 1
-Start-Process "http://localhost:5173"
+Start-Process "http://localhost:5173/#auth"
 
 # ------------------------------------------------------------------------------
 # Resumen de Puntos de Acceso
