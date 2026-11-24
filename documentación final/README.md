@@ -235,6 +235,7 @@ Toda la documentación técnica, arquitectónica, de base de datos, seguridad ru
 | **04** | [`04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md`](./04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md) | [`agentguard_secuencia_demo.drawio`](../diagramas/agentguard_secuencia_demo.drawio)<br>[`agentguard_estados_ciclo_vida.drawio`](../diagramas/agentguard_estados_ciclo_vida.drawio)<br>[`agentguard_casos_de_uso.drawio`](../diagramas/agentguard_casos_de_uso.drawio) | Diagramas de secuencia UML (4 escenarios + flujo Consultante BI con Gemini 3.8), máquinas de estado (`Execution`, `Approval` con `with_for_update()` y TTL `900s`, `Alert`) y casos de uso UML. |
 | **05** | [`05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES.md`](./05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES.md) | — | Manual de las **9 vistas React 19**, componentes de onboarding/seguridad (`QuickSetupWizard`, `ForcePasswordChangeModal`), matriz RBAC de 5 roles y credenciales demo (`seed_demo.py` vs. auto-onboarding ACME). |
 | **06** | [`06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md`](./06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md) | — | Manual integral del portal `acme-corp/` (`:9000`), auto-onboarding del CEO, integración técnica con Google Gemini 3.8 Flash (`thinkingLevel: "low"`, `thoughtSignature`), catálogo de 8 escenarios y guía de `agent-demo/`. |
+| **07** | [`07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md`](./07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md) | [Presentación Canva (`DAHbl5SRXbM`)](https://canva.link/59p7pjdurhxr1vk) | Presentación oficial de 12 diapositivas en Canva (`https://canva.link/59p7pjdurhxr1vk`), desglose técnico slide por slide, guion de oratoria (~15 min) distribuido entre los 4 roles SCRUM y checklist de defensa en vivo. |
 
 ---
 
@@ -302,7 +303,8 @@ AgentGuard/
 │   ├── 03_ARQUITECTURA_RUNTIME_PEP_PDP_Y_API_REST.md
 │   ├── 04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md
 │   ├── 05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES.md
-│   └── 06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md
+│   ├── 06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md
+│   └── 07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md
 ├── frontend/                                 # Dashboard Web SPA (React 19 + TypeScript 5+ + Vite + Tailwind CSS v4) [:5173]
 │   ├── src/
 │   │   ├── components/                       # Layout, Sidebar, Header, QuickSetupWizard, ForcePasswordChangeModal, ResetDemoModal y modales CRUD

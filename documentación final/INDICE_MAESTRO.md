@@ -11,11 +11,11 @@
 
 Esta carpeta reúne la **documentación definitiva, verificada y auditada** de AgentGuard, construida bajo la metodología **SDD (Spec-Driven Development)** y alineada de manera milimétrica con el código fuente real del backend Python, frontend React, servicio satélite ACME Corp y sus esquemas de base de datos relacionales.
 
-Históricamente, el repositorio albergó documentos preliminares que acumulaban desfasajes lógicos (omisión de migraciones, entidades faltantes en diagramas Chen, modelos de IA deprecados o falta de documentación del portal empresarial `acme-corp/`). Para resolverlo de forma irrevocable, se estructuraron **9 volúmenes especializados** más este **Índice Maestro**, proporcionando una fuente única de verdad (**SSOT**) libre de contradicciones, con enlaces relativos navegables y trazabilidad directa contra las líneas de código del repositorio.
+Históricamente, el repositorio albergó documentos preliminares que acumulaban desfasajes lógicos (omisión de migraciones, entidades faltantes en diagramas Chen, modelos de IA deprecados o falta de documentación del portal empresarial `acme-corp/`). Para resolverlo de forma irrevocable, se estructuraron **10 volúmenes especializados** más este **Índice Maestro** (totalizando **11 documentos oficiales**), proporcionando una fuente única de verdad (**SSOT**) libre de contradicciones, con enlaces relativos navegables, enlace directo a la presentación oficial en Canva y trazabilidad directa contra las líneas de código del repositorio.
 
 ---
 
-## 2. Mapa Completo de los 10 Volúmenes Documentales
+## 2. Mapa Completo de los 11 Volúmenes Documentales
 
 | N° | Archivo | Título del Volumen | Enfoque Principal | Autor / Rol |
 | :---: | :--- | :--- | :--- | :--- |
@@ -28,6 +28,7 @@ Históricamente, el repositorio albergó documentos preliminares que acumulaban 
 | **04** | [`04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md`](./04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md) | **Secuencias Runtime, Diagramas de Estados y Matriz de Casos de Uso** | Diagramas de secuencia Mermaid de los 4 escenarios canónicos de demo y del Consultante BI, máquinas de estado de Ejecuciones, Aprobaciones HITL y Alertas, más diagrama UML de Casos de Uso del sistema. | `especialista-runtime` |
 | **05** | [`05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES.md`](./05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES.md) | **Manual de Frontend SPA (React 19), Matriz RBAC y Credenciales Operativas** | Arquitectura cliente Vite/React 19/Tailwind v4, política de cero silent fallbacks, sesiones efímeras con `SERVER_BOOT_ID`, las 9 vistas SPA operativas, componentes de seguridad (`ForcePasswordChangeModal`, `QuickSetupWizard`) y matriz RBAC de 5 roles. | `especialista-fullstack` |
 | **06** | [`06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md`](./06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md) | **Portal Empresarial ACME Corp, Copiloto BI (Gemini 3.8 Flash) y CLI Agent Demo** | Arquitectura del portal satélite `:9000`, base SQLite de 7 tablas, auto-onboarding del CEO Lucas Duck, integración LLM Google Gemini 3.8 Flash con `thoughtSignature`, catálogo de 8 escenarios y uso de `run_demo.py`. | `especialista-fullstack` |
+| **07** | [`07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md`](./07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md) | **Presentación Oficial en Canva (12 Slides) y Guion de Defensa Técnica (~15 min)** | Metadatos y enlace oficial a la presentación Canva (`DAHbl5SRXbM`), desglose de las 12 diapositivas técnicas, guion de oratoria cronometrado distribuido entre los 4 integrantes SCRUM y checklist previa de defensa. | `arquitecto-ssot` |
 | **—** | [`INDICE_MAESTRO.md`](./INDICE_MAESTRO.md) | **Índice Maestro, Itinerarios de Lectura y Matriz de Trazabilidad Cruzada** | Este documento: taxonomía, recorridos recomendados según perfil evaluador, matriz de trazabilidad código vs. documentación y verificación de cero regresiones. | `verificador-qa` |
 
 ---
@@ -55,9 +56,10 @@ flowchart TD
 
 ### Itinerario 1: Defensa de Cátedra y Evaluación de Arquitectura Global
 1. [`README.md`](./README.md): Comprender el problema de gobernanza en agentes autónomos, la separación entre Control Plane y Data Plane, y el cumplimiento de las guías OWASP 2026.
-2. [`DECISIONS.md`](./DECISIONS.md): Revisar los 9 Architecture Decision Records (ADRs) para entender por qué se tomaron decisiones de asincronía, multi-tenancy lógico, sesiones efímeras y fallbacks en LLMs.
-3. [`00_INFORME_DISCREPANCIAS_DOC_VS_CODIGO_REAL.md`](./00_INFORME_DISCREPANCIAS_DOC_VS_CODIGO_REAL.md): Analizar la madurez del equipo para auditar desvíos históricos y certificar la fidelidad del software frente a las especificaciones.
-4. [`04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md`](./04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md): Evaluar los diagramas de secuencia e interactuar con el banco de preguntas típicas de defensa de cátedra.
+2. [`07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md`](./07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md): Abrir la [Presentación Oficial en Canva](https://canva.link/59p7pjdurhxr1vk) (`DAHbl5SRXbM`) de 12 diapositivas y seguir el guion de oratoria estructurado para los 4 integrantes SCRUM (~15 min).
+3. [`DECISIONS.md`](./DECISIONS.md): Revisar los 9 Architecture Decision Records (ADRs) para entender por qué se tomaron decisiones de asincronía, multi-tenancy lógico, sesiones efímeras y fallbacks en LLMs.
+4. [`00_INFORME_DISCREPANCIAS_DOC_VS_CODIGO_REAL.md`](./00_INFORME_DISCREPANCIAS_DOC_VS_CODIGO_REAL.md): Analizar la madurez del equipo para auditar desvíos históricos y certificar la fidelidad del software frente a las especificaciones.
+5. [`04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md`](./04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md): Evaluar los diagramas de secuencia e interactuar con el banco de preguntas típicas de defensa de cátedra.
 
 ### Itinerario 2: Persistencia, Modelado Relacional y Normalización
 1. [`01_MER_RELACIONAL_Y_FISICO_DB.md`](./01_MER_RELACIONAL_Y_FISICO_DB.md): Inspeccionar las 13 tablas en PostgreSQL 16 (puerto 5433), tipos de datos nativos, claves primarias UUID con `gen_random_uuid()`, columnas JSONB indexadas con GIN, y la secuencia completa de las 6 migraciones Alembic (`001` a `006`).
@@ -98,6 +100,7 @@ A continuación se detalla la matriz que comprueba de manera inequívoca que cad
 | `acme-corp/agent/gemini_client.py` | Google Gemini **`gemini-3.8-flash`** con `thinkingLevel: "low"`, preservación estricta de `thoughtSignature` en function calling, y fallback a `gemini-3.5-flash-lite`. | [`06_PORTAL...`](./06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md)<br>[`DECISIONS.md`](./DECISIONS.md) | Capítulo 3: Asistente Consultante BI.<br>ADR-009: Motor de LLM Google Gemini. |
 | `agent-demo/run_demo.py` | Cliente de prueba por consola con modos `--all`, `--scenario 1..4` y menú interactivo vía `GET /gateway/context`. | [`06_PORTAL...`](./06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md)<br>[`04_SECUENCIA...`](./04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO.md) | Capítulo 4: Guía del CLI Agent Demo.<br>Capítulo 1: Secuencias Canónicas. |
 | `start_all.bat` / `scripts/start-all.ps1` | Arranque limpio del stack abriendo frontend en `#auth`. Siembra demo solo si se pasa explícitamente `-SeedAcme` o `-Reset`. | [`README.md`](./README.md)<br>[`05_MANUAL...`](./05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES.md) | Sección 5: Puesta en Marcha.<br>Capítulo 5: Credenciales y Modos de Arranque. |
+| Presentación Oficial Canva | Diapositivas oficiales 16:9 de defensa académica ([`https://canva.link/59p7pjdurhxr1vk`](https://canva.link/59p7pjdurhxr1vk), ID: `DAHbl5SRXbM`). | [`07_PRESENTACION...`](./07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md) | Capítulo 1: Ficha Técnica Canva.<br>Capítulo 3: Guion de Oratoria SCRUM. |
 
 ---
 

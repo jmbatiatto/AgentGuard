@@ -1368,15 +1368,21 @@
     "semantic_hash": ""
   },
   "documentaci\u00f3n final/INDICE_MAESTRO.md": {
-    "mtime": 1794967372.6108942,
-    "seen": 1794967533.309979,
-    "ast_hash": "12dd690805705a5907797d0e9614bf13",
+    "mtime": 1795307552.9528406,
+    "seen": 1795307624.4561484,
+    "ast_hash": "ce5353a881a9b005e27162f7c5906803",
     "semantic_hash": ""
   },
   "documentaci\u00f3n final/README.md": {
-    "mtime": 1794967433.2545214,
-    "seen": 1794967533.309979,
-    "ast_hash": "a2c188c0eae83a4e5189d0b9e06485f5",
+    "mtime": 1795307422.5610332,
+    "seen": 1795307624.4561484,
+    "ast_hash": "835e4c301a05f37c2c3d2eb98c6712dc",
+    "semantic_hash": ""
+  },
+  "documentaci\u00f3n final/07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md": {
+    "mtime": 1795307405.263799,
+    "seen": 1795307624.4561484,
+    "ast_hash": "7fb5009ce050c3daeececb82be970fd8",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {
