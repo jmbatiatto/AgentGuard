@@ -605,58 +605,16 @@
     "ast_hash": "70c7a2a351a3f8f42a1129611164acc9",
     "semantic_hash": ""
   },
-  "DECISIONS.md": {
-    "mtime": 1794945974.4701235,
-    "seen": 1794966901.2029395,
-    "ast_hash": "285a921658cc33ac8b830082cb8974ee",
-    "semantic_hash": ""
-  },
   "README.md": {
-    "mtime": 1794945974.47571,
-    "seen": 1794966901.2029395,
-    "ast_hash": "6b20ddf1f978cca662ad79d243b69f82",
+    "mtime": 1795539946.0311382,
+    "seen": 1795540075.9869096,
+    "ast_hash": "c18904b8a6aa9d53875687477b43bbb5",
     "semantic_hash": ""
   },
   "agent-demo/README.md": {
     "mtime": 1794945974.5499818,
     "seen": 1794966901.2029395,
     "ast_hash": "8dcb4a74a1e409a84a1adb2d91b2292f",
-    "semantic_hash": ""
-  },
-  "agentguard_arquitectura_runtime.md": {
-    "mtime": 1794945974.561336,
-    "seen": 1794966901.2029395,
-    "ast_hash": "b3d689a2ea887e83ed3f90a42b56e64a",
-    "semantic_hash": ""
-  },
-  "agentguard_casos_de_uso.md": {
-    "mtime": 1791481626.7861307,
-    "seen": 1792682881.678428,
-    "ast_hash": "b67426719f61afdc900a45ac21d38b38",
-    "semantic_hash": ""
-  },
-  "agentguard_er_conceptual_chen.md": {
-    "mtime": 1791481452.7574177,
-    "seen": 1792682881.678428,
-    "ast_hash": "42f952404229ba85e4453eb0f5fe1229",
-    "semantic_hash": ""
-  },
-  "agentguard_estados_ciclo_vida.md": {
-    "mtime": 1794945974.5703568,
-    "seen": 1794966901.2029395,
-    "ast_hash": "6bae0859f30f8dbc54c23bf298d5671b",
-    "semantic_hash": ""
-  },
-  "agentguard_mer_relacional.md": {
-    "mtime": 1794945974.5703568,
-    "seen": 1794966901.2029395,
-    "ast_hash": "e2a6b0a833c9c11911134789ab21a3ac",
-    "semantic_hash": ""
-  },
-  "agentguard_secuencia_demo.md": {
-    "mtime": 1794945974.583487,
-    "seen": 1794966901.2029395,
-    "ast_hash": "9fbe96d9ce1d9c3ec9f59db27bac8553",
     "semantic_hash": ""
   },
   "backend/README.md": {
@@ -1187,12 +1145,6 @@
     "ast_hash": "7899a83bb575fccf58f3589ab7350429",
     "semantic_hash": ""
   },
-  "agentguard_credenciales_demo.md": {
-    "mtime": 1794945974.5643976,
-    "seen": 1794966901.2029395,
-    "ast_hash": "97b0fad847719e4c9f6904eb52bce21c",
-    "semantic_hash": ""
-  },
   "backend/tests/test_gateway_context.py": {
     "mtime": 1794945974.9516528,
     "seen": 1794966901.200924,
@@ -1320,9 +1272,9 @@
     "semantic_hash": ""
   },
   "documentaci\u00f3n final/00_INFORME_DISCREPANCIAS_DOC_VS_CODIGO_REAL.md": {
-    "mtime": 1794965548.4890723,
-    "seen": 1794966901.2029395,
-    "ast_hash": "8ebc782fad9d14a150450721e8713c54",
+    "mtime": 1795539879.8007703,
+    "seen": 1795540075.9869096,
+    "ast_hash": "65fa565000ec4960c0edb35380778d04",
     "semantic_hash": ""
   },
   "documentaci\u00f3n final/01_MER_RELACIONAL_Y_FISICO_DB.md": {
@@ -1374,9 +1326,9 @@
     "semantic_hash": ""
   },
   "documentaci\u00f3n final/README.md": {
-    "mtime": 1795307422.5610332,
-    "seen": 1795307624.4561484,
-    "ast_hash": "835e4c301a05f37c2c3d2eb98c6712dc",
+    "mtime": 1795539897.0588653,
+    "seen": 1795540075.9869096,
+    "ast_hash": "9c740ada2522dd4a476750f03d7ab932",
     "semantic_hash": ""
   },
   "documentaci\u00f3n final/07_PRESENTACION_CANVA_Y_GUION_DEFENSA.md": {

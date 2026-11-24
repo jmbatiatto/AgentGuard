@@ -310,8 +310,7 @@ AgentGuard/
 │   │   ├── components/                       # Layout, Sidebar, Header, QuickSetupWizard, ForcePasswordChangeModal, ResetDemoModal y modales CRUD
 │   │   ├── constants/                        # Diccionario integral en español (labels.ts) y estilos de roles/estados
 │   │   ├── context/                          # AuthContext (sessionStorage + boot_id), ToastContext y ThemeContext
-│   │   ├── hooks/                            # Hook reactivo useAgentGuardWebSocket.ts
-│   │   ├── services/                         # Cliente HTTP tipado api.ts (propagación estricta de ApiError)
+│   │   ├── services/                         # Cliente HTTP tipado api.ts (propagación estricta de ApiError) y hook useAgentGuardWebSocket.ts
 │   │   ├── types/                            # Contratos TypeScript de dominio (domain.ts)
 │   │   └── views/                            # 9 vistas: AuthView, OverviewView, AgentsView, ToolsView, PoliciesView,
 │   │                                         #   ApprovalsView, TracesView, PlaygroundView y SettingsView
