@@ -59,3 +59,11 @@ graphify-out/20*/
 
 # Teamwork agent runs & ephemeral logs
 .agents/teamwork/
+
+# Docs Portal (VitePress ephemeral copies & builds)
+docs-portal/src/.vitepress/dist/
+docs-portal/src/.vitepress/cache/
+docs-portal/src/volumenes/
+docs-portal/src/public/diagramas/
+docs-portal/src/public/diagramas-hd/
+

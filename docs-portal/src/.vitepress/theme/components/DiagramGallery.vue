@@ -1,0 +1,987 @@
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { withBase } from 'vitepress'
+
+export interface DiagramManifestItem {
+  index?: number
+  id: string
+  title: string
+  category: string
+  diagramType?: string
+  docFile?: string
+  docSlug: string
+  mermaidCode?: string
+  svgFile: string
+  pngDarkFile: string
+  pngLightFile: string
+  width?: number
+  height?: number
+}
+
+const CATEGORIES = [
+  'Todos',
+  'Base de Datos y Chen',
+  'Runtime PEP/PDP y Secuencias',
+  'Frontend y RBAC',
+  'ACME Corp y Gemini',
+  'Navegación'
+] as const
+
+type CategoryFilter = (typeof CATEGORIES)[number]
+
+const isMounted = ref(false)
+const isLoading = ref(true)
+const loadError = ref<string | null>(null)
+const generatedAt = ref<string | null>(null)
+const items = ref<DiagramManifestItem[]>([])
+
+const searchQuery = ref('')
+const activeCategory = ref<CategoryFilter>('Todos')
+
+// Estado del Modal Proyector Interactivo
+const activeItem = ref<DiagramManifestItem | null>(null)
+const projectorBgMode = ref<'dark' | 'light'>('dark')
+const modalZoom = ref(1)
+const MIN_MODAL_ZOOM = 0.25
+const MAX_MODAL_ZOOM = 8
+const panX = ref(0)
+const panY = ref(0)
+const isDragging = ref(false)
+const dragStartX = ref(0)
+const dragStartY = ref(0)
+const dragOriginPanX = ref(0)
+const dragOriginPanY = ref(0)
+const copiedCodeId = ref<string | null>(null)
+
+function stripFolderPrefix(filePath: string | undefined, folder: string): string {
+  if (!filePath) return ''
+  return filePath
+    .trim()
+    .replace(/^\/+/, '')
+    .replace(/^diagramas-hd\//i, '')
+    .replace(new RegExp(`^${folder}/`, 'i'), '')
+}
+
+function getSvgUrl(item: DiagramManifestItem): string {
+  const clean = stripFolderPrefix(item.svgFile, 'svg')
+  return clean ? withBase(`/diagramas-hd/svg/${clean}`) : ''
+}
+
+function getPngDarkUrl(item: DiagramManifestItem): string {
+  const clean = stripFolderPrefix(item.pngDarkFile, 'png-4k-dark')
+  return clean ? withBase(`/diagramas-hd/png-4k-dark/${clean}`) : ''
+}
+
+function getPngLightUrl(item: DiagramManifestItem): string {
+  const clean = stripFolderPrefix(item.pngLightFile, 'png-4k-light')
+  return clean ? withBase(`/diagramas-hd/png-4k-light/${clean}`) : ''
+}
+
+function getDocUrl(item: DiagramManifestItem): string {
+  const rawSlug = (item.docSlug || item.docFile || 'INDICE_MAESTRO')
+    .trim()
+    .replace(/^\/+/, '')
+    .replace(/^volumenes\//i, '')
+    .replace(/\.md$/i, '')
+  return withBase(`/volumenes/${rawSlug}`)
+}
+
+function getDownloadFilename(fileValue: string | undefined, suffix: string): string {
+  if (!fileValue) return `agentguard-diagrama.${suffix}`
+  const parts = fileValue.split('/')
+  const baseName = parts[parts.length - 1] || `agentguard-diagrama.${suffix}`
+  return baseName
+}
+
+function formatDiagramType(rawType?: string): string {
+  if (!rawType) return 'Mermaid'
+  const lower = rawType.toLowerCase()
+  if (lower.includes('sequence')) return 'Secuencia'
+  if (lower.includes('er')) return 'MER Físico'
+  if (lower.includes('state')) return 'Estados'
+  if (lower.includes('class')) return 'Clases'
+  if (lower.includes('flow') || lower.includes('graph')) return 'Arquitectura / Flujo'
+  return rawType
+}
+
+function formatDocBadge(item: DiagramManifestItem): string {
+  const slug = (item.docSlug || item.docFile || '').replace(/\.md$/i, '')
+  if (!slug) return 'Volumen Oficial'
+  const match = slug.match(/^(\d{2})_/)
+  if (match) return `Vol. ${match[1]}`
+  if (slug === 'README') return 'Guía README'
+  if (slug === 'INDICE_MAESTRO') return 'Índice Maestro'
+  if (slug === 'DECISIONS') return 'ADRs'
+  return slug
+}
+
+function formatIndexBadge(item: DiagramManifestItem, fallbackIdx: number): string {
+  const num = typeof item.index === 'number' ? item.index : fallbackIdx + 1
+  return `#${String(num).padStart(2, '0')}`
+}
+
+const categoryCounts = computed<Record<CategoryFilter, number>>(() => {
+  const counts: Record<CategoryFilter, number> = {
+    Todos: items.value.length,
+    'Base de Datos y Chen': 0,
+    'Runtime PEP/PDP y Secuencias': 0,
+    'Frontend y RBAC': 0,
+    'ACME Corp y Gemini': 0,
+    Navegación: 0
+  }
+  for (const item of items.value) {
+    const cat = item.category as CategoryFilter
+    if (cat in counts && cat !== 'Todos') {
+      counts[cat] += 1
+    }
+  }
+  return counts
+})
+
+const filteredItems = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  return items.value.filter((item) => {
+    const matchesCategory =
+      activeCategory.value === 'Todos' || item.category === activeCategory.value
+    if (!matchesCategory) return false
+    if (!q) return true
+
+    const haystack = [
+      item.title,
+      item.id,
+      item.svgFile,
+      item.docFile,
+      item.docSlug,
+      item.category,
+      item.diagramType
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+
+    return haystack.includes(q)
+  })
+})
+
+const modalZoomPercent = computed(() => `${Math.round(modalZoom.value * 100)}%`)
+
+function clamp(val: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Number(val.toFixed(3))))
+}
+
+async function fetchManifest() {
+  isLoading.value = true
+  loadError.value = null
+
+  try {
+    const response = await fetch(withBase('/diagramas-hd/manifest.json'), {
+      headers: { Accept: 'application/json' }
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        response.status === 404
+          ? 'El manifiesto /diagramas-hd/manifest.json aún no fue sincronizado en este entorno.'
+          : `Error HTTP ${response.status} al cargar el catálogo de diagramas.`
+      )
+    }
+
+    const payload = await response.json()
+    const extracted: DiagramManifestItem[] = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.diagrams)
+        ? payload.diagrams
+        : Array.isArray(payload?.items)
+          ? payload.items
+          : []
+
+    items.value = extracted
+    generatedAt.value = typeof payload?.generatedAt === 'string' ? payload.generatedAt : null
+  } catch (err) {
+    loadError.value =
+      err instanceof Error ? err.message : 'No se pudo cargar el catálogo de diagramas HD.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function openProjector(item: DiagramManifestItem) {
+  if (!isMounted.value) return
+  activeItem.value = item
+  projectorBgMode.value = 'dark'
+  resetModalView()
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = 'hidden'
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', handleKeydown)
+  }
+}
+
+function closeProjector() {
+  activeItem.value = null
+  isDragging.value = false
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = ''
+  }
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleKeydown)
+  }
+}
+
+function zoomModalOut() {
+  modalZoom.value = clamp(modalZoom.value / 1.25, MIN_MODAL_ZOOM, MAX_MODAL_ZOOM)
+}
+
+function zoomModalIn() {
+  modalZoom.value = clamp(modalZoom.value * 1.25, MIN_MODAL_ZOOM, MAX_MODAL_ZOOM)
+}
+
+function resetModalView() {
+  modalZoom.value = 1
+  panX.value = 0
+  panY.value = 0
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (!activeItem.value) return
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeProjector()
+  } else if (event.key === '+' || event.key === '=') {
+    event.preventDefault()
+    zoomModalIn()
+  } else if (event.key === '-') {
+    event.preventDefault()
+    zoomModalOut()
+  } else if (event.key === '0') {
+    event.preventDefault()
+    resetModalView()
+  }
+}
+
+function onModalWheel(event: WheelEvent) {
+  const factor = event.deltaY < 0 ? 1.16 : 1 / 1.16
+  const nextZoom = clamp(modalZoom.value * factor, MIN_MODAL_ZOOM, MAX_MODAL_ZOOM)
+  if (nextZoom === modalZoom.value) return
+
+  const stage = event.currentTarget as HTMLElement | null
+  if (stage) {
+    const rect = stage.getBoundingClientRect()
+    const cursorOffsetX = event.clientX - (rect.left + rect.width / 2)
+    const cursorOffsetY = event.clientY - (rect.top + rect.height / 2)
+    const scaleRatio = nextZoom / modalZoom.value
+    panX.value = cursorOffsetX - (cursorOffsetX - panX.value) * scaleRatio
+    panY.value = cursorOffsetY - (cursorOffsetY - panY.value) * scaleRatio
+  }
+
+  modalZoom.value = nextZoom
+}
+
+function onDragStart(event: MouseEvent) {
+  if (event.button !== 0) return
+  isDragging.value = true
+  dragStartX.value = event.clientX
+  dragStartY.value = event.clientY
+  dragOriginPanX.value = panX.value
+  dragOriginPanY.value = panY.value
+}
+
+function onDragMove(event: MouseEvent) {
+  if (!isDragging.value) return
+  panX.value = dragOriginPanX.value + (event.clientX - dragStartX.value)
+  panY.value = dragOriginPanY.value + (event.clientY - dragStartY.value)
+}
+
+function onDragEnd() {
+  isDragging.value = false
+}
+
+async function copyMermaidCode(item: DiagramManifestItem) {
+  if (!item.mermaidCode || typeof navigator === 'undefined' || !navigator.clipboard) return
+  try {
+    await navigator.clipboard.writeText(item.mermaidCode)
+    copiedCodeId.value = item.id
+    setTimeout(() => {
+      if (copiedCodeId.value === item.id) {
+        copiedCodeId.value = null
+      }
+    }, 2000)
+  } catch {
+    // Ignorar silenciosamente si el navegador bloquea el portapapeles
+  }
+}
+
+onMounted(() => {
+  isMounted.value = true
+  void fetchManifest()
+})
+
+onBeforeUnmount(() => {
+  if (activeItem.value) {
+    closeProjector()
+  }
+})
+</script>
+
+<template>
+  <section class="ag-gallery-root" aria-label="Galería Interactiva de Diagramas 4K y SVG">
+    <!-- Barra de búsqueda instantánea y filtros por categoría -->
+    <div class="ag-gallery-controls ag-surface-card">
+      <div class="ag-gallery-search-row">
+        <div class="ag-search-input-wrap">
+          <span class="ag-search-icon" aria-hidden="true">🔎</span>
+          <input
+            v-model="searchQuery"
+            type="search"
+            class="ag-search-input"
+            placeholder="Buscar diagrama por título, volumen, tipo (Chen, PEP, Secuencia) o archivo..."
+            aria-label="Buscar diagramas por título o nombre de archivo"
+          />
+          <button
+            v-if="searchQuery"
+            type="button"
+            class="ag-clear-btn"
+            title="Limpiar búsqueda"
+            @click="searchQuery = ''"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="ag-gallery-stats" aria-live="polite">
+          <span class="ag-badge ag-badge--emerald">
+            {{ filteredItems.length }} de {{ items.length }} diagramas
+          </span>
+          <span v-if="generatedAt" class="ag-badge ag-badge--neutral">
+            Pack 4K sincronizado
+          </span>
+        </div>
+      </div>
+
+      <div class="ag-category-pills" role="tablist" aria-label="Filtrar diagramas por categoría">
+        <button
+          v-for="cat in CATEGORIES"
+          :key="cat"
+          type="button"
+          role="tab"
+          class="ag-pill-btn"
+          :class="{ 'is-active': activeCategory === cat }"
+          :aria-selected="activeCategory === cat"
+          @click="activeCategory = cat"
+        >
+          <span>{{ cat }}</span>
+          <span class="ag-pill-count">{{ categoryCounts[cat] }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado de carga (SSR Safe) -->
+    <div v-if="!isMounted || isLoading" class="ag-gallery-loading-grid" aria-busy="true">
+      <div v-for="n in 6" :key="n" class="ag-skeleton-card">
+        <div class="ag-skeleton-thumb" />
+        <div class="ag-skeleton-line ag-skeleton-line--lg" />
+        <div class="ag-skeleton-line ag-skeleton-line--sm" />
+      </div>
+    </div>
+
+    <!-- Estado de error / aún no exportado -->
+    <div v-else-if="loadError" class="ag-gallery-empty ag-surface-card" role="status">
+      <div class="ag-empty-header">
+        <span class="ag-badge ag-badge--amber">Diagnóstico de Assets HD</span>
+        <h3>Catálogo 4K pendiente de sincronización</h3>
+      </div>
+      <p>{{ loadError }}</p>
+      <p class="ag-empty-cmd">
+        Ejecutá <code>pnpm run docs:diagrams</code> y luego
+        <code>pnpm --dir docs-portal run prepare-content</code> desde la raíz del repositorio para
+        generar los 27 diagramas en SVG vectorial y PNG 4K.
+      </p>
+      <button type="button" class="ag-btn ag-btn--primary" @click="fetchManifest">
+        ↻ Reintentar carga
+      </button>
+    </div>
+
+    <!-- Sin coincidencias en búsqueda -->
+    <div
+      v-else-if="filteredItems.length === 0"
+      class="ag-gallery-empty ag-surface-card"
+      role="status"
+    >
+      <h3>No se encontraron diagramas para ese criterio</h3>
+      <p>
+        Probá con otro término de búsqueda o restablecé el filtro de categoría a
+        <strong>Todos</strong>.
+      </p>
+      <button
+        type="button"
+        class="ag-btn ag-btn--primary"
+        @click="
+          searchQuery = '';
+          activeCategory = 'Todos'
+        "
+      >
+        Mostrar todos los diagramas ({{ items.length }})
+      </button>
+    </div>
+
+    <!-- Grilla de Tarjetas HD -->
+    <div v-else class="ag-gallery-grid">
+      <article v-for="(item, idx) in filteredItems" :key="item.id" class="ag-diagram-card">
+        <!-- Vista previa nítida -->
+        <div
+          class="ag-card-preview"
+          role="button"
+          tabindex="0"
+          :aria-label="`Abrir proyector interactivo para ${item.title}`"
+          @click="openProjector(item)"
+          @keydown.enter.prevent="openProjector(item)"
+          @keydown.space.prevent="openProjector(item)"
+        >
+          <img
+            :src="getSvgUrl(item)"
+            :alt="item.title"
+            loading="lazy"
+            decoding="async"
+            class="ag-card-img"
+          />
+          <div class="ag-card-overlay-badge">
+            <span>⛶ Ampliar en Proyector</span>
+          </div>
+        </div>
+
+        <!-- Metadatos y badges -->
+        <div class="ag-card-body">
+          <div class="ag-card-badges">
+            <span class="ag-badge ag-badge--emerald">{{ formatIndexBadge(item, idx) }}</span>
+            <span class="ag-badge ag-badge--cyan">{{ formatDocBadge(item) }}</span>
+            <span class="ag-badge ag-badge--neutral">{{
+              formatDiagramType(item.diagramType)
+            }}</span>
+            <span v-if="item.width && item.height" class="ag-badge ag-badge--neutral">
+              {{ item.width }}×{{ item.height }}
+            </span>
+          </div>
+
+          <h3 class="ag-card-title">{{ item.title }}</h3>
+          <p class="ag-card-category">{{ item.category }}</p>
+
+          <!-- Acciones primarias: Proyector Interactivo + Volumen SSOT -->
+          <div class="ag-card-primary-actions">
+            <button
+              type="button"
+              class="ag-btn ag-btn--primary"
+              @click="openProjector(item)"
+            >
+              ⛶ Proyector Interactivo
+            </button>
+            <a :href="getDocUrl(item)" class="ag-btn">
+              📖 Ir al Volumen
+            </a>
+            <button
+              v-if="item.mermaidCode"
+              type="button"
+              class="ag-btn"
+              title="Copiar fuente Mermaid"
+              @click="copyMermaidCode(item)"
+            >
+              {{ copiedCodeId === item.id ? '✓ Copiado' : 'Mermaid' }}
+            </button>
+          </div>
+
+          <!-- Descargas directas para Canva y Defensa -->
+          <div class="ag-card-downloads">
+            <span class="ag-downloads-label">Descargas HD directas:</span>
+            <div class="ag-downloads-buttons">
+              <a
+                :href="getSvgUrl(item)"
+                :download="getDownloadFilename(item.svgFile, 'svg')"
+                class="ag-btn ag-btn--cyan"
+                title="Descargar gráfico vectorial escalable infinito"
+              >
+                ⬇ SVG Vectorial
+              </a>
+              <a
+                :href="getPngDarkUrl(item)"
+                :download="getDownloadFilename(item.pngDarkFile, 'png')"
+                class="ag-btn"
+                title="Descargar captura PNG 4K con tema oscuro oficial para diapositivas Canva"
+              >
+                ⬇ PNG 4K Oscuro (Canva)
+              </a>
+              <a
+                :href="getPngLightUrl(item)"
+                :download="getDownloadFilename(item.pngLightFile, 'png')"
+                class="ag-btn"
+                title="Descargar captura PNG 4K con fondo blanco para informes impresos"
+              >
+                ⬇ PNG 4K Claro
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Modal Proyector a Pantalla Completa para Inspección 4K / Vectorial -->
+    <Teleport v-if="isMounted && activeItem" to="body">
+      <div
+        class="ag-projector-overlay"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="`Proyector Interactivo: ${activeItem.title}`"
+      >
+        <header class="ag-projector-header">
+          <div class="ag-projector-title">
+            <span class="ag-badge ag-badge--emerald">{{ formatDocBadge(activeItem) }}</span>
+            <span>{{ activeItem.title }}</span>
+            <span class="ag-projector-hint">
+              Rueda: Zoom (0.25x–8x) · Arrastrar: Mover · ESC: Cerrar
+            </span>
+          </div>
+
+          <div class="ag-toolbar-group">
+            <button
+              type="button"
+              class="ag-btn"
+              :disabled="modalZoom <= MIN_MODAL_ZOOM"
+              @click="zoomModalOut"
+            >
+              -
+            </button>
+            <span class="ag-zoom-chip">{{ modalZoomPercent }}</span>
+            <button
+              type="button"
+              class="ag-btn"
+              :disabled="modalZoom >= MAX_MODAL_ZOOM"
+              @click="zoomModalIn"
+            >
+              +
+            </button>
+            <button type="button" class="ag-btn" @click="resetModalView">Restablecer</button>
+            <button
+              type="button"
+              class="ag-btn"
+              @click="projectorBgMode = projectorBgMode === 'dark' ? 'light' : 'dark'"
+            >
+              {{ projectorBgMode === 'dark' ? '☀ Lienzo Claro' : '🌙 Lienzo Oscuro' }}
+            </button>
+            <a
+              :href="getSvgUrl(activeItem)"
+              :download="getDownloadFilename(activeItem.svgFile, 'svg')"
+              class="ag-btn ag-btn--cyan"
+            >
+              ⬇ SVG
+            </a>
+            <a
+              :href="getPngDarkUrl(activeItem)"
+              :download="getDownloadFilename(activeItem.pngDarkFile, 'png')"
+              class="ag-btn"
+            >
+              ⬇ PNG 4K (Canva)
+            </a>
+            <button type="button" class="ag-btn ag-btn--danger" @click="closeProjector">
+              ✕ Cerrar
+            </button>
+          </div>
+        </header>
+
+        <div
+          class="ag-projector-stage"
+          :class="{
+            'is-dragging': isDragging,
+            'ag-projector-stage--light': projectorBgMode === 'light'
+          }"
+          @wheel.prevent="onModalWheel"
+          @mousedown="onDragStart"
+          @mousemove="onDragMove"
+          @mouseup="onDragEnd"
+          @mouseleave="onDragEnd"
+        >
+          <div
+            class="ag-projector-canvas"
+            :style="{
+              transform: `translate3d(${panX}px, ${panY}px, 0) scale(${modalZoom})`
+            }"
+          >
+            <img
+              :src="projectorBgMode === 'light' ? getPngLightUrl(activeItem) : getSvgUrl(activeItem)"
+              :alt="activeItem.title"
+              class="ag-projector-img"
+              draggable="false"
+            />
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </section>
+</template>
+
+<style scoped>
+.ag-gallery-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 1rem 0 2.5rem;
+}
+
+.ag-gallery-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ag-gallery-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.ag-search-input-wrap {
+  position: relative;
+  flex: 1 1 340px;
+  display: flex;
+  align-items: center;
+}
+
+.ag-search-icon {
+  position: absolute;
+  left: 0.9rem;
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.ag-search-input {
+  width: 100%;
+  padding: 0.68rem 2.4rem 0.68rem 2.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--ag-border-strong);
+  background: var(--ag-surface-elevated);
+  color: var(--vp-c-text-1);
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.ag-search-input:focus {
+  outline: none;
+  border-color: var(--ag-emerald);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.ag-clear-btn {
+  position: absolute;
+  right: 0.65rem;
+  border: none;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+}
+
+.ag-clear-btn:hover {
+  background: var(--ag-surface-subtle);
+  color: var(--vp-c-text-1);
+}
+
+.ag-gallery-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ag-category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ag-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--vp-c-text-2);
+  background: var(--ag-surface-elevated);
+  border: 1px solid var(--ag-border);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.ag-pill-btn:hover {
+  border-color: var(--ag-border-strong);
+  color: var(--vp-c-text-1);
+}
+
+.ag-pill-btn.is-active {
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff;
+}
+
+.dark .ag-pill-btn.is-active {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+
+.ag-pill-count {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.72rem;
+  padding: 0.08rem 0.42rem;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.dark .ag-pill-count {
+  background: rgba(11, 17, 32, 0.6);
+}
+
+.ag-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.35rem;
+}
+
+@media (max-width: 480px) {
+  .ag-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ag-diagram-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid var(--ag-border);
+  background: var(--ag-surface-card);
+  box-shadow: var(--ag-shadow-sm);
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ag-diagram-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--ag-border-accent);
+  box-shadow: var(--ag-shadow-md);
+}
+
+.ag-card-preview {
+  position: relative;
+  height: 230px;
+  padding: 0.85rem;
+  background-color: #0b1120;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+  background-size: 18px 18px;
+  border-bottom: 1px solid var(--ag-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.ag-card-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.22s ease;
+}
+
+.ag-card-preview:hover .ag-card-img {
+  transform: scale(1.04);
+}
+
+.ag-card-overlay-badge {
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0.65rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #6ee7b7;
+  font-size: 0.74rem;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.ag-card-preview:hover .ag-card-overlay-badge,
+.ag-card-preview:focus-visible .ag-card-overlay-badge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ag-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.05rem 1.15rem 1.2rem;
+  gap: 0.7rem;
+}
+
+.ag-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ag-card-title {
+  margin: 0 !important;
+  font-size: 1.02rem !important;
+  line-height: 1.38 !important;
+  font-weight: 700 !important;
+  color: var(--vp-c-text-1);
+  border: none !important;
+  padding: 0 !important;
+}
+
+.ag-card-category {
+  margin: 0 !important;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--vp-c-text-3);
+}
+
+.ag-card-primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: auto;
+  padding-top: 0.35rem;
+}
+
+.ag-card-downloads {
+  margin-top: 0.35rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--ag-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ag-downloads-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-3);
+}
+
+.ag-downloads-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ag-zoom-chip {
+  min-width: 3.4rem;
+  text-align: center;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.32rem 0.45rem;
+  border-radius: 7px;
+  background: #0b1120;
+  color: #6ee7b7;
+  border: 1px solid #334155;
+}
+
+.ag-projector-img {
+  max-width: min(90vw, 1760px);
+  max-height: 82vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.ag-gallery-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.ag-skeleton-card {
+  border-radius: 14px;
+  border: 1px solid var(--ag-border);
+  background: var(--ag-surface-card);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ag-skeleton-thumb {
+  height: 190px;
+  border-radius: 10px;
+  background: var(--ag-surface-subtle);
+  animation: ag-pulse 1.4s ease-in-out infinite;
+}
+
+.ag-skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  background: var(--ag-surface-subtle);
+  animation: ag-pulse 1.4s ease-in-out infinite;
+}
+
+.ag-skeleton-line--lg {
+  width: 82%;
+}
+
+.ag-skeleton-line--sm {
+  width: 48%;
+}
+
+@keyframes ag-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.ag-gallery-empty {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.ag-empty-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.ag-empty-header h3,
+.ag-gallery-empty h3 {
+  margin: 0 !important;
+}
+
+.ag-gallery-empty p {
+  margin: 0 !important;
+  color: var(--vp-c-text-2);
+}
+
+.ag-empty-cmd {
+  font-size: 0.88rem;
+}
+</style>

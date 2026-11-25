@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none" role="img" aria-label="AgentGuard - Escudo de Gobernanza Zero Trust para Agentes de IA">
+  <defs>
+    <linearGradient id="ag-shield-bg" x1="16" y1="8" x2="112" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="50%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#0B1120" />
+    </linearGradient>
+
+    <linearGradient id="ag-shield-border" x1="16" y1="8" x2="112" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="55%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+
+    <linearGradient id="ag-lock-fill" x1="40" y1="48" x2="88" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#0891B2" />
+    </linearGradient>
+
+    <radialGradient id="ag-core-glow" cx="50%" cy="52%" r="48%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.32" />
+      <stop offset="65%" stop-color="#06B6D4" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#0B1120" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Escudo exterior Zero Trust -->
+  <path
+    d="M64 8L110 25.5V60.5C110 89.8 90.4 111.4 64 120C37.6 111.4 18 89.8 18 60.5V25.5L64 8Z"
+    fill="url(#ag-shield-bg)"
+    stroke="url(#ag-shield-border)"
+    stroke-width="4"
+    stroke-linejoin="round"
+  />
+
+  <!-- Bisel interior y resplandor ambiental -->
+  <path
+    d="M64 16L102 30.6V59.8C102 84.4 85.8 103 64 110.8C42.2 103 26 84.4 26 59.8V30.6L64 16Z"
+    fill="url(#ag-core-glow)"
+    stroke="#38BDF8"
+    stroke-opacity="0.24"
+    stroke-width="1.5"
+    stroke-linejoin="round"
+  />
+
+  <!-- Red contextual 5D: trazas hacia nodos IA protegidos -->
+  <g stroke="url(#ag-shield-border)" stroke-width="2.2" stroke-linecap="round" opacity="0.85">
+    <path d="M44 64H33L29 58" />
+    <path d="M84 64H95L99 58" />
+    <path d="M46 82L36 90" />
+    <path d="M82 82L92 90" />
+    <path d="M64 28V21" />
+  </g>
+
+  <!-- Nodos periféricos IA -->
+  <circle cx="29" cy="56" r="3.2" fill="#06B6D4" />
+  <circle cx="99" cy="56" r="3.2" fill="#10B981" />
+  <circle cx="35" cy="91" r="3.2" fill="#34D399" />
+  <circle cx="93" cy="91" r="3.2" fill="#06B6D4" />
+  <circle cx="64" cy="20" r="3.2" fill="#10B981" />
+
+  <!-- Arco del candado PEP/PDP -->
+  <path
+    d="M49 56V44.5C49 36.2 55.7 29.5 64 29.5C72.3 29.5 79 36.2 79 44.5V56"
+    stroke="url(#ag-shield-border)"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+
+  <!-- Cuerpo del candado con núcleo IA protegido -->
+  <rect
+    x="41"
+    y="54"
+    width="46"
+    height="38"
+    rx="9"
+    fill="#0F172A"
+    stroke="url(#ag-lock-fill)"
+    stroke-width="3.5"
+  />
+
+  <!-- Anillo de verificación determinista y nodo central -->
+  <circle cx="64" cy="70" r="8.5" stroke="#06B6D4" stroke-opacity="0.45" stroke-width="1.8" />
+  <circle cx="64" cy="70" r="4.5" fill="#10B981" />
+  <path d="M64 74.5V83" stroke="#34D399" stroke-width="3.5" stroke-linecap="round" />
+</svg>

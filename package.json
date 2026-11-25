@@ -14,7 +14,11 @@
     "start": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1",
     "stop": "powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1",
     "start:all": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1",
-    "stop:all": "powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1"
+    "stop:all": "powershell -ExecutionPolicy Bypass -File scripts/stop-all.ps1",
+    "docs:dev": "pnpm --filter docs-portal dev",
+    "docs:build": "pnpm --filter docs-portal build",
+    "docs:preview": "pnpm --filter docs-portal preview",
+    "docs:diagrams": "pnpm --filter docs-portal export-diagrams"
   },
   "packageManager": "pnpm@12.10.1",
   "engines": {

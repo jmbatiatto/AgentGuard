@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793625776.7005303,
-    "seen": 1793649774.6039844,
-    "ast_hash": "16ff3806fc2a799b3da228064967edf4",
+    "mtime": 1795563188.370447,
+    "seen": 1795566205.1885173,
+    "ast_hash": "ea5aa30c2cb060b8847b9aff4e008aa3",
     "semantic_hash": ""
   },
   "scripts/convert_docs_to_docx.py": {
@@ -648,9 +648,9 @@
     "semantic_hash": ""
   },
   "pnpm-workspace.yaml": {
-    "mtime": 1791485526.8488317,
-    "seen": 1792682881.678428,
-    "ast_hash": "67c37f25b36cf5e85ec1750e98041322",
+    "mtime": 1795564475.0058284,
+    "seen": 1795566205.1885173,
+    "ast_hash": "32af559831ea42fbe08fc2f2f4b9afe9",
     "semantic_hash": ""
   },
   "frontend/public/favicon.svg": {
@@ -1272,8 +1272,8 @@
     "semantic_hash": ""
   },
   "documentaci\u00f3n final/00_INFORME_DISCREPANCIAS_DOC_VS_CODIGO_REAL.md": {
-    "mtime": 1795539879.8007703,
-    "seen": 1795540075.9869096,
+    "mtime": 1795540248.839868,
+    "seen": 1795566205.1885173,
     "ast_hash": "65fa565000ec4960c0edb35380778d04",
     "semantic_hash": ""
   },
@@ -1326,8 +1326,8 @@
     "semantic_hash": ""
   },
   "documentaci\u00f3n final/README.md": {
-    "mtime": 1795539897.0588653,
-    "seen": 1795540075.9869096,
+    "mtime": 1795540249.0243702,
+    "seen": 1795566205.1885173,
     "ast_hash": "9c740ada2522dd4a476750f03d7ab932",
     "semantic_hash": ""
   },
@@ -1337,10 +1337,592 @@
     "ast_hash": "7fb5009ce050c3daeececb82be970fd8",
     "semantic_hash": ""
   },
+  ".github/workflows/deploy-docs.yml": {
+    "mtime": 1795563197.7712765,
+    "seen": 1795566205.1885173,
+    "ast_hash": "552b0236538325798740772d40459d54",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/manifest.json": {
+    "mtime": 1795565419.37621,
+    "seen": 1795566205.1885173,
+    "ast_hash": "f5e6919ad14f80242213024fcff1cfc8",
+    "semantic_hash": ""
+  },
+  "docs-portal/package.json": {
+    "mtime": 1795563190.587092,
+    "seen": 1795566205.1885173,
+    "ast_hash": "6a472975b752f848fcb1c684fa788add",
+    "semantic_hash": ""
+  },
+  "docs-portal/scripts/export-diagrams.mjs": {
+    "mtime": 1795565177.7160952,
+    "seen": 1795566205.1885173,
+    "ast_hash": "876c4c37feb9be72f92d9bfb6123703c",
+    "semantic_hash": ""
+  },
+  "docs-portal/scripts/prepare-content.mjs": {
+    "mtime": 1795563191.7341294,
+    "seen": 1795566205.1885173,
+    "ast_hash": "ad96c8d9c8b93c7bc753b7b6230a1421",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/config.mts": {
+    "mtime": 1795563193.2645583,
+    "seen": 1795566205.1885173,
+    "ast_hash": "f212776e5a31584c55b324ed676abbc9",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/DiagramGallery.vue": {
+    "mtime": 1795564123.308904,
+    "seen": 1795566205.1885173,
+    "ast_hash": "a49135bdcfaefa1041b92462999cb916",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/MermaidDiagram.vue": {
+    "mtime": 1795565194.4892635,
+    "seen": 1795566205.1885173,
+    "ast_hash": "0cb88c5571db875a0037a322cf15a25a",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/QrShareCard.vue": {
+    "mtime": 1795564124.7086384,
+    "seen": 1795566205.1885173,
+    "ast_hash": "f7ad8e0e62e6ab099ecaac464e18b33a",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/index.ts": {
+    "mtime": 1795564118.345601,
+    "seen": 1795566205.1885173,
+    "ast_hash": "eb76f0863d9f585c817e54841e181a5e",
+    "semantic_hash": ""
+  },
+  "_DEEP_AUDIT_REPORT.md": {
+    "mtime": 1795562853.858332,
+    "seen": 1795566205.1885173,
+    "ast_hash": "929d102288f00e79765df37b8535b084",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/CATALOGO_DIAGRAMAS.md": {
+    "mtime": 1795565419.383052,
+    "seen": 1795566205.1885173,
+    "ast_hash": "a24968d0acace6af506f0bcdb5a26cc7",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/galeria-diagramas.md": {
+    "mtime": 1795564011.6619112,
+    "seen": 1795566205.1885173,
+    "ast_hash": "4c3a35a834ac521cb85ff792ca2bd6b0",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/index.md": {
+    "mtime": 1795564010.27588,
+    "seen": 1795566205.1885173,
+    "ast_hash": "e32fca49a2f08d2742cf120c5e5b60ac",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/modo-presentacion.md": {
+    "mtime": 1795564013.0644898,
+    "seen": 1795566205.1885173,
+    "ast_hash": "1a525dbb327cbcb68ccb6d13259eb7e0",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/01_los-4-escenarios-canonicos-de-seguridad-agent-demo-y.png": {
+    "mtime": 1795565294.86373,
+    "seen": 1795566205.1885173,
+    "ast_hash": "34289879c494e2a3eb8e4aa497cf2fd4",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/02_itinerarios-de-lectura-recomendados.png": {
+    "mtime": 1795565300.1547184,
+    "seen": 1795566205.1885173,
+    "ast_hash": "636526ee36f96281d81e360493852197",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/03_arquitectura-de-doble-persistencia.png": {
+    "mtime": 1795565303.1348066,
+    "seen": 1795566205.1885173,
+    "ast_hash": "6fb7df09582abe86c5a789c697a21f12",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/04_diagrama-mer-fisico-completo-postgresql-13-tablas.png": {
+    "mtime": 1795565318.687316,
+    "seen": 1795566205.1885173,
+    "ast_hash": "bbcf97540810f02d0caa481f052d0b7c",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/05_historial-completo-de-migraciones-alembic-001-006.png": {
+    "mtime": 1795565331.890473,
+    "seen": 1795566205.1885173,
+    "ast_hash": "d228cd8cf357bf004cc98bb6c4516aac",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/06_diagrama-mer-acme-corp-7-tablas.png": {
+    "mtime": 1795565335.768231,
+    "seen": 1795566205.1885173,
+    "ast_hash": "c170fc0dc18667afe727ef694f74489b",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/07_diagrama-conceptual-completo-dominio-agentguard-13.png": {
+    "mtime": 1795565344.650703,
+    "seen": 1795566205.1885173,
+    "ast_hash": "6c2f55e5cafd266fc35c82f537b4d5a0",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/08_diagrama-de-atributos-de-entidades-nucleo-notacion.png": {
+    "mtime": 1795565351.678946,
+    "seen": 1795566205.1885173,
+    "ast_hash": "109dd8d9fc00ff50846c58c278cc3e2c",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/09_vista-conceptual-resumida-dominio-erp-acme-corp-sqlite.png": {
+    "mtime": 1795565354.3350446,
+    "seen": 1795566205.1885173,
+    "ast_hash": "646fd285b65563cda29291e352bbc2f3",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/10_esquema-arquitectonico-en-capas-runtime-real.png": {
+    "mtime": 1795565359.9142227,
+    "seen": 1795566205.1885173,
+    "ast_hash": "c7aa50eb60028d4912473fb3c7638bee",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/11_diagrama-de-secuencia-los-4-escenarios-canonicos.png": {
+    "mtime": 1795565369.7337286,
+    "seen": 1795566205.1885173,
+    "ast_hash": "7ac4cb07ee7c99e6ad4a0ba5d2fbca96",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/12_diagrama-de-secuencia-flujo-estrella-consultante-bi.png": {
+    "mtime": 1795565379.4672816,
+    "seen": 1795566205.1885173,
+    "ast_hash": "c83fa0eec85f560befca887367cd4ee0",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/13_ciclo-de-vida-de-execution-status-executionstatus.png": {
+    "mtime": 1795565384.3377876,
+    "seen": 1795566205.1885173,
+    "ast_hash": "ac188343865fb6f4be900d9a406a975a",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/14_ciclo-de-vida-de-approval-status-approvalstatus.png": {
+    "mtime": 1795565385.4900336,
+    "seen": 1795566205.1885173,
+    "ast_hash": "0926ebf8c4697dce1b8c6d5c08a7d94b",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/15_ciclo-de-vida-de-alert-status-alertstatus.png": {
+    "mtime": 1795565386.5038142,
+    "seen": 1795566205.1885173,
+    "ast_hash": "e59e21d1962302621276d1085fe58833",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/16_diagrama-de-casos-de-uso-uml-mermaid.png": {
+    "mtime": 1795565389.3214943,
+    "seen": 1795566205.1885173,
+    "ast_hash": "8926822c3db69e9bf64da1c1eed73b82",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/17_ficha-tecnica-del-stack-frontend-y-arquitectura-de.png": {
+    "mtime": 1795565392.5507598,
+    "seen": 1795566205.1885173,
+    "ast_hash": "e2aa3269b00aadddb9dd852c8efe1c37",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/18_ciclo-de-autenticacion-hidratacion-y-proteccion-fail.png": {
+    "mtime": 1795565394.8376193,
+    "seen": 1795566205.1885173,
+    "ast_hash": "19cb9ce983e68ff1e664d9af8026a368",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/19_documentacion-exhaustiva-de-las-9-vistas-frontend.png": {
+    "mtime": 1795565397.3082619,
+    "seen": 1795566205.1885173,
+    "ast_hash": "4ed07fb527b28da2c3dfb0f49083c73b",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/20_playgroundview-tsx-evaluador-pdp-real-sobre-postgresql.png": {
+    "mtime": 1795565399.1774652,
+    "seen": 1795566205.1885173,
+    "ast_hash": "7d2c46494c412d393f1da1848b5f3a4b",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/21_comparativa-de-estado-semilla-base-vs-estado-ampliado.png": {
+    "mtime": 1795565402.2030632,
+    "seen": 1795566205.1885173,
+    "ast_hash": "56eea8e9af7e861b3be6236240167fa9",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/22_documentacion-integral-del-portal-empresarial-acme.png": {
+    "mtime": 1795565404.5677018,
+    "seen": 1795566205.1885173,
+    "ast_hash": "8e5484f4542869c35f28d6d7c43b3432",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/23_inspector-relacional-sqlite-en-vivo-acme-corp-server.png": {
+    "mtime": 1795565408.0695586,
+    "seen": 1795566205.1885173,
+    "ast_hash": "ef25363f85fe2293af310983d57da2bc",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/24_auto-onboarding-automatico-del-ceo-acme-corp-agent.png": {
+    "mtime": 1795565411.520498,
+    "seen": 1795566205.1885173,
+    "ast_hash": "cad00f3b256dfbfdb2066d479cb9f761",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/25_manejo-de-historial-multi-turno-y-preservacion-de.png": {
+    "mtime": 1795565414.8104823,
+    "seen": 1795566205.1885173,
+    "ast_hash": "cef346f359477342a153316d74a7d7f0",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/26_catalogo-completo-de-los-8-escenarios-demostrativos.png": {
+    "mtime": 1795565416.4083252,
+    "seen": 1795566205.1885173,
+    "ast_hash": "ccccfb585b7d6a78f28be093a033c625",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-dark/27_comparativa-exhaustiva-modo-protegido-vs-modo-directo.png": {
+    "mtime": 1795565417.8308954,
+    "seen": 1795566205.1885173,
+    "ast_hash": "a3304716d2a317fc4b00e998b69cc5c0",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/01_los-4-escenarios-canonicos-de-seguridad-agent-demo-y.png": {
+    "mtime": 1795565298.2955997,
+    "seen": 1795566205.1885173,
+    "ast_hash": "01bc1d855e4b6a1dcd67245eda3b29f9",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/02_itinerarios-de-lectura-recomendados.png": {
+    "mtime": 1795565302.4477873,
+    "seen": 1795566205.1885173,
+    "ast_hash": "c1d5cf33ad420a3b83f602d9ac873e3e",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/03_arquitectura-de-doble-persistencia.png": {
+    "mtime": 1795565303.8931983,
+    "seen": 1795566205.1885173,
+    "ast_hash": "92c626b23557ce6c8cb4a0a1c5e71522",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/04_diagrama-mer-fisico-completo-postgresql-13-tablas.png": {
+    "mtime": 1795565331.3438573,
+    "seen": 1795566205.1885173,
+    "ast_hash": "50bc5fbb3478fb336eee671edcf3b24b",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/05_historial-completo-de-migraciones-alembic-001-006.png": {
+    "mtime": 1795565332.2535956,
+    "seen": 1795566205.1885173,
+    "ast_hash": "ad7e84ff817aaddf2129eadff85aa01c",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/06_diagrama-mer-acme-corp-7-tablas.png": {
+    "mtime": 1795565339.115484,
+    "seen": 1795566205.1885173,
+    "ast_hash": "5df9093957f2dd5549131503864eebb7",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/07_diagrama-conceptual-completo-dominio-agentguard-13.png": {
+    "mtime": 1795565350.094064,
+    "seen": 1795566205.1885173,
+    "ast_hash": "4cc4e4ada934c912bbbf1e8f827b8cfb",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/08_diagrama-de-atributos-de-entidades-nucleo-notacion.png": {
+    "mtime": 1795565352.9180782,
+    "seen": 1795566205.1885173,
+    "ast_hash": "682f0e7c43155b1762565aabfc87b395",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/09_vista-conceptual-resumida-dominio-erp-acme-corp-sqlite.png": {
+    "mtime": 1795565355.1601558,
+    "seen": 1795566205.1885173,
+    "ast_hash": "5727125372cbf5fea405f663fccd969a",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/10_esquema-arquitectonico-en-capas-runtime-real.png": {
+    "mtime": 1795565363.9359016,
+    "seen": 1795566205.1885173,
+    "ast_hash": "ed467b3318854740c7604b7e117b35ef",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/11_diagrama-de-secuencia-los-4-escenarios-canonicos.png": {
+    "mtime": 1795565375.2706296,
+    "seen": 1795566205.1885173,
+    "ast_hash": "4037454ade4a685607ab7484ebba1ed1",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/12_diagrama-de-secuencia-flujo-estrella-consultante-bi.png": {
+    "mtime": 1795565383.5934713,
+    "seen": 1795566205.1885173,
+    "ast_hash": "e48e7dcadb0062eb2547fffa5fc0524b",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/13_ciclo-de-vida-de-execution-status-executionstatus.png": {
+    "mtime": 1795565384.8362978,
+    "seen": 1795566205.1885173,
+    "ast_hash": "3abaccafee5409ec38a2aa3f841e87a2",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/14_ciclo-de-vida-de-approval-status-approvalstatus.png": {
+    "mtime": 1795565385.9024906,
+    "seen": 1795566205.1885173,
+    "ast_hash": "513ea7aeba1d97da0e4653360b429de3",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/15_ciclo-de-vida-de-alert-status-alertstatus.png": {
+    "mtime": 1795565387.0502937,
+    "seen": 1795566205.1885173,
+    "ast_hash": "d97fccf3dca3e64746d87f0554ff804e",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/16_diagrama-de-casos-de-uso-uml-mermaid.png": {
+    "mtime": 1795565391.6984122,
+    "seen": 1795566205.1885173,
+    "ast_hash": "f8fe4f0f26a003137ef5e2834e7635a1",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/17_ficha-tecnica-del-stack-frontend-y-arquitectura-de.png": {
+    "mtime": 1795565393.3484683,
+    "seen": 1795566205.1885173,
+    "ast_hash": "ee7e5a73d7c3de058d0983ca0de6be08",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/18_ciclo-de-autenticacion-hidratacion-y-proteccion-fail.png": {
+    "mtime": 1795565396.7659903,
+    "seen": 1795566205.1885173,
+    "ast_hash": "49b507933ef48087d0eff05fac5a0208",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/19_documentacion-exhaustiva-de-las-9-vistas-frontend.png": {
+    "mtime": 1795565397.8073826,
+    "seen": 1795566205.1885173,
+    "ast_hash": "a8052a9d178a08866f2f117eede0b4bd",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/20_playgroundview-tsx-evaluador-pdp-real-sobre-postgresql.png": {
+    "mtime": 1795565400.634601,
+    "seen": 1795566205.1885173,
+    "ast_hash": "2e29df56858787732dcf238d9a093eac",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/21_comparativa-de-estado-semilla-base-vs-estado-ampliado.png": {
+    "mtime": 1795565403.12598,
+    "seen": 1795566205.1885173,
+    "ast_hash": "60de69c3d2c553a2d6829efe83a0aff3",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/22_documentacion-integral-del-portal-empresarial-acme.png": {
+    "mtime": 1795565405.884199,
+    "seen": 1795566205.1885173,
+    "ast_hash": "e27bafc5d1a7f83658a9eec3d71371c0",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/23_inspector-relacional-sqlite-en-vivo-acme-corp-server.png": {
+    "mtime": 1795565409.7607965,
+    "seen": 1795566205.1885173,
+    "ast_hash": "b525d2ee9701336f2404c978243c927b",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/24_auto-onboarding-automatico-del-ceo-acme-corp-agent.png": {
+    "mtime": 1795565413.6444168,
+    "seen": 1795566205.1885173,
+    "ast_hash": "27bbb6a09031eadd36f38a14cc4d80da",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/25_manejo-de-historial-multi-turno-y-preservacion-de.png": {
+    "mtime": 1795565415.7927723,
+    "seen": 1795566205.1885173,
+    "ast_hash": "dd47708d8ecfecb0d00d6d01bc9a2d27",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/26_catalogo-completo-de-los-8-escenarios-demostrativos.png": {
+    "mtime": 1795565416.979354,
+    "seen": 1795566205.1885173,
+    "ast_hash": "b2edba9fd2061bcbbdf1a00c35f8a021",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/png-4k-light/27_comparativa-exhaustiva-modo-protegido-vs-modo-directo.png": {
+    "mtime": 1795565418.666942,
+    "seen": 1795566205.1885173,
+    "ast_hash": "f32eb9ffee4e6d85c4c6062cfc37419d",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/01_los-4-escenarios-canonicos-de-seguridad-agent-demo-y.svg": {
+    "mtime": 1795565290.8097627,
+    "seen": 1795566205.1885173,
+    "ast_hash": "04cadb2277472eb595ecc37294dff25c",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/02_itinerarios-de-lectura-recomendados.svg": {
+    "mtime": 1795565299.01624,
+    "seen": 1795566205.1885173,
+    "ast_hash": "139429bffcf43a9c85a850ddafc00099",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/03_arquitectura-de-doble-persistencia.svg": {
+    "mtime": 1795565302.6205087,
+    "seen": 1795566205.1885173,
+    "ast_hash": "85e31f43ef1c4ce8f888cf478d68260a",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/04_diagrama-mer-fisico-completo-postgresql-13-tablas.svg": {
+    "mtime": 1795565305.6710017,
+    "seen": 1795566205.1885173,
+    "ast_hash": "2efbabdd7f15ca1ea5994b90609941f2",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/05_historial-completo-de-migraciones-alembic-001-006.svg": {
+    "mtime": 1795565331.6922052,
+    "seen": 1795566205.1885173,
+    "ast_hash": "7298e4d1c30337f0d3a6bdc543c5c8ce",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/06_diagrama-mer-acme-corp-7-tablas.svg": {
+    "mtime": 1795565332.883011,
+    "seen": 1795566205.1885173,
+    "ast_hash": "df95617112ee6ccb8abad7796420aacf",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/07_diagrama-conceptual-completo-dominio-agentguard-13.svg": {
+    "mtime": 1795565339.8365726,
+    "seen": 1795566205.1885173,
+    "ast_hash": "1a33bec72d9e1093930b49bd77550277",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/08_diagrama-de-atributos-de-entidades-nucleo-notacion.svg": {
+    "mtime": 1795565350.928622,
+    "seen": 1795566205.1885173,
+    "ast_hash": "e1ab19a624945d1f644275318c701adb",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/09_vista-conceptual-resumida-dominio-erp-acme-corp-sqlite.svg": {
+    "mtime": 1795565353.4320786,
+    "seen": 1795566205.1885173,
+    "ast_hash": "83f33693664ba310d2ebf88876746e80",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/10_esquema-arquitectonico-en-capas-runtime-real.svg": {
+    "mtime": 1795565355.5661783,
+    "seen": 1795566205.1885173,
+    "ast_hash": "26f38f73adbf656fbc00f5ba4a4abb3a",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/11_diagrama-de-secuencia-los-4-escenarios-canonicos.svg": {
+    "mtime": 1795565364.3113115,
+    "seen": 1795566205.1885173,
+    "ast_hash": "27ee6a88fcf3c640fcd727f5e884f540",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/12_diagrama-de-secuencia-flujo-estrella-consultante-bi.svg": {
+    "mtime": 1795565375.6217084,
+    "seen": 1795566205.1885173,
+    "ast_hash": "b30380b19dea90f1fd057f88f6f90d0e",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/13_ciclo-de-vida-de-execution-status-executionstatus.svg": {
+    "mtime": 1795565383.9188845,
+    "seen": 1795566205.1885173,
+    "ast_hash": "fd18a92e807d7a85ce6ff3dd6d5748a3",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/14_ciclo-de-vida-de-approval-status-approvalstatus.svg": {
+    "mtime": 1795565385.1657002,
+    "seen": 1795566205.1885173,
+    "ast_hash": "33cc3db6afc5dd70ec758e142f14ad32",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/15_ciclo-de-vida-de-alert-status-alertstatus.svg": {
+    "mtime": 1795565386.115175,
+    "seen": 1795566205.1885173,
+    "ast_hash": "667eaeeba69fab742c5431c83b5e0f5a",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/16_diagrama-de-casos-de-uso-uml-mermaid.svg": {
+    "mtime": 1795565387.594277,
+    "seen": 1795566205.1885173,
+    "ast_hash": "990f4dddf3f0dba3a3e7dcf86e6bf7a5",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/17_ficha-tecnica-del-stack-frontend-y-arquitectura-de.svg": {
+    "mtime": 1795565391.9151943,
+    "seen": 1795566205.1885173,
+    "ast_hash": "a3ee8424706f744b6d614d62d9b1391c",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/18_ciclo-de-autenticacion-hidratacion-y-proteccion-fail.svg": {
+    "mtime": 1795565393.5262358,
+    "seen": 1795566205.1885173,
+    "ast_hash": "6dd78ce3bd7c799960dec6d75fd5730f",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/19_documentacion-exhaustiva-de-las-9-vistas-frontend.svg": {
+    "mtime": 1795565396.9228315,
+    "seen": 1795566205.1885173,
+    "ast_hash": "8cf888e8586dc04ddd6ce73deb266dd0",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/20_playgroundview-tsx-evaluador-pdp-real-sobre-postgresql.svg": {
+    "mtime": 1795565397.936131,
+    "seen": 1795566205.1885173,
+    "ast_hash": "c027945ced725f4d790999f11120c875",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/21_comparativa-de-estado-semilla-base-vs-estado-ampliado.svg": {
+    "mtime": 1795565400.9783592,
+    "seen": 1795566205.1885173,
+    "ast_hash": "b15c5392a06041405343fff0dde44289",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/22_documentacion-integral-del-portal-empresarial-acme.svg": {
+    "mtime": 1795565403.3451662,
+    "seen": 1795566205.1885173,
+    "ast_hash": "4ec383101816bdb9c98a201626650911",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/23_inspector-relacional-sqlite-en-vivo-acme-corp-server.svg": {
+    "mtime": 1795565406.3495965,
+    "seen": 1795566205.1885173,
+    "ast_hash": "7eb10a319cc72c1e7900c7f27b10214f",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/24_auto-onboarding-automatico-del-ceo-acme-corp-agent.svg": {
+    "mtime": 1795565409.9822257,
+    "seen": 1795566205.1885173,
+    "ast_hash": "f7c56661f8ca2eaa4025d3381867a45a",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/25_manejo-de-historial-multi-turno-y-preservacion-de.svg": {
+    "mtime": 1795565413.8361373,
+    "seen": 1795566205.1885173,
+    "ast_hash": "b7552df3c90d1ab0181b0a3af1e6c7a5",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/26_catalogo-completo-de-los-8-escenarios-demostrativos.svg": {
+    "mtime": 1795565415.9314735,
+    "seen": 1795566205.1885173,
+    "ast_hash": "c56c7ca54e8eeef89ef52175a28ca18b",
+    "semantic_hash": ""
+  },
+  "assets-presentacion/svg/27_comparativa-exhaustiva-modo-protegido-vs-modo-directo.svg": {
+    "mtime": 1795565417.1674776,
+    "seen": 1795566205.1885173,
+    "ast_hash": "35d917a73e722def3681d9c461a83d83",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/public/logo-agentguard.svg": {
+    "mtime": 1795564008.735047,
+    "seen": 1795566205.1885173,
+    "ast_hash": "789da0a48ed861284e070c39d683bfe9",
+    "semantic_hash": ""
+  },
   "pnpm-lock.yaml": {
-    "mtime": 1793625776.7054293,
-    "seen": 1794591443.2007244,
-    "ast_hash": "9adfb5dada35db3e8a215ff3b5f89d63",
+    "mtime": 1795563629.3744733,
+    "seen": 1795566205.1885173,
+    "ast_hash": "4d68edb53230f55fa57b44d237e80135",
     "semantic_hash": ""
   }
 }

@@ -3,6 +3,14 @@
 > **«IAM responde quién eres; AgentGuard decide qué puedes hacer ahora».**  
 > Plataforma **SaaS B2B Multi-Tenant** de autorización contextual determinista (PEP/PDP), gobernanza y observabilidad forense en tiempo de ejecución (*runtime*) para agentes de Inteligencia Artificial conectados a APIs REST empresariales.
 
+### 🔗 Accesos Directos del Proyecto y Defensa
+
+- 🌐 **[Portal Web Interactivo (GitHub Pages)](https://jmbatiatto.github.io/AgentGuard/)** — Documentación navegable, buscador `Ctrl+K`, Modo Proyector y Código QR.
+- 🖼️ **[Catálogo Visual 4K / SVG en GitHub (27 Diagramas)](./assets-presentacion/CATALOGO_DIAGRAMAS.md)** — Vistas previas HD, SVGs vectoriales y PNGs oscuros para Canva.
+- 📚 **[Índice Maestro Documental (SSOT)](./documentaci%C3%B3n%20final/INDICE_MAESTRO.md)** — Los 11 volúmenes oficiales y 5 itinerarios de evaluación.
+- 🎨 **[Presentación Oficial en Canva (12 Slides)](https://canva.link/59p7pjdurhxr1vk)** — Diapositivas panorámicas `16:9` de defensa (`design_id: DAHbl5SRXbM`).
+- 📋 **[Tablero SCRUM en Trello (ITU 2026)](https://trello.com/b/2Ay99TRz/agentguard-tablero-scrum-itu-2026)** — Sprints, backlog y seguimiento ágil del equipo.
+
 ---
 
 ## 🏛️ Contexto Institucional y Equipo

@@ -1,2 +1,5 @@
 packages:
   - 'frontend'
+  - 'docs-portal'
+allowBuilds:
+  esbuild: true

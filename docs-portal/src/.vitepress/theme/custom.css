@@ -1,0 +1,544 @@
+/* ==========================================================================
+ * AgentGuard Docs Portal — Identidad Visual Oficial (Zero Trust & WCAG AAA)
+ * Paleta: Navy #0b1120 · Slate #0f172a · Emerald #10b981 · Cyan #06b6d4
+ * ========================================================================== */
+
+:root {
+  /* Layout ancho para tablas técnicas, matrices RBAC y diagramas HD */
+  --vp-layout-max-width: 1520px;
+
+  /* Tipografía nítida para lectura académica y proyección */
+  --vp-font-family-base: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace,
+    SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Tokens corporativos AgentGuard (Modo Claro — Contraste WCAG AAA) */
+  --ag-navy: #0b1120;
+  --ag-slate: #0f172a;
+  --ag-emerald: #10b981;
+  --ag-emerald-strong: #047857;
+  --ag-emerald-aaa: #065f46;
+  --ag-cyan: #06b6d4;
+  --ag-cyan-strong: #0e7490;
+  --ag-amber: #b45309;
+  --ag-rose: #be123c;
+
+  --ag-surface-card: #ffffff;
+  --ag-surface-elevated: #f8fafc;
+  --ag-surface-subtle: #f1f5f9;
+  --ag-surface-canvas: #f8fafc;
+  --ag-border: #cbd5e1;
+  --ag-border-strong: #94a3b8;
+  --ag-border-accent: rgba(4, 120, 87, 0.35);
+  --ag-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+  --ag-shadow-md: 0 10px 28px rgba(15, 23, 42, 0.1);
+  --ag-shadow-lg: 0 20px 48px rgba(11, 17, 32, 0.18);
+
+  /* Sobrescritura VitePress (Modo Claro — Texto #0f172a sobre #ffffff > 16:1 AAA) */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f8fafc;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #f1f5f9;
+
+  --vp-c-text-1: #0b1120;
+  --vp-c-text-2: #1e293b;
+  --vp-c-text-3: #334155;
+
+  --vp-c-divider: #cbd5e1;
+  --vp-c-gutter: #e2e8f0;
+
+  /* Acento primario en modo claro oscurecido (#065f46 / #047857) para cumplir WCAG AAA >= 7:1 */
+  --vp-c-brand-1: #065f46;
+  --vp-c-brand-2: #047857;
+  --vp-c-brand-3: #059669;
+  --vp-c-brand-soft: rgba(16, 185, 129, 0.14);
+
+  --vp-button-brand-bg: #047857;
+  --vp-button-brand-hover-bg: #065f46;
+  --vp-button-brand-active-bg: #064e3b;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-border: transparent;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #065f46 0%, #059669 50%, #0e7490 100%);
+  --vp-home-hero-image-background-image: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.24) 30%,
+    rgba(6, 182, 212, 0.24) 70%
+  );
+  --vp-home-hero-image-filter: blur(52px);
+
+  --vp-custom-block-tip-border: rgba(4, 120, 87, 0.45);
+  --vp-custom-block-tip-text: #064e3b;
+  --vp-custom-block-tip-bg: rgba(16, 185, 129, 0.1);
+}
+
+.dark {
+  /* Paleta Oficial AgentGuard en Modo Oscuro: Navy #0b1120 / Slate #0f172a */
+  --ag-emerald-aaa: #6ee7b7;
+  --ag-emerald-strong: #34d399;
+  --ag-cyan-strong: #22d3ee;
+  --ag-amber: #fbbf24;
+  --ag-rose: #fb7185;
+
+  --ag-surface-card: #0f172a;
+  --ag-surface-elevated: #131f35;
+  --ag-surface-subtle: #192742;
+  --ag-surface-canvas: #0b1120;
+  --ag-border: #1e293b;
+  --ag-border-strong: #334155;
+  --ag-border-accent: rgba(16, 185, 129, 0.42);
+  --ag-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --ag-shadow-md: 0 12px 32px rgba(0, 0, 0, 0.48);
+  --ag-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.72);
+
+  /* Contraste WCAG AAA en Modo Oscuro: #f8fafc sobre #0b1120 = 18.1:1 */
+  --vp-c-bg: #0b1120;
+  --vp-c-bg-alt: #0f172a;
+  --vp-c-bg-elv: #111c33;
+  --vp-c-bg-soft: #131f35;
+
+  --vp-c-text-1: #f8fafc;
+  --vp-c-text-2: #e2e8f0;
+  --vp-c-text-3: #cbd5e1;
+
+  --vp-c-divider: #1e293b;
+  --vp-c-gutter: #17233b;
+
+  /* #34d399 / #6ee7b7 sobre #0b1120 supera holgadamente 9.8:1 (WCAG AAA) */
+  --vp-c-brand-1: #34d399;
+  --vp-c-brand-2: #10b981;
+  --vp-c-brand-3: #059669;
+  --vp-c-brand-soft: rgba(16, 185, 129, 0.16);
+
+  --vp-button-brand-bg: #059669;
+  --vp-button-brand-hover-bg: #10b981;
+  --vp-button-brand-active-bg: #047857;
+  --vp-button-brand-text: #ffffff;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #34d399 0%, #10b981 48%, #22d3ee 100%);
+  --vp-home-hero-image-background-image: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.32) 25%,
+    rgba(6, 182, 212, 0.3) 75%
+  );
+  --vp-home-hero-image-filter: blur(60px);
+
+  --vp-custom-block-tip-border: rgba(16, 185, 129, 0.45);
+  --vp-custom-block-tip-text: #ecfdf5;
+  --vp-custom-block-tip-bg: rgba(16, 185, 129, 0.12);
+
+  --vp-code-block-bg: #080d19;
+}
+
+/* ==========================================================================
+ * Contenedores Anchos para Documentación Técnica y Páginas sin Aside
+ * ========================================================================== */
+
+@media (min-width: 960px) {
+  .VPDoc .container {
+    max-width: var(--vp-layout-max-width) !important;
+  }
+
+  .VPDoc.has-aside .content-container {
+    max-width: 980px !important;
+  }
+
+  .VPDoc:not(.has-aside) .content,
+  .VPDoc:not(.has-aside) .content-container {
+    max-width: 1420px !important;
+  }
+
+  .VPHome .vp-doc.container {
+    max-width: 1280px !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Barra superior con desenfoque sutil y línea esmeralda/cyan */
+.VPNavBar {
+  border-bottom: 1px solid var(--ag-border) !important;
+}
+
+.dark .VPNavBar:not(.top) {
+  background-color: rgba(11, 17, 32, 0.88) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* ==========================================================================
+ * Tarjetas Home, Features, Itinerarios y Roles SCRUM
+ * ========================================================================== */
+
+.VPFeature {
+  background-color: var(--ag-surface-card) !important;
+  border: 1px solid var(--ag-border) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--ag-shadow-sm);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.VPFeature:hover {
+  transform: translateY(-2px);
+  border-color: var(--ag-border-accent) !important;
+  box-shadow: var(--ag-shadow-md);
+}
+
+.ag-surface-card {
+  background: var(--ag-surface-card);
+  border: 1px solid var(--ag-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--ag-shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ag-surface-card:hover {
+  border-color: var(--ag-border-accent);
+  box-shadow: var(--ag-shadow-md);
+}
+
+/* Badges semánticos para itinerarios, categorías y roles SCRUM (WCAG AAA) */
+.ag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.62rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.015em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.ag-badge--emerald {
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--ag-emerald-aaa);
+  border-color: rgba(16, 185, 129, 0.38);
+}
+
+.ag-badge--cyan {
+  background: rgba(6, 182, 212, 0.14);
+  color: var(--ag-cyan-strong);
+  border-color: rgba(6, 182, 212, 0.38);
+}
+
+.ag-badge--amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--ag-amber);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.ag-badge--rose {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--ag-rose);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.ag-badge--neutral {
+  background: var(--ag-surface-subtle);
+  color: var(--vp-c-text-2);
+  border-color: var(--ag-border);
+}
+
+/* Badges específicos para Roles SCRUM e Itinerarios */
+.ag-badge--scrum-po {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--ag-emerald-aaa);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.ag-badge--scrum-sm {
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--ag-cyan-strong);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+.ag-badge--scrum-ux {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--ag-amber);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.ag-badge--scrum-arch {
+  background: rgba(99, 102, 241, 0.16);
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.dark .ag-badge--scrum-arch {
+  color: #a5b4fc;
+}
+
+/* ==========================================================================
+ * Tablas Técnicas Anchas (MER, Diccionario 96 Atributos, RBAC, Discrepancias)
+ * ========================================================================== */
+
+.vp-doc table {
+  display: block;
+  width: fit-content;
+  min-width: min(100%, 680px);
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.35rem 0;
+  border: 1px solid var(--ag-border);
+  border-radius: 12px;
+  background: var(--ag-surface-card);
+  box-shadow: var(--ag-shadow-sm);
+  font-size: 0.9rem;
+}
+
+.vp-doc thead tr {
+  background: var(--ag-surface-subtle);
+}
+
+.vp-doc th {
+  color: var(--vp-c-text-1);
+  font-weight: 700;
+  text-align: left;
+  padding: 0.78rem 1rem;
+  border-top: none;
+  border-left: none;
+  border-right: 1px solid var(--ag-border);
+  border-bottom: 2px solid var(--ag-border-accent);
+  background: var(--ag-surface-subtle);
+  white-space: nowrap;
+}
+
+.vp-doc th:last-child,
+.vp-doc td:last-child {
+  border-right: none;
+}
+
+.vp-doc td {
+  padding: 0.72rem 1rem;
+  border-top: none;
+  border-left: none;
+  border-right: 1px solid var(--ag-border);
+  border-bottom: 1px solid var(--ag-border);
+  color: var(--vp-c-text-1);
+  vertical-align: top;
+}
+
+.vp-doc tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.vp-doc tbody tr:nth-child(2n) {
+  background-color: var(--ag-surface-elevated);
+}
+
+.vp-doc tbody tr:hover {
+  background-color: var(--vp-c-brand-soft);
+}
+
+.vp-doc :not(pre) > code {
+  font-weight: 600;
+  border: 1px solid var(--ag-border);
+  background-color: var(--ag-surface-subtle);
+  color: var(--vp-c-text-1);
+  padding: 0.15rem 0.42rem;
+  border-radius: 6px;
+}
+
+/* ==========================================================================
+ * Barra de Herramientas Interactiva y Modal Proyector Pantalla Completa
+ * ========================================================================== */
+
+.ag-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.65rem 0.95rem;
+  background: var(--ag-surface-elevated);
+  border-bottom: 1px solid var(--ag-border);
+}
+
+.ag-toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.72rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--vp-c-text-1);
+  background: var(--ag-surface-card);
+  border: 1px solid var(--ag-border);
+  cursor: pointer;
+  text-decoration: none !important;
+  user-select: none;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease,
+    transform 0.1s ease;
+}
+
+.ag-btn:hover {
+  background: var(--ag-surface-subtle);
+  border-color: var(--ag-border-strong);
+  color: var(--vp-c-text-1);
+}
+
+.ag-btn:focus-visible {
+  outline: 2px solid var(--ag-emerald);
+  outline-offset: 2px;
+}
+
+.ag-btn:active {
+  transform: translateY(1px);
+}
+
+.ag-btn--primary {
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff !important;
+}
+
+.ag-btn--primary:hover {
+  background: #065f46;
+  border-color: #065f46;
+  color: #ffffff !important;
+}
+
+.dark .ag-btn--primary {
+  background: #059669;
+  border-color: #10b981;
+  color: #ffffff !important;
+}
+
+.dark .ag-btn--primary:hover {
+  background: #10b981;
+  border-color: #34d399;
+  color: #06281e !important;
+}
+
+.ag-btn--cyan {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.42);
+  color: var(--ag-cyan-strong) !important;
+}
+
+.ag-btn--cyan:hover {
+  background: rgba(6, 182, 212, 0.22);
+  border-color: var(--ag-cyan);
+}
+
+/* Overlay Modal Modo Proyector (<Teleport to="body">) */
+.ag-projector-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: rgba(7, 11, 22, 0.96);
+  backdrop-filter: blur(10px);
+  color: #f8fafc;
+}
+
+.ag-projector-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.ag-projector-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ag-projector-hint {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+.ag-projector-stage {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.ag-projector-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.ag-projector-stage--light {
+  background-color: #f8fafc;
+  background-image: radial-gradient(rgba(15, 23, 42, 0.12) 1px, transparent 1px);
+}
+
+.ag-projector-canvas {
+  transform-origin: center center;
+  will-change: transform;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.ag-projector-header .ag-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.ag-projector-header .ag-btn:hover {
+  background: #334155;
+  border-color: #475569;
+  color: #ffffff;
+}
+
+.ag-projector-header .ag-btn--danger {
+  background: rgba(225, 29, 72, 0.2);
+  border-color: rgba(251, 113, 133, 0.45);
+  color: #fecdd3;
+}
+
+.ag-projector-header .ag-btn--danger:hover {
+  background: #e11d48;
+  border-color: #fb7185;
+  color: #ffffff;
+}
