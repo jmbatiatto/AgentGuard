@@ -38,6 +38,281 @@ const items = ref<DiagramManifestItem[]>([])
 const searchQuery = ref('')
 const activeCategory = ref<CategoryFilter>('Todos')
 
+// Detección de assets estáticos vs. modo nube ligero (Vercel)
+const hasStaticAssets = ref(true)
+const renderedDarkSvgs = ref<Record<string, string>>({})
+const renderedLightSvgs = ref<Record<string, string>>({})
+const downloadingKey = ref<string | null>(null)
+const downloadError = ref<string | null>(null)
+let mermaidRenderChain: Promise<void> = Promise.resolve()
+let clientSvgCounter = 0
+
+function normalizeMermaidCode(raw: string): string {
+  if (!raw) return ''
+  const lines = raw.split(/\r?\n/)
+  const firstMeaningfulLine =
+    lines.map((l) => l.trim()).find((l) => l.length > 0 && !l.startsWith('%%')) || ''
+
+  if (!/^sequenceDiagram\b/i.test(firstMeaningfulLine)) {
+    return raw
+  }
+
+  return lines
+    .map((line) => {
+      const trimmed = line.trimStart()
+      if (!trimmed || trimmed.startsWith('%%')) return line
+      const colonIdx = line.indexOf(':')
+      if (colonIdx === -1) return line
+      const head = line.slice(0, colonIdx + 1)
+      const tail = line.slice(colonIdx + 1)
+      const safeTail = tail
+        .replace(/((?:&|#)[#a-zA-Z0-9]+;)|;\s*/g, (_match, entity) => (entity ? entity : ' · '))
+        .replace(/\s*·\s*$/, '')
+      return head + safeTail
+    })
+    .join('\n')
+}
+
+async function renderMermaidSvg(
+  code: string,
+  mode: 'dark' | 'light',
+  pureSvgForCanvas = false
+): Promise<string> {
+  if (!code || typeof window === 'undefined') return ''
+  const normalized = normalizeMermaidCode(code)
+
+  const runRender = async (): Promise<string> => {
+    const mermaidMod = await import('mermaid')
+    const mermaid = mermaidMod.default ?? mermaidMod
+    const elementId = `ag-gal-${mode}-${++clientSvgCounter}`
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'loose',
+      theme: mode === 'dark' ? 'dark' : 'default',
+      fontFamily: 'Inter, Segoe UI, system-ui, -apple-system, sans-serif',
+      htmlLabels: !pureSvgForCanvas,
+      flowchart: {
+        useMaxWidth: !pureSvgForCanvas,
+        htmlLabels: !pureSvgForCanvas,
+        curve: 'basis'
+      },
+      sequence: {
+        useMaxWidth: !pureSvgForCanvas
+      },
+      er: {
+        useMaxWidth: !pureSvgForCanvas
+      },
+      themeVariables:
+        mode === 'dark'
+          ? {
+              darkMode: true,
+              background: '#0b1120',
+              primaryColor: '#132238',
+              primaryTextColor: '#f8fafc',
+              primaryBorderColor: '#10b981',
+              lineColor: '#38bdf8',
+              secondaryColor: '#1e293b',
+              tertiaryColor: '#0f172a',
+              noteBkgColor: '#132238',
+              noteTextColor: '#f8fafc',
+              noteBorderColor: '#06b6d4'
+            }
+          : {
+              darkMode: false,
+              background: '#ffffff',
+              primaryColor: '#f0fdf4',
+              primaryTextColor: '#0f172a',
+              primaryBorderColor: '#047857',
+              lineColor: '#0284c7',
+              secondaryColor: '#f8fafc',
+              tertiaryColor: '#f1f5f9',
+              noteBkgColor: '#f0fdf4',
+              noteTextColor: '#0f172a',
+              noteBorderColor: '#0e7490'
+            }
+    })
+
+    try {
+      const { svg } = await mermaid.render(elementId, normalized)
+      return svg
+    } catch (err) {
+      if (typeof document !== 'undefined') {
+        const orphan = document.getElementById(`d${elementId}`) || document.getElementById(elementId)
+        orphan?.remove()
+      }
+      throw err
+    }
+  }
+
+  const nextTask = mermaidRenderChain.then(runRender, runRender)
+  mermaidRenderChain = nextTask.then(
+    () => undefined,
+    () => undefined
+  )
+  return nextTask
+}
+
+async function renderAllClientPreviews() {
+  for (const item of items.value) {
+    if (!isMounted.value) return
+    if (!item.mermaidCode || renderedDarkSvgs.value[item.id]) continue
+    try {
+      const svg = await renderMermaidSvg(item.mermaidCode, 'dark', false)
+      renderedDarkSvgs.value = { ...renderedDarkSvgs.value, [item.id]: svg }
+    } catch {
+      // Continuar con el resto si un diagrama puntual fallara en cliente
+    }
+  }
+}
+
+async function ensureLightSvg(item: DiagramManifestItem) {
+  if (!item.mermaidCode || renderedLightSvgs.value[item.id]) return
+  try {
+    const svg = await renderMermaidSvg(item.mermaidCode, 'light', false)
+    renderedLightSvgs.value = { ...renderedLightSvgs.value, [item.id]: svg }
+  } catch {
+    // Fallback al SVG oscuro si falla el claro
+  }
+}
+
+function triggerBlobDownload(blob: Blob, filename: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+  const objectUrl = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = objectUrl
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+}
+
+async function downloadClientSvg(item: DiagramManifestItem) {
+  if (!item.mermaidCode || typeof window === 'undefined') return
+  const key = `${item.id}:svg`
+  downloadingKey.value = key
+  downloadError.value = null
+  try {
+    const svg =
+      renderedDarkSvgs.value[item.id] || (await renderMermaidSvg(item.mermaidCode, 'dark', false))
+    const xmlPayload = svg.startsWith('<?xml') ? svg : `<?xml version="1.0" encoding="UTF-8"?>\n${svg}`
+    const blob = new Blob([xmlPayload], { type: 'image/svg+xml;charset=utf-8' })
+    triggerBlobDownload(blob, getDownloadFilename(item.svgFile, 'svg'))
+  } catch (err) {
+    downloadError.value =
+      err instanceof Error ? err.message : 'No se pudo generar el SVG vectorial.'
+  } finally {
+    if (downloadingKey.value === key) downloadingKey.value = null
+  }
+}
+
+function normalizeSvgDimensionsForCanvas(rawSvg: string, fallbackWidth = 1280, fallbackHeight = 720) {
+  let width = fallbackWidth
+  let height = fallbackHeight
+
+  const viewBoxMatch = rawSvg.match(/viewBox\s*=\s*["']\s*([-\d.]+)\s+([-\d.]+)\s+([\d.]+)\s+([\d.]+)\s*["']/i)
+  if (viewBoxMatch) {
+    const vbW = Number(viewBoxMatch[3])
+    const vbH = Number(viewBoxMatch[4])
+    if (Number.isFinite(vbW) && vbW > 0 && Number.isFinite(vbH) && vbH > 0) {
+      width = vbW
+      height = vbH
+    }
+  } else {
+    const wMatch = rawSvg.match(/\bwidth\s*=\s*["']\s*([\d.]+)/i)
+    const hMatch = rawSvg.match(/\bheight\s*=\s*["']\s*([\d.]+)/i)
+    if (wMatch && hMatch) {
+      const wVal = Number(wMatch[1])
+      const hVal = Number(hMatch[1])
+      if (Number.isFinite(wVal) && wVal > 0 && Number.isFinite(hVal) && hVal > 0) {
+        width = wVal
+        height = hVal
+      }
+    }
+  }
+
+  let prepared = rawSvg
+  if (!/\bxmlns\s*=/.test(prepared)) {
+    prepared = prepared.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
+  }
+  prepared = prepared.replace(/<svg\b([^>]*)>/i, (_full, attrs: string) => {
+    const cleaned = attrs
+      .replace(/\s+width\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\s+height\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\s+style\s*=\s*["'][^"']*max-width[^"']*["']/gi, '')
+    return `<svg${cleaned} width="${Math.round(width)}" height="${Math.round(height)}">`
+  })
+
+  return { svg: prepared, width, height }
+}
+
+async function downloadClientPng4k(item: DiagramManifestItem, mode: 'dark' | 'light') {
+  if (!item.mermaidCode || typeof window === 'undefined' || typeof document === 'undefined') return
+  const key = `${item.id}:png-${mode}`
+  downloadingKey.value = key
+  downloadError.value = null
+
+  try {
+    const rawSvg = await renderMermaidSvg(item.mermaidCode, mode, true)
+    const { svg, width, height } = normalizeSvgDimensionsForCanvas(
+      rawSvg,
+      item.width ? Math.round(item.width / 3) : 1280,
+      item.height ? Math.round(item.height / 3) : 720
+    )
+
+    const targetLongSide = 3840
+    const padding = 96
+    const maxCanvasDim = 7680
+    const rawScale = Math.max(2, Math.min(4, targetLongSide / Math.max(width, height)))
+    const maxScaleForCap = Math.min(
+      (maxCanvasDim - padding * 2) / width,
+      (maxCanvasDim - padding * 2) / height
+    )
+    const scale = Math.max(1, Math.min(rawScale, maxScaleForCap))
+
+    const drawW = Math.round(width * scale)
+    const drawH = Math.round(height * scale)
+    const canvasW = drawW + padding * 2
+    const canvasH = drawH + padding * 2
+
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error('El navegador no pudo rasterizar el SVG a PNG 4K.'))
+      img.src = svgDataUrl
+    })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = canvasW
+    canvas.height = canvasH
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('No se pudo inicializar el lienzo 2D para exportar PNG.')
+
+    ctx.fillStyle = mode === 'dark' ? '#0b1120' : '#ffffff'
+    ctx.fillRect(0, 0, canvasW, canvasH)
+    ctx.drawImage(img, padding, padding, drawW, drawH)
+
+    const pngBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob)
+        else reject(new Error('Falló la codificación PNG desde el lienzo 4K.'))
+      }, 'image/png')
+    })
+
+    const suffix = mode === 'dark' ? item.pngDarkFile : item.pngLightFile
+    triggerBlobDownload(pngBlob, getDownloadFilename(suffix, 'png'))
+  } catch (err) {
+    downloadError.value =
+      err instanceof Error ? err.message : 'No se pudo generar el PNG 4K en el navegador.'
+  } finally {
+    if (downloadingKey.value === key) downloadingKey.value = null
+  }
+}
+
 // Estado del Modal Proyector Interactivo
 const activeItem = ref<DiagramManifestItem | null>(null)
 const projectorBgMode = ref<'dark' | 'light'>('dark')
@@ -197,11 +472,37 @@ async function fetchManifest() {
 
     items.value = extracted
     generatedAt.value = typeof payload?.generatedAt === 'string' ? payload.generatedAt : null
+
+    if (extracted.length > 0 && typeof window !== 'undefined') {
+      const probeUrl = getSvgUrl(extracted[0])
+      let staticAvailable = false
+      if (probeUrl) {
+        try {
+          const headRes = await fetch(probeUrl, { method: 'HEAD' })
+          const contentType = (headRes.headers.get('content-type') || '').toLowerCase()
+          staticAvailable = headRes.ok && contentType.includes('svg')
+        } catch {
+          staticAvailable = false
+        }
+      }
+      hasStaticAssets.value = staticAvailable
+      if (!staticAvailable) {
+        void renderAllClientPreviews()
+      }
+    }
   } catch (err) {
     loadError.value =
       err instanceof Error ? err.message : 'No se pudo cargar el catálogo de diagramas HD.'
   } finally {
     isLoading.value = false
+  }
+}
+
+function toggleProjectorBgMode() {
+  const nextMode = projectorBgMode.value === 'dark' ? 'light' : 'dark'
+  projectorBgMode.value = nextMode
+  if (nextMode === 'light' && !hasStaticAssets.value && activeItem.value) {
+    void ensureLightSvg(activeItem.value)
   }
 }
 
@@ -377,6 +678,10 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Estado de carga (SSR Safe) -->
+    <div v-if="downloadError" class="ag-gallery-empty ag-surface-card" role="alert">
+      <p>{{ downloadError }}</p>
+    </div>
+
     <div v-if="!isMounted || isLoading" class="ag-gallery-loading-grid" aria-busy="true">
       <div v-for="n in 6" :key="n" class="ag-skeleton-card">
         <div class="ag-skeleton-thumb" />
@@ -439,12 +744,22 @@ onBeforeUnmount(() => {
           @keydown.space.prevent="openProjector(item)"
         >
           <img
+            v-if="hasStaticAssets"
             :src="getSvgUrl(item)"
             :alt="item.title"
             loading="lazy"
             decoding="async"
             class="ag-card-img"
           />
+          <div
+            v-else-if="renderedDarkSvgs[item.id]"
+            class="ag-card-svg-inline"
+            v-html="renderedDarkSvgs[item.id]"
+          />
+          <div v-else class="ag-card-rendering">
+            <span class="ag-spinner" aria-hidden="true" />
+            <span>Renderizando diagrama vectorial...</span>
+          </div>
           <div class="ag-card-overlay-badge">
             <span>⛶ Ampliar en Proyector</span>
           </div>
@@ -492,7 +807,7 @@ onBeforeUnmount(() => {
           <!-- Descargas directas para Canva y Defensa -->
           <div class="ag-card-downloads">
             <span class="ag-downloads-label">Descargas HD directas:</span>
-            <div class="ag-downloads-buttons">
+            <div v-if="hasStaticAssets" class="ag-downloads-buttons">
               <a
                 :href="getSvgUrl(item)"
                 :download="getDownloadFilename(item.svgFile, 'svg')"
@@ -517,6 +832,43 @@ onBeforeUnmount(() => {
               >
                 ⬇ PNG 4K Claro
               </a>
+            </div>
+            <div v-else class="ag-downloads-buttons">
+              <button
+                type="button"
+                class="ag-btn ag-btn--cyan"
+                :disabled="!item.mermaidCode || downloadingKey === `${item.id}:svg`"
+                title="Descargar gráfico vectorial escalable infinito"
+                @click="downloadClientSvg(item)"
+              >
+                {{ downloadingKey === `${item.id}:svg` ? 'Generando SVG...' : '⬇ SVG Vectorial' }}
+              </button>
+              <button
+                type="button"
+                class="ag-btn"
+                :disabled="!item.mermaidCode || downloadingKey === `${item.id}:png-dark`"
+                title="Generar y descargar PNG 4K (#0b1120) en el navegador para Canva"
+                @click="downloadClientPng4k(item, 'dark')"
+              >
+                {{
+                  downloadingKey === `${item.id}:png-dark`
+                    ? 'Generando 4K...'
+                    : '⬇ PNG 4K Oscuro (Canva)'
+                }}
+              </button>
+              <button
+                type="button"
+                class="ag-btn"
+                :disabled="!item.mermaidCode || downloadingKey === `${item.id}:png-light`"
+                title="Generar y descargar PNG 4K fondo blanco en el navegador"
+                @click="downloadClientPng4k(item, 'light')"
+              >
+                {{
+                  downloadingKey === `${item.id}:png-light`
+                    ? 'Generando 4K...'
+                    : '⬇ PNG 4K Claro'
+                }}
+              </button>
             </div>
           </div>
         </div>
@@ -562,24 +914,50 @@ onBeforeUnmount(() => {
             <button
               type="button"
               class="ag-btn"
-              @click="projectorBgMode = projectorBgMode === 'dark' ? 'light' : 'dark'"
+              @click="toggleProjectorBgMode"
             >
               {{ projectorBgMode === 'dark' ? '☀ Lienzo Claro' : '🌙 Lienzo Oscuro' }}
             </button>
-            <a
-              :href="getSvgUrl(activeItem)"
-              :download="getDownloadFilename(activeItem.svgFile, 'svg')"
-              class="ag-btn ag-btn--cyan"
-            >
-              ⬇ SVG
-            </a>
-            <a
-              :href="getPngDarkUrl(activeItem)"
-              :download="getDownloadFilename(activeItem.pngDarkFile, 'png')"
-              class="ag-btn"
-            >
-              ⬇ PNG 4K (Canva)
-            </a>
+            <template v-if="hasStaticAssets">
+              <a
+                :href="getSvgUrl(activeItem)"
+                :download="getDownloadFilename(activeItem.svgFile, 'svg')"
+                class="ag-btn ag-btn--cyan"
+              >
+                ⬇ SVG
+              </a>
+              <a
+                :href="getPngDarkUrl(activeItem)"
+                :download="getDownloadFilename(activeItem.pngDarkFile, 'png')"
+                class="ag-btn"
+              >
+                ⬇ PNG 4K (Canva)
+              </a>
+            </template>
+            <template v-else>
+              <button
+                type="button"
+                class="ag-btn ag-btn--cyan"
+                :disabled="!activeItem.mermaidCode || downloadingKey === `${activeItem.id}:svg`"
+                @click="downloadClientSvg(activeItem)"
+              >
+                {{ downloadingKey === `${activeItem.id}:svg` ? 'Generando...' : '⬇ SVG' }}
+              </button>
+              <button
+                type="button"
+                class="ag-btn"
+                :disabled="
+                  !activeItem.mermaidCode || downloadingKey === `${activeItem.id}:png-dark`
+                "
+                @click="downloadClientPng4k(activeItem, 'dark')"
+              >
+                {{
+                  downloadingKey === `${activeItem.id}:png-dark`
+                    ? 'Generando 4K...'
+                    : '⬇ PNG 4K (Canva)'
+                }}
+              </button>
+            </template>
             <button type="button" class="ag-btn ag-btn--danger" @click="closeProjector">
               ✕ Cerrar
             </button>
@@ -605,10 +983,20 @@ onBeforeUnmount(() => {
             }"
           >
             <img
+              v-if="hasStaticAssets"
               :src="projectorBgMode === 'light' ? getPngLightUrl(activeItem) : getSvgUrl(activeItem)"
               :alt="activeItem.title"
               class="ag-projector-img"
               draggable="false"
+            />
+            <div
+              v-else
+              class="ag-projector-svg-inline"
+              v-html="
+                projectorBgMode === 'light'
+                  ? renderedLightSvgs[activeItem.id] || renderedDarkSvgs[activeItem.id] || ''
+                  : renderedDarkSvgs[activeItem.id] || ''
+              "
             />
           </div>
         </div>
@@ -798,6 +1186,50 @@ onBeforeUnmount(() => {
   transition: transform 0.22s ease;
 }
 
+.ag-card-svg-inline {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.22s ease;
+}
+
+.ag-card-svg-inline :deep(svg) {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+
+.ag-card-preview:hover .ag-card-svg-inline {
+  transform: scale(1.04);
+}
+
+.ag-card-rendering {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.ag-spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid #334155;
+  border-top-color: #10b981;
+  animation: ag-spin 0.75s linear infinite;
+}
+
+@keyframes ag-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .ag-card-preview:hover .ag-card-img {
   transform: scale(1.04);
 }
@@ -906,6 +1338,20 @@ onBeforeUnmount(() => {
   height: auto;
   object-fit: contain;
   pointer-events: none;
+}
+
+.ag-projector-svg-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ag-projector-svg-inline :deep(svg) {
+  max-width: min(88vw, 1680px);
+  max-height: 82vh;
+  width: auto;
+  height: auto;
 }
 
 .ag-gallery-loading-grid {

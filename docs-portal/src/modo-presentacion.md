@@ -52,7 +52,7 @@ La exposición oral está cronometrada en **15 minutos exactos** a lo largo de l
 | 🎨 **Presentación Oficial en Canva (12 Slides)** | [**https://canva.link/59p7pjdurhxr1vk**](https://canva.link/59p7pjdurhxr1vk) | Diseño `16:9` en español (`design_id: DAHbl5SRXbM`) |
 | 📋 **Tablero Trello SCRUM Oficial** | [**https://trello.com/b/2Ay99TRz/agentguard-tablero-scrum-itu-2026**](https://trello.com/b/2Ay99TRz/agentguard-tablero-scrum-itu-2026) | Gestión ágil de sprints, backlog y entregables (ITU 2026) |
 | 💻 **Repositorio Oficial en GitHub** | [**https://github.com/jmbatiatto/AgentGuard**](https://github.com/jmbatiatto/AgentGuard) | Monorepositorio rama `main` (`Zero-Regression Verified`) |
-| 🌐 **Portal Documental Web (GitHub Pages)** | [**https://jmbatiatto.github.io/AgentGuard/**](https://jmbatiatto.github.io/AgentGuard/) | Despliegue continuo vía `.github/workflows/deploy-docs.yml` |
+| 🌐 **Portal Documental Web en Vivo (Vercel)** | [**https://agentguard-docs-eight.vercel.app/**](https://agentguard-docs-eight.vercel.app/) | Despliegue público de producción (`agentguard-docs-eight` · acceso libre para el tribunal) |
 
 ---
 

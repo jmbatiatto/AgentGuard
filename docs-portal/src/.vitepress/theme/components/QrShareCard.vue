@@ -2,11 +2,12 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { withBase } from 'vitepress'
 
+const VERCEL_DOCS_URL = 'https://agentguard-docs-eight.vercel.app/'
 const GITHUB_PAGES_URL = 'https://jmbatiatto.github.io/AgentGuard/'
 const CANVA_SLIDES_URL = 'https://canva.link/59p7pjdurhxr1vk'
 
 const isMounted = ref(false)
-const targetUrl = ref(GITHUB_PAGES_URL)
+const targetUrl = ref(VERCEL_DOCS_URL)
 const qrPngDataUrl = ref('')
 const qrSvgMarkup = ref('')
 const qrError = ref<string | null>(null)
@@ -140,6 +141,10 @@ async function generateQrAssets(rawValue: string) {
   }
 }
 
+function selectVercelUrl() {
+  targetUrl.value = VERCEL_DOCS_URL
+}
+
 function selectCurrentBrowserUrl() {
   if (typeof window === 'undefined') return
   targetUrl.value = window.location.href
@@ -194,6 +199,9 @@ function downloadQrSvgCanva() {
 
 onMounted(() => {
   isMounted.value = true
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app')) {
+    targetUrl.value = `${window.location.origin}/`
+  }
   void generateQrAssets(targetUrl.value)
 })
 
@@ -225,16 +233,16 @@ watch(targetUrl, (nextUrl) => {
         <div class="ag-qr-presets" role="group" aria-label="Enlaces rápidos preconfigurados">
           <span class="ag-field-label">Seleccionar destino rápido:</span>
           <div class="ag-preset-buttons">
-            <button type="button" class="ag-btn" @click="selectCurrentBrowserUrl">
-              📍 URL actual del navegador
-            </button>
             <button
               type="button"
               class="ag-btn"
-              :class="{ 'ag-btn--primary': targetUrl === GITHUB_PAGES_URL }"
-              @click="selectGithubPagesUrl"
+              :class="{ 'ag-btn--primary': targetUrl === VERCEL_DOCS_URL }"
+              @click="selectVercelUrl"
             >
-              🌐 GitHub Pages ({{ GITHUB_PAGES_URL }})
+              🚀 Portal en Vivo Vercel ({{ VERCEL_DOCS_URL }})
+            </button>
+            <button type="button" class="ag-btn" @click="selectCurrentBrowserUrl">
+              📍 URL actual del navegador
             </button>
             <button
               type="button"
@@ -243,6 +251,14 @@ watch(targetUrl, (nextUrl) => {
               @click="selectCanvaUrl"
             >
               🎨 Presentación Canva ({{ CANVA_SLIDES_URL }})
+            </button>
+            <button
+              type="button"
+              class="ag-btn"
+              :class="{ 'ag-btn--primary': targetUrl === GITHUB_PAGES_URL }"
+              @click="selectGithubPagesUrl"
+            >
+              🌐 GitHub Pages ({{ GITHUB_PAGES_URL }})
             </button>
           </div>
         </div>
