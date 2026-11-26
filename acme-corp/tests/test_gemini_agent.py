@@ -626,6 +626,9 @@ async def test_run_scenario_gemini3_fallback_and_thought_signature(temp_db: Acme
     assert any(p.get("thoughtSignature") == "sig_gemini3_opaque_xyz" for p in model_parts_turn2)
     assert captured_turn2_payload["contents"][2]["role"] == "user"
     assert captured_turn2_payload["contents"][2]["parts"][0]["functionResponse"]["name"] == "query_sales"
+    sys_inst = captured_turn2_payload["systemInstruction"]["parts"][0]["text"]
+    assert "Tabla de Resultados" in sys_inst
+    assert "resumen ejecutivo breve" in sys_inst
 
 
 @pytest.mark.asyncio

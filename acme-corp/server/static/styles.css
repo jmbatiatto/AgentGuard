@@ -430,8 +430,44 @@ textarea:focus {
 
 .bi-assistant-speech {
   font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: 1.6;
   color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.bi-assistant-speech p,
+.final-answer-content p {
+  margin: 0;
+}
+
+.bi-assistant-speech ul,
+.bi-assistant-speech ol,
+.final-answer-content ul,
+.final-answer-content ol {
+  margin: 0.15rem 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bi-assistant-speech strong,
+.final-answer-content strong {
+  color: var(--acme-yellow);
+  font-weight: 700;
+}
+
+.bi-assistant-speech code,
+.final-answer-content code {
+  background-color: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.08rem 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82em;
+  color: #e2e8f0;
 }
 
 .bi-offer-filter-box {
@@ -787,9 +823,14 @@ textarea:focus {
   color: var(--acme-yellow);
 }
 
+.final-answer-box .final-answer-content,
 .final-answer-box p {
   margin-top: 0.35rem;
   color: #f1f5f9;
+  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 /* ==========================================================================

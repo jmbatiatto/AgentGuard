@@ -75,7 +75,7 @@
           <span class="section-title">⚙️ Parámetros de Conexión & Configuración del Copiloto</span>
           <span id="config-toggle-icon" class="badge badge-neutral">Mostrar / Ocultar</span>
         </div>
-        <span class="config-note">Opciones avanzadas para modo guiado, llaves y modelo de IA</span>
+        <span class="config-note">Con GEMINI_API_KEY activa usa Gemini LLM real automáticamente; sin clave usa modo guiado</span>
       </div>
       <div id="config-body" class="config-collapsible hidden">
         <div class="credentials-grid">
@@ -211,7 +211,7 @@
               </div>
               <span id="bi-verdict-tag" class="badge badge-success">ALLOW</span>
             </div>
-            <p id="bi-assistant-text" class="bi-assistant-speech"></p>
+            <div id="bi-assistant-text" class="bi-assistant-speech"></div>
 
             <!-- Propuesta de Filtro Local si AgentGuard bloqueó delete_sales -->
             <div id="bi-offer-filter-box" class="bi-offer-filter-box hidden">
@@ -314,7 +314,7 @@
             </div>
             <div id="final-answer-box" class="final-answer-box hidden">
               <strong>Respuesta Final del Agente:</strong>
-              <p id="final-answer-text"></p>
+              <div id="final-answer-text" class="final-answer-content"></div>
             </div>
           </div>
         </div>

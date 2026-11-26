@@ -633,7 +633,13 @@ class GeminiAgentClient:
             "(incluso si pide eliminar registros o ejecutar acciones sensibles), invoca siempre la función declarada "
             "correspondiente sin auto-rechazarla antes de consultarla. Solo después de recibir el functionResponse con "
             "decisión DENY/bloqueado, explica constructivamente que no tienes autorización para modificar ni borrar "
-            "la base de datos de ACME pero sí puedes filtrar u ocultar esos registros en la vista en pantalla."
+            "la base de datos de ACME pero sí puedes filtrar u ocultar esos registros en la vista en pantalla. "
+            "FORMATO DE SÍNTESIS: Cuando query_sales o generate_pie_chart devuelve datos, la interfaz web YA renderiza "
+            "automáticamente debajo la Tabla de Resultados y la Gráfica de Torta SVG. Por eso NO repitas ni enumeres "
+            "fila por fila cada venta ni códigos internos (IDs SALE-*, cust_* o SKUs) salvo que el usuario lo pida "
+            "explícitamente. Entrega un resumen ejecutivo breve de 2 a 3 líneas (o hasta 3 viñetas en líneas separadas) "
+            "destacando cantidad de registros, monto total en USD, el producto o cliente principal y una sugerencia breve "
+            "de siguiente paso."
         )
 
         if use_llm:

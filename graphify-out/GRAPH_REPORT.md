@@ -1,40 +1,40 @@
 # Graph Report - AgentGuard  (2026-11-26)
 
 ## Corpus Check
-- 309 files · ~763,664 words
+- 309 files · ~763,996 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 40 file(s) not represented in the graph (top: (none) 7, .toml 6, .bat 6)
 
 ## Summary
-- 5924 nodes · 15240 edges · 280 communities (230 shown, 50 thin omitted)
-- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 1902 edges (avg confidence: 0.93)
+- 5930 nodes · 15247 edges · 264 communities (223 shown, 41 thin omitted)
+- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 1888 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `39d56737`
+- Built from commit: `6ef57885`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - test_tools.py
 - domain.ts
-- .resolve_approval
+- test_analytics.py
 - 05 — Cuestionario de Decisiones Arquitectónicas y de Producto para el Usuario
 - sanitizer_service.py
 - uuid
-- test_gemini_agent.py
+- asyncio
 - 2. Documentación Exhaustiva de las 9 Vistas (`frontend/src/views/`)
-- ActorType
-- ToastContext.tsx
+- policies.py
+- ThemeContext.ts
 - frontend/package.json
 - postgres
 - live-browser.js
 - 3. Catálogo Detallado de Maquetas y Elementos Mockup
-- test_tool_actions.py
+- Tool
 - vue.js
 - asyncio
 - DiagramGallery.vue
-- Tool
+- typing
 - compilerOptions
 - auth-ui.tsx
 - PolicyService
@@ -43,14 +43,14 @@
 - convert_docs_to_docx.py
 - chunk-KPUD5PSC.js
 - AcmeDatabase
-- organizations.py
-- WebSocketConnectionManager
+- tools.py
+- policy_rules.py
 - vitepress___@vueuse_core.js
 - list_audit_events
 - resumeSession
 - ensure_same_tenant
 - 🖼️ 3. Desglose Técnico Diapositiva por Diapositiva (Slides 1 a 12)
-- agent_service.py
+- AgentService
 - .oxlintrc.json
 - cli.py
 - shallowRef
@@ -61,13 +61,13 @@
 - connectSSE
 - 📑 Desglose de Pasos: Semana 1 — Base de Datos & Setup Inicial
 - watch
-- 🗄️ AgentGuard — MER Relacional y Modelo Físico de Datos (Versión Final Verificada)
+- PDPEngine
 - ApiKey
 - 3.2 Tablas
-- _make_auth
+- UserService
 - export-diagrams.mjs
 - generate_diagrams.py
-- list_alerts
+- WebhookService
 - 06 — Portal ACME Corp, Asistente Consultante BI y Cliente Agent Demo
 - el
 - asyncio
@@ -79,21 +79,20 @@
 - copilot-instructions.md
 - app.py
 - warn$1
-- websocket.py
+- tool_actions.py
 - Original User Request
-- dashboard-sidebar.tsx
+- OverviewView.tsx
 - 001_initial_schema.py
 - toValue
 - PolicyRule
 - 🛡️ AgentGuard — Plataforma SaaS B2B Multi-Tenant de Gobernanza en Runtime para Agentes de IA
 - 📚 Índice Visual Ordenado por Volumen Documental
 - docs-portal/package.json
-- typing
+- BaseSchema
 - domain.ts
 - 🤖 AgentGuard — Agent Demo (Cliente CLI Python)
 - package.json
-- OrganizationService
-- approvals.py
+- list_approvals
 - create_app
 - app.js
 - 🏛️ Registro de Decisiones Arquitectónicas (ADRs) — AgentGuard
@@ -107,7 +106,7 @@
 - _mock_user_auth
 - env.py
 - 1.2 Inventario Individual (39 archivos `.md`)
-- initGlobalBar
+- Responsive Design
 - SanitizerService
 - `_MASTER_PROJECT_SNAPSHOT.md` — Fuente de Verdad Consolidada de AgentGuard
 - test_websocket.py
@@ -127,7 +126,7 @@
 - create_api_key
 - scripts
 - App.tsx
-- PolicyRuleService
+- ToolService
 - baseCreateRenderer
 - .evaluate
 - impeccable/SKILL.md
@@ -139,13 +138,13 @@
 - ApiError
 - asyncio
 - 4. Resumen de Brechas por Documento Auditado (14 Archivos)
-- list_executions
+- 03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural
 - 04 — Secuencias de Demo, Máquinas de Estado y Casos de Uso UML
-- bootstrap_acme_in_agentguard
-- PDPEngine
+- .run_scenario
+- 1. Ficha Técnica del Stack Frontend y Arquitectura de Cliente
 - 🧭 Los 5 Itinerarios de Evaluación Recomendados
 - nextTick
-- doctor.md
+- new-work.md
 - useScroll
 - 📄 Volumen 06 · Portal Empresarial ACME Corp, Consultante BI (Gemini 3.8) y CLI Demo
 - setup
@@ -155,7 +154,7 @@
 - Responsive Design
 - manifest.json
 - unrefElement
-- get_attack_catalog
+- 📄 Volumen 05 · Manual Frontend SPA (React 19), Matriz RBAC y Credenciales
 - document.md
 - createDevToolsCtxHooks
 - animate.md
@@ -165,21 +164,21 @@
 - createLiveBrowserDomHelpers
 - looseEqual
 - temp_db
-- 1. Ficha Técnica del Stack Frontend y Arquitectura de Cliente
+- 05 — Manual Frontend SPA, Sistema RBAC y Guía de Credenciales
 - The Toolkit
 - cleanup_overrides
 - cleanup_overrides
-- applyEditing
+- showToast
 - onAnnotDown
 - AcmeSettings
 - useCssVars
-- mountSvelteComponentVariant
+- 📄 Volumen 01 · Modelo Entidad-Relación Relacional, Esquema Físico y Alembic
 - galeria-diagramas.md
 - createLiveBrowserSessionState
 - shallowReactive
 - Launch copy (v0.2, June 2026)
-- resolveLiveInjectionAnchor
-- main.py
+- 🌊 Oleada 2 — Gobernanza Control Plane, Frontera Firmada `PEP <-> ACME`, Contratos Full-Stack (`:5173` y `:9000`) y Fixtures BD Real (18 ítems, 4 Workers en paralelo)
+- dependencies
 - apply
 - _createVNode
 - Aesthetic directions
@@ -188,7 +187,7 @@
 - AI design tells: catalog
 - Generate Report
 - Handle `generate`
-- test_approvals_api.py
+- Execution
 - propHasMismatch
 - useStorage
 - avoid-ai-design
@@ -226,13 +225,10 @@
 - Second-order defaults
 - Common Cognitive Load Violations
 - iOS platform
-- Operate mode depth (and Read notes)
 - Shape
-- typeset.md
 - SEO & discoverability
 - Typography
 - Android platform
-- colorize.md
 - Persona-Based Design Testing
 - Extract Flow
 - handleKeydown
@@ -241,7 +237,7 @@
 - Copy & microcopy
 - Motion
 - main
-- Generate Report
+- audit.native.md
 - Impeccable Finish Reviewer
 - Impeccable Manual Edit Applier
 - live-browser-ignores.js
@@ -249,7 +245,6 @@
 - useEventBus
 - useFileSystemAccess
 - bolder.md
-- $impeccable hooks
 - simulate_gateway_action
 - 4. Código Interno Muerto, Endpoints Desconectados y Reliquias de Prototipo
 - callHookWith
@@ -257,30 +252,17 @@
 - useCycleList
 - Imagery
 - interface
-- $impeccable foundations
-- Visualize: Direction Comps & Asset Production
-- 002_add_latency_ms_to_executions.py
 - 005_add_hashed_password_to_users.py
 - 006_add_must_change_password_to_users.py
 - Bloque D — Experiencia de Frontend, Simulación y Demo Académica
 - isRef
 - useUserMedia
 - Scoring the report
-- Persuade and Experience
-- Region map
-- run_async_migrations
+- new-work-world.md
 - getComponentFileName
 - getFragmentRect
 - formatTimeAgo
 - useGeolocation
-- clear_overrides
-- test_threat_detector_goal_hijacking
-- test_threat_detector_data_exfiltration
-- test_threat_detector_base64_obfuscation
-- test_threat_detector_embedded_base64_obfuscation
-- test_threat_detector_destructive_sql
-- test_threat_detector_clean_parameters
-- 2. Inventario Exhaustivo de Vistas y Componentes del Frontend
 - deps_temp_5a23245a/package.json
 - toRaw
 
@@ -297,57 +279,61 @@
 10. `computed()` - 81 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `3.1 Configuración del Modelo y Pensamiento Determinista` --references--> `_build_generation_config()`  [INFERRED]
+  documentación final/06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO.md → acme-corp/agent/gemini_client.py
 - `3. Tabla Maestra de Hallazgos (Consolidada y Deduplicada)` --references--> `loadSavedCredentials()`  [INFERRED]
   _DEEP_AUDIT_REPORT.md → acme-corp/server/static/app.js
-- `3. Tabla Maestra de Hallazgos (Consolidada y Deduplicada)` --references--> `find_tool_for_action()`  [INFERRED]
-  _DEEP_AUDIT_REPORT.md → agent-demo/run_demo.py
-- `Fase 4: Autenticación JWT y Propagación Formal de Tenant Isolation` --references--> `get_current_user()`  [INFERRED]
-  docs/archive/INFORME_MOCKUPS_FRONT_BACK.md → backend/app/api/deps.py
-- `3.2 Superficie HTTP/WebSocket real (`backend/app/api/`)` --references--> `get_current_user()`  [INFERRED]
-  docs/archive/_MASTER_PROJECT_SNAPSHOT.md → backend/app/api/deps.py
-- `4. Protocolo Lean Teamwork v2 (Orquestación Multi-Agente, Velocidad y Economía de Tokens)` --references--> `require_admin_user()`  [INFERRED]
-  AGENTS.md → backend/app/api/deps.py
+- ``ThreatDetectorService` (`backend/app/services/threat_detector.py`)` --references--> `ThreatDetectorService`  [INFERRED]
+  documentación final/03_ARQUITECTURA_RUNTIME_PEP_PDP_Y_API_REST.md → backend/app/services/threat_detector.py
+- `4.2 Estándares de Frontend (`TypeScript 6` / `React 19` / `Vite 8` / `pnpm`)` --references--> `ApiError`  [INFERRED]
+  docs/archive/audit_reports/06_RECOMENDACIONES_ARQUITECTURA_Y_MEJORES_PRACTICAS.md → frontend/src/services/api.ts
+- `👥 Equipo SCRUM Oficial (ITU — UNCuyo, 2026)` --references--> `PDPEngine`  [INFERRED]
+  docs-portal/src/index.md → backend/app/services/pdp_engine.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (280 total, 50 thin omitted)
+## Communities (264 total, 41 thin omitted)
 
 ### Community 0 - "test_tools.py"
 Cohesion: 0.13
 Nodes (11): _setup_admin_auth(), test_api_create_tool_organization_not_found(), test_api_create_tool_success(), test_api_get_tool_found(), test_api_get_tool_not_found(), test_api_list_tools(), test_tool_service_create(), mock_refresh() (+3 more)
 
 ### Community 1 - "domain.ts"
-Cohesion: 0.13
-Nodes (7): 3.2 Corrupción de Estado Real por Condición `data.length > 0` y Falsos Éxitos (`api.ts`), 1.3 Arquitectura de Integración HTTP: `src/services/api.ts`, 3.1 `QuickSetupWizard.tsx` — Asistente de Configuración Rápida en 3 Pasos, AgentGuardApiClient, extractApiError(), handleNetworkError(), UserMember
+Cohesion: 0.12
+Nodes (8): 3.2 Corrupción de Estado Real por Condición `data.length > 0` y Falsos Éxitos (`api.ts`), 1.3 Arquitectura de Integración HTTP: `src/services/api.ts`, 3.1 `QuickSetupWizard.tsx` — Asistente de Configuración Rápida en 3 Pasos, AgentGuardApiClient, extractApiError(), handleNetworkError(), AuthResponse, UserMember
+
+### Community 2 - "test_analytics.py"
+Cohesion: 0.07
+Nodes (18): AnalyticsOverviewResponse, AnalyticsTimeseriesResponse, TimeseriesPoint, AnalyticsService, MockOverviewRow, MockTimeseriesRow, test_analytics_service_get_overview_empty_state(), test_analytics_service_get_overview_with_data() (+10 more)
 
 ### Community 3 - "05 — Cuestionario de Decisiones Arquitectónicas y de Producto para el Usuario"
 Cohesion: 0.15
 Nodes (12): 05 — Cuestionario de Decisiones Arquitectónicas y de Producto para el Usuario, 10. Activación Real de Redis 7, PostgreSQL RLS y Operadores Contextuales del PDP, 1. Modelo de Autenticación y Autorización Real (Humanos en Dashboard vs. Agentes en Gateway), 2. Destino de la Tabla `audit_events` (Auditoría Administrativa — Regla 7 de `AGENTS.md`), 3. Contradicción WORM Inmutable vs. Purga Automática de Trazas (30 a 365 días), 4. Protocolo de Espera y Entrega de Resultados en HITL (`REQUIRE_APPROVAL`), 5. Custodia de Parámetros Originales para Re-Despacho HITL (Problema `"***REDACTED***"`), 6. Política de Despacho a Herramientas Externas (`_dispatch_to_tool`: Sandbox Mock vs. REST Real) (+4 more)
 
 ### Community 4 - "sanitizer_service.py"
-Cohesion: 0.17
+Cohesion: 0.13
 Nodes (5): test_sanitize_bearer_token_in_string(), test_sanitize_credit_card_masking(), test_sanitize_empty_context(), test_sanitize_lists_and_tuples(), test_sanitize_sensitive_keys()
 
 ### Community 5 - "uuid"
 Cohesion: 0.02
-Nodes (103): create_access_token(), get_password_hash(), UserRole, User, OrganizationSettingsUpdate, make_admin_jwt(), MockOverviewRow, MockTimeseriesRow (+95 more)
+Nodes (125): change_password(), get_me(), login(), register(), register_organization(), reset_demo_data(), create_access_token(), get_password_hash() (+117 more)
 
-### Community 6 - "test_gemini_agent.py"
-Cohesion: 0.07
-Nodes (22): discover_agentguard_context(), GeminiAgentClient, resolve_agent_id(), resolve_tool_id_for_action(), test_api_agent_run_endpoint(), test_bootstrap_acme_in_agentguard_mocked(), mock_handler(), test_discover_agentguard_context() (+14 more)
+### Community 6 - "asyncio"
+Cohesion: 0.08
+Nodes (12): test_api_agent_run_endpoint(), test_bootstrap_acme_in_agentguard_mocked(), mock_handler(), test_ensure_acme_onboarded_relinks_on_stale_api_key(), test_ensure_acme_onboarded_skips_when_key_valid_and_consultante_present(), test_resolve_tool_id_matches_agentguard_action_name_and_accented_names(), test_run_scenario_gemini3_fallback_and_thought_signature(), test_run_scenario_gemini_timeout_fallback_and_nonempty_error() (+4 more)
 
 ### Community 7 - "2. Documentación Exhaustiva de las 9 Vistas (`frontend/src/views/`)"
 Cohesion: 0.18
 Nodes (11): 2.1 `OverviewView.tsx` — Panel Ejecutivo y Observabilidad General, 2.2 `AgentsView.tsx` — Gestión de Agentes de IA y Capacidades, 2.3 `ToolsView.tsx` — Catálogo de Herramientas y Acciones Atómicas, 2.4 `PoliciesView.tsx` — Políticas de Gobernanza y Reglas Deterministas, 2.5 `ApprovalsView.tsx` — Bandeja Human-in-the-Loop (HITL) en Tiempo Real, 2.6 `TracesView.tsx` — Auditoría Forense de Ejecuciones e Incidentes, 2.7 `PlaygroundView.tsx` — Evaluador PDP Real sobre PostgreSQL, 2.8 `SettingsView.tsx` — Ajustes, Equipo, API Keys y SIEM Webhook (+3 more)
 
-### Community 8 - "ActorType"
-Cohesion: 0.07
-Nodes (21): create_policy(), create_policy_rule_in_policy(), delete_policy(), get_policy(), list_policies(), update_policy(), create_policy_rule(), delete_policy_rule() (+13 more)
+### Community 8 - "policies.py"
+Cohesion: 0.13
+Nodes (9): create_policy(), create_policy_rule_in_policy(), delete_policy(), get_policy(), list_policies(), update_policy(), PolicyRead, test_webhook_service_send_event_includes_siem_format_and_header() (+1 more)
 
-### Community 9 - "ToastContext.tsx"
-Cohesion: 0.10
-Nodes (22): 1.4 Notificaciones Reactivas: `ToastContext.tsx`, dependencies, lucide-react@^1.57.0, react@^19.2.8, react-dom@^19.2.8, App(), TOAST_CONFIG, ToastContainer() (+14 more)
+### Community 9 - "ThemeContext.ts"
+Cohesion: 0.60
+Nodes (3): Theme, ThemeContext, ThemeContextType
 
 ### Community 10 - "frontend/package.json"
 Cohesion: 0.14
@@ -359,15 +345,15 @@ Nodes (37): driver, name, PGDATA, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER,
 
 ### Community 12 - "live-browser.js"
 Cohesion: 0.03
-Nodes (147): absolutizeUrls(), addManualContextText(), applyGlobalBarLabelState(), applyPlaceholderSizingStyles(), averageRgb01(), bindEditBadgeProxy(), bufferToBase64(), buildCollapsible() (+139 more)
+Nodes (130): absolutizeUrls(), applyGlobalBarLabelState(), applyOriginalAttrsToSvelteAnchor(), applyParamDefaults(), applyParamValue(), applySavedParamValues(), averageRgb01(), bindEditBadgeProxy() (+122 more)
 
 ### Community 13 - "3. Catálogo Detallado de Maquetas y Elementos Mockup"
 Cohesion: 0.05
 Nodes (38): 1.1 Contexto Institucional, Premisa Central y Arquitectura Políglota, 1.2 Diagnóstico Global de la Integración (Dualidad Real vs. Simulado), 1.3 El Patrón de Resiliencia Opaca: Riesgo de los *Silent Fallbacks*, 1.4 Métricas Globales de Cobertura de la Auditoría, 1. Resumen Ejecutivo y Diagnóstico Global del Sistema, 3.1 Módulo de Autenticación y Registro Corporativo, 3.2 Gráfico Interactivo de Actividad 24 Horas, 3.3 Base de Datos Empresarial Simulada en Memoria (Playground Sandbox) (+30 more)
 
-### Community 14 - "test_tool_actions.py"
-Cohesion: 0.13
-Nodes (11): _setup_admin_auth(), test_api_create_tool_action_duplicate_conflict(), test_api_create_tool_action_success(), test_api_create_tool_action_tool_not_found(), test_api_get_tool_action_found(), test_api_get_tool_action_not_found(), test_api_list_tool_actions(), test_tool_action_service_create() (+3 more)
+### Community 14 - "Tool"
+Cohesion: 0.05
+Nodes (59): Agent, AgentTool, AgentStatus, PolicyDecision, RiskLevel, Tool, ToolAction, GatewayExecuteRequest (+51 more)
 
 ### Community 15 - "vue.js"
 Cohesion: 0.02
@@ -381,9 +367,9 @@ Nodes (11): _setup_admin_auth(), test_api_create_policy_organization_not_found()
 Cohesion: 0.05
 Nodes (45): activeCategory, activeItem, CATEGORIES, categoryCounts, CategoryFilter, copiedCodeId, DiagramManifestItem, downloadClientPng4k() (+37 more)
 
-### Community 18 - "Tool"
+### Community 18 - "typing"
 Cohesion: 0.04
-Nodes (78): get_gateway_context(), Base, get_db(), Agent, AgentTool, Alert, Approval, AgentStatus (+70 more)
+Nodes (34): run_migrations_offline(), downgrade(), upgrade(), downgrade(), upgrade(), get_attack_catalog(), get_gateway_context(), Base (+26 more)
 
 ### Community 19 - "compilerOptions"
 Cohesion: 0.10
@@ -399,10 +385,10 @@ Nodes (16): compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, lib
 
 ### Community 23 - "run_demo.py"
 Cohesion: 0.09
-Nodes (16): build_payload(), Colors, _configure_stdio(), _decision_color(), DemoConfig, DemoScenario, discover_gateway_context(), load_config() (+8 more)
+Nodes (17): build_payload(), Colors, _configure_stdio(), _decision_color(), DemoConfig, DemoScenario, discover_gateway_context(), load_config() (+9 more)
 
 ### Community 24 - "convert_docs_to_docx.py"
-Cohesion: 0.15
+Cohesion: 0.20
 Nodes (8): add_markdown_to_docx(), build_docx_files(), set_cell_background(), set_cell_margins(), add_markdown_to_docx(), build_domain_docx(), set_cell_background(), set_cell_margins()
 
 ### Community 25 - "chunk-KPUD5PSC.js"
@@ -411,31 +397,31 @@ Nodes (80): addEventListener(), addSub(), addTransitionClass(), _applyStyles(), 
 
 ### Community 26 - "AcmeDatabase"
 Cohesion: 0.12
-Nodes (5): AcmeDatabase, 6.1 Diagrama MER — ACME Corp (7 tablas), 6.2 Diccionario físico ACME (SQLite), 6.3 Datos semilla Looney Tunes (`SEED_*` en `database.py`), 6. Persistencia Externa ACME Corp (SQLite — `acme-corp/acme_corp.db`)
+Nodes (7): AcmeDatabase, test_execute_in_direct_mode_drop_db(), 3. Tabla Maestra de Hallazgos (Consolidada y Deduplicada), 6.1 Diagrama MER — ACME Corp (7 tablas), 6.2 Diccionario físico ACME (SQLite), 6.3 Datos semilla Looney Tunes (`SEED_*` en `database.py`), 6. Persistencia Externa ACME Corp (SQLite — `acme-corp/acme_corp.db`)
 
-### Community 27 - "organizations.py"
-Cohesion: 0.14
-Nodes (10): create_organization(), get_organization(), get_organization_settings(), list_organizations(), test_organization_siem_webhook(), update_organization(), update_organization_settings(), OrganizationSettings (+2 more)
+### Community 27 - "tools.py"
+Cohesion: 0.16
+Nodes (7): create_tool(), delete_tool(), get_tool(), list_tools(), update_tool(), ToolRead, 3.5 Recarga Ansiosa Anti-`MissingGreenlet` (`selectinload` vía `get_by_id`)
+
+### Community 28 - "policy_rules.py"
+Cohesion: 0.18
+Nodes (6): create_policy_rule(), delete_policy_rule(), get_policy_rule(), list_policy_rules(), update_policy_rule(), PolicyRuleRead
 
 ### Community 29 - "vitepress___@vueuse_core.js"
 Cohesion: 0.04
 Nodes (74): customRef(), effectScope(), inject(), markRaw(), propertyToRef(), resolveInjections(), toRef(), toRefs() (+66 more)
 
 ### Community 31 - "resumeSession"
-Cohesion: 0.06
-Nodes (81): abortSvelteComponentInjection(), applyParamDefaults(), applyParamValue(), applySavedParamValues(), applySavedSessionMeta(), clampVariantIndex(), clearHandled(), closedClipPath() (+73 more)
+Cohesion: 0.04
+Nodes (105): abortSvelteComponentInjection(), applyPlaceholderSizingStyles(), applySavedSessionMeta(), captureAndEmit(), checkpointPayload(), clampVariantIndex(), clearHandled(), closedClipPath() (+97 more)
 
 ### Community 32 - "ensure_same_tenant"
-Cohesion: 0.06
-Nodes (28): ensure_same_tenant(), get_current_user(), require_admin_user(), require_roles(), resolve_tenant_org_id(), create_tool_action(), get_tool_action(), list_tool_actions() (+20 more)
+Cohesion: 0.10
+Nodes (22): 1. Identidad, Stack Políglota y Equipo, 2. Reglas Innegociables de Seguridad, Dominio e Idioma, 3. Testing, Zero-Regression y Comandos Canónicos en Windows, 4. Protocolo Lean Teamwork v2 (Orquestación Multi-Agente, Velocidad y Economía de Tokens), 🛡️ Reglas Operativas del Proyecto: AgentGuard, ensure_same_tenant(), get_current_user(), require_admin_user() (+14 more)
 
 ### Community 33 - "🖼️ 3. Desglose Técnico Diapositiva por Diapositiva (Slides 1 a 12)"
-Cohesion: 0.29
-Nodes (7): 🖼️ 3. Desglose Técnico Diapositiva por Diapositiva (Slides 1 a 12), Slide 10 — `Portal Empresarial ACME Corp (:9000) y Auto-Onboarding CEO`, Slide 12 — `4 Escenarios Canónicos, Calidad Zero-Regression y Conclusión`, Slide 1 — Portada: `AgentGuard: Gobernanza Zero Trust en Runtime para Agentes de IA`, Slide 2 — `El Problema: Riesgos Críticos en Agentes Autónomos (OWASP 2026)`, Slide 3 — `Propuesta de Valor y Paradigma Zero Trust Fuera del LLM`, Slide 6 — `Modelo de Datos Dual: PostgreSQL 16 (13 Tablas) + SQLite ACME (7)`
-
-### Community 35 - "agent_service.py"
-Cohesion: 0.06
-Nodes (17): assign_tool_to_agent(), create_agent(), delete_agent(), get_agent(), list_agent_tools(), list_agents(), update_agent(), AgentCreate (+9 more)
+Cohesion: 0.13
+Nodes (13): 5.3. Ciclo Obligatorio de Cambio de Contraseña (`must_change_password` + `ForcePasswordChangeModal.tsx`), 🖼️ 3. Desglose Técnico Diapositiva por Diapositiva (Slides 1 a 12), Slide 10 — `Portal Empresarial ACME Corp (:9000) y Auto-Onboarding CEO`, Slide 12 — `4 Escenarios Canónicos, Calidad Zero-Regression y Conclusión`, Slide 1 — Portada: `AgentGuard: Gobernanza Zero Trust en Runtime para Agentes de IA`, Slide 2 — `El Problema: Riesgos Críticos en Agentes Autónomos (OWASP 2026)`, Slide 3 — `Propuesta de Valor y Paradigma Zero Trust Fuera del LLM`, Slide 6 — `Modelo de Datos Dual: PostgreSQL 16 (13 Tablas) + SQLite ACME (7)` (+5 more)
 
 ### Community 36 - ".oxlintrc.json"
 Cohesion: 0.33
@@ -443,7 +429,7 @@ Nodes (5): plugins, rules, react/only-export-components, react/rules-of-hooks, $
 
 ### Community 37 - "cli.py"
 Cohesion: 0.06
-Nodes (9): display_presets_table(), main(), main_async(), print_banner(), get_preset_by_id(), list_presets(), main(), run_migrations_online() (+1 more)
+Nodes (12): display_presets_table(), main(), main_async(), print_banner(), GeminiAgentClient, get_preset_by_id(), list_presets(), main() (+4 more)
 
 ### Community 38 - "shallowRef"
 Cohesion: 0.05
@@ -462,8 +448,8 @@ Cohesion: 0.06
 Nodes (33): clamp(), closeProjector(), copiedMermaid, decodedCode, detectedDiagramLabel, dragOriginPanX, dragOriginPanY, dragStartX (+25 more)
 
 ### Community 48 - "connectSSE"
-Cohesion: 0.10
-Nodes (65): abandonForeignSession(), abandonSupersededGo(), applyLiveBarPreference(), beginNewLiveConfiguration(), cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure(), cleanup() (+57 more)
+Cohesion: 0.08
+Nodes (73): applyLiveBarPreference(), beginNewLiveConfiguration(), cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure(), cleanup(), cleanupAcceptedSession(), clearAnnotations() (+65 more)
 
 ### Community 49 - "📑 Desglose de Pasos: Semana 1 — Base de Datos & Setup Inicial"
 Cohesion: 0.05
@@ -473,17 +459,13 @@ Nodes (38): ⚙️ AgentGuard — Backend (Python 3.12+ & FastAPI), 📋 Especif
 Cohesion: 0.07
 Nodes (62): createRef(), doWatch(), get(), getCurrentScope(), isRef2(), onScopeDispose(), readonly(), ref() (+54 more)
 
-### Community 51 - "🗄️ AgentGuard — MER Relacional y Modelo Físico de Datos (Versión Final Verificada)"
-Cohesion: 0.15
-Nodes (13): 0. Resumen ejecutivo (datos verificados contra el código), 1.1 Persistencia Core AgentGuard (PostgreSQL 16), 1.2 Persistencia Externa ACME Corp (SQLite), 1. Arquitectura de doble persistencia, 2. Diagrama MER físico completo — PostgreSQL (13 tablas), 3.3 Inventario de integridad referencial (resumen de `ON DELETE`), 3.4 Desvíos modelo ORM ↔ migración (hallazgos de auditoría), 3. Diccionario físico tabla por tabla (+5 more)
+### Community 51 - "PDPEngine"
+Cohesion: 0.10
+Nodes (14): PDPEngine, test_matches_conditions_destinations(), test_matches_conditions_empty(), test_matches_conditions_numeric(), 0. Resumen ejecutivo (datos verificados contra el código), 1.1 Persistencia Core AgentGuard (PostgreSQL 16), 1.2 Persistencia Externa ACME Corp (SQLite), 1. Arquitectura de doble persistencia (+6 more)
 
 ### Community 53 - "3.2 Tablas"
-Cohesion: 0.25
-Nodes (15): now(), 3.2.10 `approvals` — bandeja HITL, 3.2.11 `alerts`, 3.2.12 `audit_events` — log administrativo inmutable, 3.2.13 `api_keys` — credenciales del Gateway (migración 003), 3.2.1 `organizations` — raíz del tenant, 3.2.2 `users`, 3.2.3 `agents` (+7 more)
-
-### Community 54 - "_make_auth"
-Cohesion: 0.27
-Nodes (5): _make_auth(), test_get_alert_by_id_found(), test_get_alert_by_id_not_found(), test_list_alerts_endpoint(), test_update_alert_status()
+Cohesion: 0.19
+Nodes (18): now(), 3.2.10 `approvals` — bandeja HITL, 3.2.11 `alerts`, 3.2.12 `audit_events` — log administrativo inmutable, 3.2.13 `api_keys` — credenciales del Gateway (migración 003), 3.2.1 `organizations` — raíz del tenant, 3.2.2 `users`, 3.2.3 `agents` (+10 more)
 
 ### Community 55 - "export-diagrams.mjs"
 Cohesion: 0.12
@@ -493,21 +475,17 @@ Nodes (24): ASSETS_DIR, buildCatalogMarkdown(), CANONICAL_DOCS_ORDER, cleanHeadi
 Cohesion: 0.12
 Nodes (8): check_database_health(), health_check(), ping(), root(), build_drawio_xml(), add_card(), add_edge(), add_textbox()
 
-### Community 57 - "list_alerts"
-Cohesion: 0.27
-Nodes (3): get_alert_by_id(), list_alerts(), update_alert_status()
-
 ### Community 58 - "06 — Portal ACME Corp, Asistente Consultante BI y Cliente Agent Demo"
-Cohesion: 0.09
-Nodes (22): _build_generation_config(), 4.5. Modelo Gemini Deprecado (`gemini-2.5-flash`) vs. `gemini-3.8-flash` + Fallback `gemini-3.5-flash-lite`, 06 — Portal ACME Corp, Asistente Consultante BI y Cliente Agent Demo, 2. Auto-Onboarding Automático del CEO (`acme-corp/agent/onboarding.py`), 3.1 Configuración del Modelo y Pensamiento Determinista, 3.2 Manejo de Historial Multi-Turno y Preservación de `thoughtSignature`, 3.3 Conmutación por Fallback de Alta Disponibilidad (`GEMINI_FALLBACK_MODELS`), 3.4 Modos de Ejecución: Guiado / Rápido vs Gemini LLM Real (+14 more)
+Cohesion: 0.11
+Nodes (19): 06 — Portal ACME Corp, Asistente Consultante BI y Cliente Agent Demo, 2. Auto-Onboarding Automático del CEO (`acme-corp/agent/onboarding.py`), 3.1 Configuración del Modelo y Pensamiento Determinista, 3.2 Manejo de Historial Multi-Turno y Preservación de `thoughtSignature`, 3.3 Conmutación por Fallback de Alta Disponibilidad (`GEMINI_FALLBACK_MODELS`), 3.4 Modos de Ejecución: Guiado / Rápido vs Gemini LLM Real, 3.5 Gráfica de Torta SVG Interactiva y Filtro Visual no Destructivo, 3. Asistente "Consultante BI" y Motor Google Gemini 3.8 Flash (+11 more)
 
 ### Community 59 - "el"
-Cohesion: 0.07
-Nodes (59): actionLabel(), applyConfigureBarChrome(), bindConfigureCountPillTooltip(), bindConfigureInlineControlHover(), bindConfigureModifierPillHover(), buildConfigureActionControl(), buildConfigureCountControl(), buildConfigureRow() (+51 more)
+Cohesion: 0.06
+Nodes (65): actionLabel(), applyConfigureBarChrome(), barPaletteForTheme(), bindConfigureCountPillTooltip(), bindConfigureInlineControlHover(), bindConfigureModifierPillHover(), buildConfigureActionControl(), buildConfigureCountControl() (+57 more)
 
 ### Community 60 - "asyncio"
-Cohesion: 0.22
-Nodes (4): test_gateway_execute_invalid_api_key_returns_401(), test_gateway_execute_missing_api_key_returns_401(), test_gateway_execute_org_mismatch_returns_403(), test_gateway_execute_validation_error()
+Cohesion: 0.13
+Nodes (7): test_gateway_execute_endpoint_allow(), test_gateway_execute_endpoint_deny(), test_gateway_execute_endpoint_require_approval(), test_gateway_execute_invalid_api_key_returns_401(), test_gateway_execute_missing_api_key_returns_401(), test_gateway_execute_org_mismatch_returns_403(), test_gateway_execute_validation_error()
 
 ### Community 62 - "QrShareCard.vue"
 Cohesion: 0.09
@@ -529,17 +507,21 @@ Nodes (10): AgentDiscoverRequest, AgentRunRequest, DeleteSalesRequest, DropDatab
 Cohesion: 0.06
 Nodes (56): applyOptions(), callHook(), callWithAsyncErrorHandling(), callWithErrorHandling(), createDuplicateChecker(), createPathGetter(), createSetupContext(), createWatcher() (+48 more)
 
+### Community 69 - "tool_actions.py"
+Cohesion: 0.13
+Nodes (5): create_tool_action(), get_tool_action(), list_tool_actions(), websocket_global_endpoint(), websocket_tenant_endpoint()
+
 ### Community 70 - "Original User Request"
 Cohesion: 0.08
 Nodes (23): Alcance de la Fase 2:, Contexto y Reglas Obligatorias:, Criterios de Aceptación:, Criterios de Aceptación:, Entregables:, Follow-up — 2026-11-02 21:50:33 UTC, Follow-up — 2026-11-03 01:31:43 UTC, INC-01: Homogeneización de Enums y Localización Integral al Español en la UI (+15 more)
 
-### Community 71 - "dashboard-sidebar.tsx"
-Cohesion: 0.33
-Nodes (6): DashboardSidebarProps, NavGroupData, NavItem(), NavItemData, WorkspaceSwitcherProps, AuthUser
+### Community 71 - "OverviewView.tsx"
+Cohesion: 0.11
+Nodes (23): 2.1 Arquitectura de Ruteo y Navegación Hash, 2. Inventario Exhaustivo de Vistas y Componentes del Frontend, SidebarProps, NavGroupData, NavItem(), NavItemData, SidebarNav(), WorkspaceSwitcher() (+15 more)
 
 ### Community 72 - "001_initial_schema.py"
-Cohesion: 0.14
-Nodes (6): downgrade(), upgrade(), downgrade(), upgrade(), downgrade(), upgrade()
+Cohesion: 0.18
+Nodes (4): downgrade(), upgrade(), downgrade(), upgrade()
 
 ### Community 73 - "toValue"
 Cohesion: 0.07
@@ -547,27 +529,27 @@ Nodes (52): computed(), hasInjectionContext(), toValue(), createFetch(), createU
 
 ### Community 74 - "PolicyRule"
 Cohesion: 0.04
-Nodes (42): AuditEvent, RuleEffect, Policy, PolicyRule, test_audit_service_get_by_id(), test_audit_service_list_and_count_events(), test_mutation_policy_rules_logs_audit_events(), test_pdp_evaluate_allow() (+34 more)
+Nodes (36): RuleEffect, Policy, PolicyRule, PolicyUpdate, PolicyRuleCreateInPolicy, PolicyRuleUpdate, _invalidate_policy_cache(), PolicyRuleService (+28 more)
 
 ### Community 75 - "🛡️ AgentGuard — Plataforma SaaS B2B Multi-Tenant de Gobernanza en Runtime para Agentes de IA"
 Cohesion: 0.10
 Nodes (20): 1. Caso de Uso Estrella: Copiloto Administrativo "Consultante BI" (`http://localhost:9000`), 2. Los 4 Escenarios Canónicos de Seguridad (`agent-demo` y Pestaña Seguridad ACME), 🔗 Accesos Directos del Proyecto y Defensa, 🛡️ AgentGuard — Plataforma SaaS B2B Multi-Tenant de Gobernanza en Runtime para Agentes de IA, Alternativas de Arranque por Separado y Cliente CLI, 🧪 Comandos Canónicos de Verificación y Testing, 🏛️ Contexto Institucional y Equipo, 🚀 Cómo Replicar y Probar el Proyecto desde Cero (+12 more)
 
 ### Community 76 - "📚 Índice Visual Ordenado por Volumen Documental"
-Cohesion: 0.06
-Nodes (32): 01. Los 4 Escenarios Canónicos de Seguridad (agent-demo y Pestaña Seguridad ACME), 02. Itinerarios de Lectura Recomendados, 03. Arquitectura de doble persistencia, 04. Diagrama MER físico completo — PostgreSQL (13 tablas), 05. Historial completo de migraciones Alembic (001 → 006), 06. Diagrama MER — ACME Corp (7 tablas), 07. Diagrama conceptual completo — Dominio AgentGuard (13 entidades), 08. Diagrama de atributos de entidades núcleo (notación Chen) (+24 more)
+Cohesion: 0.10
+Nodes (21): 01. Los 4 Escenarios Canónicos de Seguridad (agent-demo y Pestaña Seguridad ACME), 02. Itinerarios de Lectura Recomendados, 07. Diagrama conceptual completo — Dominio AgentGuard (13 entidades), 08. Diagrama de atributos de entidades núcleo (notación Chen), 09. Vista conceptual resumida — Dominio ERP ACME Corp (SQLite), 10. Esquema Arquitectónico en Capas (Runtime Real), 11. Diagrama de Secuencia: Los 4 Escenarios Canónicos (Gateway PEP/PDP), 12. Diagrama de Secuencia: Flujo Estrella "Consultante BI" con Gemini 3.8 Flash (+13 more)
 
 ### Community 77 - "docs-portal/package.json"
 Cohesion: 0.10
 Nodes (24): description, devDependencies, mermaid@^11.4.1, puppeteer-core@^24.4.0, qrcode@^1.5.4, @types/qrcode@^1.5.5, vue@^3.5.13, name (+16 more)
 
-### Community 78 - "typing"
-Cohesion: 0.04
-Nodes (37): change_password(), get_me(), login(), register(), register_organization(), verify_password(), AlertUpdateRequest, AnalyticsOverviewResponse (+29 more)
+### Community 78 - "BaseSchema"
+Cohesion: 0.03
+Nodes (49): assign_tool_to_agent(), create_agent(), delete_agent(), get_agent(), list_agent_tools(), list_agents(), update_agent(), create_organization() (+41 more)
 
 ### Community 79 - "domain.ts"
 Cohesion: 0.06
-Nodes (67): B. Matriz Comparativa de Enums, EmptyStateAction, EmptyStateProps, ForcePasswordChangeModalProps, QuickSetupWizardProps, ResetDemoModalProps, SidebarProps, AGENT_STATUS_LABELS (+59 more)
+Nodes (54): B. Matriz Comparativa de Enums, ForcePasswordChangeModalProps, DashboardSidebarProps, AGENT_STATUS_LABELS, AGENT_STATUS_STYLES, APPROVAL_STATUS_LABELS, DECISION_BADGE_CLASSES, DECISION_STYLES (+46 more)
 
 ### Community 80 - "🤖 AgentGuard — Agent Demo (Cliente CLI Python)"
 Cohesion: 0.29
@@ -577,37 +559,33 @@ Nodes (6): 1. Requisitos previos, 2. Instalación, 3. Configuración (`.env`), 4
 Cohesion: 0.12
 Nodes (20): dependencies, class-variance-authority@^0.7.1, clsx@^2.1.1, @radix-ui/react-label@^2.1.17, @radix-ui/react-slot@^1.5.0, tailwind-merge@^3.7.0, tw-animate-css@^1.4.0, description (+12 more)
 
-### Community 82 - "OrganizationService"
-Cohesion: 0.11
-Nodes (4): SiemWebhookTestResponse, OrganizationService, WebhookService, 3. Tabla Maestra de Hallazgos (Consolidada y Deduplicada)
-
-### Community 83 - "approvals.py"
-Cohesion: 0.12
-Nodes (10): get_approval(), list_approvals(), resolve_approval(), ApprovalDetailRead, ApprovalResolveRequest, test_approval_resolve_schema(), 1. Resumen Ejecutivo, 🛡️ Auditoría Profunda de Ingeniería, Seguridad y Arquitectura — Ecosistema AgentGuard + ACME Corp (+2 more)
+### Community 83 - "list_approvals"
+Cohesion: 0.31
+Nodes (3): get_approval(), list_approvals(), resolve_approval()
 
 ### Community 84 - "create_app"
-Cohesion: 0.14
-Nodes (16): create_app(), bi_delete_sales(), bi_query_sales(), catalog_update_price(), crm_create_quote(), crm_export_customers(), db_drop(), discover_context() (+8 more)
+Cohesion: 0.16
+Nodes (14): create_app(), bi_delete_sales(), bi_query_sales(), catalog_update_price(), crm_create_quote(), crm_export_customers(), db_drop(), get_state() (+6 more)
 
 ### Community 85 - "app.js"
 Cohesion: 0.13
-Nodes (32): applyLocalFilter(), dom, escapeHtml(), executeBiStep(), handleBiChatSubmit(), loadPresets(), loadSavedCredentials(), onboardAgentguard() (+24 more)
+Nodes (35): applyLocalFilter(), dom, escapeHtml(), executeBiStep(), formatInlineMarkdown(), handleBiChatSubmit(), loadPresets(), loadSavedCredentials() (+27 more)
 
 ### Community 86 - "🏛️ Registro de Decisiones Arquitectónicas (ADRs) — AgentGuard"
-Cohesion: 0.06
-Nodes (25): UserService, Slide 8 — `Onboarding SaaS B2B, Sesiones Efímeras y Matriz RBAC`, 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema (+17 more)
+Cohesion: 0.10
+Nodes (20): 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema, 1. Contexto y Problema, 1. Decisión Tomada, 1. Decisión Tomada, 2. Asignación de Responsabilidades por Paquete (+12 more)
 
 ### Community 88 - "scripts"
 Cohesion: 0.12
 Nodes (16): scripts, build:frontend, dev:backend, dev:frontend, docs:build, docs:dev, docs:diagrams, docs:preview (+8 more)
 
 ### Community 89 - "test_acme_server.py"
-Cohesion: 0.11
-Nodes (10): app_with_temp_db(), temp_db(), test_bi_delete_sales_endpoint(), test_bi_query_sales_endpoint(), test_catalog_update_price_and_tampering(), test_crm_create_quote_endpoint(), test_crm_export_customers_endpoint(), test_database_drop_and_503_wiped_with_sales() (+2 more)
+Cohesion: 0.08
+Nodes (13): app_with_temp_db(), temp_db(), test_bi_delete_sales_endpoint(), test_bi_query_sales_endpoint(), test_catalog_update_price_and_tampering(), test_crm_create_quote_endpoint(), test_crm_export_customers_endpoint(), test_database_drop_and_503_wiped_with_sales() (+5 more)
 
 ### Community 90 - "initPageChat"
-Cohesion: 0.09
-Nodes (48): armPageChatForTyping(), attachSteerFocusDebug(), attachSteerFocusGuard(), clearSteerAwaitTimer(), clearSteerFocusRecoverTimer(), collapsePageChat(), configureVoiceContext(), expandPageChat() (+40 more)
+Cohesion: 0.08
+Nodes (52): armPageChatForTyping(), attachSteerFocusDebug(), attachSteerFocusGuard(), buildSteerProcessingDots(), buildSteerQueueHint(), clearSteerAwaitTimer(), clearSteerFocusRecoverTimer(), collapsePageChat() (+44 more)
 
 ### Community 91 - "🛡️ AgentGuard — Guía Simple y Hoja de Ruta para el Equipo"
 Cohesion: 0.15
@@ -619,7 +597,7 @@ Nodes (48): batch(), checkIdentityKeys(), cleanupDeps(), cleanupEffect(), constr
 
 ### Community 94 - "_mock_user_auth"
 Cohesion: 0.16
-Nodes (8): _mock_user_auth(), test_anti_ai_agent_header_blocked_on_all_control_plane_routes(), test_anti_idor_cross_tenant_blocked_with_403(), test_rbac_matrix_admin_only_mutations_and_settings(), test_rbac_matrix_alerts_triage(), test_rbac_matrix_approvals_resolve(), test_rbac_matrix_audit_events(), test_rbac_matrix_operational_reads_allowed_for_all_roles()
+Nodes (8): _mock_user_auth(), test_anti_ai_agent_header_blocked_on_all_control_plane_routes(), test_anti_idor_cross_tenant_blocked_with_403(), test_rbac_matrix_admin_only_mutations_and_settings(), test_rbac_matrix_alerts_triage(), test_rbac_matrix_audit_events(), test_rbac_matrix_gateway_simulate(), test_rbac_matrix_operational_reads_allowed_for_all_roles()
 
 ### Community 95 - "env.py"
 Cohesion: 0.11
@@ -629,37 +607,33 @@ Nodes (5): Settings, test_health_endpoint(), test_ping_endpoint(), test_root_end
 Cohesion: 0.12
 Nodes (15): 1.1 Árbol Documental del Repositorio, 1.2 Inventario Individual (39 archivos `.md`), 1.3 Bloque Aparte: Logs Históricos de Ejecución (`.agents/teamwork/*/*`), 1.4 Artefactos No-Markdown Relacionados, 1. Inventario Completo de Archivos Markdown (`.md`), 2.1 Mapa de Duplicaciones Principales (7 grupos), 2.2 Mapa de Contradicciones (Doc vs. Doc y Doc vs. Código/Graphify), 2. Mapa de Duplicaciones y Contradicciones (+7 more)
 
-### Community 97 - "initGlobalBar"
-Cohesion: 0.08
-Nodes (40): agentHasWorkInFlight(), agentStatusText(), barPaletteForTheme(), brandMarkSvg(), buildParamsPanel(), buildSteerQueueHint(), detectPageTheme(), ensureAgentPollTooltip() (+32 more)
-
-### Community 98 - "SanitizerService"
-Cohesion: 0.15
-Nodes (4): 2.1 Stack políglota verificado, 2.2 Topología PEP / PDP y aislamiento multi-tenant, 2.3 Controles de seguridad para agentes IA (Implementado vs. Solo en papel), 2. Arquitectura y Stack Tecnológico
+### Community 97 - "Responsive Design"
+Cohesion: 0.20
+Nodes (10): Breakpoints: Content-Driven, Detect Input Method, Not Just Screen Size, Layout Adaptation Patterns, Mobile-First: Write It Right, Picture Element for Art Direction, Responsive Design, Responsive Images: Get It Right, Safe Areas: Handle the Notch (+2 more)
 
 ### Community 99 - "`_MASTER_PROJECT_SNAPSHOT.md` — Fuente de Verdad Consolidada de AgentGuard"
 Cohesion: 0.12
-Nodes (14): ThreatAnalysisResult, 1.1 Qué problema resuelve, 1.2 Roles y realidad SaaS B2B vs. solicitud PaaS Superadmin, 1. Propósito y Modelo de Negocio (SaaS B2B vs. PaaS Multi-tenant), 3.1 Esquema PostgreSQL real (13 tablas, migraciones `001`–`005`), 3.2 Superficie HTTP/WebSocket real (`backend/app/api/`), 3. Modelo de Datos y Contratos Clave, 4.1 Módulos construidos y verificables en código (+6 more)
+Nodes (16): 1.1 Qué problema resuelve, 1.2 Roles y realidad SaaS B2B vs. solicitud PaaS Superadmin, 1. Propósito y Modelo de Negocio (SaaS B2B vs. PaaS Multi-tenant), 2.1 Stack políglota verificado, 2.2 Topología PEP / PDP y aislamiento multi-tenant, 2.3 Controles de seguridad para agentes IA (Implementado vs. Solo en papel), 2. Arquitectura y Stack Tecnológico, 3.1 Esquema PostgreSQL real (13 tablas, migraciones `001`–`005`) (+8 more)
 
 ### Community 100 - "test_websocket.py"
-Cohesion: 0.16
-Nodes (5): test_websocket_endpoint_ping_pong(), test_websocket_manager_broadcast_tenant_isolation(), test_websocket_manager_connect_and_welcome(), test_websocket_manager_disconnect_cleanup(), test_websocket_tenant_endpoint_connect()
+Cohesion: 0.11
+Nodes (6): WebSocketConnectionManager, test_websocket_endpoint_ping_pong(), test_websocket_manager_broadcast_tenant_isolation(), test_websocket_manager_connect_and_welcome(), test_websocket_manager_disconnect_cleanup(), test_websocket_tenant_endpoint_connect()
 
 ### Community 102 - "🧭 2. Flujo del Wizard de Presentación (4 Pasos Guiados)"
 Cohesion: 0.20
 Nodes (9): 📌 1. Objetivo y Visión General, 🧭 2. Flujo del Wizard de Presentación (4 Pasos Guiados), 💡 3. Componentes y Estados Sugeridos para la Implementación en React, 🤝 4. Distribución de Tareas del Equipo, 🎨 Especificación de Mejoras de Frontend: Presenter Tour & Live Demo Runner, Paso 1: Cotización Legítima (ALLOW), Paso 2: Abuso de Privilegio / Falta de Capacidad (DENY), Paso 3: Operación Financiera Sensible (REQUIRE_APPROVAL - HITL) (+1 more)
 
 ### Community 103 - "3. Hallazgos Críticos y Bugs Funcionales en el Frontend"
-Cohesion: 0.17
-Nodes (11): 02 — Diagnóstico Forense del Frontend y "Alma Máter" del Proyecto, 1. Veredicto General del Frontend, 2. Mapa de Estado por Pantalla y Componente, 3.1 Crash Fatal (White Screen of Death) en `TracesView` al Recibir Eventos WebSocket, 3.3 Pérdida de Datos Reales en el Mapeo DTO -> Dominio (`api.ts`), 3.4 Inconsistencias Matemáticas y Doble Conteo en `OverviewView` y `App`, 3.5 Usuario RBAC Fantasma (`Lucia Vance`) que Provoca Errores FK en Base de Datos, 3.6 Defectos de CSS, Tematización y Clases Inexistentes (+3 more)
+Cohesion: 0.15
+Nodes (12): 02 — Diagnóstico Forense del Frontend y "Alma Máter" del Proyecto, 1. Veredicto General del Frontend, 2. Mapa de Estado por Pantalla y Componente, 3.1 Crash Fatal (White Screen of Death) en `TracesView` al Recibir Eventos WebSocket, 3.3 Pérdida de Datos Reales en el Mapeo DTO -> Dominio (`api.ts`), 3.4 Inconsistencias Matemáticas y Doble Conteo en `OverviewView` y `App`, 3.5 Usuario RBAC Fantasma (`Lucia Vance`) que Provoca Errores FK en Base de Datos, 3.6 Defectos de CSS, Tematización y Clases Inexistentes (+4 more)
 
 ### Community 104 - "🌊 Oleada 3 — Cierre de Vistas React y Certificación End-to-End (PostgreSQL Real + Integración Cross-Sistema `:9000 <-> :8000`) (9 ítems, 5 Workers en paralelo)"
 Cohesion: 0.13
 Nodes (15): 4. Propuesta de Oleadas de Ejecución (Etapa 3) Actualizada, ✅ Matriz Final de Verificación de Cobertura `P0` + `P1` en Etapa 3 (`60 / 60`), 🌊 Oleada 1 — Contención P0 Runtime, WebSockets en Vivo, Auth/Reset Seguro, Esquema Base y Núcleo Backend ACME (33 ítems, 6 Workers en paralelo), 🌊 Oleada 3 — Cierre de Vistas React y Certificación End-to-End (PostgreSQL Real + Integración Cross-Sistema `:9000 <-> :8000`) (9 ítems, 5 Workers en paralelo), Worker `O1-W1`: Motor PEP/PDP, Anti-SSRF (`:9000` en `_dispatch_to_tool`), Sanitización LLM06 y Núcleo `resolve_approval`, Worker `O1-W2`: WebSockets Full-Stack (Auth JWT, Aislamiento Multi-Tenant y Conexión Global `App.tsx`), Worker `O1-W3`: Blindaje `X-Agent-Id`, Config/JWT Fail-Fast, `must_change_password`, `demo/reset` Seguro (con Re-emisión JWT) y Scripts CLI/Parada, Worker `O1-W4`: Modelos SQLAlchemy (`server_default`), Índices Compuestos Alembic `007` y Guardia `dry_run` en Gateway (+7 more)
 
 ### Community 105 - "4. Biblioteca / Diccionario completo de atributos reales (96 atributos)"
-Cohesion: 0.12
-Nodes (17): 0. Leyenda de notación (Chen adaptada a Mermaid), 1.1 Lectura del diagrama, 1.2 Conteo de relaciones y correspondencia con claves foráneas, 1. Diagrama conceptual completo — Dominio AgentGuard (13 entidades), 3.1 Resumen de participaciones, 3. Análisis formal de cardinalidades `(mín, máx)`, 4.1 Identificadores (clave primaria `UUID v4`), 4.2 Referencias (claves foráneas y referencia polimórfica) (+9 more)
+Cohesion: 0.10
+Nodes (18): 0. Leyenda de notación (Chen adaptada a Mermaid), 1.1 Lectura del diagrama, 1.2 Conteo de relaciones y correspondencia con claves foráneas, 1. Diagrama conceptual completo — Dominio AgentGuard (13 entidades), 2. Diagrama de atributos de entidades núcleo (notación Chen), 3.1 Resumen de participaciones, 3. Análisis formal de cardinalidades `(mín, máx)`, 4.1 Identificadores (clave primaria `UUID v4`) (+10 more)
 
 ### Community 107 - "vite.config.ts"
 Cohesion: 0.33
@@ -681,6 +655,10 @@ Nodes (13): 06 — Propuesta de Evolución Arquitectónica, Optimización de Ren
 Cohesion: 0.50
 Nodes (3): allowBuilds, esbuild, packages
 
+### Community 113 - "threat_detector.py"
+Cohesion: 0.17
+Nodes (3): ThreatAnalysisResult, ThreatDetectorService, 5. Deuda Técnica y Riesgos Detectados
+
 ### Community 114 - "create_api_key"
 Cohesion: 0.17
 Nodes (6): create_api_key(), get_api_key(), list_api_keys(), revoke_api_key(), ApiKeyCreatedResponse, ApiKeyResponse
@@ -690,24 +668,24 @@ Cohesion: 0.40
 Nodes (5): scripts, build, dev, lint, preview
 
 ### Community 116 - "App.tsx"
-Cohesion: 0.11
-Nodes (49): 🌊 Oleada 2 — Gobernanza Control Plane, Frontera Firmada `PEP <-> ACME`, Contratos Full-Stack (`:5173` y `:9000`) y Fixtures BD Real (18 ítems, 4 Workers en paralelo), Worker `O2-W1`: Frontera Firmada `PEP <-> ACME` (`ACME-01`), Secretos SIEM, Guardias Multi-Tenant, Atomicidad `AuditService`, `IntegrityError -> 409` y `SettingsView`, Worker `O2-W2`: Sincronización de Contratos Full-Stack AgentGuard (`api.ts`), Resolución HITL `ApprovalsView` y `PlaygroundView` OWASP, Worker `O2-W3`: Saneamiento de `conftest.py`, Fixture `AsyncSession` PostgreSQL Real y Ciclo de Vida de API Keys, Worker `O2-W4`: Consola Web ACME (`:9000`) — Contratos Visuales BI, Manejo Seguro HTTP/JSON y UX HITL Cruzada con `:5173`, 1. Observation, 2.2 Tabla Maestra de Vistas, Componentes y Estado de Consumo, INC-13: Estados de Carga Limpios con Skeleton Loaders y Empty States (+41 more)
+Cohesion: 0.10
+Nodes (58): 1. Observation, 2.2 Tabla Maestra de Vistas, Componentes y Estado de Consumo, INC-13: Estados de Carga Limpios con Skeleton Loaders y Empty States, App(), AppContent(), getInitialView(), EmptyState(), EmptyStateAction (+50 more)
 
-### Community 117 - "PolicyRuleService"
-Cohesion: 0.06
-Nodes (24): ToolUpdate, _invalidate_policy_cache(), PolicyRuleService, ToolService, 2.1 Fallos `sqlalchemy.exc.MissingGreenlet` por Lazy-Loading Implícito tras `db.refresh()`, 2.2 Violaciones de Clave Foránea (`IntegrityError`) No Controladas (`HTTP 500`), 2. Crashes `HTTP 500` Confirmados en Tiempo de Ejecución, 4.1 Ausencia Total de Autenticación y Control de Acceso (RBAC) en APIs (+16 more)
+### Community 117 - "ToolService"
+Cohesion: 0.21
+Nodes (3): ToolUpdate, ToolService, 2.1 Fallos `sqlalchemy.exc.MissingGreenlet` por Lazy-Loading Implícito tras `db.refresh()`
 
 ### Community 118 - "baseCreateRenderer"
 Cohesion: 0.07
 Nodes (41): baseCreateRenderer(), checkRecursiveUpdates(), cloneIfMounted(), createAppAPI(), createAppContext(), createComponentInstance(), createDevRenderContext(), createHydrationFunctions() (+33 more)
 
 ### Community 119 - ".evaluate"
-Cohesion: 0.10
-Nodes (13): _safe_hashpw(), check_redis_health(), 03 — Arquitectura Runtime Zero Trust (PEP/PDP) e Inventario API REST, 1.2 Esquema Arquitectónico en Capas (Runtime Real), 1. Principio Rector Zero Trust y Arquitectura en Capas, 3.2 Motor PDP Determinista 5D (`backend/app/services/pdp_engine.py`), 3.3 Sanitización (OWASP LLM06) y Detección de Amenazas (OWASP Agentic Top 10 2026), 3.4 Seguridad Criptográfica (`security.py`) y Tiempo Real (`websocket_manager.py`) (+5 more)
+Cohesion: 0.13
+Nodes (14): _safe_hashpw(), check_redis_health(), 03 — Arquitectura Runtime Zero Trust (PEP/PDP) e Inventario API REST, 1.1 Principio: *"Never trust the model as the enforcement point"*, 1.2 Esquema Arquitectónico en Capas (Runtime Real), 1. Principio Rector Zero Trust y Arquitectura en Capas, 3.2 Motor PDP Determinista 5D (`backend/app/services/pdp_engine.py`), 3.3 Sanitización (OWASP LLM06) y Detección de Amenazas (OWASP Agentic Top 10 2026) (+6 more)
 
 ### Community 120 - "impeccable/SKILL.md"
 Cohesion: 0.06
-Nodes (25): Craft (deprecated alias), Craft floor, Refuse, Verify, Impeccable Documenter, Input Contract, Output Contract, Workflow (+17 more)
+Nodes (29): Craft floor, Refuse, Verify, $impeccable foundations, What "done" means, With an id: fix that one item, Without an argument: the roadmap, Constraints (+21 more)
 
 ### Community 121 - "🚀 Comandos Rápidos y Credenciales para la Demo en Vivo"
 Cohesion: 0.20
@@ -718,44 +696,44 @@ Cohesion: 0.11
 Nodes (19): 1. Caso de Uso Estrella: Copiloto Administrativo "Consultante BI" (`http://localhost:9000`), 2. Los 4 Escenarios Canónicos de Seguridad (`agent-demo` y Pestaña Seguridad ACME), 🛡️ AgentGuard — Plataforma SaaS B2B Multi-Tenant de Gobernanza en Runtime para Agentes de IA, Alternativas de Arranque por Separado y Cliente CLI, 🧪 Comandos Canónicos de Verificación y Testing, 🏛️ Contexto Institucional y Equipo, 🚀 Cómo Replicar y Probar el Proyecto desde Cero, 🗂️ Estructura Completa y Real del Monorepositorio (+11 more)
 
 ### Community 123 - "🎤 Presentación Oficial en Canva y Guion de Defensa Académica — AgentGuard"
-Cohesion: 0.25
-Nodes (8): 🎨 1. Ficha Técnica y Enlace Oficial de la Presentación en Canva, 👥 2. Distribución de Roles SCRUM y Asignación de Diapositivas (~15 Minutos), 🎙️ 4. Guion de Oratoria Paso a Paso (~15 Minutos), ✅ 5. Checklist Rápida de Puesta en Marcha Antes de Pasar al Frente, 🟢 Bloque 1: Visión, Problema OWASP y Paradigma Zero Trust (Agustín Belardinelli — Slides 1, 2 y 3), 🟣 Bloque 3: Protocolo HITL Asíncrono, WebSockets, Onboarding SaaS y RBAC (Juan Martín Battiato — Slides 7 y 8), 🟠 Bloque 4: Dashboard SPA, Portal ACME Corp, Caso Estrella "Consultante BI" y Cierre (Mateo Ortega y Jonathan Araujo — Slides 9, 10, 11 y 12), 🎤 Presentación Oficial en Canva y Guion de Defensa Académica — AgentGuard
+Cohesion: 0.22
+Nodes (9): 🎨 1. Ficha Técnica y Enlace Oficial de la Presentación en Canva, 👥 2. Distribución de Roles SCRUM y Asignación de Diapositivas (~15 Minutos), 🎙️ 4. Guion de Oratoria Paso a Paso (~15 Minutos), ✅ 5. Checklist Rápida de Puesta en Marcha Antes de Pasar al Frente, 🟢 Bloque 1: Visión, Problema OWASP y Paradigma Zero Trust (Agustín Belardinelli — Slides 1, 2 y 3), 🔵 Bloque 2: Stack Políglota, Motor PDP 5D y Persistencia Dual (Jonathan Araujo y Agustín Belardinelli — Slides 4, 5 y 6), 🟣 Bloque 3: Protocolo HITL Asíncrono, WebSockets, Onboarding SaaS y RBAC (Juan Martín Battiato — Slides 7 y 8), 🟠 Bloque 4: Dashboard SPA, Portal ACME Corp, Caso Estrella "Consultante BI" y Cierre (Mateo Ortega y Jonathan Araujo — Slides 9, 10, 11 y 12) (+1 more)
 
 ### Community 124 - "showToast"
-Cohesion: 0.11
-Nodes (38): clearStoredManualApplyState(), discardOrphanedSession(), dismissToast(), fetchPendingCount(), handleManualEditActivity(), hidePendingApplyDock(), injectVariantsFromSource(), isCompiledTemplateSourceFile() (+30 more)
+Cohesion: 0.08
+Nodes (46): agentHasWorkInFlight(), agentStatusText(), brandMarkSvg(), clearStoredManualApplyState(), ensureAgentPollTooltip(), ensureSpinKeyframes(), fetchAgentPollingStatus(), fetchPendingCount() (+38 more)
 
 ### Community 125 - "🧭 AgentGuard: Índice Maestro y Guía de Navegación del Sistema"
 Cohesion: 0.17
 Nodes (12): 1. Propósito de este Índice y de la Carpeta `documentación final/`, 2. Mapa Completo de los 11 Volúmenes Documentales, 3. Itinerarios de Lectura Recomendados, 4. Matriz de Trazabilidad: Código Fuente Real vs. Documentación Final, 5. Glosario Canónico de Términos del Dominio, 6. Certificación de Cero Regresiones y Estado del Repositorio, 🧭 AgentGuard: Índice Maestro y Guía de Navegación del Sistema, Itinerario 1: Defensa de Cátedra y Evaluación de Arquitectura Global (+4 more)
 
 ### Community 126 - "ApiError"
-Cohesion: 0.12
-Nodes (14): 1. Identidad, Stack Políglota y Equipo, 2. Reglas Innegociables de Seguridad, Dominio e Idioma, 3. Testing, Zero-Regression y Comandos Canónicos en Windows, 4. Protocolo Lean Teamwork v2 (Orquestación Multi-Agente, Velocidad y Economía de Tokens), 🛡️ Reglas Operativas del Proyecto: AgentGuard, 2. Logic Chain, 3. Caveats, 4. Conclusion (+6 more)
+Cohesion: 0.18
+Nodes (9): 2. Logic Chain, 3. Caveats, 4. Conclusion, 5. Verification Method, Master Handoff Report — Sentinel (Fase 1, Fase 2 y Fase 3), Alcance de la Fase 3:, INC-11: Refactorización de `api.ts` (Propagación Explícita de Errores y `ApiError`), INC-12: Sistema Global de Notificaciones (Toasts) y Banners de Desconexión (+1 more)
 
 ### Community 127 - "asyncio"
 Cohesion: 0.29
 Nodes (3): test_gateway_context_invalid_api_key_returns_401(), test_gateway_context_missing_header_returns_401(), test_gateway_context_org_not_found_returns_404()
 
 ### Community 128 - "4. Resumen de Brechas por Documento Auditado (14 Archivos)"
-Cohesion: 0.20
-Nodes (10): 1. Resumen Ejecutivo y Metodología, 3.1. Historial Real de Migraciones Alembic (`001`–`006`) vs. Documentación (`001`–`005`), 3.2. Conteo de Entidades / Tablas (11 vs. 12 vs. 13) y Omisión de `API_KEY` en Chen, 3.3. Generación Nativa de `UUID v4` en PostgreSQL vs. Afirmación en `agentguard_mer_relacional.md`, 3.4. Columnas `JSONB` e Índices GIN Reales, 3. Análisis Detallado por Foco Obligatorio, 5. Recomendaciones y Criterios Adoptados en `documentación final/`, Distribución de Hallazgos por Severidad (+2 more)
+Cohesion: 0.11
+Nodes (19): 🩺 Estado General de Salud por Capa (5 Capas), batch(), commit(), resume(), 1. Resumen Ejecutivo y Metodología, 2. Tabla Comparativa Maestra: Documentación Actual vs. Proyecto Real (Código/DB), 3.1. Historial Real de Migraciones Alembic (`001`–`006`) vs. Documentación (`001`–`005`), 3.2. Conteo de Entidades / Tablas (11 vs. 12 vs. 13) y Omisión de `API_KEY` en Chen (+11 more)
 
-### Community 129 - "list_executions"
-Cohesion: 0.12
-Nodes (13): get_execution_by_id(), list_executions(), _to_execution_response(), ExecutionResponse, 03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural, 1. Veredicto Ejecutivo del Backend, 3.1 Falso Éxito Silencioso en `_dispatch_to_tool` (Violación Directa de Fail-Closed), 3.2 Re-Despacho HITL Corrupto con Parámetros `"***REDACTED***"` y Pérdida de Resultado (+5 more)
+### Community 129 - "03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural"
+Cohesion: 0.15
+Nodes (12): 03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural, 1. Veredicto Ejecutivo del Backend, 2.2 Violaciones de Clave Foránea (`IntegrityError`) No Controladas (`HTTP 500`), 2. Crashes `HTTP 500` Confirmados en Tiempo de Ejecución, 3.1 Falso Éxito Silencioso en `_dispatch_to_tool` (Violación Directa de Fail-Closed), 3.2 Re-Despacho HITL Corrupto con Parámetros `"***REDACTED***"` y Pérdida de Resultado, 3. Stubs, Retornos Ficticios y Fallos de Lógica en el Core PEP/PDP, 4.1 Ausencia Total de Autenticación y Control de Acceso (RBAC) en APIs (+4 more)
 
 ### Community 131 - "04 — Secuencias de Demo, Máquinas de Estado y Casos de Uso UML"
 Cohesion: 0.25
 Nodes (8): 04 — Secuencias de Demo, Máquinas de Estado y Casos de Uso UML, 1. Diagrama de Secuencia: Los 4 Escenarios Canónicos (Gateway PEP/PDP), 2. Diagrama de Secuencia: Flujo Estrella "Consultante BI" con Gemini 3.8 Flash, 3.1 Ciclo de Vida de `Execution.status` (`ExecutionStatus`), 3.2 Ciclo de Vida de `Approval.status` (`ApprovalStatus`), 3. Máquinas de Estado Reales (`stateDiagram-v2`), 4.1 Diagrama de Casos de Uso UML (Mermaid), 4. Diagrama de Casos de Uso UML, Especificación y Preguntas de Defensa
 
-### Community 132 - "bootstrap_acme_in_agentguard"
-Cohesion: 0.12
-Nodes (14): bootstrap_acme_in_agentguard(), persist_api_key_to_env(), lifespan(), _auto_onboard_when_ready(), onboard_agentguard(), ensure_acme_onboarded_if_needed(), 2. Mapa de Interacción y Puntos de Ruptura Cross-Sistema (`ACME Corp :9000 <-> AgentGuard :8000/:5173`), 🏗️ Arquitectura Operativa Real Verificada (+6 more)
+### Community 132 - ".run_scenario"
+Cohesion: 0.06
+Nodes (27): _build_generation_config(), discover_agentguard_context(), resolve_agent_id(), resolve_tool_id_for_action(), bootstrap_acme_in_agentguard(), persist_api_key_to_env(), discover_context(), lifespan() (+19 more)
 
-### Community 133 - "PDPEngine"
-Cohesion: 0.11
-Nodes (13): PDPEngine, SanitizerService, test_matches_conditions_destinations(), test_matches_conditions_empty(), test_matches_conditions_numeric(), 3. Seguridad en Runtime, Interceptor PEP y Motor PDP 5D, 1.1 Principio: *"Never trust the model as the enforcement point"*, 🔵 Bloque 2: Stack Políglota, Motor PDP 5D y Persistencia Dual (Jonathan Araujo y Agustín Belardinelli — Slides 4, 5 y 6) (+5 more)
+### Community 133 - "1. Ficha Técnica del Stack Frontend y Arquitectura de Cliente"
+Cohesion: 0.22
+Nodes (9): 1.1 Dependencias y Versiones Exactas (`frontend/package.json`), 1.2 Comandos y Scripts Canónicos, 1.4 Notificaciones Reactivas: `ToastContext.tsx`, 1.5 Ciclo de Autenticación, Hidratación y Protección Fail-Closed: `AuthContext.tsx`, 1.6 Sistema de Diseño y Temas: `ThemeProvider.tsx` e `index.css`, 1.7 Localización Canónica 100% en Español: `src/constants/labels.ts`, 1.8 Conexión WebSocket en Tiempo Real: `useAgentGuardWebSocket.ts`, 1. Ficha Técnica del Stack Frontend y Arquitectura de Cliente (+1 more)
 
 ### Community 134 - "🧭 Los 5 Itinerarios de Evaluación Recomendados"
 Cohesion: 0.25
@@ -765,9 +743,9 @@ Nodes (7): 1. Defensa de Cátedra y Evaluación de Arquitectura Global, 2. Persi
 Cohesion: 0.09
 Nodes (36): nextTick(), resolve(), blobToBase64(), checkOverflowScroll(), createUntil(), changed(), changedTimes(), toBe() (+28 more)
 
-### Community 136 - "doctor.md"
-Cohesion: 0.06
-Nodes (29): Adaptation Strategies, Assess Adaptation Challenge, Implement & Verify, Orientation & foldables, Phone → Tablet (iPad / large screens), Platform → platform (iOS ↔ Android), Web → native (porting a website or web app), 1. Accessibility (VoiceOver / TalkBack) (+21 more)
+### Community 136 - "new-work.md"
+Cohesion: 0.07
+Nodes (27): Craft (deprecated alias), Impeccable Documenter, Input Contract, Output Contract, Workflow, Monorepo notes, Opting out of the boot check, Step 1: Run the pass (+19 more)
 
 ### Community 137 - "useScroll"
 Cohesion: 0.08
@@ -782,20 +760,20 @@ Cohesion: 0.10
 Nodes (30): applyTranslation(), callPendingCbs(), cloneVNode(), deepCloneVNode(), emptyPlaceholder(), findItem(), findNonCommentChild(), forceReflow() (+22 more)
 
 ### Community 140 - "live.md"
-Cohesion: 0.07
-Nodes (26): Step 1: Parse the request, Step 2: Reuse the page, then start, Step 3: Generate, Step 4: Accept and close, Cleanup, Exit, First-time setup, Handle `accept` (+18 more)
+Cohesion: 0.06
+Nodes (33): Apply at system scale, Audit before choosing, Choose a strategy, Contrast and perception, Live-mode signature params, Verify, Visitor mode, Step 1: Parse the request (+25 more)
 
 ### Community 141 - "detect.mjs"
-Cohesion: 0.10
-Nodes (22): at(), buildContext(), contrast(), count(), EXAMPLE_DIRS, EXT, idxOf(), is (+14 more)
+Cohesion: 0.09
+Nodes (24): at(), buildContext(), contrast(), count(), EXAMPLE_DIRS, EXT, hsl(), idxOf() (+16 more)
 
 ### Community 142 - "test_agents.py"
-Cohesion: 0.17
-Nodes (7): _setup_admin_auth(), test_agent_service_get_by_id(), test_api_assign_tool_different_org(), test_api_assign_tool_to_agent_success(), test_api_create_agent_owner_different_org(), test_api_create_agent_success(), test_api_list_agent_tools()
+Cohesion: 0.14
+Nodes (10): _setup_admin_auth(), test_agent_service_assign_tool(), test_agent_service_create(), mock_refresh(), test_agent_service_get_by_id(), test_api_assign_tool_different_org(), test_api_assign_tool_to_agent_success(), test_api_create_agent_owner_different_org() (+2 more)
 
 ### Community 143 - "Responsive Design"
 Cohesion: 0.08
-Nodes (25): Assess Adaptation Challenge, Breakpoints: Content-Driven, Content Adaptation, Desktop Adaptation (Mobile → Desktop), Detect Input Method, Not Just Screen Size, Email Adaptation (Web → Email), Implement Adaptations, Layout Adaptation Patterns (+17 more)
+Nodes (22): Assess Adaptation Challenge, Content Adaptation, Desktop Adaptation (Mobile → Desktop), Email Adaptation (Web → Email), Implement Adaptations, Layout Adaptation Techniques, Mobile Adaptation (Desktop → Mobile), Adaptation Strategies (+14 more)
 
 ### Community 144 - "manifest.json"
 Cohesion: 0.40
@@ -805,9 +783,13 @@ Nodes (4): diagrams, generatedAt, items, total
 Cohesion: 0.12
 Nodes (24): objectOmit(), onElementRemoval(), onLongPress(), clear(), onDown(), onMove(), onRelease(), unrefElement() (+16 more)
 
+### Community 146 - "📄 Volumen 05 · Manual Frontend SPA (React 19), Matriz RBAC y Credenciales"
+Cohesion: 0.33
+Nodes (6): 17. Ficha Técnica del Stack Frontend y Arquitectura de Cliente, 18. Ciclo de Autenticación, Hidratación y Protección Fail-Closed: AuthContext.tsx, 19. Documentación Exhaustiva de las 9 Vistas (frontend/src/views/), 20. PlaygroundView.tsx — Evaluador PDP Real sobre PostgreSQL, 21. Comparativa de Estado: Semilla Base vs Estado Ampliado, 📄 Volumen 05 · Manual Frontend SPA (React 19), Matriz RBAC y Credenciales
+
 ### Community 147 - "document.md"
-Cohesion: 0.08
-Nodes (24): hsl(), Component translation rules, Narrative mapping, Pitfalls, Scan mode (approach C: auto-extract, then confirm descriptive language), Schema, Seed mode, Step 1: Find the design assets (+16 more)
+Cohesion: 0.09
+Nodes (22): Component translation rules, Narrative mapping, Pitfalls, Scan mode (approach C: auto-extract, then confirm descriptive language), Schema, Seed mode, Step 1: Find the design assets, Step 1: Route through new-work's workshop (+14 more)
 
 ### Community 148 - "createDevToolsCtxHooks"
 Cohesion: 0.14
@@ -822,32 +804,32 @@ Cohesion: 0.09
 Nodes (22): Assess Onboarding Needs, Context Over Ceremony, Contextual Help, Design Onboarding Experiences, Documentation & Help, Empty State Design, Feature Discovery & Adoption, Guided Tours & Walkthroughs (+14 more)
 
 ### Community 151 - "Organization"
-Cohesion: 0.05
-Nodes (27): reset_demo_data(), Organization, OrganizationUpdate, clear_database(), ensure_canonical_demo_users(), _resolve_demo_org(), seed_data(), _setup_admin_auth() (+19 more)
+Cohesion: 0.06
+Nodes (25): ActorType, Organization, OrganizationUpdate, OrganizationService, test_audit_service_get_by_id(), test_audit_service_list_and_count_events(), test_audit_service_log_audit_event(), _setup_admin_auth() (+17 more)
 
 ### Community 152 - "1. Propuesta de Arquitectura Objetivo y Árbol de Directorios (Front & Back)"
 Cohesion: 0.50
 Nodes (4): 1.1 Diagrama de Capas y Regla de Dependencia (Arquitectura Hexagonal / Clean), 1.2 Árbol de Directorios Objetivo — Backend (`backend/`), 1.3 Árbol de Directorios Objetivo — Frontend (`frontend/src/`), 1. Propuesta de Arquitectura Objetivo y Árbol de Directorios (Front & Back)
 
 ### Community 153 - "createLiveBrowserDomHelpers"
-Cohesion: 0.14
-Nodes (18): createLiveBrowserDomHelpers(), activeElementDeep(), cloneWithoutChrome(), copyTextViaSelection(), cssId(), liveUiRoot(), makeFrozenAnchor(), own() (+10 more)
+Cohesion: 0.16
+Nodes (15): createLiveBrowserDomHelpers(), activeElementDeep(), cloneWithoutChrome(), copyTextViaSelection(), cssId(), liveUiRoot(), makeFrozenAnchor(), raiseHitModal() (+7 more)
 
 ### Community 154 - "looseEqual"
 Cohesion: 0.15
 Nodes (22): beforeUpdate(), callModelHook(), castValue(), created(), getCheckboxValue(), getValue(), initVModelForSSR(), isSameSelectValue() (+14 more)
 
-### Community 156 - "1. Ficha Técnica del Stack Frontend y Arquitectura de Cliente"
-Cohesion: 0.09
-Nodes (22): 05 — Manual Frontend SPA, Sistema RBAC y Guía de Credenciales, 1.1 Dependencias y Versiones Exactas (`frontend/package.json`), 1.2 Comandos y Scripts Canónicos, 1.5 Ciclo de Autenticación, Hidratación y Protección Fail-Closed: `AuthContext.tsx`, 1.6 Sistema de Diseño y Temas: `ThemeProvider.tsx` e `index.css`, 1.7 Localización Canónica 100% en Español: `src/constants/labels.ts`, 1.8 Conexión WebSocket en Tiempo Real: `useAgentGuardWebSocket.ts`, 1. Ficha Técnica del Stack Frontend y Arquitectura de Cliente (+14 more)
+### Community 156 - "05 — Manual Frontend SPA, Sistema RBAC y Guía de Credenciales"
+Cohesion: 0.20
+Nodes (10): 05 — Manual Frontend SPA, Sistema RBAC y Guía de Credenciales, 3.2 `ForcePasswordChangeModal.tsx` — Bloqueo Obligatorio de Contraseña Temporal, 3.3 `ResetDemoModal.tsx` — Factory Reset en Vivo de PostgreSQL 16, 3. Componentes Clave de Onboarding y Seguridad, 4. Matriz Exacta de Permisos RBAC (5 Roles), 5.1 Cuentas Canónicas Sembradas (`backend/scripts/seed_demo.py`), 5.2 Comparativa de Estado: Semilla Base vs Estado Ampliado, 5.3 Flujo de Alta Autogestionada SaaS B2B (`POST /api/v1/auth/register-org`) (+2 more)
 
 ### Community 157 - "The Toolkit"
 Cohesion: 0.10
 Nodes (20): Animate complex properties, Assess What "Extraordinary" Means Here, For data-heavy interfaces, For functional UI, For performance-critical UI, For visual/marketing surfaces, Implement with Discipline, Interact with the device (+12 more)
 
-### Community 160 - "applyEditing"
-Cohesion: 0.15
-Nodes (21): applyEditing(), buildLocatorForLeaf(), collectEditableTextRows(), visit(), copyEditContainerContext(), copyEditLeafContext(), documentRefForElement(), enableInlineEdit() (+13 more)
+### Community 160 - "showToast"
+Cohesion: 0.05
+Nodes (60): abandonForeignSession(), abandonSupersededGo(), addManualContextText(), applyEditing(), buildLocatorForLeaf(), canRestoreManualEditElement(), collectEditableTextRows(), visit() (+52 more)
 
 ### Community 162 - "onAnnotDown"
 Cohesion: 0.15
@@ -861,9 +843,9 @@ Nodes (10): AcmeSettings, 1.1 Scripts de Ejecución y Lanzadores, 1.2 Variables 
 Cohesion: 0.11
 Nodes (21): collectDeferredEnters(), discardEffects(), enterDeferred(), findInsertionIndex(), getEscapedCssVarName(), isCssVarsRoot(), locateUnresolvedAsyncRoot(), markTeleport() (+13 more)
 
-### Community 165 - "mountSvelteComponentVariant"
-Cohesion: 0.15
-Nodes (19): applyOriginalAttrsToSvelteAnchor(), captureAndEmit(), checkpointPayload(), commitAcceptedSvelteComponentToDom(), componentModuleCandidates(), describeMountFailure(), detectDevServerBase(), getMountedSvelteComponentAnchor() (+11 more)
+### Community 165 - "📄 Volumen 01 · Modelo Entidad-Relación Relacional, Esquema Físico y Alembic"
+Cohesion: 0.40
+Nodes (5): 03. Arquitectura de doble persistencia, 04. Diagrama MER físico completo — PostgreSQL (13 tablas), 05. Historial completo de migraciones Alembic (001 → 006), 06. Diagrama MER — ACME Corp (7 tablas), 📄 Volumen 01 · Modelo Entidad-Relación Relacional, Esquema Físico y Alembic
 
 ### Community 167 - "createLiveBrowserSessionState"
 Cohesion: 0.19
@@ -877,13 +859,13 @@ Nodes (20): createReactiveObject(), hasPropsChanged(), hasPropValueChanged(), in
 Cohesion: 0.11
 Nodes (18): Assets, Hacker News: Show HN, Launch copy (v0.2, June 2026), Launch-day checklist, Launch kit: avoid-ai-design, LinkedIn, LinkedIn (attach `docs/variants.png`), Product Hunt (+10 more)
 
-### Community 170 - "resolveLiveInjectionAnchor"
-Cohesion: 0.16
-Nodes (19): buildSvelteExpressionTextMap(), buildSveltePropValuesFromLiveElement(), buildSveltePropValuesV2(), cloneWithoutElements(), collectTextNodes(), collectVisibleTexts(), cssEscapeIdent(), elementMatchesOriginalMarkup() (+11 more)
+### Community 170 - "🌊 Oleada 2 — Gobernanza Control Plane, Frontera Firmada `PEP <-> ACME`, Contratos Full-Stack (`:5173` y `:9000`) y Fixtures BD Real (18 ítems, 4 Workers en paralelo)"
+Cohesion: 0.40
+Nodes (5): 🌊 Oleada 2 — Gobernanza Control Plane, Frontera Firmada `PEP <-> ACME`, Contratos Full-Stack (`:5173` y `:9000`) y Fixtures BD Real (18 ítems, 4 Workers en paralelo), Worker `O2-W1`: Frontera Firmada `PEP <-> ACME` (`ACME-01`), Secretos SIEM, Guardias Multi-Tenant, Atomicidad `AuditService`, `IntegrityError -> 409` y `SettingsView`, Worker `O2-W2`: Sincronización de Contratos Full-Stack AgentGuard (`api.ts`), Resolución HITL `ApprovalsView` y `PlaygroundView` OWASP, Worker `O2-W3`: Saneamiento de `conftest.py`, Fixture `AsyncSession` PostgreSQL Real y Ciclo de Vida de API Keys, Worker `O2-W4`: Consola Web ACME (`:9000`) — Contratos Visuales BI, Manejo Seguro HTTP/JSON y UX HITL Cruzada con `:5173`
 
-### Community 171 - "main.py"
-Cohesion: 0.04
-Nodes (21): run_migrations_offline(), lifespan(), ApiKey, 🏗️ Arquitectura de la API REST (`/api/v1`), test_api_create_api_key_blocks_ai_agents(), test_api_create_api_key_org_not_found(), test_api_create_api_key_returns_raw_key_once_and_hides_hash(), test_api_get_api_key_by_id_not_found() (+13 more)
+### Community 171 - "dependencies"
+Cohesion: 0.40
+Nodes (5): dependencies, lucide-react@^1.57.0, react@^19.2.8, react-dom@^19.2.8, react-dom
 
 ### Community 172 - "apply"
 Cohesion: 0.15
@@ -898,8 +880,8 @@ Cohesion: 0.12
 Nodes (16): 10. Maximalist, 11. Warm minimal (done well), 12. Monospace / terminal, 1. Brutalist / raw, 2. Editorial / magazine, 3. Swiss / International typographic, 4. Retro-futuristic / Y2K / synth, 5. Organic / natural (+8 more)
 
 ### Community 175 - "actOnAgentTarget"
-Cohesion: 0.29
-Nodes (17): actOnAgentTarget(), agentTargetBusyReason(), agentTargetOverlayGone(), agentTargetTaken(), claimAgentTarget(), claimAndActOnAgentTarget(), declineAgentTargetBusy(), declineAgentTargetUnresolvable() (+9 more)
+Cohesion: 0.18
+Nodes (23): actOnAgentTarget(), agentTargetBusyReason(), agentTargetOverlayGone(), agentTargetTaken(), buildPlaceholderResizeHandles(), claimAgentTarget(), claimAndActOnAgentTarget(), cursorForPlaceholderEdge() (+15 more)
 
 ### Community 176 - "useIntervalFn"
 Cohesion: 0.15
@@ -917,9 +899,9 @@ Nodes (15): 1. Accessibility (A11y), 2. Performance, 3. Theming, 4. Responsive D
 Cohesion: 0.12
 Nodes (16): 1. Read the screenshot (if present), 2. Wrap the element, 3. Load the action's reference, 4. Plan three variants: identity first, then mode, then axes, 5. Apply the freeform prompt (if present), 6. Deliver variants, 7. Parameters (composition-sized, 0-4 per variant), 8. Signal done (+8 more)
 
-### Community 180 - "test_approvals_api.py"
-Cohesion: 0.21
-Nodes (7): _setup_user_auth(), test_approvals_get_by_id_not_found(), test_approvals_get_by_id_success(), test_approvals_list_endpoint(), test_approvals_resolve_already_resolved_or_not_found(), test_approvals_resolve_forbidden_for_non_approver_roles(), test_approvals_resolve_success()
+### Community 180 - "Execution"
+Cohesion: 0.04
+Nodes (46): get_alert_by_id(), list_alerts(), update_alert_status(), get_execution_by_id(), list_executions(), _to_execution_response(), Alert, Approval (+38 more)
 
 ### Community 181 - "propHasMismatch"
 Cohesion: 0.16
@@ -950,8 +932,8 @@ Cohesion: 0.14
 Nodes (13): Animation Performance, Assess Performance Issues, Core Web Vitals Optimization, Cumulative Layout Shift (CLS < 0.1), Interaction to Next Paint (INP < 200ms), Largest Contentful Paint (LCP < 2.5s), Loading Performance, Network Optimization (+5 more)
 
 ### Community 188 - "scheduleAcceptCleanup"
-Cohesion: 0.23
-Nodes (14): acceptedDomAlreadyClean(), clearHandledWrapperReloadStamp(), commitAcceptedVariantToDom(), deferredRecoverySuperseded(), ensureAcceptedDomClean(), findAcceptedRuntimeWrappers(), handledWrapperReloadKey(), reloadAfterMissingAcceptedDom() (+6 more)
+Cohesion: 0.18
+Nodes (17): acceptedDomAlreadyClean(), clearHandledWrapperReloadStamp(), commitAcceptedSvelteComponentToDom(), commitAcceptedVariantToDom(), deferredRecoverySuperseded(), ensureAcceptedDomClean(), findAcceptedRuntimeWrappers(), handledWrapperReloadKey() (+9 more)
 
 ### Community 189 - "copy"
 Cohesion: 0.16
@@ -962,8 +944,8 @@ Cohesion: 0.15
 Nodes (13): Components, K10: Stock effect-library components (Aceternity / Magic UI) · P1 · ⚙, K11: Cards inside cards · P2 · 👁, K12: Status-chip soup · P2 · 👁, K1: Untouched shadcn/ui defaults · P0 · ⚙, K2: `rounded-2xl shadow-lg` on everything · P1 · ⚙, K3: Glassmorphism / `backdrop-blur` by reflex · P1 · ⚙, K4: Colored left/top border-accent cards · P1 · ⚙ (+5 more)
 
 ### Community 191 - "Impeccable Asset Producer"
-Cohesion: 0.15
-Nodes (11): Act on the receipt, Assemble and review, Plan and asset review, Plan, capture, serve, Core Rule, Decision Comps, Impeccable Asset Producer, Input Contract (+3 more)
+Cohesion: 0.07
+Nodes (22): Act on the receipt, Assemble and review, Plan and asset review, Plan, capture, serve, Core Rule, Decision Comps, Impeccable Asset Producer, Input Contract (+14 more)
 
 ### Community 192 - "process"
 Cohesion: 0.21
@@ -1065,17 +1047,9 @@ Nodes (9): 1. The Wall of Options, 2. The Memory Bridge, 3. The Hidden Navigatio
 Cohesion: 0.22
 Nodes (9): Color & materials, Components & controls, iOS platform, Layout & structure, Motion, The iOS slop test, Touch targets, Typography (+1 more)
 
-### Community 219 - "Operate mode depth (and Read notes)"
-Cohesion: 0.22
-Nodes (9): Color, Components, Layout, Motion, Operate mode depth (and Read notes), Product constraints, Product permissions, The product slop test (+1 more)
-
 ### Community 220 - "Shape"
 Cohesion: 0.22
 Nodes (8): Cadence, Confirm and stop, Phase 1: Discovery interview, Phase 2: Resolve the design direction, Phase 3: Write the brief, Round 1: purpose, people, and outcome, Round 2: material, behavior, and boundaries, Shape
-
-### Community 221 - "typeset.md"
-Cohesion: 0.22
-Nodes (8): Apply, Line breaks, Live-mode signature params, Optical alignment, Set the system, Two isolated assessments, Verify, Visitor mode
 
 ### Community 222 - "SEO & discoverability"
 Cohesion: 0.25
@@ -1088,10 +1062,6 @@ Nodes (8): T1: Inter (or the system stack) for everything · P0 · ⚙, T2: The 
 ### Community 224 - "Android platform"
 Cohesion: 0.25
 Nodes (8): Android platform, Color & theming, Components & motion, Layout & structure, The Android slop test, Touch targets, Typography, Verifying the build
-
-### Community 225 - "colorize.md"
-Cohesion: 0.25
-Nodes (7): Apply at system scale, Audit before choosing, Choose a strategy, Contrast and perception, Live-mode signature params, Verify, Visitor mode
 
 ### Community 226 - "Persona-Based Design Testing"
 Cohesion: 0.25
@@ -1125,9 +1095,9 @@ Nodes (7): M1: The same fade-up-on-scroll on everything · P2 · ⚙, M2: Scatte
 Cohesion: 0.33
 Nodes (7): linesLabel(), main(), paint(), printRules(), readStdin(), report(), walk()
 
-### Community 234 - "Generate Report"
-Cohesion: 0.29
-Nodes (7): Audit Health Score, Detailed Findings by Severity, Executive Summary, Generate Report, Patterns & Systemic Issues, Platform Conformance Verdict, Positive Findings
+### Community 234 - "audit.native.md"
+Cohesion: 0.12
+Nodes (15): 1. Accessibility (VoiceOver / TalkBack), 2. Performance, 3. Appearance & Theming, 4. Platform Conformance (CRITICAL), 5. Adaptivity, Audit Health Score, Detailed Findings by Severity, Diagnostic Scan (+7 more)
 
 ### Community 235 - "Impeccable Finish Reviewer"
 Cohesion: 0.29
@@ -1157,10 +1127,6 @@ Nodes (7): useFileSystemAccess(), create(), open(), save(), saveAs(), updateData
 Cohesion: 0.33
 Nodes (5): Before you finish, Scope is sovereign, The amplification, The skeleton test, Why it reads flat
 
-### Community 242 - "$impeccable hooks"
-Cohesion: 0.33
-Nodes (6): Constraints, Failure modes, Flow, $impeccable hooks, Routing, Triage findings
-
 ### Community 244 - "4. Código Interno Muerto, Endpoints Desconectados y Reliquias de Prototipo"
 Cohesion: 0.33
 Nodes (6): 4.1 Tipos, Esquemas y Configuraciones con `0` Consumidores, 4.2 Par Endpoint + Método Cliente Nunca Invocado (`Attack Catalog`), 4.3 Dataset de Prototipo Heredado que Contamina Datos Reales (`mockData.ts`), 4.4 Modelo ORM y Tabla Huérfana Sujetos a Decisión de Producto (`AuditEvent`), 4. Código Interno Muerto, Endpoints Desconectados y Reliquias de Prototipo, SecurityStanceSettings
@@ -1185,14 +1151,6 @@ Nodes (5): IM1: Stock "diverse team at a laptop" · P1 · 👁, IM2: AI 3D gloss
 Cohesion: 0.40
 Nodes (4): interface, default_prompt, display_name, short_description
 
-### Community 250 - "$impeccable foundations"
-Cohesion: 0.40
-Nodes (4): $impeccable foundations, What "done" means, With an id: fix that one item, Without an argument: the roadmap
-
-### Community 251 - "Visualize: Direction Comps & Asset Production"
-Cohesion: 0.40
-Nodes (5): After approval: the comp becomes a spec, Generate three compositional options, One approval point, Plates and provenance, Visualize: Direction Comps & Asset Production
-
 ### Community 255 - "Bloque D — Experiencia de Frontend, Simulación y Demo Académica"
 Cohesion: 0.40
 Nodes (5): 11. Eliminación del Modo *"Wizard-of-Oz"* (`mockData.ts` y Falsos Éxitos en `api.ts`), 12. Alcance de las 4 Pestañas Simuladas de `SettingsView.tsx`, 13. Evolución del `PlaygroundView` y Desarrollo de `agent-demo/`, 14. Gobernanza del Botón `"Reset Demo"` e Idioma Canónico de la Interfaz, Bloque D — Experiencia de Frontend, Simulación y Demo Académica
@@ -1209,13 +1167,9 @@ Nodes (5): useUserMedia(), getDeviceOptions(), restart(), _start(), _stop()
 Cohesion: 0.50
 Nodes (4): Issue Severity (P0–P3), Reference Material, Score Summary, Scoring the report
 
-### Community 259 - "Persuade and Experience"
-Cohesion: 0.50
-Nodes (3): Comps, Directions, Persuade and Experience
-
-### Community 260 - "Region map"
-Cohesion: 0.50
-Nodes (4): Containment, Painted material, Region map, What varies independently
+### Community 259 - "new-work-world.md"
+Cohesion: 0.13
+Nodes (11): Comps, Directions, Operate, Comps, Directions, Persuade and Experience, Comps, Directions (+3 more)
 
 ### Community 262 - "getComponentFileName"
 Cohesion: 0.50
@@ -1234,22 +1188,22 @@ Cohesion: 0.67
 Nodes (3): useGeolocation(), resume(), updatePosition()
 
 ## Knowledge Gaps
-- **50 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **41 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `3. Tabla Maestra de Hallazgos (Consolidada y Deduplicada)` connect `OrganizationService` to `domain.ts`, `bootstrap_acme_in_agentguard`, `uuid`, `test_gemini_agent.py`, `ActorType`, `Tool`, `PolicyService`, `run_demo.py`, `Organization`, `AcmeDatabase`, `WebSocketConnectionManager`, `ensure_same_tenant`, `agent_service.py`, `shallowRef`, `ApiKey`, `3.2 Tablas`, `generate_diagrams.py`, `AuditEvent`, `ToolActionService`, `typing`, `domain.ts`, `approvals.py`, `create_app`, `app.js`, `env.py`, `SanitizerService`, `test_websocket.py`, `threat_detector.py`, `App.tsx`, `PolicyRuleService`, `4. Código Interno Muerto, Endpoints Desconectados y Reliquias de Prototipo`, `.evaluate`, `ApiError`?**
-  _High betweenness centrality (0.212) - this node is a cross-community bridge._
+- **Why does `3. Tabla Maestra de Hallazgos (Consolidada y Deduplicada)` connect `AcmeDatabase` to `4. Resumen de Brechas por Documento Auditado (14 Archivos)`, `domain.ts`, `.run_scenario`, `uuid`, `policies.py`, `Tool`, `typing`, `PolicyService`, `run_demo.py`, `tools.py`, `policy_rules.py`, `ensure_same_tenant`, `AgentService`, `shallowRef`, `PDPEngine`, `Execution`, `ApiKey`, `3.2 Tablas`, `generate_diagrams.py`, `WebhookService`, `AuditEvent`, `ToolActionService`, `PolicyRule`, `BaseSchema`, `domain.ts`, `.get_by_id`, `create_app`, `app.js`, `env.py`, `SanitizerService`, `test_websocket.py`, `threat_detector.py`, `App.tsx`, `4. Código Interno Muerto, Endpoints Desconectados y Reliquias de Prototipo`, `ApiError`?**
+  _High betweenness centrality (0.229) - this node is a cross-community bridge._
 - **Are the 161 inferred relationships involving `User` (e.g. with `assign_tool_to_agent()` and `create_agent()`) actually correct?**
   _`User` has 161 INFERRED edges - model-reasoned connections that need verification._
 - **Should `test_tools.py` be split into smaller, more focused modules?**
   _Cohesion score 0.13 - nodes in this community are weakly interconnected._
-- **Why does `request()` connect `shallowRef` to `OrganizationService`?**
-  _High betweenness centrality (0.099) - this node is a cross-community bridge._
+- **Why does `commit()` connect `4. Resumen de Brechas por Documento Auditado (14 Archivos)` to `03 — Estado Forense del Backend, Lógica Pendiente y Deuda Técnica Estructural`, `useScroll`, `ToolService`, `AcmeDatabase`, `tools.py`?**
+  _High betweenness centrality (0.094) - this node is a cross-community bridge._
 - **Are the 125 inferred relationships involving `UserRole` (e.g. with `update_alert_status()` and `resolve_approval()`) actually correct?**
   _`UserRole` has 125 INFERRED edges - model-reasoned connections that need verification._
 - **Should `domain.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.12583182093163944 - nodes in this community are weakly interconnected._
-- **Why does `useWakeLock()` connect `shallowRef` to `toValue`, `watch`, `vitepress___@vueuse_core.js`?**
-  _High betweenness centrality (0.099) - this node is a cross-community bridge._
+  _Cohesion score 0.12273524254821741 - nodes in this community are weakly interconnected._
+- **Why does `useRefHistory()` connect `useScroll` to `4. Resumen de Brechas por Documento Auditado (14 Archivos)`, `watch`, `vitepress___@vueuse_core.js`?**
+  _High betweenness centrality (0.093) - this node is a cross-community bridge._

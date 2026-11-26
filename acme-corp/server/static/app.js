@@ -32,6 +32,99 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function formatInlineMarkdown(escapedLine) {
+  const codePlaceholders = [];
+  let formatted = escapedLine.replace(/`([^`]+)`/g, (_, codeText) => {
+    const token = `__MD_CODE_${codePlaceholders.length}__`;
+    codePlaceholders.push(`<code>${codeText}</code>`);
+    return token;
+  });
+
+  formatted = formatted
+    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+
+  codePlaceholders.forEach((html, idx) => {
+    formatted = formatted.replace(`__MD_CODE_${idx}__`, () => html);
+  });
+  return formatted;
+}
+
+function renderSafeMarkdown(rawText) {
+  const normalized = String(rawText ?? "").replace(/\r\n?/g, "\n").trim();
+  if (!normalized) return "";
+
+  const lines = normalized.split("\n");
+  const blocks = [];
+  let paragraphLines = [];
+  let listType = null;
+  let listItems = [];
+
+  const flushParagraph = () => {
+    if (paragraphLines.length > 0) {
+      blocks.push(`<p>${paragraphLines.join("<br>")}</p>`);
+      paragraphLines = [];
+    }
+  };
+
+  const flushList = () => {
+    if (listItems.length > 0 && listType) {
+      blocks.push(`<${listType}>${listItems.map((item) => `<li>${item}</li>`).join("")}</${listType}>`);
+      listItems = [];
+      listType = null;
+    }
+  };
+
+  for (const rawLine of lines) {
+    const trimmed = rawLine.trim();
+    if (!trimmed) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    const ulMatch = trimmed.match(/^[-*•]\s+(.+)$/);
+    if (ulMatch) {
+      flushParagraph();
+      if (listType && listType !== "ul") flushList();
+      listType = "ul";
+      listItems.push(formatInlineMarkdown(escapeHtml(ulMatch[1])));
+      continue;
+    }
+
+    const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+    if (olMatch) {
+      flushParagraph();
+      if (listType && listType !== "ol") flushList();
+      listType = "ol";
+      listItems.push(formatInlineMarkdown(escapeHtml(olMatch[1])));
+      continue;
+    }
+
+    const headingMatch = trimmed.match(/^#{1,3}\s+(.+)$/);
+    if (headingMatch) {
+      flushParagraph();
+      flushList();
+      blocks.push(`<p><strong>${formatInlineMarkdown(escapeHtml(headingMatch[1]))}</strong></p>`);
+      continue;
+    }
+
+    flushList();
+    paragraphLines.push(formatInlineMarkdown(escapeHtml(trimmed)));
+  }
+
+  flushParagraph();
+  flushList();
+  return blocks.join("");
+}
+
+function resolveUseLlm() {
+  const explicitEngine = document.querySelector('input[name="agent-engine"]:checked')?.value;
+  if (explicitEngine) return explicitEngine === "llm";
+  const inputGeminiKey = dom.geminiKey?.value.trim() || "";
+  return Boolean(inputGeminiKey || state.hasEnvGeminiKey);
+}
+
 // Colores canónicos para la gráfica de torta SVG
 const PIE_COLORS = [
   "#facc15", // Amarillo ACME
@@ -325,8 +418,7 @@ async function runBiAgentQuery(promptText, presetId) {
   if (state.isExecuting) return;
 
   const mode = document.querySelector('input[name="agent-mode"]:checked')?.value || "protected";
-  const engine = document.querySelector('input[name="agent-engine"]:checked')?.value || "deterministic";
-  const useLlm = engine === "llm";
+  const useLlm = resolveUseLlm();
 
   // Validaciones
   const geminiKey = dom.geminiKey.value.trim();
@@ -348,7 +440,9 @@ async function runBiAgentQuery(promptText, presetId) {
   state.isExecuting = true;
   dom.btnBiSend.disabled = true;
   dom.biResponseCard.classList.remove("hidden");
-  dom.biAssistantText.textContent = "El Consultante BI está procesando tu solicitud...";
+  dom.biAssistantText.textContent = useLlm
+    ? "El Consultante BI está analizando tu solicitud con Gemini..."
+    : "El Consultante BI está procesando tu solicitud...";
   dom.biVerdictTag.className = "badge badge-neutral";
   dom.biVerdictTag.textContent = "Consultando...";
   dom.biOfferFilterBox.classList.add("hidden");
@@ -389,7 +483,7 @@ async function runBiAgentQuery(promptText, presetId) {
 
 function renderBiResult(data) {
   const answer = data.final_answer || "Operación procesada.";
-  dom.biAssistantText.textContent = answer;
+  dom.biAssistantText.innerHTML = renderSafeMarkdown(answer);
 
   const mode = data.mode;
   const verdict = data.gateway_verdicts?.[0]?.decision || (mode === "protected" ? "DENY" : "DIRECT");
@@ -893,8 +987,7 @@ async function runCurrentScenario() {
   if (state.isExecuting) return;
 
   const mode = document.querySelector('input[name="agent-mode"]:checked')?.value || "protected";
-  const engine = document.querySelector('input[name="agent-engine"]:checked')?.value || "deterministic";
-  const useLlm = engine === "llm";
+  const useLlm = resolveUseLlm();
   const prompt = dom.agentPrompt.value.trim();
 
   const geminiKey = dom.geminiKey.value.trim();
@@ -998,6 +1091,6 @@ function renderTrace(traceData) {
 
   if (traceData.final_answer) {
     dom.finalAnswerBox.classList.remove("hidden");
-    dom.finalAnswerText.textContent = traceData.final_answer;
+    dom.finalAnswerText.innerHTML = renderSafeMarkdown(traceData.final_answer);
   }
 }
