@@ -624,6 +624,112 @@ async def test_run_scenario_gemini3_fallback_and_thought_signature(temp_db: Acme
     assert trace["final_answer"] == "Se encontraron 4 ventas mayores a $1,000."
     model_parts_turn2 = captured_turn2_payload["contents"][1]["parts"]
     assert any(p.get("thoughtSignature") == "sig_gemini3_opaque_xyz" for p in model_parts_turn2)
+    assert captured_turn2_payload["contents"][2]["role"] == "user"
+    assert captured_turn2_payload["contents"][2]["parts"][0]["functionResponse"]["name"] == "query_sales"
+
+
+@pytest.mark.asyncio
+async def test_run_scenario_gemini_turn2_parallel_calls_and_http_400_fallback(temp_db: AcmeDatabase):
+    """Verifica que Turno 2 use role='user', empareje llamadas paralelas y no oculte el motivo de AgentGuard ante HTTP 400."""
+    org_id = str(uuid.uuid4())
+    bi_agent_id = str(uuid.uuid4())
+    bi_tool_id = str(uuid.uuid4())
+    captured_turn2_payload = {}
+
+    def mock_handler(request: httpx.Request) -> Response:
+        url_str = str(request.url)
+        if "/api/v1/gateway/context" in url_str:
+            return Response(
+                200,
+                json={
+                    "organization_id": org_id,
+                    "agents": [{"id": bi_agent_id, "name": "Consultante BI"}],
+                    "tools": [
+                        {
+                            "id": bi_tool_id,
+                            "name": "BI & Ventas ACME",
+                            "actions": [{"action_name": "query_sales"}],
+                        }
+                    ],
+                },
+            )
+        if "/api/v1/gateway/execute" in url_str:
+            return Response(
+                403,
+                json={
+                    "decision": "DENY",
+                    "status": "REJECTED",
+                    "error_message": "El agente se encuentra en estado 'SUSPENDED' y no puede operar",
+                    "latency_ms": 5.1,
+                },
+            )
+        if "models/gemini-3.8-flash:generateContent" in url_str:
+            body = json.loads(request.content)
+            if len(body["contents"]) == 1:
+                return Response(
+                    200,
+                    json={
+                        "candidates": [
+                            {
+                                "content": {
+                                    "role": "model",
+                                    "parts": [
+                                        {
+                                            "functionCall": {
+                                                "id": "call_1",
+                                                "name": "query_sales",
+                                                "args": {"min_amount": 1000.0, "period": "last_month"},
+                                            },
+                                            "thoughtSignature": "sig_parallel_1",
+                                        },
+                                        {
+                                            "functionCall": {
+                                                "id": "call_2",
+                                                "name": "generate_pie_chart",
+                                                "args": {"min_amount": 1000.0, "period": "last_month"},
+                                            },
+                                        },
+                                    ],
+                                }
+                            }
+                        ]
+                    },
+                )
+            captured_turn2_payload.update(body)
+            return Response(400, json={"error": {"code": 400, "message": "Invalid argument mock"}})
+        return Response(500, json={})
+
+    original_client = httpx.AsyncClient
+    transport = httpx.MockTransport(mock_handler)
+    client = GeminiAgentClient(
+        gemini_api_key="test-gemini-key",
+        gemini_model="gemini-3.8-flash",
+        agentguard_url="http://agentguard-test:8000",
+        agentguard_api_key="ag_live_test_key",
+        db=temp_db,
+    )
+
+    with patch(
+        "agent.gemini_client.httpx.AsyncClient",
+        side_effect=lambda *args, **kwargs: original_client(transport=transport),
+    ):
+        trace = await client.run_scenario(
+            prompt="Dame las ventas mayores a $1,000 del mes pasado",
+            mode="protected",
+            use_llm=True,
+        )
+
+    turn2_user_msg = captured_turn2_payload["contents"][2]
+    assert turn2_user_msg["role"] == "user"
+    assert len(turn2_user_msg["parts"]) == 2
+    assert turn2_user_msg["parts"][0]["functionResponse"]["id"] == "call_1"
+    assert turn2_user_msg["parts"][0]["functionResponse"]["name"] == "query_sales"
+    assert turn2_user_msg["parts"][1]["functionResponse"]["id"] == "call_2"
+    assert turn2_user_msg["parts"][1]["functionResponse"]["response"]["status"] == "skipped"
+
+    assert "SUSPENDED" in trace["final_answer"]
+    assert "HTTP 400 en la síntesis" not in trace["final_answer"]
+    assert any("HTTP 400" in s["title"] for s in trace["steps"])
 
 
 @pytest.mark.asyncio

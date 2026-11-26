@@ -934,6 +934,80 @@ class GeminiAgentClient:
                 }
 
         # -------------------------------------------------------------------
+        # Síntesis determinística reutilizable (Modo Guiado o fallback Turno 2)
+        # -------------------------------------------------------------------
+        def _build_deterministic_answer() -> str:
+            if mode == "protected":
+                dec = gateway_verdicts[0].get("decision") if gateway_verdicts else "UNKNOWN"
+                if dec == "ALLOW":
+                    if effective_dispatch_action == "query_sales":
+                        cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
+                        tot = ui_payload.get("total_amount", 0.0)
+                        return (
+                            f"✅ ¡Hola! Aquí tienes las {cnt} ventas mayores a $1,000 del mes pasado registradas en ACME Corp. "
+                            f"El monto total facturado asciende a ${tot:,.2f} USD. "
+                            f"He desplegado el desglose en la tabla interactiva y los datos están listos para ser graficados."
+                        )
+                    if is_pie_chart_shortcut:
+                        return (
+                            "📊 ¡Gráfico generado exitosamente! He preparado la distribución de ventas por producto "
+                            "en una gráfica circular interactiva con los porcentajes reales correspondientes."
+                        )
+                    return (
+                        f"✅ Operación autorizada exitosamente por AgentGuard bajo política comercial. "
+                        f"La acción '{action_name}' fue ejecutada en el servicio destino con latencia "
+                        f"{gateway_verdicts[0].get('latency_ms', 0)} ms."
+                    )
+                if dec == "REQUIRE_APPROVAL":
+                    return (
+                        f"⏳ Operación suspendida sujeta a gobernanza humana (HITL). "
+                        f"El monto o riesgo de '{action_name}' excede los límites autónomos. "
+                        f"Ticket registrado en la bandeja de aprobación de AgentGuard."
+                    )
+                if effective_dispatch_action == "delete_sales":
+                    return (
+                        "🛡️ Puedo filtrar u ocultar esos registros en esta pantalla y actualizar tu gráfico de torta, "
+                        "pero no tengo autorización para escribir ni borrar datos en la base de datos de ACME "
+                        "(bloqueado por política de seguridad en AgentGuard)."
+                    )
+                return (
+                    f"🛡️ Bloqueo de seguridad preventivo emitido por AgentGuard (PDP). "
+                    f"La acción '{action_name}' fue rechazada por política estricta. "
+                    f"Detalle: {gateway_verdicts[0].get('error_message', 'Acceso denegado')}."
+                )
+
+            if acme_results and acme_results[0].get("is_database_wiped"):
+                return (
+                    "🚨 ERROR CATASTRÓFICO: La base de datos de ACME Corporation ha sido purgada. "
+                    "El servidor no puede responder a solicitudes operativas (503 Service Unavailable)."
+                )
+            if acme_results and acme_results[0].get("status") == "wiped":
+                return (
+                    "💥 PELIGRO CRÍTICO: La acción destructiva se ejecutó directamente sin pasar por AgentGuard. "
+                    "Todas las tablas de productos, clientes, cotizaciones, reembolsos y ventas fueron eliminadas de la base de datos."
+                )
+            if acme_results and acme_results[0].get("result", {}).get("is_tampered"):
+                res_tamper = acme_results[0]["result"]
+                return (
+                    f"⚠️ ALTERACIÓN GRAVE: Al omitir AgentGuard, el precio de '{res_tamper['product_name']}' "
+                    f"fue rebajado a ${res_tamper['new_price']} USD (Precio Base: ${res_tamper['base_price']} USD). "
+                    f"Se ha provocado un sabotaje directo en el catálogo oficial de ACME."
+                )
+            if action_name == "delete_sales":
+                cnt = acme_results[0].get("result", {}).get("deleted_count", 0)
+                return (
+                    f"💥 ALERTA: En Modo Directo (sin AgentGuard), se eliminaron {cnt} registros de ventas "
+                    f"directamente de SQLite. ¡Los datos han desaparecido de la base de datos real!"
+                )
+            if effective_dispatch_action == "query_sales":
+                cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
+                return f"⚡ Consulta de ventas ejecutada directamente sobre SQLite ({cnt} registros recuperados)."
+            return (
+                f"⚡ Acción '{action_name}' ejecutada directamente en ACME Corp omitiendo salvaguardas de gobernanza. "
+                f"Resultado: {json.dumps(acme_results[0] if acme_results else {}, ensure_ascii=False)}"
+            )
+
+        # -------------------------------------------------------------------
         # Cierre del Ciclo: Síntesis Final
         # -------------------------------------------------------------------
         if use_llm and tool_call_found:
@@ -945,21 +1019,40 @@ class GeminiAgentClient:
             })
 
             canonical_tool_name = tool_call_found.get("name")
+            turn1_function_calls = [
+                p["functionCall"]
+                for p in model_turn_parts
+                if isinstance(p, dict) and isinstance(p.get("functionCall"), dict)
+            ]
+            if not turn1_function_calls:
+                turn1_function_calls = [tool_call_found]
+
+            function_response_parts: List[Dict[str, Any]] = []
+            for fc_idx, fc in enumerate(turn1_function_calls):
+                fc_name = fc.get("name") or canonical_tool_name
+                fc_response_body: Dict[str, Any] = {
+                    "name": fc_name,
+                    "response": (
+                        function_response_payload
+                        if fc_idx == 0
+                        else {
+                            "status": "skipped",
+                            "message": "Se ejecutó únicamente la primera invocación de herramienta en este turno.",
+                        }
+                    ),
+                }
+                if fc.get("id"):
+                    fc_response_body["id"] = fc["id"]
+                function_response_parts.append({"functionResponse": fc_response_body})
+
             payload_turn_2 = {
                 "systemInstruction": {"parts": [{"text": system_instruction_text}]},
                 "contents": [
                     {"role": "user", "parts": [{"text": user_prompt}]},
                     {"role": "model", "parts": model_turn_parts or [{"functionCall": tool_call_found}]},
                     {
-                        "role": "function",
-                        "parts": [
-                            {
-                                "functionResponse": {
-                                    "name": canonical_tool_name,
-                                    "response": function_response_payload,
-                                }
-                            }
-                        ],
+                        "role": "user",
+                        "parts": function_response_parts,
                     },
                 ],
                 "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
@@ -974,89 +1067,38 @@ class GeminiAgentClient:
                         parts_2 = cand_2[0].get("content", {}).get("parts", []) if cand_2 else []
                         final_answer = "".join(
                             p.get("text", "") for p in parts_2 if isinstance(p, dict) and not p.get("thought")
-                        )
+                        ).strip()
+                        if not final_answer:
+                            final_answer = _build_deterministic_answer()
                     else:
-                        final_answer = f"Gemini respondió con error HTTP {resp_2.status_code} en la síntesis."
+                        err_snippet = (resp_2.text or "")[:500]
+                        logger.warning(
+                            "Gemini Turno 2 respondió HTTP %s (%s): %s",
+                            resp_2.status_code,
+                            active_gemini_model,
+                            err_snippet,
+                        )
+                        steps.append({
+                            "step": 6,
+                            "title": f"Fallback en síntesis de Gemini (HTTP {resp_2.status_code})",
+                            "detail": f"Detalle devuelto por Gemini API: {err_snippet or 'Sin cuerpo de error'}",
+                            "status": "warning",
+                        })
+                        final_answer = _build_deterministic_answer()
             except Exception as exc:
                 detail = str(exc).strip() or type(exc).__name__
-                final_answer = f"No se pudo completar el turno 2 de Gemini ({type(exc).__name__}): {detail}"
+                logger.warning("Fallo al completar Turno 2 de Gemini (%s): %s", type(exc).__name__, detail)
+                steps.append({
+                    "step": 6,
+                    "title": f"Fallback en síntesis de Gemini ({type(exc).__name__})",
+                    "detail": detail,
+                    "status": "warning",
+                })
+                final_answer = _build_deterministic_answer()
 
         else:
             # Síntesis determinística estructurada en español
-            if mode == "protected":
-                dec = gateway_verdicts[0].get("decision") if gateway_verdicts else "UNKNOWN"
-                if dec == "ALLOW":
-                    if effective_dispatch_action == "query_sales":
-                        cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
-                        tot = ui_payload.get("total_amount", 0.0)
-                        final_answer = (
-                            f"✅ ¡Hola! Aquí tienes las {cnt} ventas mayores a $1,000 del mes pasado registradas en ACME Corp. "
-                            f"El monto total facturado asciende a ${tot:,.2f} USD. "
-                            f"He desplegado el desglose en la tabla interactiva y los datos están listos para ser graficados."
-                        )
-                    elif is_pie_chart_shortcut:
-                        final_answer = (
-                            "📊 ¡Gráfico generado exitosamente! He preparado la distribución de ventas por producto "
-                            "en una gráfica circular interactiva con los porcentajes reales correspondientes."
-                        )
-                    else:
-                        final_answer = (
-                            f"✅ Operación autorizada exitosamente por AgentGuard bajo política comercial. "
-                            f"La acción '{action_name}' fue ejecutada en el servicio destino con latencia "
-                            f"{gateway_verdicts[0].get('latency_ms', 0)} ms."
-                        )
-                elif dec == "REQUIRE_APPROVAL":
-                    final_answer = (
-                        f"⏳ Operación suspendida sujeta a gobernanza humana (HITL). "
-                        f"El monto o riesgo de '{action_name}' excede los límites autónomos. "
-                        f"Ticket registrado en la bandeja de aprobación de AgentGuard."
-                    )
-                else:
-                    # DENY
-                    if effective_dispatch_action == "delete_sales":
-                        final_answer = (
-                            "🛡️ Puedo filtrar u ocultar esos registros en esta pantalla y actualizar tu gráfico de torta, "
-                            "pero no tengo autorización para escribir ni borrar datos en la base de datos de ACME "
-                            "(bloqueado por política de seguridad en AgentGuard)."
-                        )
-                    else:
-                        final_answer = (
-                            f"🛡️ Bloqueo de seguridad preventivo emitido por AgentGuard (PDP). "
-                            f"La acción '{action_name}' fue rechazada por política estricta. "
-                            f"Detalle: {gateway_verdicts[0].get('error_message', 'Acceso denegado')}."
-                        )
-            else:
-                if acme_results and acme_results[0].get("is_database_wiped"):
-                    final_answer = (
-                        "🚨 ERROR CATASTRÓFICO: La base de datos de ACME Corporation ha sido purgada. "
-                        "El servidor no puede responder a solicitudes operativas (503 Service Unavailable)."
-                    )
-                elif acme_results and acme_results[0].get("status") == "wiped":
-                    final_answer = (
-                        "💥 PELIGRO CRÍTICO: La acción destructiva se ejecutó directamente sin pasar por AgentGuard. "
-                        "Todas las tablas de productos, clientes, cotizaciones, reembolsos y ventas fueron eliminadas de la base de datos."
-                    )
-                elif acme_results and acme_results[0].get("result", {}).get("is_tampered"):
-                    res_tamper = acme_results[0]["result"]
-                    final_answer = (
-                        f"⚠️ ALTERACIÓN GRAVE: Al omitir AgentGuard, el precio de '{res_tamper['product_name']}' "
-                        f"fue rebajado a ${res_tamper['new_price']} USD (Precio Base: ${res_tamper['base_price']} USD). "
-                        f"Se ha provocado un sabotaje directo en el catálogo oficial de ACME."
-                    )
-                elif action_name == "delete_sales":
-                    cnt = acme_results[0].get("result", {}).get("deleted_count", 0)
-                    final_answer = (
-                        f"💥 ALERTA: En Modo Directo (sin AgentGuard), se eliminaron {cnt} registros de ventas "
-                        f"directamente de SQLite. ¡Los datos han desaparecido de la base de datos real!"
-                    )
-                elif effective_dispatch_action == "query_sales":
-                    cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
-                    final_answer = f"⚡ Consulta de ventas ejecutada directamente sobre SQLite ({cnt} registros recuperados)."
-                else:
-                    final_answer = (
-                        f"⚡ Acción '{action_name}' ejecutada directamente en ACME Corp omitiendo salvaguardas de gobernanza. "
-                        f"Resultado: {json.dumps(acme_results[0] if acme_results else {}, ensure_ascii=False)}"
-                    )
+            final_answer = _build_deterministic_answer()
 
         steps.append({
             "step": 7 if use_llm else 6,
