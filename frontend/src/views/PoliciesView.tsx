@@ -663,9 +663,9 @@ export const PoliciesView: React.FC = () => {
               width: '100%',
               maxWidth: '520px',
               height: '100%',
-              backgroundColor: '#0F172A',
-              borderLeft: '1px solid #334155',
-              boxShadow: '-10px 0 35px rgba(0, 0, 0, 0.8)',
+              backgroundColor: 'var(--bg-card)',
+              borderLeft: '1px solid var(--border-subtle)',
+              boxShadow: 'var(--shadow-lg)',
               display: 'flex',
               flexDirection: 'column',
               padding: '24px',
@@ -675,7 +675,7 @@ export const PoliciesView: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header del Drawer */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
                   width: '42px',
@@ -686,12 +686,12 @@ export const PoliciesView: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#38BDF8',
+                  color: 'var(--brand-primary)',
                 }}>
                   <Shield size={20} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#F8FAFC' }}>
+                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                     {selectedPolicy.name}
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
@@ -700,7 +700,7 @@ export const PoliciesView: React.FC = () => {
                       padding: '2px 8px',
                       borderRadius: '4px',
                       backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                      color: '#38BDF8',
+                      color: 'var(--brand-primary)',
                       fontWeight: 600,
                     }}>
                       Prioridad {selectedPolicy.priority || 100}
@@ -714,7 +714,7 @@ export const PoliciesView: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedPolicy(null)}
-                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', padding: '4px' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
                 title="Cerrar panel"
               >
                 <X size={20} />
@@ -723,25 +723,25 @@ export const PoliciesView: React.FC = () => {
 
             {/* Identificador UUID de Política */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Identificador de Política (UUID)
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: '#1E293B',
+                backgroundColor: 'var(--bg-app)',
                 padding: '8px 12px',
                 borderRadius: '8px',
-                border: '1px solid #334155',
+                border: '1px solid var(--border-subtle)',
                 fontFamily: 'monospace',
                 fontSize: '12px',
-                color: '#E2E8F0',
+                color: 'var(--text-primary)',
               }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedPolicy.id}</span>
                 <button
                   onClick={() => handleCopy(selectedPolicy.id)}
-                  style={{ background: 'none', border: 'none', color: copiedId ? '#10B981' : '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
+                  style={{ background: 'none', border: 'none', color: copiedId ? 'var(--success)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
                 >
                   <Copy size={13} />
                   <span>{copiedId ? 'Copiado' : 'Copiar'}</span>
@@ -751,24 +751,24 @@ export const PoliciesView: React.FC = () => {
 
             {/* Estado de Gobernanza con Switch */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Estado de Gobernanza
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: '#1E293B',
+                backgroundColor: 'var(--bg-app)',
                 padding: '10px 14px',
                 borderRadius: '8px',
-                border: '1px solid #334155',
+                border: '1px solid var(--border-subtle)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span className={selectedPolicy.status === 'Active' ? 'badge badge-success' : 'badge badge-warning'}>
                     <span className="badge-dot" />
                     <span>{selectedPolicy.status === 'Active' ? 'Activa' : 'Inactiva'}</span>
                   </span>
-                  <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                     {selectedPolicy.status === 'Active' ? 'Evaluada activamente por el PDP' : 'Desactivada temporalmente'}
                   </span>
                 </div>
@@ -788,10 +788,10 @@ export const PoliciesView: React.FC = () => {
 
             {/* Descripción / Alcance */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Alcance y Justificación
               </label>
-              <div style={{ fontSize: '13px', color: '#CBD5E1', lineHeight: '1.5', backgroundColor: '#1E293B', padding: '10px 12px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', backgroundColor: 'var(--bg-app)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                 {selectedPolicy.description || 'Política de autorización determinista perimetral.'}
               </div>
             </div>
@@ -799,14 +799,14 @@ export const PoliciesView: React.FC = () => {
             {/* Reglas Deterministas Asociadas (Jerárquicas) */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Reglas Asociadas ({selectedPolicy.rules?.length || 0})
                 </label>
                 {currentUser.canConfigurePolicies && (
                   <button
                     onClick={() => handleOpenAddRuleModal(selectedPolicy)}
                     className="btn btn-secondary"
-                    style={{ padding: '3px 8px', fontSize: '11px', gap: '4px', color: '#38BDF8' }}
+                    style={{ padding: '3px 8px', fontSize: '11px', gap: '4px', color: 'var(--brand-primary)' }}
                   >
                     <Plus size={11} />
                     <span>+ Añadir regla</span>
@@ -815,7 +815,7 @@ export const PoliciesView: React.FC = () => {
               </div>
 
               {(!selectedPolicy.rules || selectedPolicy.rules.length === 0) ? (
-                <div style={{ padding: '16px', textAlign: 'center', backgroundColor: '#1E293B', borderRadius: '8px', border: '1px dashed #334155', color: '#94A3B8', fontSize: '12px' }}>
+                <div style={{ padding: '16px', textAlign: 'center', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px dashed var(--border-subtle)', color: 'var(--text-muted)', fontSize: '12px' }}>
                   No hay reglas hijas configuradas en esta política.
                 </div>
               ) : (
@@ -824,8 +824,8 @@ export const PoliciesView: React.FC = () => {
                     <div 
                       key={rule.id}
                       style={{
-                        backgroundColor: '#1E293B',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--bg-app)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '8px',
                         padding: '10px 12px',
                         display: 'flex',
@@ -835,8 +835,8 @@ export const PoliciesView: React.FC = () => {
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Zap size={14} color="#38BDF8" />
-                          <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', color: '#F8FAFC' }}>
+                          <Zap size={14} color="var(--brand-primary)" />
+                          <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', color: 'var(--text-primary)' }}>
                             {rule.action_name || '*'}
                           </span>
                         </div>
@@ -1373,7 +1373,6 @@ export const PoliciesView: React.FC = () => {
       {/* Cabecera Principal */}
       <Header 
         title="Políticas de Gobernanza" 
-        subtitle="Define y aplica políticas jerárquicas y reglas deterministas de autorización evaluadas por el Motor PDP."
         actionButton={
           currentUser.canConfigurePolicies ? (
             <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>

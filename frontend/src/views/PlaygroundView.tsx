@@ -393,7 +393,6 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Header
         title="Probador de Políticas PDP (Dry-Run)"
-        subtitle="Evalúa decisiones contextuales, reglas deterministas y detección de amenazas OWASP en PostgreSQL en tiempo real sin alterar servicios externos."
       />
 
       {/* Banner Informativo Superior: Explicación de Dry-Run vs Ejecución Productiva */}
@@ -776,7 +775,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                   />
                   {jsonError && (
                     <div style={{ fontSize: '10px', color: '#EF4444', marginTop: '4px' }}>
-                      ⚠️ Error de sintaxis: {jsonError}
+                      Error de sintaxis: {jsonError}
                     </div>
                   )}
                 </div>
@@ -861,7 +860,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                         gap: '4px',
                       }}
                     >
-                      <span>⚡ Latencia Real:</span>
+                      <span>Latencia Real:</span>
                       <strong style={{ color: 'var(--text-primary)' }}>
                         {simulationResult.latency_ms ?? simulationResult.evaluation_latency_ms ?? 0} ms
                       </strong>

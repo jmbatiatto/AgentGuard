@@ -152,7 +152,7 @@ const AppContent: React.FC = () => {
   }) => {
     setSecurityAlert({
       id: alert.id,
-      title: alert.title || '🚨 SIEM: Bloqueo en acción crítica detectado',
+      title: alert.title || 'SIEM: Bloqueo en acción crítica detectado',
       description:
         alert.description ||
         'Intento de violación de política o anomalía de seguridad interceptada en tiempo real.',
@@ -333,7 +333,7 @@ const AppContent: React.FC = () => {
                 letterSpacing: '0.5px',
               }}
             >
-              <span>🚨 SIEM SECURITY INCIDENT</span>
+              <span>SIEM SECURITY INCIDENT</span>
               <span
                 style={{
                   fontSize: '10px',

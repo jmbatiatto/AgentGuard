@@ -284,9 +284,9 @@ export const ToolsView: React.FC = () => {
               width: '100%',
               maxWidth: '480px',
               height: '100%',
-              backgroundColor: '#0F172A',
-              borderLeft: '1px solid #334155',
-              boxShadow: '-10px 0 35px rgba(0, 0, 0, 0.8)',
+              backgroundColor: 'var(--bg-card)',
+              borderLeft: '1px solid var(--border-subtle)',
+              boxShadow: 'var(--shadow-lg)',
               display: 'flex',
               flexDirection: 'column',
               padding: '24px',
@@ -296,25 +296,25 @@ export const ToolsView: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
                   width: '42px',
                   height: '42px',
                   borderRadius: '10px',
-                  backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  backgroundColor: 'var(--avatar-bg)',
+                  border: '1px solid var(--avatar-border)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '14px',
                   fontWeight: 800,
-                  color: '#38BDF8',
+                  color: 'var(--avatar-text)',
                 }}>
                   {selectedTool.initials}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#F8FAFC' }}>
+                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                     {selectedTool.name}
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
@@ -323,7 +323,7 @@ export const ToolsView: React.FC = () => {
                       padding: '2px 8px',
                       borderRadius: '4px',
                       backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                      color: '#38BDF8',
+                      color: 'var(--brand-primary)',
                       fontWeight: 600,
                     }}>
                       {selectedTool.protocol || 'REST'}
@@ -337,7 +337,7 @@ export const ToolsView: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedTool(null)}
-                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', padding: '4px' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
                 title="Cerrar panel"
               >
                 <X size={20} />
@@ -346,25 +346,25 @@ export const ToolsView: React.FC = () => {
 
             {/* Identificador UUID */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 UUID de Herramienta
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: '#1E293B',
+                backgroundColor: 'var(--bg-app)',
                 padding: '8px 12px',
                 borderRadius: '8px',
-                border: '1px solid #334155',
+                border: '1px solid var(--border-subtle)',
                 fontFamily: 'monospace',
                 fontSize: '12px',
-                color: '#E2E8F0',
+                color: 'var(--text-primary)',
               }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedTool.id}</span>
                 <button
                   onClick={() => handleCopy(selectedTool.id, 'id')}
-                  style={{ background: 'none', border: 'none', color: copiedId ? '#10B981' : '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
+                  style={{ background: 'none', border: 'none', color: copiedId ? 'var(--success)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
                 >
                   <Copy size={13} />
                   <span>{copiedId ? 'Copiado' : 'Copiar'}</span>
@@ -374,27 +374,27 @@ export const ToolsView: React.FC = () => {
 
             {/* Endpoint Base URL */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Endpoint Base URL
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: '#1E293B',
+                backgroundColor: 'var(--bg-app)',
                 padding: '8px 12px',
                 borderRadius: '8px',
-                border: '1px solid #334155',
+                border: '1px solid var(--border-subtle)',
                 fontFamily: 'monospace',
                 fontSize: '12px',
-                color: '#38BDF8',
+                color: 'var(--brand-primary)',
               }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {selectedTool.endpoint_url || 'https://api.empresa.internal/v1'}
                 </span>
                 <button
                   onClick={() => handleCopy(selectedTool.endpoint_url || 'https://api.empresa.internal/v1', 'url')}
-                  style={{ background: 'none', border: 'none', color: copiedUrl ? '#10B981' : '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', flexShrink: 0 }}
+                  style={{ background: 'none', border: 'none', color: copiedUrl ? 'var(--success)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', flexShrink: 0 }}
                 >
                   <Copy size={13} />
                   <span>{copiedUrl ? 'Copiado' : 'Copiar'}</span>
@@ -404,17 +404,17 @@ export const ToolsView: React.FC = () => {
 
             {/* Descripción Funcional */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Descripción del Servicio
               </label>
-              <div style={{ fontSize: '13px', color: '#CBD5E1', lineHeight: '1.5', backgroundColor: '#1E293B', padding: '10px 12px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', backgroundColor: 'var(--bg-app)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                 {selectedTool.description}
               </div>
             </div>
 
             {/* Agentes Autorizados */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Agentes con Acceso Vinculado
               </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -422,10 +422,10 @@ export const ToolsView: React.FC = () => {
                   <span key={idx} style={{
                     fontSize: '12px',
                     padding: '4px 10px',
-                    backgroundColor: '#1E293B',
-                    border: '1px solid #334155',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: '6px',
-                    color: '#F1F5F9',
+                    color: 'var(--text-primary)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
@@ -456,8 +456,8 @@ export const ToolsView: React.FC = () => {
                       <div 
                         key={act.id} 
                         style={{
-                          backgroundColor: '#1E293B',
-                          border: '1px solid #334155',
+                          backgroundColor: 'var(--bg-app)',
+                          border: '1px solid var(--border-subtle)',
                           borderRadius: '8px',
                           padding: '10px 12px',
                           display: 'flex',
@@ -467,7 +467,7 @@ export const ToolsView: React.FC = () => {
                         }}
                       >
                         <div>
-                          <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>
+                          <div style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                             {act.action_name}
                           </div>
                           {act.description && (
@@ -497,8 +497,8 @@ export const ToolsView: React.FC = () => {
                     <div 
                       key={idx}
                       style={{
-                        backgroundColor: '#1E293B',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--bg-app)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '8px',
                         padding: '10px 12px',
                         display: 'flex',
@@ -506,7 +506,7 @@ export const ToolsView: React.FC = () => {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: '#F8FAFC' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {actName}
                       </span>
                       <span style={{
@@ -913,7 +913,6 @@ export const ToolsView: React.FC = () => {
 
       <Header 
         title="Herramientas" 
-        subtitle="Controla las herramientas y recursos disponibles para tus agentes."
         actionButton={
           currentUser.canConfigurePolicies ? (
             <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>

@@ -18,7 +18,7 @@ import { ResetDemoModal } from './ResetDemoModal';
 
 interface HeaderProps {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   actionButton?: React.ReactNode;
 }
 
@@ -78,8 +78,8 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
         zIndex: 100,
       }}
     >
-      {/* View Title & Subtitle */}
-      <div>
+      {/* View Title */}
+      <div style={{ flexShrink: 0, minWidth: 0 }}>
         <h1
           style={{
             fontSize: '18px',
@@ -87,23 +87,29 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             color: 'var(--text-primary)',
             letterSpacing: '-0.015em',
             lineHeight: '1.2',
+            margin: 0,
+            whiteSpace: 'nowrap',
           }}
         >
           {title}
         </h1>
-        <p
-          style={{
-            fontSize: '12px',
-            color: 'var(--text-muted)',
-            marginTop: '2px',
-          }}
-        >
-          {subtitle}
-        </p>
+        {subtitle && (
+          <p
+            style={{
+              fontSize: '12px',
+              color: 'var(--text-muted)',
+              marginTop: '2px',
+              margin: 0,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {subtitle}
+          </p>
+        )}
       </div>
 
-      {/* Right Controls: Action + Reset Demo (ADMIN Acme only) + Theme + Operational Status + Locked Tenant + Real JWT Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      {/* Right Controls: Action + Theme + Operational Status + Locked Tenant + Real JWT Profile */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'nowrap', flexShrink: 0 }}>
         {actionButton}
 
         {currentUser.canResetDemo && (
@@ -115,31 +121,27 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              height: '34px',
-              padding: '0 11px',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
               borderRadius: '8px',
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
-              fontSize: '12px',
-              fontWeight: 500,
+              color: '#F59E0B',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
+              flexShrink: 0,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = '#F59E0B';
-              e.currentTarget.style.color = '#F59E0B';
               e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
-              e.currentTarget.style.color = 'var(--text-secondary)';
               e.currentTarget.style.backgroundColor = 'var(--bg-card)';
             }}
           >
-            <RotateCcw size={14} style={{ color: '#F59E0B' }} />
-            <span>Reset Demo</span>
+            <RotateCcw size={15} />
           </button>
         )}
 
@@ -152,14 +154,15 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '34px',
-            height: '34px',
+            width: '36px',
+            height: '36px',
             borderRadius: '8px',
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             color: theme === 'dark' ? '#FBBF24' : '#0284C7',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = 'var(--border-focus)';
@@ -173,33 +176,6 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
           {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
         </button>
 
-        {/* Operational Status Pill */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '7px',
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '9999px',
-            padding: '5px 12px',
-            fontSize: '12px',
-            fontWeight: 500,
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <span
-            style={{
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              backgroundColor: '#10B981',
-              boxShadow: '0 0 6px #10B981',
-            }}
-          />
-          <span>Todos los sistemas operativos</span>
-        </div>
-
         {/* Single-Tenant Locked Badge */}
         <div
           id="org-tenant-badge"
@@ -208,21 +184,23 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '7px',
-            height: '34px',
-            padding: '0 10px',
+            gap: '8px',
+            height: '36px',
+            padding: '0 12px',
             borderRadius: '8px',
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             color: 'var(--text-primary)',
             fontSize: '12px',
             fontWeight: 600,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
           <Building2 size={15} style={{ color: 'var(--brand-primary)', flexShrink: 0 }} />
           <span
             style={{
-              maxWidth: '140px',
+              maxWidth: '120px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -244,7 +222,8 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, actionButton })
               display: 'flex',
               alignItems: 'center',
               gap: '9px',
-              padding: '4px 10px 4px 6px',
+              height: '36px',
+              padding: '0 12px 0 6px',
               borderRadius: '8px',
               backgroundColor: isDropdownOpen ? 'var(--bg-card-hover)' : 'var(--bg-card)',
               border: `1px solid ${isDropdownOpen ? 'var(--brand-primary)' : 'var(--border-subtle)'}`,

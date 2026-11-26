@@ -13,8 +13,7 @@ import {
   Check, 
   Power, 
   Trash2, 
-  Clock,
-  Sparkles 
+  Clock 
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { QuickSetupWizard } from '../components/QuickSetupWizard';
@@ -196,9 +195,9 @@ export const AgentsView: React.FC = () => {
               width: '100%',
               maxWidth: '460px',
               height: '100%',
-              backgroundColor: '#0F172A',
-              borderLeft: '1px solid #334155',
-              boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.7)',
+              backgroundColor: 'var(--bg-card)',
+              borderLeft: '1px solid var(--border-subtle)',
+              boxShadow: 'var(--shadow-lg)',
               display: 'flex',
               flexDirection: 'column',
               padding: '24px',
@@ -208,35 +207,35 @@ export const AgentsView: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
                   width: '42px',
                   height: '42px',
                   borderRadius: '10px',
-                  backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  backgroundColor: 'var(--avatar-bg)',
+                  border: '1px solid var(--avatar-border)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '14px',
                   fontWeight: 800,
-                  color: '#38BDF8',
+                  color: 'var(--avatar-text)',
                 }}>
                   {selectedAgent.initials}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#F8FAFC' }}>
+                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                     {selectedAgent.name}
                   </h3>
-                  <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                     {selectedAgent.type}
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedAgent(null)}
-                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', padding: '4px' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
               >
                 <X size={20} />
               </button>
@@ -244,26 +243,26 @@ export const AgentsView: React.FC = () => {
 
             {/* Identificador UUID */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Identificador Oficial (UUID)
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: '#1E293B',
+                backgroundColor: 'var(--bg-app)',
                 padding: '8px 12px',
                 borderRadius: '8px',
-                border: '1px solid #334155',
+                border: '1px solid var(--border-subtle)',
                 fontFamily: 'monospace',
                 fontSize: '12px',
-                color: '#38BDF8',
+                color: 'var(--brand-primary)',
               }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedAgent.id}</span>
                 <button
                   onClick={() => handleCopyId(selectedAgent.id)}
                   title="Copiar ID"
-                  style={{ background: 'none', border: 'none', color: copiedId ? '#34D399' : '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
+                  style={{ background: 'none', border: 'none', color: copiedId ? 'var(--success)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
                 >
                   {copiedId ? <Check size={14} /> : <Copy size={14} />}
                   <span>{copiedId ? 'Copiado' : 'Copiar'}</span>
@@ -273,10 +272,10 @@ export const AgentsView: React.FC = () => {
 
             {/* Estado Operativo */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Estado de Gobernanza
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1E293B', padding: '10px 14px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--bg-app)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                 <span className={selectedAgent.status === 'ACTIVE' ? 'badge badge-success' : selectedAgent.status === 'SUSPENDED' ? 'badge badge-danger' : 'badge badge-secondary'}>
                   <span className="badge-dot" />
                   <span>{AGENT_STATUS_LABELS[selectedAgent.status] || selectedAgent.status}</span>
@@ -297,25 +296,25 @@ export const AgentsView: React.FC = () => {
 
             {/* Sponsor y Equipo */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Sponsor Responsable
               </label>
-              <div style={{ backgroundColor: '#1E293B', padding: '10px 14px', borderRadius: '8px', border: '1px solid #334155', fontSize: '13px', color: '#E2E8F0' }}>
+              <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontSize: '13px', color: 'var(--text-primary)' }}>
                 {selectedAgent.owner}
               </div>
             </div>
 
             {/* Herramientas Asignadas */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Herramientas Autorizadas (AgentTool N:N)
               </label>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', backgroundColor: '#1E293B', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', backgroundColor: 'var(--bg-app)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                 {selectedAgent.assignedTools.length === 0 ? (
-                  <span style={{ fontSize: '12px', color: '#64748B' }}>Sin herramientas asignadas</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Sin herramientas asignadas</span>
                 ) : (
                   selectedAgent.assignedTools.map(t => (
-                    <span key={t} className="code-pill" style={{ backgroundColor: 'rgba(56, 189, 248, 0.1)', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.25)' }}>
+                    <span key={t} className="code-pill">
                       {t}
                     </span>
                   ))
@@ -324,7 +323,7 @@ export const AgentsView: React.FC = () => {
             </div>
 
             {/* Acciones de Footer del Drawer */}
-            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px', borderTop: '1px solid #1E293B' }}>
+            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
               <button
                 onClick={() => {
                   window.location.hash = '#traces';
@@ -339,9 +338,9 @@ export const AgentsView: React.FC = () => {
                 <button
                   onClick={() => handleDeleteAgent(selectedAgent)}
                   style={{
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    color: '#EF4444',
+                    backgroundColor: 'var(--danger-bg)',
+                    border: '1px solid var(--danger-border)',
+                    color: 'var(--danger-text)',
                     borderRadius: '8px',
                     padding: '10px',
                     cursor: 'pointer',
@@ -564,7 +563,6 @@ export const AgentsView: React.FC = () => {
 
       <Header 
         title="Agentes" 
-        subtitle="Gestiona los agentes de IA registrados y sus capacidades."
         actionButton={
           currentUser.canConfigurePolicies ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -573,8 +571,8 @@ export const AgentsView: React.FC = () => {
                 className="btn btn-secondary"
                 onClick={() => setIsWizardOpen(true)}
               >
-                <Sparkles size={15} />
-                <span>Proteger Agente en 3 Clics</span>
+                <Plus size={15} strokeWidth={2.5} />
+                <span>+ Conectar agente</span>
               </button>
               <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
                 <Plus size={16} strokeWidth={2.5} />

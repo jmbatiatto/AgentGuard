@@ -67,7 +67,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
         action: data.action_name || 'refund.create',
         resource: data.parameters?.gateway || 'payment/stripe_live',
         amount: amountVal,
-        requestedAt: 'Recién (En Vivo ⚡)',
+        requestedAt: 'Recién (En vivo)',
         status: 'PENDING',
         delegatedBy: 'Automated Gateway Trigger',
         riskLevel: (data.risk_level || 'HIGH') as RiskLevel,
@@ -88,7 +88,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       });
       setSelectedId(newReq.id);
       setFilterTab('PENDING');
-      setResolutionNotice(`⚡ Nueva solicitud en tiempo real: ${newReq.action} (${newReq.amount}) de ${newReq.agentName}`);
+      setResolutionNotice(`Nueva solicitud en tiempo real: ${newReq.action} (${newReq.amount}) de ${newReq.agentName}`);
       setTimeout(() => setResolutionNotice(null), 5000);
     },
     onResolvedApproval: (data) => {
@@ -125,7 +125,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
     }
 
     if (!currentUser.canApproveHITL) {
-      setResolutionNotice(`🔒 Permiso denegado: Tu perfil actual (${currentUser.role}) no tiene permisos para resolver solicitudes HITL. Inicia sesión con una cuenta APPROVER o ADMIN para autorizar o rechazar.`);
+      setResolutionNotice(`Permiso denegado: Tu perfil actual (${currentUser.role}) no tiene permisos para resolver solicitudes HITL. Inicia sesión con una cuenta APPROVER o ADMIN para autorizar o rechazar.`);
       setTimeout(() => setResolutionNotice(null), 4000);
       return;
     }
@@ -146,7 +146,7 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
       onUpdatePendingCount(remainingCount);
     }
 
-    setResolutionNotice(`Solicitud ${targetReq.action} (${targetReq.amount}) ha sido ${action === 'APPROVED' ? 'Aprobada ✅' : 'Rechazada ❌'} por ${currentUser.name}.`);
+    setResolutionNotice(`Solicitud ${targetReq.action} (${targetReq.amount}) ha sido ${action === 'APPROVED' ? 'Aprobada' : 'Rechazada'} por ${currentUser.name}.`);
     setTimeout(() => setResolutionNotice(null), 4000);
 
     const nextPending = updated.find(r => r.status === 'PENDING');
@@ -173,7 +173,6 @@ export const ApprovalsView: React.FC<ApprovalsViewProps> = ({ onUpdatePendingCou
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Header 
         title="Aprobaciones" 
-        subtitle="Revisa las acciones que requieren autorización humana."
       />
 
       {/* Resolution Toast Notification */}

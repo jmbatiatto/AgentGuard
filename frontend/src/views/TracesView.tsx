@@ -108,7 +108,6 @@ export const TracesView: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Header 
         title="Trazas de Ejecución" 
-        subtitle="Registro de auditoría forense inmutable de todas las llamadas a herramientas y decisiones de autorización de agentes."
         actionButton={
           <button 
             className="btn btn-secondary" 
@@ -141,6 +140,7 @@ export const TracesView: React.FC = () => {
               placeholder="Buscar trazas por agente, acción o ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Buscar trazas de ejecución"
             />
           </div>
 
@@ -148,6 +148,7 @@ export const TracesView: React.FC = () => {
             <select
               value={decisionFilter}
               onChange={(e) => setDecisionFilter(e.target.value)}
+              aria-label="Filtrar trazas por decisión de política"
               className="btn btn-secondary"
               style={{ padding: '8px 12px', cursor: 'pointer', outline: 'none' }}
             >
@@ -370,6 +371,8 @@ export const TracesView: React.FC = () => {
                         <button
                           onClick={() => setSelectedTrace(trace)}
                           className="btn btn-secondary"
+                          aria-label={`Ver detalles forenses de la traza ${trace.id}`}
+                          title="Ver detalle forense"
                           style={{ padding: '5px 10px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                         >
                           <Eye size={12} />
@@ -429,7 +432,8 @@ export const TracesView: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedTrace(null)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                aria-label="Cerrar modal de auditoría forense"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}
               >
                 <X size={18} />
               </button>

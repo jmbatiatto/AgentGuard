@@ -48,19 +48,19 @@ export function WorkspaceSwitcher({ selected }: WorkspaceSwitcherProps) {
       className="flex items-center justify-between px-3 py-2.5 rounded-xl select-none"
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[13px] shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-[var(--brand-primary)]/15 border border-[var(--brand-primary)]/30 text-[var(--brand-primary)] flex items-center justify-center font-bold text-[13px] shrink-0">
           {currentName.charAt(0).toUpperCase()}
         </div>
         <div className="flex flex-col overflow-hidden min-w-0">
-          <span className="text-[13px] font-semibold leading-none mb-1 text-white truncate max-w-[120px]">
+          <span className="text-[13px] font-semibold leading-none mb-1 text-[var(--text-primary)] truncate max-w-[120px]">
             {currentName}
           </span>
-          <span className="text-[11px] text-slate-400 leading-none">
+          <span className="text-[11px] text-[var(--text-muted)] leading-none">
             Tenant Verificado
           </span>
         </div>
       </div>
-      <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" strokeWidth={1.75} />
+      <Lock className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" strokeWidth={1.75} />
     </div>
   );
 }
@@ -91,41 +91,41 @@ function NavItem({
   return (
     <div className="flex flex-col w-full">
       <div 
-        className={`group flex items-center justify-between py-2.5 rounded-lg cursor-pointer transition-colors duration-200 select-none border-l-2
+        className={`group flex items-center justify-between py-2 rounded-lg cursor-pointer transition-colors duration-150 select-none border-l-2
           ${isActive 
-            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500' 
-            : 'text-slate-400 hover:bg-slate-800/60 hover:text-white border-transparent'
+            ? 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--brand-primary)] font-medium shadow-xs' 
+            : 'text-[var(--text-secondary)] hover:bg-[var(--nav-hover-bg)] hover:text-[var(--nav-hover-text)] border-transparent'
           }
         `}
-        style={{ paddingLeft: `${level * 12 + 9}px`, paddingRight: '10px' }}
+        style={{ paddingLeft: `${level * 12 + 10}px`, paddingRight: '10px' }}
         onClick={handleClick}
       >
         <div className="flex items-center gap-2.5 min-w-0">
           <item.icon 
-            className={`w-[16px] h-[16px] transition-colors duration-200 shrink-0
-              ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-white'}
+            className={`w-[16px] h-[16px] transition-colors duration-150 shrink-0
+              ${isActive ? 'text-[var(--brand-primary)]' : 'text-[var(--text-muted)] group-hover:text-[var(--nav-hover-text)]'}
             `} 
-            strokeWidth={1.5} 
+            strokeWidth={1.75} 
           />
-          <span className="text-[13px] tracking-wide truncate">
+          <span className="text-[13px] tracking-tight truncate">
             {item.title}
           </span>
         </div>
         
         <div className="flex items-center gap-2 shrink-0">
           {item.shortcut && (
-             <kbd className="hidden group-hover:inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-medium font-mono text-slate-500 bg-slate-800/80 border border-slate-700/60 rounded-[4px]">
+             <kbd className="hidden group-hover:inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-medium font-mono text-[var(--text-muted)] bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-[4px]">
                {item.shortcut}
              </kbd>
           )}
           {item.badge !== undefined && item.badge !== null && item.badge !== 0 && (
-            <span className="flex items-center justify-center min-w-[20px] h-5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-500/20 text-emerald-400">
+            <span className="flex items-center justify-center min-w-[20px] h-5 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-[var(--danger-bg)] text-[var(--danger)] border border-[var(--danger-border)]">
               {item.badge}
             </span>
           )}
           {hasChildren && (
             <ChevronRight 
-              className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} 
+              className={`w-3.5 h-3.5 text-[var(--text-muted)] transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`} 
               strokeWidth={2}
             />
           )}
@@ -134,13 +134,13 @@ function NavItem({
 
       {hasChildren && (
         <div 
-          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${
             isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
           }`}
         >
           <div className="overflow-hidden min-h-0 relative flex flex-col gap-1 mt-0.5">
             <div 
-              className="absolute top-0 bottom-0 border-l border-slate-700/50"
+              className="absolute top-0 bottom-0 border-l border-[var(--border-subtle)]"
               style={{ left: `${level * 12 + 17.5}px` }}
             />
             {item.children!.map(child => (
@@ -185,7 +185,7 @@ export function SidebarNav({
       ? [{ id: 'playground', viewId: 'playground' as NavView, title: 'Playground', icon: PlayCircle }]
       : []),
     ...(currentUser?.canManageTeam
-      ? [{ id: 'api', viewId: 'settings' as NavView, title: 'Configuración & RBAC', icon: Terminal }]
+      ? [{ id: 'api', viewId: 'settings' as NavView, title: 'Permisos y RBAC', icon: Terminal }]
       : []),
   ];
 
@@ -235,7 +235,7 @@ export function SidebarNav({
   ];
 
   const bottomItems: NavItemData[] = [
-    { id: 'settings', viewId: 'settings', title: 'Configuración', icon: Settings, shortcut: '⌘,' },
+    { id: 'settings', viewId: 'settings', title: 'Configuración general', icon: Settings, shortcut: '⌘,' },
     { id: 'logout', title: 'Cerrar sesión', icon: LogOut },
   ];
 
@@ -250,20 +250,20 @@ export function SidebarNav({
   };
 
   return (
-    <aside className={`flex flex-col w-[240px] h-screen bg-[#0D1520] border-r border-slate-800/80 px-3 pt-5 pb-4 font-sans select-none shrink-0 ${className}`}>
+    <aside className={`flex flex-col w-[256px] h-screen bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] text-[var(--text-primary)] px-3.5 pt-6 pb-5 font-sans select-none shrink-0 ${className}`}>
       {/* Workspace Switcher en tarjeta con borde sutil */}
-      <div className="mb-8 px-1">
-        <div className="border border-slate-800 bg-slate-900/50 rounded-xl p-3">
+      <div className="mb-10 px-1">
+        <div className="border border-[var(--border-subtle)] bg-[var(--bg-card)] rounded-xl p-2.5">
           <WorkspaceSwitcher selected={activeWorkspace} onSelect={onWorkspaceSelect} />
         </div>
       </div>
 
       {/* Lista de Navegación */}
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-5">
+      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-6 pt-5 pb-2">
         {navGroups.map((group, idx) => (
           <div key={idx} className="flex flex-col gap-1">
             {group.heading && (
-              <span className="px-2.5 mb-1 text-[10px] font-semibold tracking-widest text-slate-500 uppercase">
+              <span className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-wider text-[var(--text-muted)] uppercase">
                 {group.heading}
               </span>
             )}
@@ -280,24 +280,24 @@ export function SidebarNav({
       </div>
 
       {/* Footer: Usuario Autenticado + Configuración y Cerrar sesión */}
-      <div className="mt-auto border-t border-slate-800 pt-3 flex flex-col gap-1.5">
+      <div className="mt-auto border-t border-[var(--border-subtle)] pt-3 flex flex-col gap-1.5">
         {currentUser && (
-          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-slate-900/60 border border-slate-800/80 mb-1">
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] mb-1">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center font-bold text-[11px] shrink-0"
               style={{
-                backgroundColor: currentUser.avatarBg || 'rgba(99, 102, 241, 0.2)',
-                color: currentUser.badgeColor || '#818CF8',
-                border: `1px solid ${currentUser.badgeColor || '#818CF8'}`,
+                backgroundColor: currentUser.avatarBg || 'var(--avatar-bg)',
+                color: currentUser.badgeColor || 'var(--avatar-text)',
+                border: `1px solid ${currentUser.badgeColor || 'var(--avatar-border)'}`,
               }}
             >
               {currentUser.avatarInitials}
             </div>
             <div className="flex flex-col min-w-0 overflow-hidden text-left">
-              <span className="text-[12px] font-semibold text-slate-200 truncate">
+              <span className="text-[12px] font-semibold text-[var(--text-primary)] truncate">
                 {currentUser.name}
               </span>
-              <span className="text-[10px] font-medium text-slate-400 truncate">
+              <span className="text-[10px] font-medium text-[var(--text-muted)] truncate">
                 {ROLE_LABELS[currentUser.role] || currentUser.role}
               </span>
             </div>

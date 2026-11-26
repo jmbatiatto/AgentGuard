@@ -476,7 +476,6 @@ export const SettingsView: React.FC = () => {
       {/* View Header */}
       <Header
         title="Configuración del Espacio de Trabajo & Gobernanza"
-        subtitle="Gestión de Tenant Multi-tenant, Llaves de Acceso Gateway PEP, Miembros RBAC y Salida SIEM"
         actionButton={
           <div style={{
             display: 'flex',

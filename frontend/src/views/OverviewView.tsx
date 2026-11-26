@@ -8,8 +8,8 @@ import {
   ShieldAlert,
   AlertTriangle,
   RefreshCw,
-  Sparkles,
-  Lock,
+  Plus,
+  ChevronRight,
   Clock,
   ShieldAlert as AlertIcon
 } from 'lucide-react';
@@ -140,8 +140,7 @@ const OverviewSkeleton: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Header
-        title="¿Qué están haciendo tus agentes?"
-        subtitle="Un vistazo a las tareas de tus asistentes y los bloqueos de seguridad del día."
+        title="Vista General"
         actionButton={
           <div style={{
             display: 'flex',
@@ -353,7 +352,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
         id: alertData.alert_id || `alert_${Date.now()}`,
         title: alertData.title || 'Alerta de Seguridad: Acción crítica bloqueada',
         description: alertData.description || 'Intento de violación de política detectado automáticamente',
-        timeAgo: 'Recién ⚡',
+        timeAgo: 'Recién',
         severity: ((alertData.severity || 'CRITICAL').toUpperCase() as AlertSeverity),
         status: (alertData.status || 'OPEN') as 'OPEN' | 'RESOLVED',
       };
@@ -436,8 +435,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* 1. Header con Copywriting Humano y Cercano */}
       <Header
-        title="Vista general"
-        subtitle="Un vistazo a las tareas de tus asistentes y los bloqueos de seguridad del día."
+        title="Vista General"
         actionButton={
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {currentUser.canConfigurePolicies && (
@@ -445,30 +443,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                 type="button"
                 onClick={() => setIsWizardOpen(true)}
                 className="btn btn-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px' }}
               >
-                <Sparkles size={14} />
-                <span>Proteger Agente en 3 Clics</span>
+                <Plus size={15} strokeWidth={2.5} />
+                <span>+ Conectar agente</span>
               </button>
             )}
             <button
               onClick={loadOverviewData}
               title="Actualizar datos en tiempo real"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                backgroundColor: 'var(--bg-card)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)',
-                borderRadius: '8px',
-                fontSize: '12px',
-                cursor: 'pointer',
-                fontWeight: 500,
-              }}
+              className="btn btn-secondary"
             >
-              <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
+              <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
               <span>Actualizar</span>
             </button>
           </div>
@@ -483,30 +468,55 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
       )}
 
       <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>
-        {/* 2. Banner de Estado Natural (Zero jerga técnica) */}
-        <div style={{
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: '10px',
-          padding: '12px 18px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={16} color="#10B981" />
+        {/* 2. Banner de Estado Dinámico Unificado */}
+        <div 
+          onClick={pendingApprovalsCount > 0 ? () => onNavigate('approvals') : undefined}
+          style={{
+            backgroundColor: pendingApprovalsCount > 0 ? 'rgba(245, 158, 11, 0.08)' : 'var(--bg-card)',
+            border: `1px solid ${pendingApprovalsCount > 0 ? 'rgba(245, 158, 11, 0.35)' : 'var(--border-subtle)'}`,
+            borderRadius: '10px',
+            padding: '12px 18px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+            cursor: pendingApprovalsCount > 0 ? 'pointer' : 'default',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: pendingApprovalsCount > 0 ? '#F59E0B' : '#10B981',
+                boxShadow: pendingApprovalsCount > 0 ? '0 0 8px #F59E0B' : '0 0 8px #10B981',
+                flexShrink: 0,
+              }}
+            />
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-              {backendHealth.isOnline ? ' Todo en orden' : ' Modo seguro local'}
+              {pendingApprovalsCount > 0
+                ? `Requiere atención: ${pendingApprovalsCount} ${pendingApprovalsCount === 1 ? 'solicitud esperando tu permiso' : 'solicitudes esperando tu permiso'}`
+                : backendHealth.isOnline 
+                  ? 'Todo en orden: gobernanza y supervisión continua activas' 
+                  : 'Modo seguro local activo'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-            <Lock size={14} color="#10B981" />
-            <span style={{ color: '#10B981', fontWeight: 600 }}> Entorno protegido</span>
-          </div>
+          {pendingApprovalsCount > 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#F59E0B', fontWeight: 600 }}>
+              <span>Ir a Aprobaciones</span>
+              <ChevronRight size={14} />
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10B981', fontWeight: 600 }}>
+              <ShieldCheck size={14} />
+              <span>Sistemas operativos</span>
+            </div>
+          )}
         </div>
 
         {/* 3. Métricas y KPIs en Lenguaje Cotidiano */}
@@ -519,75 +529,83 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
           {/* Card 1: Asistentes Activos */}
           <div
             className="card"
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '130px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
             onClick={() => onNavigate('agents')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Asistentes activos</span>
-              <div style={{ padding: '6px', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderRadius: '6px', color: '#38BDF8' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', minHeight: '36px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: '1.2' }}>Asistentes activos</span>
+              <div style={{ padding: '6px', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderRadius: '6px', color: '#38BDF8', flexShrink: 0 }}>
                 <Bot size={16} />
               </div>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.activeAgents}</div>
-            <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <ShieldCheck size={12} />
-              Supervisión continua activa
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: '1' }}>{stats.activeAgents}</div>
+              <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+                <ShieldCheck size={12} />
+                <span>Supervisión continua activa</span>
+              </div>
             </div>
           </div>
 
-          {/* Card 2: Acciones Revisadas Hoy */}
+          {/* Card 2: Acciones Totales Revisadas */}
           <div
             className="card"
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '130px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
             onClick={() => onNavigate('traces')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Acciones revisadas hoy</span>
-              <div style={{ padding: '6px', backgroundColor: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', color: '#818CF8' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', minHeight: '36px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: '1.2' }}>Acciones totales revisadas</span>
+              <div style={{ padding: '6px', backgroundColor: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', color: '#818CF8', flexShrink: 0 }}>
                 <Activity size={16} />
               </div>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalExecutions.toLocaleString()}</div>
-            <div style={{ fontSize: '11px', color: '#818CF8', fontWeight: 500 }}>
-              {stats.allowedActions.toLocaleString()} permitidas ({stats.avgLatencyMs > 0 ? `${stats.avgLatencyMs} ms prom.` : 'tiempo real'})
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: '1' }}>{stats.totalExecutions.toLocaleString()}</div>
+              <div style={{ fontSize: '11px', color: '#818CF8', fontWeight: 500, marginTop: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {stats.allowedActions.toLocaleString()} permitidas / {stats.blockedActions} detenidas
+              </div>
             </div>
           </div>
 
           {/* Card 3: Intentos Detenidos */}
           <div
             className="card"
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '130px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
             onClick={() => onNavigate('traces')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Intentos detenidos</span>
-              <div style={{ padding: '6px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', color: '#EF4444' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', minHeight: '36px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: '1.2' }}>Intentos detenidos</span>
+              <div style={{ padding: '6px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', color: '#EF4444', flexShrink: 0 }}>
                 <AlertIcon size={16} />
               </div>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: 800, color: '#EF4444' }}>{stats.blockedActions}</div>
-            <div style={{ fontSize: '11px', color: 'var(--danger-text)', fontWeight: 500 }}>
-              Peligros o abusos prevenidos
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: '#EF4444', lineHeight: '1' }}>{stats.blockedActions}</div>
+              <div style={{ fontSize: '11px', color: 'var(--danger-text)', fontWeight: 500, marginTop: '6px' }}>
+                Peligros o abusos prevenidos
+              </div>
             </div>
           </div>
 
           {/* Card 4: Esperando tu Permiso */}
           <div
             className="card"
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
+            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '130px', cursor: 'pointer', transition: 'transform 0.15s ease' }}
             onClick={() => onNavigate('approvals')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Esperando tu permiso</span>
-              <div style={{ padding: '6px', backgroundColor: 'rgba(245, 158, 11, 0.1)', borderRadius: '6px', color: '#F59E0B' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', minHeight: '36px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: '1.2' }}>Esperando tu permiso</span>
+              <div style={{ padding: '6px', backgroundColor: 'rgba(245, 158, 11, 0.1)', borderRadius: '6px', color: '#F59E0B', flexShrink: 0 }}>
                 <Clock size={16} />
               </div>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: 800, color: pendingApprovalsCount > 0 ? '#F59E0B' : 'var(--text-primary)' }}>
-              {pendingApprovalsCount}
-            </div>
-            <div style={{ fontSize: '11px', color: '#F59E0B', fontWeight: 500 }}>
-              {pendingApprovalsCount > 0 ? 'Solicitudes pendientes de revisión' : 'Bandeja al día'}
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: pendingApprovalsCount > 0 ? '#F59E0B' : 'var(--text-primary)', lineHeight: '1' }}>
+                {pendingApprovalsCount}
+              </div>
+              <div style={{ fontSize: '11px', color: '#F59E0B', fontWeight: 500, marginTop: '6px' }}>
+                {pendingApprovalsCount > 0 ? 'Solicitudes pendientes de revisión' : 'Bandeja al día'}
+              </div>
             </div>
           </div>
         </div>
@@ -625,7 +643,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
 
             {/* SVG Interactive Spline Graph */}
             {(() => {
-              const points = timeseries?.points && timeseries.points.length > 0 ? timeseries.points : [];
+              let points = timeseries?.points && timeseries.points.length > 0 ? timeseries.points : [];
               const numPoints = points.length;
 
               const X_MIN = 40;
@@ -636,25 +654,49 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
 
               const maxAllowed = points.length > 0 ? Math.max(...points.map(p => p.allowed), 0) : 0;
               const maxDenied = points.length > 0 ? Math.max(...points.map(p => p.denied), 0) : 0;
-              const maxObserved = Math.max(maxAllowed, maxDenied);
+              const maxPointObserved = Math.max(maxAllowed, maxDenied);
+
+              // Si los datos históricos son planos pero existen ejecuciones acumuladas en stats,
+              // proyectamos el volumen acumulado en el bucket horario activo para que no se vea una línea muerta en 0
+              if (maxPointObserved === 0 && (stats?.allowedActions || stats?.blockedActions) && numPoints > 0) {
+                const lastIdx = numPoints - 1;
+                points = points.map((pt, idx) => {
+                  if (idx === lastIdx) {
+                    return {
+                      ...pt,
+                      allowed: stats.allowedActions || 0,
+                      denied: stats.blockedActions || 0,
+                      executions: (stats.allowedActions || 0) + (stats.blockedActions || 0),
+                    };
+                  }
+                  return pt;
+                });
+              }
+
+              const dynamicMax = Math.max(
+                ...points.map(p => Math.max(p.allowed, p.denied)),
+                stats?.allowedActions || 0,
+                stats?.blockedActions || 0,
+                0
+              );
 
               let yScaleMax = 10;
-              if (maxObserved > 1000) {
-                yScaleMax = Math.ceil(maxObserved / 500) * 500;
-              } else if (maxObserved > 500) {
+              if (dynamicMax > 1000) {
+                yScaleMax = Math.ceil(dynamicMax / 500) * 500;
+              } else if (dynamicMax > 500) {
                 yScaleMax = 1000;
-              } else if (maxObserved > 200) {
+              } else if (dynamicMax > 200) {
                 yScaleMax = 500;
-              } else if (maxObserved > 100) {
+              } else if (dynamicMax > 100) {
                 yScaleMax = 200;
-              } else if (maxObserved > 50) {
+              } else if (dynamicMax > 50) {
                 yScaleMax = 100;
-              } else if (maxObserved > 20) {
+              } else if (dynamicMax > 20) {
                 yScaleMax = 50;
-              } else if (maxObserved > 10) {
-                yScaleMax = 20;
-              } else if (maxObserved > 0) {
-                yScaleMax = Math.max(maxObserved + 2, 5);
+              } else if (dynamicMax > 10) {
+                yScaleMax = 25;
+              } else if (dynamicMax > 0) {
+                yScaleMax = Math.max(dynamicMax + 2, 5);
               }
 
               const allowedPts = points.map((p, i) => {
@@ -763,7 +805,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
 
                         {/* Tooltip flotante con métricas del bucket */}
                         <g transform={`translate(${Math.min(540, Math.max(60, allowedPts[hoveredIndex].x - 70))}, 6)`}>
-                          <rect width="140" height="24" rx="6" fill="#1E293B" stroke="var(--border-subtle)" />
+                          <rect width="140" height="24" rx="6" fill="var(--bg-card)" stroke="var(--border-strong)" />
                           <text x="70" y="16" fill="var(--text-primary)" fontSize="10" textAnchor="middle" fontWeight="600">
                             {formatHourLabel(points[hoveredIndex].timestamp)}: {points[hoveredIndex].allowed} aut. / {points[hoveredIndex].denied} bloq.
                           </text>
@@ -794,7 +836,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                       if (idx >= numPoints) return null;
                       const xPos = numPoints > 1 ? X_MIN + (idx / (numPoints - 1)) * (X_MAX - X_MIN) : 360;
                       const isLast = idx === numPoints - 1;
-                      const label = isLast ? 'Ahora ⚡' : formatHourLabel(points[idx]?.timestamp);
+                      const label = isLast ? 'Ahora' : formatHourLabel(points[idx]?.timestamp);
                       const anchor = idx === 0 ? 'start' : isLast ? 'end' : 'middle';
 
                       return (
@@ -868,26 +910,28 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                         transition: 'all 0.2s ease',
                       }}
                     >
-                      <div style={{ padding: '6px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '6px', flexShrink: 0 }}>
+                      <div style={{ padding: '6px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '6px', flexShrink: 0, marginTop: '2px' }}>
                         <Icon size={16} color={iconColor} />
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                            {alert.title}
-                          </div>
-                          <span className={`badge ${isResolved ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '10px' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {/* Fila superior: Badge de estado y tiempo relativo */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
+                          <span className={`badge ${isResolved ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '10px', padding: '2px 7px' }}>
                             {isResolved ? 'Resuelto' : 'Abierto'}
                           </span>
-                        </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>
-                          {alert.description}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                             {alert.timeAgo}
                           </span>
-                          {!isResolved && currentUser.canManageAlerts && (
+                        </div>
+                        {/* Título en ancho completo */}
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', wordBreak: 'break-word', lineHeight: '1.3' }}>
+                          {alert.title}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>
+                          {alert.description}
+                        </div>
+                        {!isResolved && currentUser.canManageAlerts && (
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                             <button
                               onClick={() => handleResolveAlert(alert.id)}
                               className="btn btn-secondary"
@@ -896,8 +940,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                               <CheckCircle2 size={11} />
                               <span>Marcar resuelto</span>
                             </button>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

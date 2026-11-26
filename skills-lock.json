@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "skills": {
+    "avoid-ai-design": {
+      "source": "funboy322/avoid-ai-design",
+      "commit": "2b7c71836b06cdf6b3d73265b56490c1b75ad5aa",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "5f0ad5b9e3192854cc0c6f8a49edd65d00008a942dded2f0f46dd5a2b6ad0d03"
+    },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "commit": "9e460a87ef338ee9d12c7beed8fedc597a5af5f7",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "b89bce2429b2b581d38620af9b555e2b4762b12f6f4f61fb07fba7757a284b3e"
+    }
+  }
+}
