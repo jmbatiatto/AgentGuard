@@ -417,3 +417,50 @@ async def test_pep_dispatch_normalizes_localhost_to_ipv4_loopback():
     assert https_kw_1["verify"] is https_kw_2["verify"]
     assert https_kw_1["verify"] is get_cached_ssl_context()
     assert https_kw_1["trust_env"] is True
+
+
+@pytest.mark.asyncio
+async def test_api_key_service_caches_real_db_and_falls_back_without_redis():
+    """Verifica que verify_api_key cachee sesiones reales y degrade a memoria si Redis no responde."""
+    from app.core.cache import BackendCacheService, normalize_redis_url
+    from app.models.api_key import ApiKey
+    from app.services.api_key_service import ApiKeyService
+
+    assert normalize_redis_url("redis://localhost:6379/0") == "redis://127.0.0.1:6379/0"
+
+    raw_key = "ag_live_cache_test_key_999999999999"
+    org_id = uuid.uuid4()
+    key_obj = ApiKey(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        name="Key Test",
+        key_prefix=raw_key[:12],
+        hashed_key=ApiKeyService._hash_key(raw_key),
+        created_at=datetime.now(timezone.utc),
+        expires_at=None,
+        is_active=True,
+    )
+
+    class _CountingResult:
+        def scalar_one_or_none(self):
+            return key_obj
+
+    class _FakeRealSession:
+        def __init__(self):
+            self.execute_calls = 0
+
+        async def execute(self, stmt):
+            self.execute_calls += 1
+            return _CountingResult()
+
+    fake_db = _FakeRealSession()
+    local_cache = BackendCacheService(redis_url="redis://127.0.0.1:6399/0")
+
+    with patch("app.services.api_key_service.backend_cache", local_cache):
+        res1 = await ApiKeyService.verify_api_key(fake_db, raw_key)
+        res2 = await ApiKeyService.verify_api_key(fake_db, raw_key)
+
+    assert res1 is not None and res2 is not None
+    assert res1.organization_id == org_id
+    assert res2.organization_id == org_id
+    assert fake_db.execute_calls == 1

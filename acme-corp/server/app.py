@@ -36,9 +36,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from agent.gemini_client import (
     GeminiAgentClient,
     discover_agentguard_context,
+    handshake_llm_provider,
 )
 from agent.onboarding import bootstrap_acme_in_agentguard
 from agent.presets import list_presets
+from server.cache import acme_cache, hash_secret
 from server.config import ROOT_DIR, httpx_client_kwargs, normalize_loopback_url, settings
 from server.database import AcmeDatabase, DatabaseWipedError, acme_db
 
@@ -125,12 +127,27 @@ class AgentRunRequest(BaseModel):
     prompt: Optional[str] = None
     preset_id: Optional[str] = None
     mode: str = Field(default="protected", description="'protected' o 'direct'")
-    use_llm: bool = Field(default=False, description="Activa razonamiento real con Google Gemini")
+    use_llm: bool = Field(default=False, description="Activa razonamiento real con IA")
     gemini_api_key: Optional[str] = None
     gemini_model: Optional[str] = None
     agentguard_url: Optional[str] = None
     agentguard_api_key: Optional[str] = None
     override_parameters: Optional[Dict[str, Any]] = None
+
+
+class AgentHandshakeRequest(BaseModel):
+    api_key: Optional[str] = Field(
+        default=None,
+        description="API Key del proveedor de IA (Google Gemini, OpenAI, Groq o Anthropic)",
+    )
+    provider: Optional[str] = Field(
+        default=None,
+        description="Proveedor explícito opcional ('google-gemini', 'openai', 'groq', 'anthropic')",
+    )
+    force_refresh: bool = Field(
+        default=False,
+        description="Ignora caché de modelos en Redis y consulta en vivo al proveedor",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -443,6 +460,9 @@ def create_app(
                 acme_public_url=settings.ACME_PUBLIC_URL,
                 force_reset=payload.force_reset,
             )
+            clean_url = normalize_loopback_url(target_url.rstrip("/"))
+            if settings.AGENTGUARD_API_KEY:
+                await acme_cache.delete(f"acme:ag:context:{hash_secret(clean_url + ':' + settings.AGENTGUARD_API_KEY)}")
             return result
         except RuntimeError as re:
             raise HTTPException(
@@ -459,6 +479,37 @@ def create_app(
     async def get_agent_presets():
         return list_presets()
 
+    @app.post("/api/agent/handshake", tags=["Consola Web"])
+    async def handshake_llm(payload: AgentHandshakeRequest):
+        """Saluda al proveedor de IA, valida la API Key y descubre los modelos disponibles."""
+        api_key = (payload.api_key or "").strip() or (settings.GEMINI_API_KEY or "").strip()
+        if not api_key:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ingrese una API Key de IA (Google Gemini, OpenAI, Groq o Anthropic) para realizar el Handshake.",
+            )
+        try:
+            return await handshake_llm_provider(
+                api_key=api_key,
+                provider=payload.provider,
+                force_refresh=payload.force_refresh,
+            )
+        except ValueError as ve:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+        except PermissionError as pe:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(pe))
+        except httpx.TimeoutException as tex:
+            detail_msg = str(tex).strip() or type(tex).__name__
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail=f"Tiempo de espera agotado durante el Handshake con el proveedor de IA ({detail_msg}).",
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"No fue posible completar el Handshake con el proveedor de IA: {exc}",
+            )
+
     @app.post("/api/agent/discover", tags=["Consola Web"])
     async def discover_context(payload: AgentDiscoverRequest):
         url = payload.agentguard_url or settings.AGENTGUARD_URL
@@ -472,6 +523,7 @@ def create_app(
             return await discover_agentguard_context(
                 agentguard_url=url,
                 agentguard_api_key=api_key,
+                force_refresh=True,
             )
         except Exception as exc:
             raise HTTPException(
@@ -515,6 +567,8 @@ def create_app(
             )
         except ValueError as ve:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+        except PermissionError as pe:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(pe))
         except httpx.TimeoutException as tex:
             detail_msg = str(tex).strip() or type(tex).__name__
             raise HTTPException(

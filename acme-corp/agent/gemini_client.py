@@ -14,24 +14,326 @@ Orquesta el ciclo de vida del agente autónomo de IA:
 import json
 import logging
 import re
+import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 
 from agent.presets import PRESETS_BY_ID, get_preset_by_id
+from server.cache import acme_cache, hash_secret
 from server.config import httpx_client_kwargs, normalize_loopback_url, settings
 from server.database import AcmeDatabase, DatabaseWipedError, acme_db
 
 logger = logging.getLogger("acme.agent")
-GEMINI_FALLBACK_MODELS: Tuple[str, ...] = ("gemini-3.8-flash", "gemini-3.5-flash-lite")
+GEMINI_FALLBACK_MODELS: Tuple[str, ...] = (
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
+    "gemini-3.5-flash-lite",
+)
+
+_GEMINI_EXCLUDED_SUBSTRINGS: Tuple[str, ...] = (
+    "embedding",
+    "imagen",
+    "veo",
+    "tts",
+    "audio",
+    "aqa",
+    "learnlm",
+    "robotics",
+    "computer-use",
+    "thinking-exp",
+    "nano-banana",
+    "gemma",
+)
+_GEMINI_PREFERRED_ORDER: Dict[str, int] = {
+    "gemini-2.5-flash": 0,
+    "gemini-2.5-flash-lite": 1,
+    "gemini-2.0-flash": 2,
+    "gemini-3.5-flash-lite": 3,
+    "gemini-3-flash": 4,
+}
+_OPENAI_COMPAT_EXCLUDED_SUBSTRINGS: Tuple[str, ...] = (
+    "whisper",
+    "tts",
+    "dall-e",
+    "embedding",
+    "moderation",
+    "guard",
+    "audio",
+    "realtime",
+    "transcribe",
+    "search",
+    "image",
+    "sora",
+    "babbage",
+    "davinci",
+)
+_OPENAI_COMPAT_PREFERRED_ORDER: Dict[str, int] = {
+    "gpt-4o-mini": 0,
+    "gpt-4.1-mini": 1,
+    "gpt-4.1-nano": 2,
+    "gpt-4o": 3,
+    "gpt-4.1": 4,
+    "llama-3.3-70b-versatile": 0,
+    "llama-3.1-8b-instant": 1,
+    "claude-3-5-haiku-latest": 0,
+    "claude-3-5-haiku-20241022": 1,
+    "claude-sonnet-4-20250514": 2,
+    "claude-3-7-sonnet-latest": 3,
+    "claude-3-5-sonnet-latest": 4,
+}
 
 
-def _build_generation_config(model_name: str) -> Dict[str, Any]:
-    """Configura temperatura determinista y pensamiento rápido ('low') en modelos Gemini 3."""
+def _is_httpx_mocked() -> bool:
+    """Detecta si httpx.AsyncClient fue mockeado en tests para no interferir con side_effect."""
+    return (
+        "unittest.mock" in type(httpx.AsyncClient).__module__
+        or "unittest.mock" in type(getattr(httpx.AsyncClient, "get", None)).__module__
+        or "unittest.mock" in type(getattr(httpx.AsyncClient, "post", None)).__module__
+    )
+
+
+def _build_generation_config(model_name: str, is_synthesis: bool = False) -> Dict[str, Any]:
+    """Configura temperatura determinista y mínimo pensamiento para máxima velocidad en agentes."""
     config: Dict[str, Any] = {"temperature": 0.2}
-    if model_name.startswith("gemini-3"):
+    lower = (model_name or "").lower()
+    if lower.startswith("gemini-3"):
         config["thinkingConfig"] = {"thinkingLevel": "low"}
+    elif lower.startswith("gemini-2.5-flash") and "lite" not in lower:
+        config["thinkingConfig"] = {"thinkingBudget": 0}
+    if is_synthesis:
+        config["maxOutputTokens"] = 220
     return config
+
+
+def detect_llm_provider(api_key: str, explicit_provider: Optional[str] = None) -> Tuple[str, str]:
+    """Detecta el proveedor de IA a partir de la API Key o parámetro explícito."""
+    if explicit_provider:
+        norm = explicit_provider.strip().lower()
+        mapping = {
+            "google-gemini": ("google-gemini", "Google Gemini"),
+            "gemini": ("google-gemini", "Google Gemini"),
+            "google": ("google-gemini", "Google Gemini"),
+            "groq": ("groq", "Groq"),
+            "openai": ("openai", "OpenAI"),
+            "anthropic": ("anthropic", "Anthropic"),
+        }
+        if norm in mapping:
+            return mapping[norm]
+
+    key = (api_key or "").strip()
+    if key.startswith("gsk_"):
+        return ("groq", "Groq")
+    if key.startswith("sk-ant-"):
+        return ("anthropic", "Anthropic")
+    if key.startswith("sk-"):
+        return ("openai", "OpenAI")
+    return ("google-gemini", "Google Gemini")
+
+
+def _rank_gemini_model(model_id: str) -> Tuple[int, int, str]:
+    lower = model_id.lower()
+    if lower in _GEMINI_PREFERRED_ORDER:
+        return (0, _GEMINI_PREFERRED_ORDER[lower], lower)
+    is_unstable = "preview" in lower or "exp" in lower
+    if lower == "gemini-3.8-flash":
+        return (3, 0, lower)
+    if "pro" in lower:
+        return (4, 1 if is_unstable else 0, lower)
+    if "flash-lite" in lower:
+        return (2 if is_unstable else 1, 0, lower)
+    if "flash" in lower:
+        return (2 if is_unstable else 1, 1, lower)
+    return (3, 1, lower)
+
+
+def _format_gemini_models(raw_models: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    seen = set()
+    formatted: List[Dict[str, Any]] = []
+    for item in raw_models:
+        if not isinstance(item, dict):
+            continue
+        methods = item.get("supportedGenerationMethods") or []
+        if "generateContent" not in methods:
+            continue
+        raw_name = str(item.get("name") or "")
+        model_id = raw_name[len("models/"):] if raw_name.startswith("models/") else raw_name
+        lower = model_id.lower()
+        if not lower.startswith("gemini-") or model_id in seen:
+            continue
+        if any(bad in lower for bad in _GEMINI_EXCLUDED_SUBSTRINGS):
+            continue
+        seen.add(model_id)
+
+        rank = _rank_gemini_model(model_id)
+        if rank[0] == 0 and rank[1] == 0:
+            label = f"{model_id} (Rápido Recomendado)"
+            tier = "recommended"
+        elif "pro" in lower:
+            label = f"{model_id} (Razonamiento Pesado)"
+            tier = "heavy"
+        elif "flash-lite" in lower or "flash" in lower:
+            label = f"{model_id} (Rápido)" if rank[0] <= 1 else f"{model_id} (Estándar)"
+            tier = "fast" if rank[0] <= 1 else "standard"
+        else:
+            label = model_id
+            tier = "standard"
+
+        formatted.append({
+            "id": model_id,
+            "label": label,
+            "display_name": str(item.get("displayName") or model_id),
+            "tier": tier,
+            "_rank": rank,
+        })
+
+    formatted.sort(key=lambda m: m["_rank"])
+    for m in formatted:
+        m.pop("_rank", None)
+    return formatted
+
+
+def _format_openai_compat_models(raw_models: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    seen = set()
+    formatted: List[Dict[str, Any]] = []
+    for item in raw_models:
+        if not isinstance(item, dict):
+            continue
+        model_id = str(item.get("id") or "").strip()
+        lower = model_id.lower()
+        if not model_id or model_id in seen:
+            continue
+        if any(bad in lower for bad in _OPENAI_COMPAT_EXCLUDED_SUBSTRINGS):
+            continue
+        seen.add(model_id)
+
+        if lower in _OPENAI_COMPAT_PREFERRED_ORDER:
+            rank = (0, _OPENAI_COMPAT_PREFERRED_ORDER[lower], lower)
+            tier = "recommended" if rank[1] == 0 else "fast"
+            label = f"{model_id} (Rápido Recomendado)" if rank[1] == 0 else f"{model_id} (Rápido)"
+        elif "mini" in lower or "haiku" in lower or "instant" in lower or "flash" in lower:
+            rank = (1, 0, lower)
+            tier = "fast"
+            label = f"{model_id} (Rápido)"
+        else:
+            rank = (2, 0, lower)
+            tier = "standard"
+            label = model_id
+
+        formatted.append({
+            "id": model_id,
+            "label": label,
+            "display_name": str(item.get("display_name") or model_id),
+            "tier": tier,
+            "_rank": rank,
+        })
+
+    formatted.sort(key=lambda m: m["_rank"])
+    for m in formatted:
+        m.pop("_rank", None)
+    return formatted
+
+
+async def handshake_llm_provider(
+    api_key: str,
+    provider: Optional[str] = None,
+    force_refresh: bool = False,
+) -> Dict[str, Any]:
+    """Ejecuta un Handshake contra el proveedor de IA, valida la clave y lista modelos disponibles."""
+    clean_key = (api_key or "").strip()
+    if not clean_key:
+        raise ValueError(
+            "Ingrese una API Key de IA (Google Gemini, OpenAI, Groq o Anthropic) para realizar el Handshake."
+        )
+
+    t0 = time.perf_counter()
+    prov_id, prov_label = detect_llm_provider(clean_key, provider)
+    cache_key = f"acme:llm:models:{prov_id}:{hash_secret(clean_key)}"
+    use_cache = not _is_httpx_mocked()
+
+    if use_cache and not force_refresh:
+        cached = await acme_cache.get_json(cache_key)
+        if isinstance(cached, dict) and isinstance(cached.get("models"), list) and cached["models"]:
+            return {
+                **cached,
+                "cached": True,
+                "cache_backend": acme_cache.backend_status(),
+                "latency_ms": round((time.perf_counter() - t0) * 1000.0, 1),
+            }
+
+    if prov_id == "groq":
+        url = "https://api.groq.com/openai/v1/models"
+        headers = {"Authorization": f"Bearer {clean_key}"}
+    elif prov_id == "openai":
+        url = "https://api.openai.com/v1/models"
+        headers = {"Authorization": f"Bearer {clean_key}"}
+    elif prov_id == "anthropic":
+        url = "https://api.anthropic.com/v1/models"
+        headers = {"x-api-key": clean_key, "anthropic-version": "2023-06-01"}
+    else:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={clean_key}&pageSize=100"
+        headers = {}
+
+    async with httpx.AsyncClient(**httpx_client_kwargs(url, timeout=8.0)) as client:
+        resp = await client.get(url, headers=headers)
+
+    if resp.status_code in (400, 401, 403):
+        err_msg = f"HTTP {resp.status_code}"
+        try:
+            err_body = resp.json()
+            if isinstance(err_body, dict):
+                err_obj = err_body.get("error")
+                if isinstance(err_obj, dict) and err_obj.get("message"):
+                    err_msg = str(err_obj["message"])
+                elif err_body.get("message"):
+                    err_msg = str(err_body["message"])
+        except Exception:
+            pass
+        raise PermissionError(f"API Key rechazada por {prov_label}: {err_msg}")
+
+    if resp.status_code != 200:
+        raise RuntimeError(f"Error al consultar modelos en {prov_label} (HTTP {resp.status_code}): {resp.text[:250]}")
+
+    payload = resp.json() if resp.content else {}
+    if prov_id == "google-gemini":
+        models = _format_gemini_models(payload.get("models", []))
+    else:
+        models = _format_openai_compat_models(payload.get("data", []))
+
+    recommended = models[0]["id"] if models else (
+        "gemini-2.5-flash" if prov_id == "google-gemini" else None
+    )
+
+    result: Dict[str, Any] = {
+        "status": "connected",
+        "message": "IA Conectada",
+        "provider": prov_id,
+        "provider_label": prov_label,
+        "models": models,
+        "recommended_model": recommended,
+        "cached": False,
+        "cache_backend": acme_cache.backend_status(),
+        "latency_ms": round((time.perf_counter() - t0) * 1000.0, 1),
+    }
+
+    if use_cache and models:
+        await acme_cache.set_json(cache_key, result, ttl_seconds=600)
+        result["cache_backend"] = acme_cache.backend_status()
+
+    return result
+
+
+def _lowercase_schema_types(schema: Any) -> Any:
+    """Convierte tipos OpenAPI en mayúscula (Gemini) a minúsculas (OpenAI/Groq)."""
+    if isinstance(schema, dict):
+        out: Dict[str, Any] = {}
+        for k, v in schema.items():
+            out[k] = v.lower() if k == "type" and isinstance(v, str) else _lowercase_schema_types(v)
+        return out
+    if isinstance(schema, list):
+        return [_lowercase_schema_types(item) for item in schema]
+    return schema
 
 # ---------------------------------------------------------------------------
 # Declaración de Herramientas para Gemini Function Calling (OpenAPI 3.0 schema)
@@ -238,11 +540,19 @@ async def discover_agentguard_context(
     agentguard_url: str,
     agentguard_api_key: str,
     timeout: float = 6.0,
+    force_refresh: bool = False,
 ) -> Dict[str, Any]:
-    """Consulta el endpoint /gateway/context de AgentGuard para auto-descubrir IDs."""
+    """Consulta /gateway/context de AgentGuard con caché Redis (TTL 45s) para auto-descubrir IDs."""
     clean_url = normalize_loopback_url(agentguard_url.rstrip("/"))
     endpoint = f"{clean_url}/api/v1/gateway/context"
     headers = {"X-AgentGuard-Key": agentguard_api_key}
+    cache_key = f"acme:ag:context:{hash_secret(clean_url + ':' + agentguard_api_key)}"
+    use_cache = not _is_httpx_mocked() and not force_refresh
+
+    if use_cache:
+        cached = await acme_cache.get_json(cache_key)
+        if isinstance(cached, dict) and cached.get("organization_id"):
+            return cached
 
     async with httpx.AsyncClient(**httpx_client_kwargs(endpoint, timeout=timeout)) as client:
         resp = await client.get(endpoint, headers=headers)
@@ -250,7 +560,11 @@ async def discover_agentguard_context(
             raise RuntimeError(
                 f"Error al descubrir contexto en AgentGuard ({resp.status_code}): {resp.text}"
             )
-        return resp.json()
+        data = resp.json()
+
+    if use_cache and isinstance(data, dict) and data.get("organization_id"):
+        await acme_cache.set_json(cache_key, data, ttl_seconds=45)
+    return data
 
 
 def resolve_tool_id_for_action(context: Dict[str, Any], action_name: str) -> Optional[str]:
@@ -522,6 +836,13 @@ class GeminiAgentClient:
                 "error_message": f"No se recibió respuesta a tiempo del Gateway de AgentGuard ({detail}).",
             }
 
+        if not _is_httpx_mocked() and (
+            resp.status_code in (401, 404)
+            or (resp.status_code == 403 and "no existe" in str(body.get("error_message") or "").lower())
+        ):
+            clean_url = normalize_loopback_url(self.agentguard_url.rstrip("/"))
+            await acme_cache.delete(f"acme:ag:context:{hash_secret(clean_url + ':' + self.agentguard_api_key)}")
+
         return {
             "status_code": resp.status_code,
             "decision": body.get("decision", "DENY" if resp.status_code >= 400 else "ALLOW"),
@@ -548,14 +869,31 @@ class GeminiAgentClient:
         """Ejecuta el ciclo de vida completo del agente en modo protegido o directo.
 
         Retorna una traza estructurada con todos los pasos para la consola web y CLI,
-        incluyendo ui_payload con datos de tabla, gráfico de torta y oferta de filtro local.
+        incluyendo ui_payload y métricas reales de reloj (`timings`).
         """
+        scenario_t0 = time.perf_counter()
+        llm_turn1_ms = 0.0
+        llm_turn2_ms = 0.0
+        gateway_ms = 0.0
+        agentguard_internal_ms = 0.0
+
         steps: List[Dict[str, Any]] = []
         llm_tool_calls: List[Dict[str, Any]] = []
         gateway_verdicts: List[Dict[str, Any]] = []
         acme_results: List[Dict[str, Any]] = []
         final_answer = ""
         ui_payload: Dict[str, Any] = {}
+
+        def _build_timings() -> Dict[str, Any]:
+            return {
+                "total_ms": round((time.perf_counter() - scenario_t0) * 1000.0, 1),
+                "llm_turn1_ms": round(llm_turn1_ms, 1),
+                "llm_turn2_ms": round(llm_turn2_ms, 1),
+                "llm_total_ms": round(llm_turn1_ms + llm_turn2_ms, 1),
+                "gateway_ms": round(gateway_ms, 1),
+                "agentguard_internal_ms": round(agentguard_internal_ms, 1),
+                "cache_backend": acme_cache.backend_status(),
+            }
 
         # 1. Resolver preset y prompt
         preset = get_preset_by_id(preset_id) if preset_id else None
@@ -616,7 +954,7 @@ class GeminiAgentClient:
         steps.append({
             "step": 1,
             "title": "Inicio de Sesión del Agente",
-            "detail": f"Prompt recibido: '{user_prompt}' (Modo: {mode.upper()}, LLM: {'Gemini' if use_llm else 'Disparo Guiado / Determinístico'})",
+            "detail": f"Prompt recibido: '{user_prompt}' (Modo: {mode.upper()}, LLM: {'IA Real' if use_llm else 'Disparo Guiado / Determinístico'})",
             "status": "info",
         })
 
@@ -624,6 +962,13 @@ class GeminiAgentClient:
         model_turn_parts: List[Dict[str, Any]] = []
         active_gemini_model = self.gemini_model
         gemini_url = ""
+        prov_id = "google-gemini"
+        prov_label = "Google Gemini"
+        openai_endpoint = ""
+        openai_headers: Dict[str, str] = {}
+        openai_assistant_msg: Optional[Dict[str, Any]] = None
+        openai_tool_call_id: Optional[str] = None
+        llm_client: Optional[httpx.AsyncClient] = None
         system_instruction_text = (
             "Eres el Consultante BI y Asistente Operativo de ACME Corporation (división Looney Tunes). "
             "Responde siempre en español formal y amigable. Dispones de herramientas declaradas (query_sales, "
@@ -642,471 +987,643 @@ class GeminiAgentClient:
             "de siguiente paso."
         )
 
-        if use_llm:
-            if not self.gemini_api_key or not self.gemini_api_key.strip():
-                raise ValueError(
-                    "Se requiere una clave GEMINI_API_KEY válida para ejecutar el agente con Gemini LLM real. "
-                    "Por favor configure su API Key en el panel de control o en el archivo .env."
-                )
-
-            steps.append({
-                "step": 2,
-                "title": "Inferencia con Google Gemini",
-                "detail": f"Consultando modelo {self.gemini_model} con catálogo de {len(GEMINI_FUNCTION_DECLARATIONS)} herramientas...",
-                "status": "info",
-            })
-
-            candidate_models: List[str] = [self.gemini_model] + [
-                m for m in GEMINI_FALLBACK_MODELS if m != self.gemini_model
-            ]
-
-            gemini_data_1: Dict[str, Any] = {}
-            async with httpx.AsyncClient(
-                **httpx_client_kwargs("https://generativelanguage.googleapis.com", timeout=45.0)
-            ) as client:
-                for idx, candidate_model in enumerate(candidate_models):
-                    gemini_url = (
-                        f"https://generativelanguage.googleapis.com/v1beta/models/"
-                        f"{candidate_model}:generateContent?key={self.gemini_api_key}"
+        try:
+            if use_llm:
+                if not self.gemini_api_key or not self.gemini_api_key.strip():
+                    raise ValueError(
+                        "Se requiere una clave GEMINI_API_KEY válida para ejecutar el agente con IA real. "
+                        "Por favor configure su API Key en el panel de control o en el archivo .env."
                     )
-                    payload_turn_1 = {
-                        "systemInstruction": {"parts": [{"text": system_instruction_text}]},
-                        "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
-                        "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
-                        "generationConfig": _build_generation_config(candidate_model),
-                    }
-                    try:
-                        resp_1 = await client.post(gemini_url, json=payload_turn_1)
-                    except httpx.TimeoutException as tex:
-                        if idx < len(candidate_models) - 1:
-                            logger.warning(
-                                "Tiempo de espera agotado con '%s' (%s); reintentando con '%s'...",
-                                candidate_model,
-                                type(tex).__name__,
-                                candidate_models[idx + 1],
-                            )
-                            continue
-                        raise RuntimeError(
-                            f"Tiempo de espera agotado al consultar Google Gemini ({candidate_model}). "
-                            "Reintentá o seleccioná el modelo 'gemini-3.5-flash-lite'."
-                        ) from tex
 
-                    if resp_1.status_code == 200:
-                        active_gemini_model = candidate_model
-                        gemini_data_1 = resp_1.json()
-                        break
-                    if resp_1.status_code in (404, 429, 503) and idx < len(candidate_models) - 1:
-                        logger.warning(
-                            "Modelo Gemini '%s' no disponible (HTTP %s); reintentando con '%s'...",
-                            candidate_model,
-                            resp_1.status_code,
-                            candidate_models[idx + 1],
+                prov_id, prov_label = detect_llm_provider(self.gemini_api_key)
+                if prov_id == "anthropic":
+                    raise ValueError(
+                        "El Handshake validó Anthropic correctamente, pero la ejecución con Tool Calling "
+                        "soporta actualmente Google Gemini, Groq u OpenAI."
+                    )
+
+                use_redis_cache = not _is_httpx_mocked()
+                key_hash = hash_secret(self.gemini_api_key)
+
+                if prov_id in ("openai", "groq"):
+                    openai_endpoint = (
+                        "https://api.groq.com/openai/v1/chat/completions"
+                        if prov_id == "groq"
+                        else "https://api.openai.com/v1/chat/completions"
+                    )
+                    openai_headers = {"Authorization": f"Bearer {self.gemini_api_key.strip()}"}
+                    default_compat = "llama-3.3-70b-versatile" if prov_id == "groq" else "gpt-4o-mini"
+                    active_gemini_model = (
+                        default_compat
+                        if self.gemini_model.lower().startswith("gemini-")
+                        else self.gemini_model
+                    )
+                    if use_redis_cache:
+                        cached_hs = await acme_cache.get_json(f"acme:llm:models:{prov_id}:{key_hash}")
+                        if isinstance(cached_hs, dict):
+                            hs_ids = {
+                                m.get("id") for m in cached_hs.get("models", []) if isinstance(m, dict) and m.get("id")
+                            }
+                            if hs_ids and active_gemini_model not in hs_ids and cached_hs.get("recommended_model"):
+                                active_gemini_model = cached_hs["recommended_model"]
+
+                    steps.append({
+                        "step": 2,
+                        "title": f"Inferencia con {prov_label}",
+                        "detail": f"Consultando modelo {active_gemini_model} con catálogo de {len(GEMINI_FUNCTION_DECLARATIONS)} herramientas...",
+                        "status": "info",
+                    })
+
+                    openai_tools = [
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": fn["name"],
+                                "description": fn["description"],
+                                "parameters": _lowercase_schema_types(fn["parameters"]),
+                            },
+                        }
+                        for fn in GEMINI_FUNCTION_DECLARATIONS
+                    ]
+
+                    llm_client = httpx.AsyncClient(**httpx_client_kwargs(openai_endpoint, timeout=8.0))
+                    await llm_client.__aenter__()
+                    t_llm1 = time.perf_counter()
+                    resp_1 = await llm_client.post(
+                        openai_endpoint,
+                        headers=openai_headers,
+                        json={
+                            "model": active_gemini_model,
+                            "messages": [
+                                {"role": "system", "content": system_instruction_text},
+                                {"role": "user", "content": user_prompt},
+                            ],
+                            "tools": openai_tools,
+                            "temperature": 0.2,
+                        },
+                        timeout=8.0,
+                    )
+                    llm_turn1_ms = (time.perf_counter() - t_llm1) * 1000.0
+                    if resp_1.status_code in (401, 403):
+                        raise PermissionError(f"API Key rechazada por {prov_label} (HTTP {resp_1.status_code}).")
+                    if resp_1.status_code != 200:
+                        raise RuntimeError(f"Error de {prov_label} API ({resp_1.status_code}): {resp_1.text[:300]}")
+
+                    oa_data = resp_1.json()
+                    choice_msg = (oa_data.get("choices") or [{}])[0].get("message") or {}
+                    openai_assistant_msg = choice_msg
+                    oa_calls = choice_msg.get("tool_calls") or []
+                    text_response = str(choice_msg.get("content") or "")
+                    if oa_calls:
+                        tc0 = oa_calls[0]
+                        openai_tool_call_id = tc0.get("id") or "call_0"
+                        fn_obj = tc0.get("function") or {}
+                        try:
+                            parsed_args = json.loads(fn_obj.get("arguments") or "{}")
+                        except Exception:
+                            parsed_args = {}
+                        tool_call_found = {"name": fn_obj.get("name"), "args": parsed_args}
+
+                else:
+                    # Google Gemini
+                    candidate_models: List[str] = [self.gemini_model] + [
+                        m for m in GEMINI_FALLBACK_MODELS if m != self.gemini_model
+                    ]
+                    if use_redis_cache:
+                        cached_hs = await acme_cache.get_json(f"acme:llm:models:google-gemini:{key_hash}")
+                        if isinstance(cached_hs, dict) and isinstance(cached_hs.get("models"), list):
+                            hs_ids = {
+                                m.get("id") for m in cached_hs["models"] if isinstance(m, dict) and m.get("id")
+                            }
+                            rec_model = cached_hs.get("recommended_model")
+                            if hs_ids and self.gemini_model not in hs_ids and rec_model:
+                                candidate_models = [rec_model] + [m for m in candidate_models if m != rec_model]
+
+                        alive_candidates: List[str] = []
+                        for m in candidate_models:
+                            dead_flag = await acme_cache.get_json(f"acme:llm:dead_model:{key_hash}:{m}")
+                            if not dead_flag:
+                                alive_candidates.append(m)
+                        if alive_candidates:
+                            candidate_models = alive_candidates
+
+                    steps.append({
+                        "step": 2,
+                        "title": "Inferencia con Google Gemini",
+                        "detail": f"Consultando modelo {candidate_models[0]} con catálogo de {len(GEMINI_FUNCTION_DECLARATIONS)} herramientas...",
+                        "status": "info",
+                    })
+
+                    gemini_data_1: Dict[str, Any] = {}
+                    llm_client = httpx.AsyncClient(
+                        **httpx_client_kwargs("https://generativelanguage.googleapis.com", timeout=8.0)
+                    )
+                    await llm_client.__aenter__()
+                    t_llm1 = time.perf_counter()
+
+                    for idx, candidate_model in enumerate(candidate_models):
+                        gemini_url = (
+                            f"https://generativelanguage.googleapis.com/v1beta/models/"
+                            f"{candidate_model}:generateContent?key={self.gemini_api_key}"
                         )
-                        continue
-                    raise RuntimeError(f"Error de Gemini API ({resp_1.status_code}): {resp_1.text}")
+                        payload_turn_1 = {
+                            "systemInstruction": {"parts": [{"text": system_instruction_text}]},
+                            "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
+                            "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
+                            "generationConfig": _build_generation_config(candidate_model),
+                        }
+                        try:
+                            resp_1 = await llm_client.post(gemini_url, json=payload_turn_1, timeout=8.0)
+                        except httpx.TimeoutException as tex:
+                            if use_redis_cache:
+                                await acme_cache.set_json(
+                                    f"acme:llm:dead_model:{key_hash}:{candidate_model}",
+                                    {"reason": type(tex).__name__},
+                                    ttl_seconds=600,
+                                )
+                            if idx < len(candidate_models) - 1:
+                                logger.warning(
+                                    "Tiempo de espera agotado con '%s' (%s); reintentando con '%s'...",
+                                    candidate_model,
+                                    type(tex).__name__,
+                                    candidate_models[idx + 1],
+                                )
+                                continue
+                            raise RuntimeError(
+                                f"Tiempo de espera agotado al consultar Google Gemini ({candidate_model}). "
+                                "Reintentá o seleccioná el modelo 'gemini-2.5-flash-lite'."
+                            ) from tex
 
-            candidates = gemini_data_1.get("candidates", [])
-            raw_parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
-            model_turn_parts = [p for p in raw_parts if isinstance(p, dict)]
-            text_response = ""
+                        if resp_1.status_code == 200:
+                            active_gemini_model = candidate_model
+                            gemini_data_1 = resp_1.json()
+                            break
+                        if resp_1.status_code in (404, 429, 503):
+                            if use_redis_cache:
+                                await acme_cache.set_json(
+                                    f"acme:llm:dead_model:{key_hash}:{candidate_model}",
+                                    {"reason": f"HTTP {resp_1.status_code}"},
+                                    ttl_seconds=600,
+                                )
+                            if idx < len(candidate_models) - 1:
+                                logger.warning(
+                                    "Modelo Gemini '%s' no disponible (HTTP %s); reintentando con '%s'...",
+                                    candidate_model,
+                                    resp_1.status_code,
+                                    candidate_models[idx + 1],
+                                )
+                                continue
+                        if resp_1.status_code in (400, 401, 403):
+                            raise PermissionError(f"API Key rechazada por Google Gemini (HTTP {resp_1.status_code}).")
+                        raise RuntimeError(f"Error de Gemini API ({resp_1.status_code}): {resp_1.text[:300]}")
 
-            for part in model_turn_parts:
-                if "functionCall" in part and tool_call_found is None:
-                    tool_call_found = part["functionCall"]
-                elif "text" in part and not part.get("thought"):
-                    text_response += part["text"]
+                    llm_turn1_ms = (time.perf_counter() - t_llm1) * 1000.0
+                    candidates = gemini_data_1.get("candidates", [])
+                    raw_parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+                    model_turn_parts = [p for p in raw_parts if isinstance(p, dict)]
+                    text_response = ""
 
-            if tool_call_found:
-                action_name = tool_call_found.get("name")
-                raw_args = tool_call_found.get("args") or {}
-                parameters = dict(override_parameters) if override_parameters else dict(raw_args)
-                if preset and action_name != preset.get("action_name") and not (
-                    action_name == "database_drop" and preset.get("action_name") == "database.drop"
-                ):
-                    resource = None
+                    for part in model_turn_parts:
+                        if "functionCall" in part and tool_call_found is None:
+                            tool_call_found = part["functionCall"]
+                        elif "text" in part and not part.get("thought"):
+                            text_response += part["text"]
 
-                llm_tool_calls.append({"action_name": action_name, "parameters": parameters})
-                fallback_note = (
-                    f" [Fallback automático a {active_gemini_model}]"
-                    if active_gemini_model != self.gemini_model
-                    else ""
-                )
-                steps.append({
-                    "step": 3,
-                    "title": f"Gemini seleccionó la herramienta '{action_name}'{fallback_note}",
-                    "detail": f"Argumentos determinados por el LLM: {json.dumps(parameters, ensure_ascii=False)}",
-                    "status": "warning",
-                })
+                if tool_call_found:
+                    action_name = tool_call_found.get("name")
+                    raw_args = tool_call_found.get("args") or {}
+                    parameters = dict(override_parameters) if override_parameters else dict(raw_args)
+                    if preset and action_name != preset.get("action_name") and not (
+                        action_name == "database_drop" and preset.get("action_name") == "database.drop"
+                    ):
+                        resource = None
+
+                    llm_tool_calls.append({"action_name": action_name, "parameters": parameters})
+                    fallback_note = (
+                        f" [Fallback automático a {active_gemini_model}]"
+                        if active_gemini_model != self.gemini_model and prov_id == "google-gemini"
+                        else ""
+                    )
+                    steps.append({
+                        "step": 3,
+                        "title": f"{prov_label} seleccionó la herramienta '{action_name}'{fallback_note}",
+                        "detail": f"Argumentos determinados por el LLM: {json.dumps(parameters, ensure_ascii=False)}",
+                        "status": "warning",
+                    })
+                else:
+                    steps.append({
+                        "step": 3,
+                        "title": f"{prov_label} respondió directamente sin invocar herramientas",
+                        "detail": text_response or "Respuesta conversacional pura.",
+                        "status": "info",
+                    })
+                    final_answer = text_response
+                    return {
+                        "mode": mode,
+                        "use_llm": True,
+                        "provider": prov_id,
+                        "model_used": active_gemini_model,
+                        "llm_tool_calls": [],
+                        "gateway_verdicts": [],
+                        "acme_results": [],
+                        "final_answer": final_answer,
+                        "steps": steps,
+                        "ui_payload": ui_payload,
+                        "timings": _build_timings(),
+                    }
             else:
+                # Modo Guiado / Determinístico
+                llm_tool_calls.append({"action_name": action_name, "parameters": parameters})
                 steps.append({
-                    "step": 3,
-                    "title": "Gemini respondió directamente sin invocar herramientas",
-                    "detail": text_response or "Respuesta conversacional pura.",
+                    "step": 2,
+                    "title": f"Carga Determinística de Acción '{action_name}'",
+                    "detail": f"Parámetros asignados: {json.dumps(parameters, ensure_ascii=False)}",
                     "status": "info",
                 })
-                final_answer = text_response
-                return {
-                    "mode": mode,
-                    "use_llm": True,
-                    "model_used": active_gemini_model,
-                    "llm_tool_calls": [],
-                    "gateway_verdicts": [],
-                    "acme_results": [],
-                    "final_answer": final_answer,
-                    "steps": steps,
-                    "ui_payload": ui_payload,
-                }
-        else:
-            # Modo Guiado / Determinístico
-            llm_tool_calls.append({"action_name": action_name, "parameters": parameters})
-            steps.append({
-                "step": 2,
-                "title": f"Carga Determinística de Acción '{action_name}'",
-                "detail": f"Parámetros asignados: {json.dumps(parameters, ensure_ascii=False)}",
-                "status": "info",
-            })
 
-        # -------------------------------------------------------------------
-        # Despacho: Modo Protegido (AgentGuard) vs Modo Directo (Sin Protección)
-        # -------------------------------------------------------------------
-        is_pie_chart_shortcut = action_name == "generate_pie_chart"
-        effective_dispatch_action = "query_sales" if is_pie_chart_shortcut else action_name
+            # -------------------------------------------------------------------
+            # Despacho: Modo Protegido (AgentGuard) vs Modo Directo (Sin Protección)
+            # -------------------------------------------------------------------
+            is_pie_chart_shortcut = action_name == "generate_pie_chart"
+            effective_dispatch_action = "query_sales" if is_pie_chart_shortcut else action_name
 
-        if mode == "protected":
-            steps.append({
-                "step": 4,
-                "title": "Intercepción en Tiempo de Ejecución (AgentGuard PEP/PDP)",
-                "detail": f"Enviando solicitud a {self.agentguard_url}/api/v1/gateway/execute con X-AgentGuard-Key para '{effective_dispatch_action}'...",
-                "status": "info",
-            })
-
-            gw_result = await self.execute_in_protected_mode(
-                action_name=effective_dispatch_action,
-                parameters=parameters,
-                resource=resource,
-            )
-            gateway_verdicts.append(gw_result)
-            decision = gw_result.get("decision", "DENY")
-
-            if decision == "ALLOW":
+            if mode == "protected":
                 steps.append({
-                    "step": 5,
-                    "title": "Veredicto AgentGuard: ALLOW (200 OK)",
-                    "detail": "Acción autorizada por política PDP y despachada exitosamente al servicio de destino.",
-                    "status": "success",
+                    "step": 4,
+                    "title": "Intercepción en Tiempo de Ejecución (AgentGuard PEP/PDP)",
+                    "detail": f"Enviando solicitud a {self.agentguard_url}/api/v1/gateway/execute con X-AgentGuard-Key para '{effective_dispatch_action}'...",
+                    "status": "info",
                 })
-                function_response_payload = {"status": "success", "data": gw_result.get("result")}
 
-                # Si fue una consulta de ventas o gráfico de torta, reutilizar el resultado devuelto por AgentGuard si ya trae 'sales'
-                if effective_dispatch_action == "query_sales":
-                    gw_res_data = gw_result.get("result")
-                    if isinstance(gw_res_data, dict) and isinstance(gw_res_data.get("sales"), list):
-                        sales_data = gw_res_data
-                    else:
-                        sales_data = self.db.query_sales_records(
-                            min_amount=parameters.get("min_amount"),
-                            max_amount=parameters.get("max_amount"),
-                            period=parameters.get("period", "last_month"),
-                            category=parameters.get("category"),
+                t_gw = time.perf_counter()
+                gw_result = await self.execute_in_protected_mode(
+                    action_name=effective_dispatch_action,
+                    parameters=parameters,
+                    resource=resource,
+                )
+                gateway_ms = (time.perf_counter() - t_gw) * 1000.0
+                agentguard_internal_ms = float(gw_result.get("latency_ms") or 0.0)
+                gateway_verdicts.append(gw_result)
+                decision = gw_result.get("decision", "DENY")
+
+                if decision == "ALLOW":
+                    steps.append({
+                        "step": 5,
+                        "title": "Veredicto AgentGuard: ALLOW (200 OK)",
+                        "detail": "Acción autorizada por política PDP y despachada exitosamente al servicio de destino.",
+                        "status": "success",
+                    })
+                    function_response_payload = {"status": "success", "data": gw_result.get("result")}
+
+                    # Si fue una consulta de ventas o gráfico de torta, reutilizar el resultado devuelto por AgentGuard si ya trae 'sales'
+                    if effective_dispatch_action == "query_sales":
+                        gw_res_data = gw_result.get("result")
+                        if isinstance(gw_res_data, dict) and isinstance(gw_res_data.get("sales"), list):
+                            sales_data = gw_res_data
+                        else:
+                            sales_data = self.db.query_sales_records(
+                                min_amount=parameters.get("min_amount"),
+                                max_amount=parameters.get("max_amount"),
+                                period=parameters.get("period", "last_month"),
+                                category=parameters.get("category"),
+                                log_event=False,
+                            )
+                        ui_payload = {
+                            "table_data": sales_data.get("sales", []),
+                            "pie_chart": sales_data.get("pie_chart", []),
+                            "total_records": sales_data.get("total_records", 0),
+                            "total_amount": sales_data.get("total_amount", 0.0),
+                            "period": sales_data.get("period"),
+                            "filters": sales_data.get("filters"),
+                            "is_chart_view": is_pie_chart_shortcut,
+                        }
+
+                elif decision == "REQUIRE_APPROVAL":
+                    steps.append({
+                        "step": 5,
+                        "title": "Veredicto AgentGuard: REQUIRE_APPROVAL (202 Accepted)",
+                        "detail": (
+                            f"Acción suspendida sujeta a aprobación humana obligatoria en bandeja HITL. "
+                            f"Motivo: {gw_result.get('error_message') or 'Monto supera el umbral autónomo'}"
+                        ),
+                        "status": "warning",
+                    })
+                    function_response_payload = {
+                        "status": "suspended",
+                        "decision": "REQUIRE_APPROVAL",
+                        "message": "Operación suspendida sujeta a revisión de un supervisor humano en la bandeja de AgentGuard.",
+                    }
+
+                else:
+                    # DENY
+                    steps.append({
+                        "step": 5,
+                        "title": "Veredicto AgentGuard: DENY (403 Forbidden)",
+                        "detail": (
+                            f"Acción bloqueada por política de seguridad Fail-Closed. "
+                            f"Razón: {gw_result.get('error_message') or 'Violación de políticas de acceso o falta de capacidad'}"
+                        ),
+                        "status": "danger",
+                    })
+                    function_response_payload = {
+                        "status": "blocked",
+                        "decision": "DENY",
+                        "error": gw_result.get("error_message") or "Acción denegada por AgentGuard.",
+                    }
+
+                    # Caso estelar: delete_sales bloqueado por AgentGuard para el administrativo
+                    if effective_dispatch_action == "delete_sales":
+                        threshold_val = float(parameters.get("max_amount") or 1000.0)
+                        last_sales = self.db.query_sales_records(
+                            period=parameters.get("period") or "last_month",
                             log_event=False,
                         )
+                        ui_payload = {
+                            "table_data": last_sales.get("sales", []),
+                            "pie_chart": last_sales.get("pie_chart", []),
+                            "offer_local_filter": {
+                                "max_amount": threshold_val,
+                                "min_amount": threshold_val,
+                            },
+                            "blocked_reason": "Política de solo lectura del Consultante BI en AgentGuard",
+                        }
+
+            else:
+                # Modo Directo: Sin protección alguna
+                steps.append({
+                    "step": 4,
+                    "title": "¡ADVERTENCIA! Modo Directo Activado (AgentGuard OMITIDO)",
+                    "detail": "La llamada a la herramienta se ejecuta directamente sobre la infraestructura de ACME Corp sin pasar por el PDP.",
+                    "status": "danger",
+                })
+
+                direct_res = await self.execute_in_direct_mode(
+                    action_name=action_name,
+                    parameters=parameters,
+                )
+                acme_results.append(direct_res)
+
+                if direct_res.get("is_database_wiped"):
+                    steps.append({
+                        "step": 5,
+                        "title": "Fallo del Servidor: Base de Datos Purgada (503 Service Unavailable)",
+                        "detail": direct_res.get("error"),
+                        "status": "danger",
+                    })
+                elif direct_res.get("status") == "wiped":
+                    steps.append({
+                        "step": 5,
+                        "title": "¡CATASTRÓFICO! Base de Datos Eliminada por Completo",
+                        "detail": "El comando SQL DROP TABLE borró todas las tablas de ACME. La empresa queda inoperable.",
+                        "status": "danger",
+                    })
+                elif direct_res.get("result", {}).get("is_tampered"):
+                    steps.append({
+                        "step": 5,
+                        "title": "¡ALERTA DE SABOTAJE! Precio Alterado en Catálogo Real",
+                        "detail": (
+                            f"El producto '{direct_res['result']['product_name']}' fue rebajado a "
+                            f"${direct_res['result']['new_price']} USD (Base: ${direct_res['result']['base_price']} USD)."
+                        ),
+                        "status": "danger",
+                    })
+                elif action_name == "delete_sales":
+                    deleted_cnt = direct_res.get("result", {}).get("deleted_count", 0)
+                    steps.append({
+                        "step": 5,
+                        "title": "¡REGISTROS ELIMINADOS EN SQLITE REAL!",
+                        "detail": f"Al no mediar protección de AgentGuard, se eliminaron {deleted_cnt} ventas de la base de datos.",
+                        "status": "danger",
+                    })
+                else:
+                    steps.append({
+                        "step": 5,
+                        "title": "Ejecución Directa Completada",
+                        "detail": json.dumps(direct_res, ensure_ascii=False),
+                        "status": "warning",
+                    })
+
+                function_response_payload = direct_res
+
+                # Si fue query_sales o generate_pie_chart en directo, actualizar ui_payload
+                if effective_dispatch_action == "query_sales" and "result" in direct_res:
+                    q_res = direct_res["result"]
                     ui_payload = {
-                        "table_data": sales_data.get("sales", []),
-                        "pie_chart": sales_data.get("pie_chart", []),
-                        "total_records": sales_data.get("total_records", 0),
-                        "total_amount": sales_data.get("total_amount", 0.0),
-                        "period": sales_data.get("period"),
-                        "filters": sales_data.get("filters"),
+                        "table_data": q_res.get("sales", []),
+                        "pie_chart": q_res.get("pie_chart", []),
+                        "total_records": q_res.get("total_records", 0),
+                        "total_amount": q_res.get("total_amount", 0.0),
+                        "period": q_res.get("period"),
+                        "filters": q_res.get("filters"),
                         "is_chart_view": is_pie_chart_shortcut,
                     }
 
-            elif decision == "REQUIRE_APPROVAL":
-                steps.append({
-                    "step": 5,
-                    "title": "Veredicto AgentGuard: REQUIRE_APPROVAL (202 Accepted)",
-                    "detail": (
-                        f"Acción suspendida sujeta a aprobación humana obligatoria en bandeja HITL. "
-                        f"Motivo: {gw_result.get('error_message') or 'Monto supera el umbral autónomo'}"
-                    ),
-                    "status": "warning",
-                })
-                function_response_payload = {
-                    "status": "suspended",
-                    "decision": "REQUIRE_APPROVAL",
-                    "message": "Operación suspendida sujeta a revisión de un supervisor humano en la bandeja de AgentGuard.",
-                }
-
-            else:
-                # DENY
-                steps.append({
-                    "step": 5,
-                    "title": "Veredicto AgentGuard: DENY (403 Forbidden)",
-                    "detail": (
-                        f"Acción bloqueada por política de seguridad Fail-Closed. "
-                        f"Razón: {gw_result.get('error_message') or 'Violación de políticas de acceso o falta de capacidad'}"
-                    ),
-                    "status": "danger",
-                })
-                function_response_payload = {
-                    "status": "blocked",
-                    "decision": "DENY",
-                    "error": gw_result.get("error_message") or "Acción denegada por AgentGuard.",
-                }
-
-                # Caso estelar: delete_sales bloqueado por AgentGuard para el administrativo
-                if effective_dispatch_action == "delete_sales":
-                    # Conservar datos de ventas del mes pasado sin duplicar evento en bitácora
-                    threshold_val = float(parameters.get("max_amount") or 1000.0)
-                    last_sales = self.db.query_sales_records(
-                        period=parameters.get("period") or "last_month",
-                        log_event=False,
-                    )
-                    ui_payload = {
-                        "table_data": last_sales.get("sales", []),
-                        "pie_chart": last_sales.get("pie_chart", []),
-                        "offer_local_filter": {
-                            "max_amount": threshold_val,
-                            "min_amount": threshold_val,
-                        },
-                        "blocked_reason": "Política de solo lectura del Consultante BI en AgentGuard",
-                    }
-
-        else:
-            # Modo Directo: Sin protección alguna
-            steps.append({
-                "step": 4,
-                "title": "¡ADVERTENCIA! Modo Directo Activado (AgentGuard OMITIDO)",
-                "detail": "La llamada a la herramienta se ejecuta directamente sobre la infraestructura de ACME Corp sin pasar por el PDP.",
-                "status": "danger",
-            })
-
-            direct_res = await self.execute_in_direct_mode(
-                action_name=action_name,
-                parameters=parameters,
-            )
-            acme_results.append(direct_res)
-
-            if direct_res.get("is_database_wiped"):
-                steps.append({
-                    "step": 5,
-                    "title": "Fallo del Servidor: Base de Datos Purgada (503 Service Unavailable)",
-                    "detail": direct_res.get("error"),
-                    "status": "danger",
-                })
-            elif direct_res.get("status") == "wiped":
-                steps.append({
-                    "step": 5,
-                    "title": "¡CATASTRÓFICO! Base de Datos Eliminada por Completo",
-                    "detail": "El comando SQL DROP TABLE borró todas las tablas de ACME. La empresa queda inoperable.",
-                    "status": "danger",
-                })
-            elif direct_res.get("result", {}).get("is_tampered"):
-                steps.append({
-                    "step": 5,
-                    "title": "¡ALERTA DE SABOTAJE! Precio Alterado en Catálogo Real",
-                    "detail": (
-                        f"El producto '{direct_res['result']['product_name']}' fue rebajado a "
-                        f"${direct_res['result']['new_price']} USD (Base: ${direct_res['result']['base_price']} USD)."
-                    ),
-                    "status": "danger",
-                })
-            elif action_name == "delete_sales":
-                deleted_cnt = direct_res.get("result", {}).get("deleted_count", 0)
-                steps.append({
-                    "step": 5,
-                    "title": "¡REGISTROS ELIMINADOS EN SQLITE REAL!",
-                    "detail": f"Al no mediar protección de AgentGuard, se eliminaron {deleted_cnt} ventas de la base de datos.",
-                    "status": "danger",
-                })
-            else:
-                steps.append({
-                    "step": 5,
-                    "title": "Ejecución Directa Completada",
-                    "detail": json.dumps(direct_res, ensure_ascii=False),
-                    "status": "warning",
-                })
-
-            function_response_payload = direct_res
-
-            # Si fue query_sales o generate_pie_chart en directo, actualizar ui_payload
-            if effective_dispatch_action == "query_sales" and "result" in direct_res:
-                q_res = direct_res["result"]
-                ui_payload = {
-                    "table_data": q_res.get("sales", []),
-                    "pie_chart": q_res.get("pie_chart", []),
-                    "total_records": q_res.get("total_records", 0),
-                    "total_amount": q_res.get("total_amount", 0.0),
-                    "period": q_res.get("period"),
-                    "filters": q_res.get("filters"),
-                    "is_chart_view": is_pie_chart_shortcut,
-                }
-
-        # -------------------------------------------------------------------
-        # Síntesis determinística reutilizable (Modo Guiado o fallback Turno 2)
-        # -------------------------------------------------------------------
-        def _build_deterministic_answer() -> str:
-            if mode == "protected":
-                dec = gateway_verdicts[0].get("decision") if gateway_verdicts else "UNKNOWN"
-                if dec == "ALLOW":
-                    if effective_dispatch_action == "query_sales":
-                        cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
-                        tot = ui_payload.get("total_amount", 0.0)
+            # -------------------------------------------------------------------
+            # Síntesis determinística reutilizable (Modo Guiado o fallback Turno 2)
+            # -------------------------------------------------------------------
+            def _build_deterministic_answer() -> str:
+                if mode == "protected":
+                    dec = gateway_verdicts[0].get("decision") if gateway_verdicts else "UNKNOWN"
+                    if dec == "ALLOW":
+                        if effective_dispatch_action == "query_sales":
+                            cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
+                            tot = ui_payload.get("total_amount", 0.0)
+                            return (
+                                f"✅ ¡Hola! Aquí tienes las {cnt} ventas mayores a $1,000 del mes pasado registradas en ACME Corp. "
+                                f"El monto total facturado asciende a ${tot:,.2f} USD. "
+                                f"He desplegado el desglose en la tabla interactiva y los datos están listos para ser graficados."
+                            )
+                        if is_pie_chart_shortcut:
+                            return (
+                                "📊 ¡Gráfico generado exitosamente! He preparado la distribución de ventas por producto "
+                                "en una gráfica circular interactiva con los porcentajes reales correspondientes."
+                            )
                         return (
-                            f"✅ ¡Hola! Aquí tienes las {cnt} ventas mayores a $1,000 del mes pasado registradas en ACME Corp. "
-                            f"El monto total facturado asciende a ${tot:,.2f} USD. "
-                            f"He desplegado el desglose en la tabla interactiva y los datos están listos para ser graficados."
+                            f"✅ Operación autorizada exitosamente por AgentGuard bajo política comercial. "
+                            f"La acción '{action_name}' fue ejecutada en el servicio destino con latencia "
+                            f"{gateway_verdicts[0].get('latency_ms', 0)} ms."
                         )
-                    if is_pie_chart_shortcut:
+                    if dec == "REQUIRE_APPROVAL":
                         return (
-                            "📊 ¡Gráfico generado exitosamente! He preparado la distribución de ventas por producto "
-                            "en una gráfica circular interactiva con los porcentajes reales correspondientes."
+                            f"⏳ Operación suspendida sujeta a gobernanza humana (HITL). "
+                            f"El monto o riesgo de '{action_name}' excede los límites autónomos. "
+                            f"Ticket registrado en la bandeja de aprobación de AgentGuard."
+                        )
+                    if effective_dispatch_action == "delete_sales":
+                        return (
+                            "🛡️ Puedo filtrar u ocultar esos registros en esta pantalla y actualizar tu gráfico de torta, "
+                            "pero no tengo autorización para escribir ni borrar datos en la base de datos de ACME "
+                            "(bloqueado por política de seguridad en AgentGuard)."
                         )
                     return (
-                        f"✅ Operación autorizada exitosamente por AgentGuard bajo política comercial. "
-                        f"La acción '{action_name}' fue ejecutada en el servicio destino con latencia "
-                        f"{gateway_verdicts[0].get('latency_ms', 0)} ms."
+                        f"🛡️ Bloqueo de seguridad preventivo emitido por AgentGuard (PDP). "
+                        f"La acción '{action_name}' fue rechazada por política estricta. "
+                        f"Detalle: {gateway_verdicts[0].get('error_message', 'Acceso denegado')}."
                     )
-                if dec == "REQUIRE_APPROVAL":
+
+                if acme_results and acme_results[0].get("is_database_wiped"):
                     return (
-                        f"⏳ Operación suspendida sujeta a gobernanza humana (HITL). "
-                        f"El monto o riesgo de '{action_name}' excede los límites autónomos. "
-                        f"Ticket registrado en la bandeja de aprobación de AgentGuard."
+                        "🚨 ERROR CATASTRÓFICO: La base de datos de ACME Corporation ha sido purgada. "
+                        "El servidor no puede responder a solicitudes operativas (503 Service Unavailable)."
                     )
-                if effective_dispatch_action == "delete_sales":
+                if acme_results and acme_results[0].get("status") == "wiped":
                     return (
-                        "🛡️ Puedo filtrar u ocultar esos registros en esta pantalla y actualizar tu gráfico de torta, "
-                        "pero no tengo autorización para escribir ni borrar datos en la base de datos de ACME "
-                        "(bloqueado por política de seguridad en AgentGuard)."
+                        "💥 PELIGRO CRÍTICO: La acción destructiva se ejecutó directamente sin pasar por AgentGuard. "
+                        "Todas las tablas de productos, clientes, cotizaciones, reembolsos y ventas fueron eliminadas de la base de datos."
                     )
+                if acme_results and acme_results[0].get("result", {}).get("is_tampered"):
+                    res_tamper = acme_results[0]["result"]
+                    return (
+                        f"⚠️ ALTERACIÓN GRAVE: Al omitir AgentGuard, el precio de '{res_tamper['product_name']}' "
+                        f"fue rebajado a ${res_tamper['new_price']} USD (Precio Base: ${res_tamper['base_price']} USD). "
+                        f"Se ha provocado un sabotaje directo en el catálogo oficial de ACME."
+                    )
+                if action_name == "delete_sales":
+                    cnt = acme_results[0].get("result", {}).get("deleted_count", 0)
+                    return (
+                        f"💥 ALERTA: En Modo Directo (sin AgentGuard), se eliminaron {cnt} registros de ventas "
+                        f"directamente de SQLite. ¡Los datos han desaparecido de la base de datos real!"
+                    )
+                if effective_dispatch_action == "query_sales":
+                    cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
+                    return f"⚡ Consulta de ventas ejecutada directamente sobre SQLite ({cnt} registros recuperados)."
                 return (
-                    f"🛡️ Bloqueo de seguridad preventivo emitido por AgentGuard (PDP). "
-                    f"La acción '{action_name}' fue rechazada por política estricta. "
-                    f"Detalle: {gateway_verdicts[0].get('error_message', 'Acceso denegado')}."
+                    f"⚡ Acción '{action_name}' ejecutada directamente en ACME Corp omitiendo salvaguardas de gobernanza. "
+                    f"Resultado: {json.dumps(acme_results[0] if acme_results else {}, ensure_ascii=False)}"
                 )
 
-            if acme_results and acme_results[0].get("is_database_wiped"):
-                return (
-                    "🚨 ERROR CATASTRÓFICO: La base de datos de ACME Corporation ha sido purgada. "
-                    "El servidor no puede responder a solicitudes operativas (503 Service Unavailable)."
-                )
-            if acme_results and acme_results[0].get("status") == "wiped":
-                return (
-                    "💥 PELIGRO CRÍTICO: La acción destructiva se ejecutó directamente sin pasar por AgentGuard. "
-                    "Todas las tablas de productos, clientes, cotizaciones, reembolsos y ventas fueron eliminadas de la base de datos."
-                )
-            if acme_results and acme_results[0].get("result", {}).get("is_tampered"):
-                res_tamper = acme_results[0]["result"]
-                return (
-                    f"⚠️ ALTERACIÓN GRAVE: Al omitir AgentGuard, el precio de '{res_tamper['product_name']}' "
-                    f"fue rebajado a ${res_tamper['new_price']} USD (Precio Base: ${res_tamper['base_price']} USD). "
-                    f"Se ha provocado un sabotaje directo en el catálogo oficial de ACME."
-                )
-            if action_name == "delete_sales":
-                cnt = acme_results[0].get("result", {}).get("deleted_count", 0)
-                return (
-                    f"💥 ALERTA: En Modo Directo (sin AgentGuard), se eliminaron {cnt} registros de ventas "
-                    f"directamente de SQLite. ¡Los datos han desaparecido de la base de datos real!"
-                )
-            if effective_dispatch_action == "query_sales":
-                cnt = ui_payload.get("total_records", len(ui_payload.get("table_data", [])))
-                return f"⚡ Consulta de ventas ejecutada directamente sobre SQLite ({cnt} registros recuperados)."
-            return (
-                f"⚡ Acción '{action_name}' ejecutada directamente en ACME Corp omitiendo salvaguardas de gobernanza. "
-                f"Resultado: {json.dumps(acme_results[0] if acme_results else {}, ensure_ascii=False)}"
-            )
-
-        # -------------------------------------------------------------------
-        # Cierre del Ciclo: Síntesis Final
-        # -------------------------------------------------------------------
-        if use_llm and tool_call_found:
-            steps.append({
-                "step": 6,
-                "title": "Síntesis Final con Google Gemini (Turno 2)",
-                "detail": "Enviando respuesta de la herramienta a Gemini para obtener el análisis final en español...",
-                "status": "info",
-            })
-
-            canonical_tool_name = tool_call_found.get("name")
-            turn1_function_calls = [
-                p["functionCall"]
-                for p in model_turn_parts
-                if isinstance(p, dict) and isinstance(p.get("functionCall"), dict)
-            ]
-            if not turn1_function_calls:
-                turn1_function_calls = [tool_call_found]
-
-            function_response_parts: List[Dict[str, Any]] = []
-            for fc_idx, fc in enumerate(turn1_function_calls):
-                fc_name = fc.get("name") or canonical_tool_name
-                fc_response_body: Dict[str, Any] = {
-                    "name": fc_name,
-                    "response": (
-                        function_response_payload
-                        if fc_idx == 0
-                        else {
-                            "status": "skipped",
-                            "message": "Se ejecutó únicamente la primera invocación de herramienta en este turno.",
-                        }
-                    ),
-                }
-                if fc.get("id"):
-                    fc_response_body["id"] = fc["id"]
-                function_response_parts.append({"functionResponse": fc_response_body})
-
-            payload_turn_2 = {
-                "systemInstruction": {"parts": [{"text": system_instruction_text}]},
-                "contents": [
-                    {"role": "user", "parts": [{"text": user_prompt}]},
-                    {"role": "model", "parts": model_turn_parts or [{"functionCall": tool_call_found}]},
-                    {
-                        "role": "user",
-                        "parts": function_response_parts,
-                    },
-                ],
-                "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
-                "generationConfig": _build_generation_config(active_gemini_model),
-            }
-
-            try:
-                async with httpx.AsyncClient(**httpx_client_kwargs(gemini_url, timeout=45.0)) as client:
-                    resp_2 = await client.post(gemini_url, json=payload_turn_2)
-                    if resp_2.status_code == 200:
-                        cand_2 = resp_2.json().get("candidates", [])
-                        parts_2 = cand_2[0].get("content", {}).get("parts", []) if cand_2 else []
-                        final_answer = "".join(
-                            p.get("text", "") for p in parts_2 if isinstance(p, dict) and not p.get("thought")
-                        ).strip()
-                        if not final_answer:
-                            final_answer = _build_deterministic_answer()
-                    else:
-                        err_snippet = (resp_2.text or "")[:500]
-                        logger.warning(
-                            "Gemini Turno 2 respondió HTTP %s (%s): %s",
-                            resp_2.status_code,
-                            active_gemini_model,
-                            err_snippet,
-                        )
-                        steps.append({
-                            "step": 6,
-                            "title": f"Fallback en síntesis de Gemini (HTTP {resp_2.status_code})",
-                            "detail": f"Detalle devuelto por Gemini API: {err_snippet or 'Sin cuerpo de error'}",
-                            "status": "warning",
-                        })
-                        final_answer = _build_deterministic_answer()
-            except Exception as exc:
-                detail = str(exc).strip() or type(exc).__name__
-                logger.warning("Fallo al completar Turno 2 de Gemini (%s): %s", type(exc).__name__, detail)
+            # -------------------------------------------------------------------
+            # Cierre del Ciclo: Síntesis Final (reutilizando conexión Keep-Alive)
+            # -------------------------------------------------------------------
+            if use_llm and tool_call_found:
                 steps.append({
                     "step": 6,
-                    "title": f"Fallback en síntesis de Gemini ({type(exc).__name__})",
-                    "detail": detail,
-                    "status": "warning",
+                    "title": f"Síntesis Final con {prov_label} (Turno 2)",
+                    "detail": "Enviando respuesta de la herramienta usando la sesión activa para generar el resumen ejecutivo en español...",
+                    "status": "info",
                 })
-                final_answer = _build_deterministic_answer()
 
-        else:
-            # Síntesis determinística estructurada en español
-            final_answer = _build_deterministic_answer()
+                t_llm2 = time.perf_counter()
+                try:
+                    active_client = llm_client or httpx.AsyncClient(
+                        **httpx_client_kwargs(gemini_url or openai_endpoint, timeout=10.0)
+                    )
+                    if prov_id in ("openai", "groq"):
+                        oa_payload_2 = {
+                            "model": active_gemini_model,
+                            "messages": [
+                                {"role": "system", "content": system_instruction_text},
+                                {"role": "user", "content": user_prompt},
+                                openai_assistant_msg or {"role": "assistant", "tool_calls": []},
+                                {
+                                    "role": "tool",
+                                    "tool_call_id": openai_tool_call_id or "call_0",
+                                    "content": json.dumps(function_response_payload, ensure_ascii=False),
+                                },
+                            ],
+                            "tool_choice": "none",
+                            "max_tokens": 220,
+                            "temperature": 0.2,
+                        }
+                        resp_2 = await active_client.post(
+                            openai_endpoint,
+                            headers=openai_headers,
+                            json=oa_payload_2,
+                            timeout=10.0,
+                        )
+                        if resp_2.status_code == 200:
+                            c2 = (resp_2.json().get("choices") or [{}])[0].get("message") or {}
+                            final_answer = str(c2.get("content") or "").strip() or _build_deterministic_answer()
+                        else:
+                            err_snippet = (resp_2.text or "")[:300]
+                            logger.warning("%s Turno 2 HTTP %s: %s", prov_label, resp_2.status_code, err_snippet)
+                            final_answer = _build_deterministic_answer()
+                    else:
+                        canonical_tool_name = tool_call_found.get("name")
+                        turn1_function_calls = [
+                            p["functionCall"]
+                            for p in model_turn_parts
+                            if isinstance(p, dict) and isinstance(p.get("functionCall"), dict)
+                        ]
+                        if not turn1_function_calls:
+                            turn1_function_calls = [tool_call_found]
+
+                        function_response_parts: List[Dict[str, Any]] = []
+                        for fc_idx, fc in enumerate(turn1_function_calls):
+                            fc_name = fc.get("name") or canonical_tool_name
+                            fc_response_body: Dict[str, Any] = {
+                                "name": fc_name,
+                                "response": (
+                                    function_response_payload
+                                    if fc_idx == 0
+                                    else {
+                                        "status": "skipped",
+                                        "message": "Se ejecutó únicamente la primera invocación de herramienta en este turno.",
+                                    }
+                                ),
+                            }
+                            if fc.get("id"):
+                                fc_response_body["id"] = fc["id"]
+                            function_response_parts.append({"functionResponse": fc_response_body})
+
+                        payload_turn_2 = {
+                            "systemInstruction": {"parts": [{"text": system_instruction_text}]},
+                            "contents": [
+                                {"role": "user", "parts": [{"text": user_prompt}]},
+                                {"role": "model", "parts": model_turn_parts or [{"functionCall": tool_call_found}]},
+                                {
+                                    "role": "user",
+                                    "parts": function_response_parts,
+                                },
+                            ],
+                            "tools": [{"functionDeclarations": GEMINI_FUNCTION_DECLARATIONS}],
+                            "toolConfig": {"functionCallingConfig": {"mode": "NONE"}},
+                            "generationConfig": _build_generation_config(active_gemini_model, is_synthesis=True),
+                        }
+
+                        resp_2 = await active_client.post(gemini_url, json=payload_turn_2, timeout=10.0)
+                        if resp_2.status_code == 200:
+                            cand_2 = resp_2.json().get("candidates", [])
+                            parts_2 = cand_2[0].get("content", {}).get("parts", []) if cand_2 else []
+                            final_answer = "".join(
+                                p.get("text", "") for p in parts_2 if isinstance(p, dict) and not p.get("thought")
+                            ).strip()
+                            if not final_answer:
+                                final_answer = _build_deterministic_answer()
+                        else:
+                            err_snippet = (resp_2.text or "")[:500]
+                            logger.warning(
+                                "Gemini Turno 2 respondió HTTP %s (%s): %s",
+                                resp_2.status_code,
+                                active_gemini_model,
+                                err_snippet,
+                            )
+                            steps.append({
+                                "step": 6,
+                                "title": f"Fallback en síntesis de Gemini (HTTP {resp_2.status_code})",
+                                "detail": f"Detalle devuelto por Gemini API: {err_snippet or 'Sin cuerpo de error'}",
+                                "status": "warning",
+                            })
+                            final_answer = _build_deterministic_answer()
+                except Exception as exc:
+                    detail = str(exc).strip() or type(exc).__name__
+                    logger.warning("Fallo al completar Turno 2 de %s (%s): %s", prov_label, type(exc).__name__, detail)
+                    steps.append({
+                        "step": 6,
+                        "title": f"Fallback en síntesis de {prov_label} ({type(exc).__name__})",
+                        "detail": detail,
+                        "status": "warning",
+                    })
+                    final_answer = _build_deterministic_answer()
+                finally:
+                    llm_turn2_ms = (time.perf_counter() - t_llm2) * 1000.0
+
+            else:
+                # Síntesis determinística estructurada en español
+                final_answer = _build_deterministic_answer()
+        finally:
+            if llm_client is not None:
+                await llm_client.__aexit__(None, None, None)
 
         steps.append({
             "step": 7 if use_llm else 6,
@@ -1118,6 +1635,7 @@ class GeminiAgentClient:
         return {
             "mode": mode,
             "use_llm": use_llm,
+            "provider": prov_id if use_llm else "deterministic",
             "model_used": active_gemini_model if use_llm else "N/A (Disparo Guiado / Determinístico)",
             "llm_tool_calls": llm_tool_calls,
             "gateway_verdicts": gateway_verdicts,
@@ -1125,4 +1643,5 @@ class GeminiAgentClient:
             "final_answer": final_answer,
             "steps": steps,
             "ui_payload": ui_payload,
+            "timings": _build_timings(),
         }

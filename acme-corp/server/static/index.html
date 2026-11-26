@@ -24,6 +24,14 @@
         </div>
       </div>
       <div class="header-right">
+        <!-- Badge de Estado IA -->
+        <div id="llm-status-container" class="agentguard-status-box">
+          <span id="llm-status-badge" class="badge badge-neutral" title="Haz clic para configurar o conectar proveedor de IA" style="cursor: pointer;">
+            <span class="indicator-dot"></span>
+            <span id="llm-status-text">IA: Modo Guiado</span>
+          </span>
+        </div>
+
         <!-- Badge / Botón de Vinculación con AgentGuard -->
         <div id="agentguard-status-container" class="agentguard-status-box">
           <span id="agentguard-status-badge" class="badge badge-neutral">
@@ -75,19 +83,21 @@
           <span class="section-title">⚙️ Parámetros de Conexión & Configuración del Copiloto</span>
           <span id="config-toggle-icon" class="badge badge-neutral">Mostrar / Ocultar</span>
         </div>
-        <span class="config-note">Con GEMINI_API_KEY activa usa Gemini LLM real automáticamente; sin clave usa modo guiado</span>
+        <span class="config-note">Con API Key conectada usa IA real automáticamente (Handshake multi-proveedor); sin clave usa modo guiado</span>
       </div>
       <div id="config-body" class="config-collapsible hidden">
         <div class="credentials-grid">
           <div class="form-group">
-            <label for="gemini-key">Google Gemini API Key (Opcional):</label>
-            <input type="password" id="gemini-key" placeholder="AIzaSy... (o usa .env)" autocomplete="off">
+            <label for="gemini-key">API Key de IA (Gemini, OpenAI, Groq):</label>
+            <input type="password" id="gemini-key" placeholder="AIzaSy... / gsk_... / sk-..." autocomplete="off">
           </div>
           <div class="form-group">
-            <label for="gemini-model">Modelo Gemini:</label>
+            <label for="gemini-model">Modelo IA (Auto-descubierto):</label>
             <select id="gemini-model">
-              <option value="gemini-3.8-flash">gemini-3.8-flash (Recomendado)</option>
-              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Ligero / Rápido)</option>
+              <option value="gemini-2.5-flash">gemini-2.5-flash (Rápido Recomendado)</option>
+              <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (Ultra Ligero)</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash (Rápido Estable)</option>
+              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Alternativo)</option>
             </select>
           </div>
           <div class="form-group">
@@ -114,7 +124,11 @@
             </div>
           </div>
         </div>
-        <div class="credentials-actions" style="margin-top: 0.75rem;">
+        <div class="credentials-actions" style="margin-top: 0.75rem; flex-wrap: wrap;">
+          <button id="btn-handshake-llm" class="btn btn-primary">
+            🤝 Conectar IA (Handshake)
+          </button>
+          <span id="llm-handshake-msg" class="status-msg"></span>
           <button id="btn-test-connection" class="btn btn-secondary">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -212,6 +226,7 @@
               <span id="bi-verdict-tag" class="badge badge-success">ALLOW</span>
             </div>
             <div id="bi-assistant-text" class="bi-assistant-speech"></div>
+            <div id="bi-timing-bar" class="timing-breakdown hidden"></div>
 
             <!-- Propuesta de Filtro Local si AgentGuard bloqueó delete_sales -->
             <div id="bi-offer-filter-box" class="bi-offer-filter-box hidden">
@@ -315,6 +330,7 @@
             <div id="final-answer-box" class="final-answer-box hidden">
               <strong>Respuesta Final del Agente:</strong>
               <div id="final-answer-text" class="final-answer-content"></div>
+              <div id="security-timing-bar" class="timing-breakdown hidden"></div>
             </div>
           </div>
         </div>

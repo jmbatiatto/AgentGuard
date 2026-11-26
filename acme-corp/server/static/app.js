@@ -14,6 +14,9 @@ const state = {
   hasEnvAgentGuardKey: false,
   hasEffectiveAgentGuardKey: false,
   agentguardKeyPrefix: "",
+  initialHandshakeAttempted: false,
+  llmConnected: false,
+  llmProviderLabel: "",
 
   // Estado del Asistente BI
   biCurrentSales: [],
@@ -143,6 +146,10 @@ const dom = {
   configBody: document.getElementById("config-body"),
   geminiKey: document.getElementById("gemini-key"),
   geminiModel: document.getElementById("gemini-model"),
+  btnHandshakeLlm: document.getElementById("btn-handshake-llm"),
+  llmHandshakeMsg: document.getElementById("llm-handshake-msg"),
+  llmStatusBadge: document.getElementById("llm-status-badge"),
+  llmStatusText: document.getElementById("llm-status-text"),
   agentguardUrl: document.getElementById("agentguard-url"),
   agentguardKey: document.getElementById("agentguard-key"),
   btnTestConnection: document.getElementById("btn-test-connection"),
@@ -172,6 +179,7 @@ const dom = {
   btnBiSend: document.getElementById("btn-bi-send"),
   biResponseCard: document.getElementById("bi-response-card"),
   biAssistantText: document.getElementById("bi-assistant-text"),
+  biTimingBar: document.getElementById("bi-timing-bar"),
   biVerdictTag: document.getElementById("bi-verdict-tag"),
   biOfferFilterBox: document.getElementById("bi-offer-filter-box"),
   btnApplyLocalFilter: document.getElementById("btn-apply-local-filter"),
@@ -194,6 +202,7 @@ const dom = {
   traceSummaryBadge: document.getElementById("trace-summary-badge"),
   finalAnswerBox: document.getElementById("final-answer-box"),
   finalAnswerText: document.getElementById("final-answer-text"),
+  securityTimingBar: document.getElementById("security-timing-bar"),
 
   // Inspector de Tablas (Panel Derecho)
   btnRefreshState: document.getElementById("btn-refresh-state"),
@@ -227,20 +236,24 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadSavedCredentials() {
-  const legacyModels = new Set(["gemini-2.5-flash", "gemini-2.0-flash"]);
+  const legacyModels = new Set(["gemini-3.8-flash", "gemini-2.5-flash-exp", "gemini-2.0-flash-exp"]);
   const rawSavedModel = sessionStorage.getItem("acme_gemini_model") || "";
   const savedGeminiKey = sessionStorage.getItem("acme_gemini_key") || "";
   const savedGeminiModel = (!rawSavedModel || legacyModels.has(rawSavedModel))
-    ? "gemini-3.8-flash"
+    ? "gemini-2.5-flash"
     : rawSavedModel;
   const savedAgUrl = sessionStorage.getItem("acme_agentguard_url") || "http://localhost:8000";
   const savedAgKey = sessionStorage.getItem("acme_agentguard_key") || "";
 
   if (savedGeminiKey && dom.geminiKey) dom.geminiKey.value = savedGeminiKey;
-  if (dom.geminiModel && [...dom.geminiModel.options].some((opt) => opt.value === savedGeminiModel)) {
-    dom.geminiModel.value = savedGeminiModel;
+  if (dom.geminiModel) {
+    if ([...dom.geminiModel.options].some((opt) => opt.value === savedGeminiModel)) {
+      dom.geminiModel.value = savedGeminiModel;
+    } else {
+      dom.geminiModel.value = "gemini-2.5-flash";
+    }
     if (rawSavedModel && legacyModels.has(rawSavedModel)) {
-      sessionStorage.setItem("acme_gemini_model", savedGeminiModel);
+      sessionStorage.setItem("acme_gemini_model", dom.geminiModel.value);
     }
   }
   if (savedAgUrl && dom.agentguardUrl) dom.agentguardUrl.value = savedAgUrl;
@@ -328,6 +341,15 @@ function setupEventListeners() {
     }
   });
 
+  dom.btnHandshakeLlm?.addEventListener("click", () => handshakeLlm({ silent: false, forceRefresh: true }));
+  dom.llmStatusBadge?.addEventListener("click", () => {
+    dom.configBody.classList.remove("hidden");
+    dom.geminiKey?.focus();
+  });
+  dom.geminiKey?.addEventListener("input", () => {
+    state.llmConnected = false;
+    updateLlmBadge();
+  });
   dom.btnTestConnection.addEventListener("click", testAgentGuardConnection);
   dom.btnOnboardAgentguard.addEventListener("click", onboardAgentguard);
   dom.btnResetDb.addEventListener("click", resetDatabase);
@@ -440,8 +462,9 @@ async function runBiAgentQuery(promptText, presetId) {
   state.isExecuting = true;
   dom.btnBiSend.disabled = true;
   dom.biResponseCard.classList.remove("hidden");
+  dom.biTimingBar?.classList.add("hidden");
   dom.biAssistantText.textContent = useLlm
-    ? "El Consultante BI está analizando tu solicitud con Gemini..."
+    ? `El Consultante BI está analizando tu solicitud con IA (${dom.geminiModel?.value || "gemini-2.5-flash"})...`
     : "El Consultante BI está procesando tu solicitud...";
   dom.biVerdictTag.className = "badge badge-neutral";
   dom.biVerdictTag.textContent = "Consultando...";
@@ -458,6 +481,7 @@ async function runBiAgentQuery(promptText, presetId) {
     agentguard_api_key: agentguardKey || null,
   };
 
+  const clientStart = performance.now();
   try {
     const res = await fetch("/api/agent/run", {
       method: "POST",
@@ -466,10 +490,11 @@ async function runBiAgentQuery(promptText, presetId) {
     });
 
     const data = await res.json();
+    const clientTotalMs = Math.round(performance.now() - clientStart);
     if (!res.ok) throw new Error(data.detail || "Error en la consulta");
 
-    // Renderizar respuesta del Consultante
-    renderBiResult(data);
+    // Renderizar respuesta del Consultante y desglose real de latencia
+    renderBiResult(data, clientTotalMs);
     await refreshCompanyState();
   } catch (err) {
     dom.biAssistantText.textContent = `❌ Error: ${err.message}`;
@@ -481,9 +506,48 @@ async function runBiAgentQuery(promptText, presetId) {
   }
 }
 
-function renderBiResult(data) {
+function renderTimingBar(containerEl, data, clientTotalMs) {
+  if (!containerEl) return;
+  const timings = data?.timings || {};
+  const totalMs = Number(clientTotalMs || timings.total_ms || 0);
+  const gwInternalMs = data?.gateway_verdicts?.[0]?.latency_ms ?? timings.agentguard_internal_ms;
+  const gwNetworkMs = timings.gateway_ms;
+  const llmTotalMs = Number(timings.llm_total_ms || 0);
+  const useLlm = Boolean(data?.use_llm);
+
+  const chips = [
+    `<span class="timing-chip timing-total">⏱️ Reloj total: <strong>${(totalMs / 1000).toFixed(2)}s</strong></span>`,
+  ];
+  if (gwInternalMs !== undefined && gwInternalMs !== null) {
+    chips.push(
+      `<span class="timing-chip timing-guard">🛡️ AgentGuard PEP/PDP: <strong>${Math.round(Number(gwInternalMs))}ms</strong></span>`
+    );
+  } else if (gwNetworkMs) {
+    chips.push(
+      `<span class="timing-chip timing-guard">🛡️ AgentGuard: <strong>${Math.round(Number(gwNetworkMs))}ms</strong></span>`
+    );
+  }
+  if (useLlm) {
+    chips.push(
+      `<span class="timing-chip timing-llm">✨ IA (${escapeHtml(data?.model_used || "LLM")}): <strong>${(llmTotalMs / 1000).toFixed(2)}s</strong></span>`
+    );
+  } else {
+    chips.push(`<span class="timing-chip timing-guided">⚡ Motor Guiado (sin IA)</span>`);
+  }
+  if (timings.cache_backend) {
+    chips.push(
+      `<span class="timing-chip timing-cache">💾 Caché: <strong>${escapeHtml(timings.cache_backend)}</strong></span>`
+    );
+  }
+
+  containerEl.innerHTML = chips.join("");
+  containerEl.classList.remove("hidden");
+}
+
+function renderBiResult(data, clientTotalMs) {
   const answer = data.final_answer || "Operación procesada.";
   dom.biAssistantText.innerHTML = renderSafeMarkdown(answer);
+  renderTimingBar(dom.biTimingBar, data, clientTotalMs);
 
   const mode = data.mode;
   const verdict = data.gateway_verdicts?.[0]?.decision || (mode === "protected" ? "DENY" : "DIRECT");
@@ -728,6 +792,97 @@ function selectPreset(presetId) {
 }
 
 // ---------------------------------------------------------------------------
+// Handshake con Proveedor de IA y Descubrimiento de Modelos Disponibles
+// ---------------------------------------------------------------------------
+function updateLlmBadge() {
+  if (!dom.llmStatusBadge || !dom.llmStatusText) return;
+  const hasKey = Boolean((dom.geminiKey?.value || "").trim() || state.hasEnvGeminiKey);
+  if (state.llmConnected) {
+    dom.llmStatusBadge.className = "badge badge-success";
+    dom.llmStatusText.textContent = `✓ IA Conectada (${state.llmProviderLabel || "IA"})`;
+  } else if (hasKey) {
+    dom.llmStatusBadge.className = "badge badge-warning";
+    dom.llmStatusText.textContent = "IA: Clave Lista (Conectar)";
+  } else {
+    dom.llmStatusBadge.className = "badge badge-neutral";
+    dom.llmStatusText.textContent = "IA: Modo Guiado";
+  }
+}
+
+async function handshakeLlm({ silent = false, forceRefresh = false } = {}) {
+  const apiKey = (dom.geminiKey?.value || "").trim();
+  if (!apiKey && !state.hasEnvGeminiKey) {
+    if (!silent && dom.llmHandshakeMsg) {
+      dom.llmHandshakeMsg.className = "status-msg error";
+      dom.llmHandshakeMsg.textContent = "Ingresa una API Key de IA primero.";
+    }
+    updateLlmBadge();
+    return false;
+  }
+
+  if (dom.btnHandshakeLlm) dom.btnHandshakeLlm.disabled = true;
+  if (dom.llmHandshakeMsg && !silent) {
+    dom.llmHandshakeMsg.className = "status-msg";
+    dom.llmHandshakeMsg.textContent = "Conectando con el proveedor de IA...";
+  }
+
+  try {
+    const res = await fetch("/api/agent/handshake", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: apiKey || null,
+        force_refresh: forceRefresh,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "No se pudo validar la clave de IA");
+
+    if (dom.geminiModel && Array.isArray(data.models) && data.models.length > 0) {
+      const currentVal = dom.geminiModel.value;
+      const unsafeLegacy = new Set(["gemini-3.8-flash"]);
+      dom.geminiModel.innerHTML = "";
+      data.models.forEach((m) => {
+        const opt = document.createElement("option");
+        opt.value = m.id;
+        opt.textContent = m.label || m.id;
+        dom.geminiModel.appendChild(opt);
+      });
+
+      const hasCurrent = !unsafeLegacy.has(currentVal) && data.models.some((m) => m.id === currentVal);
+      if (hasCurrent) {
+        dom.geminiModel.value = currentVal;
+      } else if (data.recommended_model) {
+        dom.geminiModel.value = data.recommended_model;
+      }
+      sessionStorage.setItem("acme_gemini_model", dom.geminiModel.value);
+    }
+
+    state.llmConnected = true;
+    state.llmProviderLabel = data.provider_label || "IA";
+    updateLlmBadge();
+
+    if (dom.llmHandshakeMsg) {
+      const cacheNote = data.cached ? " · caché Redis" : "";
+      dom.llmHandshakeMsg.className = "status-msg success";
+      dom.llmHandshakeMsg.textContent = `¡IA Conectada! ${state.llmProviderLabel} (${data.models?.length || 0} modelos · ${Math.round(data.latency_ms || 0)}ms${cacheNote})`;
+    }
+    return true;
+  } catch (err) {
+    state.llmConnected = false;
+    state.llmProviderLabel = "";
+    updateLlmBadge();
+    if (dom.llmHandshakeMsg && !silent) {
+      dom.llmHandshakeMsg.className = "status-msg error";
+      dom.llmHandshakeMsg.textContent = `Error Handshake: ${err.message}`;
+    }
+    return false;
+  } finally {
+    if (dom.btnHandshakeLlm) dom.btnHandshakeLlm.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Probar Conexión con AgentGuard
 // ---------------------------------------------------------------------------
 async function testAgentGuardConnection() {
@@ -788,6 +943,14 @@ async function refreshCompanyState() {
     state.hasEnvAgentGuardKey = Boolean(data.has_env_agentguard_key);
     state.hasEffectiveAgentGuardKey = Boolean(data.has_effective_agentguard_key);
     state.agentguardKeyPrefix = data.agentguard_api_key_prefix || "";
+    updateLlmBadge();
+
+    if (!state.initialHandshakeAttempted) {
+      state.initialHandshakeAttempted = true;
+      if ((dom.geminiKey?.value || "").trim() || state.hasEnvGeminiKey) {
+        handshakeLlm({ silent: true, forceRefresh: false });
+      }
+    }
 
     if (dom.geminiKey) {
       dom.geminiKey.placeholder = state.hasEnvGeminiKey
@@ -1011,6 +1174,7 @@ async function runCurrentScenario() {
   dom.traceSummaryBadge.textContent = "Procesando...";
   dom.traceTimeline.innerHTML = `<div class="empty-state">Iniciando ciclo deliberativo del agente...</div>`;
   dom.finalAnswerBox.classList.add("hidden");
+  dom.securityTimingBar?.classList.add("hidden");
 
   const payload = {
     prompt: prompt,
@@ -1023,6 +1187,7 @@ async function runCurrentScenario() {
     agentguard_api_key: agentguardKey || null,
   };
 
+  const clientStart = performance.now();
   try {
     const res = await fetch("/api/agent/run", {
       method: "POST",
@@ -1031,9 +1196,10 @@ async function runCurrentScenario() {
     });
 
     const data = await res.json();
+    const clientTotalMs = Math.round(performance.now() - clientStart);
     if (!res.ok) throw new Error(data.detail || "Fallo en la ejecución");
 
-    renderTrace(data);
+    renderTrace(data, clientTotalMs);
     await refreshCompanyState();
   } catch (err) {
     dom.traceTimeline.innerHTML = `
@@ -1053,7 +1219,7 @@ async function runCurrentScenario() {
   }
 }
 
-function renderTrace(traceData) {
+function renderTrace(traceData, clientTotalMs) {
   const steps = traceData.steps || [];
   dom.traceTimeline.innerHTML = "";
 
@@ -1092,5 +1258,6 @@ function renderTrace(traceData) {
   if (traceData.final_answer) {
     dom.finalAnswerBox.classList.remove("hidden");
     dom.finalAnswerText.innerHTML = renderSafeMarkdown(traceData.final_answer);
+    renderTimingBar(dom.securityTimingBar, traceData, clientTotalMs);
   }
 }

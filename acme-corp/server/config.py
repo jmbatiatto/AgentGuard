@@ -26,6 +26,22 @@ def normalize_loopback_url(url: str) -> str:
     return url
 
 
+def normalize_redis_url(url: str) -> str:
+    """Resuelve 'localhost' a '127.0.0.1' en URLs redis/rediss para evitar fallback IPv6 en Windows."""
+    parsed = urlsplit(url)
+    if parsed.scheme.lower() in ("redis", "rediss") and (parsed.hostname or "").lower() == "localhost":
+        netloc = "127.0.0.1"
+        if parsed.port is not None:
+            netloc = f"{netloc}:{parsed.port}"
+        if parsed.username or parsed.password:
+            userinfo = parsed.username or ""
+            if parsed.password is not None:
+                userinfo = f"{userinfo}:{parsed.password}"
+            netloc = f"{userinfo}@{netloc}"
+        return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+    return url
+
+
 def get_cached_ssl_context() -> ssl.SSLContext:
     """Construye y cachea un único SSLContext verificado por proceso para llamadas HTTPS."""
     global _CACHED_SSL_CONTEXT
@@ -67,13 +83,14 @@ class AcmeSettings(BaseSettings):
     ACME_PUBLIC_URL: str = "http://localhost:9000"
     ACME_DB_PATH: str = "acme_corp.db"
 
-    # Integración con AgentGuard (PEP/PDP)
+    # Integración con AgentGuard (PEP/PDP) y Redis
     AGENTGUARD_URL: str = "http://localhost:8000"
     AGENTGUARD_API_KEY: Optional[str] = None
+    REDIS_URL: str = "redis://127.0.0.1:6379/1"
 
-    # Integración con Google Gemini AI
+    # Integración con Proveedores de IA (Google Gemini / OpenAI / Groq)
     GEMINI_API_KEY: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-3.8-flash"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE) if ENV_FILE.exists() else None,

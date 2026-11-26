@@ -547,18 +547,22 @@ async def test_ensure_acme_onboarded_skips_when_key_valid_and_consultante_presen
 
 @pytest.mark.asyncio
 async def test_run_scenario_gemini3_fallback_and_thought_signature(temp_db: AcmeDatabase):
-    """Verifica fallback 404 a gemini-3.8-flash y preservación de thoughtSignature en Turno 2."""
+    """Verifica fallback 404 a gemini-3.5-flash-lite, preservación de thoughtSignature y payload rápido en Turno 2."""
     captured_turn2_payload = {}
     called_models = []
 
     def mock_handler(request: httpx.Request) -> Response:
         url_str = str(request.url)
         body = json.loads(request.content)
-        if "models/gemini-2.5-flash:generateContent" in url_str:
-            called_models.append("gemini-2.5-flash")
+        if any(
+            f"models/{m}:generateContent" in url_str
+            for m in ("gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash")
+        ):
+            model_hit = url_str.split("models/")[1].split(":generateContent")[0]
+            called_models.append(model_hit)
             return Response(404, json={"error": {"code": 404, "status": "NOT_FOUND"}})
-        if "models/gemini-3.8-flash:generateContent" in url_str:
-            called_models.append("gemini-3.8-flash")
+        if "models/gemini-3.5-flash-lite:generateContent" in url_str:
+            called_models.append("gemini-3.5-flash-lite")
             if len(body["contents"]) == 1:
                 return Response(
                     200,
@@ -619,16 +623,27 @@ async def test_run_scenario_gemini3_fallback_and_thought_signature(temp_db: Acme
             use_llm=True,
         )
 
-    assert called_models == ["gemini-2.5-flash", "gemini-3.8-flash", "gemini-3.8-flash"]
-    assert trace["model_used"] == "gemini-3.8-flash"
+    assert called_models == [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-3.5-flash-lite",
+    ]
+    assert trace["model_used"] == "gemini-3.5-flash-lite"
     assert trace["final_answer"] == "Se encontraron 4 ventas mayores a $1,000."
     model_parts_turn2 = captured_turn2_payload["contents"][1]["parts"]
     assert any(p.get("thoughtSignature") == "sig_gemini3_opaque_xyz" for p in model_parts_turn2)
     assert captured_turn2_payload["contents"][2]["role"] == "user"
     assert captured_turn2_payload["contents"][2]["parts"][0]["functionResponse"]["name"] == "query_sales"
+    assert captured_turn2_payload["toolConfig"] == {"functionCallingConfig": {"mode": "NONE"}}
+    assert captured_turn2_payload["generationConfig"]["maxOutputTokens"] == 220
     sys_inst = captured_turn2_payload["systemInstruction"]["parts"][0]["text"]
     assert "Tabla de Resultados" in sys_inst
     assert "resumen ejecutivo breve" in sys_inst
+    assert "timings" in trace
+    assert trace["timings"]["llm_turn1_ms"] >= 0
+    assert trace["timings"]["llm_turn2_ms"] >= 0
 
 
 @pytest.mark.asyncio
@@ -806,7 +821,7 @@ async def test_acme_client_normalizes_localhost_to_ipv4_loopback(temp_db: AcmeDa
 
 @pytest.mark.asyncio
 async def test_run_scenario_gemini_timeout_fallback_and_nonempty_error(temp_db: AcmeDatabase):
-    """Verifica fallback automático ante ReadTimeout('') en gemini-3.8-flash y detalle claro ante timeout total."""
+    """Verifica fallback automático ante ReadTimeout('') en gemini-3.8-flash a gemini-2.5-flash (thinkingBudget=0) y detalle 504."""
     seen_configs = []
 
     def mock_handler(request: httpx.Request) -> Response:
@@ -815,7 +830,7 @@ async def test_run_scenario_gemini_timeout_fallback_and_nonempty_error(temp_db: 
         seen_configs.append(body.get("generationConfig"))
         if "models/gemini-3.8-flash:generateContent" in url_str:
             raise httpx.ReadTimeout("", request=request)
-        if "models/gemini-3.5-flash-lite:generateContent" in url_str:
+        if "models/gemini-2.5-flash:generateContent" in url_str:
             return Response(
                 200,
                 json={
@@ -823,7 +838,7 @@ async def test_run_scenario_gemini_timeout_fallback_and_nonempty_error(temp_db: 
                         {
                             "content": {
                                 "role": "model",
-                                "parts": [{"text": "Respuesta rápida vía fallback lite."}],
+                                "parts": [{"text": "Respuesta rápida vía fallback 2.5-flash."}],
                             }
                         }
                     ]
@@ -849,9 +864,10 @@ async def test_run_scenario_gemini_timeout_fallback_and_nonempty_error(temp_db: 
             use_llm=True,
         )
 
-    assert trace["model_used"] == "gemini-3.5-flash-lite"
-    assert trace["final_answer"] == "Respuesta rápida vía fallback lite."
+    assert trace["model_used"] == "gemini-2.5-flash"
+    assert trace["final_answer"] == "Respuesta rápida vía fallback 2.5-flash."
     assert seen_configs[0] == {"temperature": 0.2, "thinkingConfig": {"thinkingLevel": "low"}}
+    assert seen_configs[1] == {"temperature": 0.2, "thinkingConfig": {"thinkingBudget": 0}}
 
     # Ahora verificar que si todos expiran con ReadTimeout(""), /api/agent/run devuelve mensaje legible
     app = create_app(db_path=temp_db.db_path)
@@ -864,3 +880,117 @@ async def test_run_scenario_gemini_timeout_fallback_and_nonempty_error(temp_db: 
 
     assert resp.status_code == 504
     assert "Tiempo de espera agotado" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_api_agent_handshake_multi_provider_and_filtering(temp_db: AcmeDatabase):
+    """Verifica /api/agent/handshake: detección Gemini/Groq, filtrado de no-chat, ranking y errores 400/401."""
+    app = create_app(db_path=temp_db.db_path)
+    original_key = settings.GEMINI_API_KEY
+    settings.GEMINI_API_KEY = None
+
+    try:
+        # 1. Sin API Key -> HTTP 400 claro en español
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api_client:
+            resp_empty = await api_client.post("/api/agent/handshake", json={})
+            assert resp_empty.status_code == 400
+            assert "API Key" in resp_empty.json()["detail"]
+
+        # 2. Gemini válido vs clave inválida + Groq válido
+        def mock_provider_handler(request: httpx.Request) -> Response:
+            url_str = str(request.url)
+            if "generativelanguage.googleapis.com" in url_str:
+                if "AIzaInvalidKey" in url_str:
+                    return Response(400, json={"error": {"message": "API key not valid."}})
+                return Response(
+                    200,
+                    json={
+                        "models": [
+                            {"name": "models/text-embedding-004", "supportedGenerationMethods": ["embedContent"]},
+                            {"name": "models/imagen-3.0-generate-002", "supportedGenerationMethods": ["generateContent"]},
+                            {"name": "models/gemini-2.5-pro", "supportedGenerationMethods": ["generateContent"]},
+                            {"name": "models/gemini-3.8-flash", "supportedGenerationMethods": ["generateContent"]},
+                            {"name": "models/gemini-2.5-flash-lite", "supportedGenerationMethods": ["generateContent"]},
+                            {"name": "models/gemini-2.5-flash", "supportedGenerationMethods": ["generateContent"]},
+                        ]
+                    },
+                )
+            if "api.groq.com" in url_str:
+                return Response(
+                    200,
+                    json={
+                        "data": [
+                            {"id": "whisper-large-v3"},
+                            {"id": "meta-llama/llama-guard-4-12b"},
+                            {"id": "llama-3.1-8b-instant"},
+                            {"id": "llama-3.3-70b-versatile"},
+                        ]
+                    },
+                )
+            return Response(404, json={})
+
+        original_client = httpx.AsyncClient
+        transport = httpx.MockTransport(mock_provider_handler)
+        with patch(
+            "agent.gemini_client.httpx.AsyncClient",
+            side_effect=lambda *args, **kwargs: original_client(transport=transport),
+        ):
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api_client:
+                # 2a. Clave Gemini inválida -> 401
+                bad_res = await api_client.post("/api/agent/handshake", json={"api_key": "AIzaInvalidKey"})
+                assert bad_res.status_code == 401
+                assert "rechazada" in bad_res.json()["detail"]
+
+                # 2b. Clave Gemini válida -> ranking y filtrado correcto
+                ok_res = await api_client.post("/api/agent/handshake", json={"api_key": "AIzaValidDemoKey123"})
+                assert ok_res.status_code == 200
+                data = ok_res.json()
+                assert data["message"] == "IA Conectada"
+                assert data["provider"] == "google-gemini"
+                model_ids = [m["id"] for m in data["models"]]
+                assert "text-embedding-004" not in model_ids
+                assert "imagen-3.0-generate-002" not in model_ids
+                assert model_ids[0] == "gemini-2.5-flash"
+                assert data["recommended_model"] == "gemini-2.5-flash"
+                assert model_ids.index("gemini-2.5-flash-lite") < model_ids.index("gemini-3.8-flash")
+                assert model_ids.index("gemini-3.8-flash") < model_ids.index("gemini-2.5-pro")
+                assert "Razonamiento Pesado" in next(m["label"] for m in data["models"] if m["id"] == "gemini-2.5-pro")
+
+                # 2c. Clave Groq válida -> autodetección Groq
+                groq_res = await api_client.post("/api/agent/handshake", json={"api_key": "gsk_valid_groq_key"})
+                assert groq_res.status_code == 200
+                groq_data = groq_res.json()
+                assert groq_data["provider"] == "groq"
+                groq_ids = [m["id"] for m in groq_data["models"]]
+                assert "whisper-large-v3" not in groq_ids
+                assert "meta-llama/llama-guard-4-12b" not in groq_ids
+                assert groq_data["recommended_model"] == "llama-3.3-70b-versatile"
+    finally:
+        settings.GEMINI_API_KEY = original_key
+
+
+@pytest.mark.asyncio
+async def test_acme_cache_fallback_and_timings_telemetry(temp_db: AcmeDatabase):
+    """Verifica fallback a memoria TTL de AcmeCacheService, OWASP LLM06 en hash_secret y timings en run_scenario."""
+    from server.cache import AcmeCacheService, hash_secret
+
+    raw_secret = "AIzaSySecretKeyNeverPersistInPlaintext999"
+    hashed = hash_secret(raw_secret)
+    assert len(hashed) == 16
+    assert "SecretKey" not in hashed
+
+    cache = AcmeCacheService(redis_url="redis://127.0.0.1:6399/1")
+    await cache.set_json(f"acme:test:{hashed}", {"ok": True, "models": ["gemini-2.5-flash"]}, ttl_seconds=30)
+    loaded = await cache.get_json(f"acme:test:{hashed}")
+    assert loaded == {"ok": True, "models": ["gemini-2.5-flash"]}
+    assert cache.backend_status() == "memory"
+    await cache.delete(f"acme:test:{hashed}")
+    assert await cache.get_json(f"acme:test:{hashed}") is None
+
+    # Verificar timings en run_scenario
+    client = GeminiAgentClient(db=temp_db)
+    trace = await client.run_scenario(preset_id="consult_sales", mode="direct", use_llm=False)
+    assert "timings" in trace
+    for key in ("total_ms", "llm_turn1_ms", "llm_turn2_ms", "llm_total_ms", "gateway_ms", "agentguard_internal_ms", "cache_backend"):
+        assert key in trace["timings"]
+    assert trace["timings"]["total_ms"] >= 0

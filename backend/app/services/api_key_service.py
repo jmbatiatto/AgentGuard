@@ -14,14 +14,23 @@ import inspect
 import logging
 import secrets
 import uuid
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache import backend_cache
 from app.models.api_key import ApiKey
 
 logger = logging.getLogger("agentguard.api_key_service")
+
+
+def _is_mock_db(db: Any) -> bool:
+    """Evita usar caché externa cuando los tests unitarios inyectan AsyncMock/MagicMock."""
+    return (
+        "unittest.mock" in type(db).__module__
+        or "unittest.mock" in type(getattr(db, "execute", None)).__module__
+    )
 
 
 class ApiKeyService:
@@ -135,6 +144,7 @@ class ApiKeyService:
         api_key.is_active = False
         await db.commit()
         await db.refresh(api_key)
+        await backend_cache.delete(f"ag:apikey:{api_key.hashed_key}")
 
         logger.info("API Key %s revocada exitosamente", key_id)
         return True
@@ -144,12 +154,49 @@ class ApiKeyService:
         db: AsyncSession,
         raw_key: str,
     ) -> Optional[ApiKey]:
-        """Valida una API Key en tiempo de ejecución para el Gateway PEP."""
+        """Valida una API Key en tiempo de ejecución para el Gateway PEP (con caché Redis)."""
         if len(raw_key) < 12:
             return None
 
         prefix = raw_key[:12]
         hashed = ApiKeyService._hash_key(raw_key)
+        cache_key = f"ag:apikey:{hashed}"
+        use_cache = not _is_mock_db(db)
+
+        if use_cache:
+            cached = await backend_cache.get_json(cache_key)
+            if isinstance(cached, dict) and cached.get("is_active") is True:
+                expires_raw = cached.get("expires_at")
+                expires_at: Optional[datetime] = None
+                if isinstance(expires_raw, str):
+                    try:
+                        expires_at = datetime.fromisoformat(expires_raw)
+                        if expires_at.tzinfo is None:
+                            expires_at = expires_at.replace(tzinfo=timezone.utc)
+                    except ValueError:
+                        expires_at = None
+                if expires_at is not None and expires_at < datetime.now(timezone.utc):
+                    await backend_cache.delete(cache_key)
+                    return None
+
+                created_raw = cached.get("created_at")
+                created_at = datetime.now(timezone.utc)
+                if isinstance(created_raw, str):
+                    try:
+                        created_at = datetime.fromisoformat(created_raw)
+                    except ValueError:
+                        pass
+
+                return ApiKey(
+                    id=UUID(cached["id"]),
+                    organization_id=UUID(cached["organization_id"]),
+                    name=cached.get("name", ""),
+                    key_prefix=cached.get("key_prefix", prefix),
+                    hashed_key=cached.get("hashed_key", hashed),
+                    created_at=created_at,
+                    expires_at=expires_at,
+                    is_active=True,
+                )
 
         stmt = select(ApiKey).where(
             ApiKey.key_prefix == prefix,
@@ -163,9 +210,30 @@ class ApiKeyService:
             return None
 
         # Verificar si expiró
-        if key.expires_at is not None and key.expires_at < datetime.now(timezone.utc):
+        now_utc = datetime.now(timezone.utc)
+        if key.expires_at is not None and key.expires_at < now_utc:
             logger.warning("API Key %s ha expirado el %s", key.id, key.expires_at)
             return None
+
+        if use_cache:
+            ttl = 60
+            if key.expires_at is not None:
+                exp = key.expires_at if key.expires_at.tzinfo else key.expires_at.replace(tzinfo=timezone.utc)
+                ttl = max(1, min(60, int((exp - now_utc).total_seconds())))
+            await backend_cache.set_json(
+                cache_key,
+                {
+                    "id": str(key.id),
+                    "organization_id": str(key.organization_id),
+                    "name": key.name,
+                    "key_prefix": key.key_prefix,
+                    "hashed_key": key.hashed_key,
+                    "created_at": key.created_at.isoformat() if key.created_at else None,
+                    "expires_at": key.expires_at.isoformat() if key.expires_at else None,
+                    "is_active": bool(key.is_active),
+                },
+                ttl_seconds=ttl,
+            )
 
         return key
 

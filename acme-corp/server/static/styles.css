@@ -833,6 +833,42 @@ textarea:focus {
   gap: 0.4rem;
 }
 
+.timing-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.25);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.timing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background-color: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-color);
+  color: #cbd5e1;
+}
+
+.timing-chip strong {
+  color: var(--text-main);
+}
+
+.timing-chip.timing-guard {
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #6ee7b7;
+}
+
+.timing-chip.timing-llm {
+  border-color: rgba(250, 204, 21, 0.45);
+  color: #fde047;
+}
+
 /* ==========================================================================
    Inspector de SQLite (Panel Derecho)
    ========================================================================== */
