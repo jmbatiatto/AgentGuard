@@ -1750,17 +1750,17 @@ export const PoliciesView: React.FC = () => {
                   {isExpanded && (
                     <div style={{
                       padding: '0 20px 16px 54px',
-                      backgroundColor: 'rgba(15, 23, 42, 0.4)',
+                      backgroundColor: 'var(--bg-app)',
                       borderTop: '1px dashed var(--border-subtle)',
                     }}>
                       {policyRules.length === 0 ? (
                         <div style={{
                           padding: '20px',
                           textAlign: 'center',
-                          backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                          backgroundColor: 'var(--bg-card)',
                           borderRadius: '8px',
                           marginTop: '12px',
-                          border: '1px dashed rgba(100, 116, 139, 0.3)',
+                          border: '1px dashed var(--border-subtle)',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
@@ -1785,18 +1785,18 @@ export const PoliciesView: React.FC = () => {
                           marginTop: '12px',
                           borderRadius: '8px',
                           overflow: 'hidden',
-                          border: '1px solid rgba(51, 65, 85, 0.6)',
-                          backgroundColor: '#0F172A',
+                          border: '1px solid var(--border-subtle)',
+                          backgroundColor: 'var(--bg-card)',
                         }}>
                           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
                             <thead>
-                              <tr style={{ backgroundColor: '#1E293B', borderBottom: '1px solid #334155' }}>
-                                <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>ACCIÓN ATÓMICA</th>
-                                <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>AGENTE</th>
-                                <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>CONDICIÓN (JSONB)</th>
-                                <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>DECISIÓN</th>
-                                <th style={{ padding: '9px 14px', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>PRIORIDAD</th>
-                                <th style={{ padding: '9px 14px', textAlign: 'right', color: '#94A3B8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>ACCIONES DE REGLA</th>
+                              <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-subtle)' }}>
+                                <th style={{ padding: '9px 14px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>ACCIÓN ATÓMICA</th>
+                                <th style={{ padding: '9px 14px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>AGENTE</th>
+                                <th style={{ padding: '9px 14px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>CONDICIÓN (JSONB)</th>
+                                <th style={{ padding: '9px 14px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>DECISIÓN</th>
+                                <th style={{ padding: '9px 14px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>PRIORIDAD</th>
+                                <th style={{ padding: '9px 14px', textAlign: 'right', color: 'var(--text-muted)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>ACCIONES DE REGLA</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1804,26 +1804,26 @@ export const PoliciesView: React.FC = () => {
                                 <tr
                                   key={rule.id}
                                   style={{
-                                    borderBottom: '1px solid rgba(51, 65, 85, 0.4)',
+                                    borderBottom: '1px solid var(--border-subtle)',
                                     transition: 'background-color 0.15s ease',
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.7)'}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
                                   {/* Acción */}
                                   <td style={{ padding: '10px 14px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                      <Zap size={14} color="#38BDF8" />
-                                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#F8FAFC' }}>
+                                      <Zap size={14} color="var(--brand-primary)" />
+                                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-primary)' }}>
                                         {rule.action_name || '*'}
                                       </span>
                                     </div>
                                   </td>
 
                                   {/* Agente */}
-                                  <td style={{ padding: '10px 14px', color: '#CBD5E1' }}>
+                                  <td style={{ padding: '10px 14px', color: 'var(--text-secondary)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                      <Bot size={13} color="#94A3B8" />
+                                      <Bot size={13} color="var(--text-muted)" />
                                       <span>{rule.agent_name || 'Global / Multi-agente'}</span>
                                     </div>
                                   </td>
@@ -1843,8 +1843,8 @@ export const PoliciesView: React.FC = () => {
                                   </td>
 
                                   {/* Prioridad de regla */}
-                                  <td style={{ padding: '10px 14px', color: '#94A3B8' }}>
-                                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#38BDF8' }}>
+                                  <td style={{ padding: '10px 14px', color: 'var(--text-muted)' }}>
+                                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--brand-primary)' }}>
                                       {rule.priority}
                                     </span>
                                   </td>
@@ -1859,7 +1859,7 @@ export const PoliciesView: React.FC = () => {
                                           style={{ padding: '4px 8px', fontSize: '11px', gap: '4px' }}
                                           title="Probar esta regla en Playground"
                                         >
-                                          <Play size={12} fill="#38BDF8" color="#38BDF8" />
+                                          <Play size={12} fill="var(--brand-primary)" color="var(--brand-primary)" />
                                           <span>Probar</span>
                                         </button>
                                       )}
