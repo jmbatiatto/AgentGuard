@@ -445,7 +445,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, pendingA
                 className="btn btn-primary"
               >
                 <Plus size={15} strokeWidth={2.5} />
-                <span>+ Conectar agente</span>
+                <span>Conectar agente</span>
               </button>
             )}
             <button

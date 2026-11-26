@@ -572,7 +572,7 @@ export const AgentsView: React.FC = () => {
                 onClick={() => setIsWizardOpen(true)}
               >
                 <Plus size={15} strokeWidth={2.5} />
-                <span>+ Conectar agente</span>
+                <span>Conectar agente</span>
               </button>
               <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
                 <Plus size={16} strokeWidth={2.5} />
