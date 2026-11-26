@@ -736,6 +736,61 @@ async def test_run_scenario_gemini_turn2_parallel_calls_and_http_400_fallback(te
 
 
 @pytest.mark.asyncio
+async def test_acme_client_normalizes_localhost_to_ipv4_loopback(temp_db: AcmeDatabase):
+    """Verifica que las llamadas internas de ACME hacia localhost:8000 usen 127.0.0.1 para evitar latencia IPv6."""
+    from server.config import normalize_loopback_url
+
+    assert normalize_loopback_url("http://localhost:8000") == "http://127.0.0.1:8000"
+    assert normalize_loopback_url("http://agentguard:8000") == "http://agentguard:8000"
+
+    org_id = str(uuid.uuid4())
+    bi_agent_id = str(uuid.uuid4())
+    bi_tool_id = str(uuid.uuid4())
+    requested_urls = []
+
+    def mock_handler(request: httpx.Request) -> Response:
+        requested_urls.append(str(request.url))
+        if request.url.path == "/api/v1/gateway/context":
+            return Response(
+                200,
+                json={
+                    "organization_id": org_id,
+                    "agents": [{"id": bi_agent_id, "name": "Consultante BI"}],
+                    "tools": [
+                        {
+                            "id": bi_tool_id,
+                            "name": "BI & Ventas ACME",
+                            "actions": [{"action_name": "query_sales"}],
+                        }
+                    ],
+                },
+            )
+        if request.url.path == "/api/v1/gateway/execute":
+            return Response(200, json={"decision": "ALLOW", "status": "EXECUTED", "result": {"sales": []}})
+        return Response(404, json={})
+
+    original_client = httpx.AsyncClient
+    transport = httpx.MockTransport(mock_handler)
+    client = GeminiAgentClient(
+        agentguard_url="http://localhost:8000",
+        agentguard_api_key="ag_live_test_key",
+        db=temp_db,
+    )
+
+    with patch(
+        "agent.gemini_client.httpx.AsyncClient",
+        side_effect=lambda *args, **kwargs: original_client(transport=transport),
+    ):
+        res = await client.execute_in_protected_mode("query_sales", {"min_amount": 1000.0})
+
+    assert res["decision"] == "ALLOW"
+    assert requested_urls == [
+        "http://127.0.0.1:8000/api/v1/gateway/context",
+        "http://127.0.0.1:8000/api/v1/gateway/execute",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_run_scenario_gemini_timeout_fallback_and_nonempty_error(temp_db: AcmeDatabase):
     """Verifica fallback automático ante ReadTimeout('') en gemini-3.8-flash y detalle claro ante timeout total."""
     seen_configs = []

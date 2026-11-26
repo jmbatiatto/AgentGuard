@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import httpx
 
 from agent.presets import PRESETS_BY_ID, get_preset_by_id
-from server.config import settings
+from server.config import normalize_loopback_url, settings
 from server.database import AcmeDatabase, DatabaseWipedError, acme_db
 
 logger = logging.getLogger("acme.agent")
@@ -240,7 +240,7 @@ async def discover_agentguard_context(
     timeout: float = 6.0,
 ) -> Dict[str, Any]:
     """Consulta el endpoint /gateway/context de AgentGuard para auto-descubrir IDs."""
-    clean_url = agentguard_url.rstrip("/")
+    clean_url = normalize_loopback_url(agentguard_url.rstrip("/"))
     endpoint = f"{clean_url}/api/v1/gateway/context"
     headers = {"X-AgentGuard-Key": agentguard_api_key}
 
@@ -491,7 +491,7 @@ class GeminiAgentClient:
             resource = resource_map.get(canonical_action, f"acme:{canonical_action}")
 
         # 2. Despachar solicitud al PEP de AgentGuard
-        execute_url = f"{self.agentguard_url.rstrip('/')}/api/v1/gateway/execute"
+        execute_url = f"{normalize_loopback_url(self.agentguard_url.rstrip('/'))}/api/v1/gateway/execute"
         headers = {
             "X-AgentGuard-Key": self.agentguard_api_key,
             "Content-Type": "application/json",

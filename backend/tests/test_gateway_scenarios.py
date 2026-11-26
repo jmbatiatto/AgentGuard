@@ -364,3 +364,42 @@ async def test_demo_scenario_4_prompt_injection_deny_and_critical_alert():
                 assert created_alert.organization_id == org_id
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_pep_dispatch_normalizes_localhost_to_ipv4_loopback():
+    """Verifica que _dispatch_to_tool resuelva localhost -> 127.0.0.1 para evitar timeout IPv6 en Windows."""
+    from app.services.pep_gateway_service import PEPGatewayService
+
+    assert (
+        PEPGatewayService._normalize_loopback_url("http://localhost:9000/bi/query_sales")
+        == "http://127.0.0.1:9000/bi/query_sales"
+    )
+    assert (
+        PEPGatewayService._normalize_loopback_url("https://api.stripe.com/v1/refunds")
+        == "https://api.stripe.com/v1/refunds"
+    )
+    assert (
+        PEPGatewayService._normalize_loopback_url("http://acme-corp:9000/bi/query_sales")
+        == "http://acme-corp:9000/bi/query_sales"
+    )
+
+    tool = Tool(
+        id=uuid.uuid4(),
+        organization_id=uuid.uuid4(),
+        name="BI & Ventas ACME",
+        endpoint_url="http://localhost:9000/bi",
+    )
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"status": "success", "sales": []}
+
+    with patch("app.services.pep_gateway_service.httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = mock_resp
+        result = await PEPGatewayService._dispatch_to_tool(tool, "query_sales", {"min_amount": 1000})
+
+    assert result == {"status": "success", "sales": []}
+    mock_post.assert_awaited_once_with(
+        "http://127.0.0.1:9000/bi/query_sales",
+        json={"min_amount": 1000},
+    )

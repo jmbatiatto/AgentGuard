@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import httpx
 
-from server.config import ENV_FILE, ROOT_DIR, settings
+from server.config import ENV_FILE, ROOT_DIR, normalize_loopback_url, settings
 
 logger = logging.getLogger("acme.onboarding")
 
@@ -59,7 +59,7 @@ async def bootstrap_acme_in_agentguard(
     force_reset: bool = False,
 ) -> Dict[str, Any]:
     """Orquesta el onboarding completo y automatizado de ACME Corporation en AgentGuard."""
-    base_url = (agentguard_url or settings.AGENTGUARD_URL).rstrip("/")
+    base_url = normalize_loopback_url((agentguard_url or settings.AGENTGUARD_URL).rstrip("/"))
     acme_url = (acme_public_url or settings.ACME_PUBLIC_URL).rstrip("/")
 
     admin_email = "admin@acmecorp.com"

@@ -2,7 +2,24 @@
 
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def normalize_loopback_url(url: str) -> str:
+    """Resuelve 'localhost' a '127.0.0.1' para evitar el timeout IPv6 (::1 -> IPv4 ~2s) en Windows."""
+    parsed = urlsplit(url)
+    if parsed.scheme in ("http", "https") and (parsed.hostname or "").lower() == "localhost":
+        netloc = "127.0.0.1"
+        if parsed.port is not None:
+            netloc = f"{netloc}:{parsed.port}"
+        if parsed.username:
+            userinfo = parsed.username
+            if parsed.password:
+                userinfo = f"{userinfo}:{parsed.password}"
+            netloc = f"{userinfo}@{netloc}"
+        return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+    return url
 
 # Raíz del paquete acme-corp
 ROOT_DIR = Path(__file__).resolve().parent.parent

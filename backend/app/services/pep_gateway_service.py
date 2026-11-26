@@ -12,6 +12,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlsplit, urlunsplit
 from uuid import UUID
 
 import httpx
@@ -51,6 +52,22 @@ class PEPGatewayService:
     """Orquestador de autorización, ejecución y auditoría en tiempo de ejecución."""
 
     @staticmethod
+    def _normalize_loopback_url(url: str) -> str:
+        """Resuelve 'localhost' a '127.0.0.1' para evitar el fallback IPv6 (::1 -> IPv4 ~2s) en Windows."""
+        parsed = urlsplit(url)
+        if parsed.scheme in ("http", "https") and (parsed.hostname or "").lower() == "localhost":
+            netloc = "127.0.0.1"
+            if parsed.port is not None:
+                netloc = f"{netloc}:{parsed.port}"
+            if parsed.username:
+                userinfo = parsed.username
+                if parsed.password:
+                    userinfo = f"{userinfo}:{parsed.password}"
+                netloc = f"{userinfo}@{netloc}"
+            return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+        return url
+
+    @staticmethod
     async def _dispatch_to_tool(
         tool: Tool,
         action_name: str,
@@ -58,6 +75,7 @@ class PEPGatewayService:
     ) -> Dict[str, Any]:
         """Despacha la llamada HTTP a la API externa de destino o simula respuesta de éxito."""
         endpoint = f"{tool.endpoint_url.rstrip('/')}/{action_name}"
+        request_url = PEPGatewayService._normalize_loopback_url(endpoint)
 
         # Si el endpoint es real y accesible por HTTP/HTTPS
         if tool.endpoint_url.startswith(("http://", "https://")) and not (
@@ -65,7 +83,7 @@ class PEPGatewayService:
         ):
             try:
                 async with httpx.AsyncClient(timeout=3.0) as client:
-                    resp = await client.post(endpoint, json=parameters)
+                    resp = await client.post(request_url, json=parameters)
                     if resp.status_code < 400:
                         try:
                             return resp.json()

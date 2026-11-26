@@ -39,7 +39,7 @@ from agent.gemini_client import (
 )
 from agent.onboarding import bootstrap_acme_in_agentguard
 from agent.presets import list_presets
-from server.config import ROOT_DIR, settings
+from server.config import ROOT_DIR, normalize_loopback_url, settings
 from server.database import AcmeDatabase, DatabaseWipedError, acme_db
 
 logger = logging.getLogger("acme.app")
@@ -149,7 +149,7 @@ async def ensure_acme_onboarded_if_needed(
     acme_public_url: Optional[str] = None,
 ) -> bool:
     """Verifica si ACME está vinculado con una API Key válida y ejecuta auto-onboarding si falta o expiró."""
-    base_url = (agentguard_url or settings.AGENTGUARD_URL).rstrip("/")
+    base_url = normalize_loopback_url((agentguard_url or settings.AGENTGUARD_URL).rstrip("/"))
     acme_url = (acme_public_url or settings.ACME_PUBLIC_URL).rstrip("/")
 
     async with httpx.AsyncClient(timeout=4.0) as probe_client:
