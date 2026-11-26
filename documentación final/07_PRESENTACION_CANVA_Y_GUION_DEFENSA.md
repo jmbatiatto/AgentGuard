@@ -277,27 +277,26 @@ La exposición está diseñada para una duración total de **15 minutos**, equil
 
 ---
 
-## ✅ 5. Checklist Rápida de Puesta en Marcha Antes de Pasar alFrente
+## ✅ 5. Checklist Rápida de Puesta en Marcha Antes de Pasar al Frente
 
-Ejecutar en orden **5 minutos antes** de comenzar la defensa:
+Ejecutar en orden **5 minutos antes** de comenzar la defensa (con **Docker Desktop** ya iniciado):
 
-1. **Iniciar la plataforma AgentGuard (arranque limpio por defecto):**
+1. **Iniciar todo el ecosistema unificado (AgentGuard + ACME Corp en un solo comando):**
    ```powershell
-   .\start_all.bat
+   npm run start:all
+   # (equivalentes: pnpm start:all  |  .\start_ecosystem.bat)
    ```
-   *Verificar:* Contenedores Docker (`agentguard-postgres` en `:5433` y `agentguard-redis` en `:6379`) activos, migraciones Alembic aplicadas hasta `006_add_must_change_password`, backend en `http://localhost:8000/health` (`status: "healthy"`, `boot_id` presente) y navegador abierto en `http://localhost:5173/#auth`.
-2. **Iniciar el Portal Empresarial ACME Corporation (`:9000`):**
-   ```powershell
-   acme-corp\start_acme.bat
-   ```
-   *Verificar:* El servidor levanta en `http://localhost:9000` y en menos de 2 segundos el `lifespan` ejecuta el **auto-onboarding del CEO Lucas Duck**, dejando en AgentGuard los **4 agentes** y **5 herramientas** de `Acme Corp` y persistiendo `AGENTGUARD_API_KEY` en `acme-corp/.env`.
-3. **Abrir las 3 pestañas clave en el navegador (en orden de exposición):**
+   *Verificar:* Contenedores Docker (`agentguard-postgres` en `:5433` y `agentguard-redis` en `:6379`) activos, migraciones Alembic aplicadas hasta `006_add_must_change_password`, backend en `http://localhost:8000/health` (`status: "healthy"`, `boot_id` presente), ACME Corp en `http://localhost:9000` con **auto-onboarding automático del CEO Lucas Duck** completado (4 agentes, 5 herramientas y `AGENTGUARD_API_KEY` en `acme-corp/.env`), y ambas pestañas abiertas (`:5173/#auth` y `:9000`).  
+   *(Alternativa en dos pasos separados: `.\start_all.bat` y luego `acme-corp\start_acme.bat`.)*
+2. **Abrir las 3 pestañas clave en el navegador (en orden de exposición):**
    * **Pestaña 1:** Presentación oficial en Canva $\rightarrow$ [`https://canva.link/59p7pjdurhxr1vk`](https://canva.link/59p7pjdurhxr1vk) (`design_id: DAHbl5SRXbM`).
    * **Pestaña 2:** Dashboard de Control Plane AgentGuard $\rightarrow$ `http://localhost:5173/#auth` (iniciar sesión con un clic como `admin@acmecorp.com` / `demo-password`).
    * **Pestaña 3:** Portal Empresarial ACME Corp & Consultante BI $\rightarrow$ `http://localhost:9000` (verificar badge verde **"Vinculado con AgentGuard"** y las **15 ventas históricas** en el Inspector Relacional SQLite).
-4. **(Opcional) Tener lista una terminal en la raíz para el demostrador CLI:**
+3. **(Opcional) Tener lista una terminal en la raíz para el demostrador CLI y el cierre limpio:**
    ```powershell
    backend\.venv\Scripts\python.exe agent-demo\run_demo.py --all
+   # Al finalizar la defensa, apagar todo (AgentGuard + ACME + Docker):
+   npm run stop:all
    ```
 
 ---

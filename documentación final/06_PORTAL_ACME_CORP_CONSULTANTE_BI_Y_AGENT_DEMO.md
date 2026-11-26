@@ -44,13 +44,16 @@ graph TD
 
 ### 1.1 Scripts de Ejecución y Lanzadores
 
-El entorno autónomo de ACME Corporation puede iniciarse de forma independiente o integrado:
-1. **Lanzador por Lotes en Windows (`acme-corp/start_acme.bat`):**
+El entorno autónomo de ACME Corporation puede iniciarse de forma unificada junto a toda la plataforma AgentGuard o de manera independiente:
+1. **Arranque Unificado del Ecosistema (`npm run start:all` / `pnpm start:all` / `.\start_ecosystem.bat` $\rightarrow$ `scripts/start-ecosystem.ps1`):**
+   - Levanta Docker (PostgreSQL 16 + Redis 7), aplica migraciones Alembic, inicia Backend AgentGuard (`:8000`) esperando confirmación de `/health`, levanta Frontend SPA (`:5173`) y a continuación inicia ACME Corp (`:9000`) garantizando que el auto-onboarding del CEO se complete a la primera.
+   - Todo el ecosistema (incluidos `:8000`, `:5173`, `:9000` y Docker) se detiene con `npm run stop:all` / `pnpm stop` / `.\stop_all.bat`.
+2. **Lanzador por Lotes Independiente en Windows (`acme-corp/start_acme.bat`):**
    - Configura la consola a UTF-8 (`chcp 65001`).
    - Copia automáticamente `.env.example` a `.env` si no existe.
    - Detecta el entorno virtual local `.venv` o el entorno virtual global `backend\.venv`.
    - Si no existe entorno, crea `.venv`, instala dependencias con `pip install -q -r requirements.txt` y arranca `run.py`.
-2. **Punto de Entrada Autónomo (`acme-corp/run.py`):**
+3. **Punto de Entrada Autónomo (`acme-corp/run.py`):**
    - Resuelve rutas absolutas y carga la configuración de Uvicorn.
    - Inicia `uvicorn.run("server.app:app", host="0.0.0.0", port=9000, reload=False)` en `http://localhost:9000`.
 

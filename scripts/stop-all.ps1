@@ -35,7 +35,17 @@ foreach ($p in $pids5173) {
     } catch {}
 }
 
-# 3. Pausar o detener contenedores Docker de persistencia
+# 3. Detener procesos escuchando en puerto 9000 (Portal Empresarial ACME Corp)
+Write-Host "[*] Liberando puerto 9000 (ACME Corp)..." -ForegroundColor Yellow
+$pids9000 = Get-NetTCPConnection -LocalPort 9000 -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 } | Select-Object -ExpandProperty OwningProcess -Unique
+foreach ($p in $pids9000) {
+    try {
+        Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
+        Write-Host "    Proceso con PID $p detenido." -ForegroundColor Gray
+    } catch {}
+}
+
+# 4. Pausar o detener contenedores Docker de persistencia
 Write-Host "[*] Deteniendo contenedores Docker (PostgreSQL 16 + Redis 7)..." -ForegroundColor Yellow
 try {
     docker compose stop

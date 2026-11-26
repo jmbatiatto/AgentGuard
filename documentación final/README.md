@@ -78,78 +78,105 @@ El ecosistema completo opera con dos bases de datos relacionales desacopladas qu
 
 ---
 
-## 🚀 Arranque Local Exacto y Flujo Operativo
+## 🚀 Cómo Replicar y Probar el Proyecto desde Cero
 
-> [!IMPORTANT]
-> **Comportamiento de Arranque Limpio por Defecto:**  
-> El orquestador `start_all.bat` (`scripts/start-all.ps1`) aplica las 6 migraciones de Alembic (`upgrade head`), pero **NO ejecuta `seed_demo.py` por defecto**. De este modo, AgentGuard inicia limpio en la pantalla de autenticación (`http://localhost:5173/#auth`), listo para que una empresa se registre manualmente o para que el portal `acme-corp` ejecute su **auto-onboarding automático** al levantarse.
+Cualquier docente, evaluador o desarrollador puede clonar el repositorio y levantar todo el ecosistema (**AgentGuard + ACME Corp + PostgreSQL 16 + Redis 7**) en menos de 2 minutos siguiendo estos pasos:
 
-### Paso 1: Iniciar la Plataforma AgentGuard (Docker + Backend + Frontend)
+### Prerrequisitos
+- **Git** instalado.
+- **Docker Desktop** instalado y en ejecución (Windows / macOS / Linux).
+- **Python 3.12+** en el `PATH`.
+- **Node.js 20+** (`npm` incluido; opcionalmente `pnpm`).
+- Puertos locales disponibles: `5173` (Dashboard SPA), `8000` (Backend AgentGuard), `9000` (ACME Corp), `5433` (PostgreSQL 16) y `6379` (Redis 7).
+
+---
+
+### Paso 1: Descargar el proyecto desde GitHub y abrirlo
+```powershell
+git clone https://github.com/jmbatiatto/AgentGuard.git
+cd AgentGuard
+```
+*(Podés abrir la carpeta `AgentGuard` en VS Code o trabajar directo desde PowerShell en la raíz del repositorio.)*
+
+---
+
+### Paso 2: Abrir Docker Desktop
+Iniciá **Docker Desktop** y esperá a que el motor indique estado **Running**. El script verificará el daemon automáticamente y levantará `postgres:16-alpine` (`:5433`) y `redis:7-alpine` (`:6379`).
+
+---
+
+### Paso 3: (Opcional) Configurar `GEMINI_API_KEY`
+> **No necesitás crear ningún `.env` ni tener API Keys pagas para probar el sistema.**  
+> El lanzador crea automáticamente `backend/.env` y `acme-corp/.env` desde sus plantillas `.env.example`, y el portal **ACME Corp (`:9000`)** incluye un **Modo Guiado / Rápido** 100% funcional sin llave externa.  
+> Si deseás activar el razonamiento real con **Google Gemini 3.8 Flash**, podés pegar tu `GEMINI_API_KEY` en `acme-corp/.env` o ingresarla directamente desde el encabezado web de `http://localhost:9000`.
+
+---
+
+### Paso 4: Levantar TODO en un solo comando (Recomendado)
+Desde la raíz de `AgentGuard`, ejecutá cualquiera de estos equivalentes:
 
 ```powershell
-# Opción A (Recomendada en Windows — arranque limpio sin semillas):
-.\start_all.bat
+# Con npm:
+npm run start:all
 
-# Opción B (Vía PowerShell — arranque limpio sin semillas):
-powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1
+# Con pnpm:
+pnpm start:all
 
-# Opción C (Precargando explícitamente las semillas base de Acme Corp con seed_demo.py):
+# O doble clic / consola directa en Windows:
+.\start_ecosystem.bat
+```
+
+**¿Qué hace automáticamente `scripts/start-ecosystem.ps1` en sus 7 etapas?**
+1. **[1/7] Docker (`postgres` + `redis`):** Verifica Docker Desktop, ejecuta `docker compose up -d` y espera `pg_isready` en PostgreSQL 16 (`localhost:5433`).
+2. **[2/7] Entorno Python y Migraciones Alembic:** Crea `backend/.env` desde `.env.example`, crea e instala `backend/.venv` si no existe y aplica las **6 migraciones Alembic (`001`–`006`)** creando las 13 tablas del MER.
+3. **[3/7] Dependencias Frontend:** Instala `frontend/node_modules` automáticamente si falta.
+4. **[4/7] Backend AgentGuard (`:8000`):** Inicia FastAPI/Uvicorn en consola separada y **espera confirmación real en `GET http://localhost:8000/health`** antes de lanzar ACME.
+5. **[5/7] Frontend SPA (`:5173`):** Inicia React 19 + Vite en consola separada y espera respuesta HTTP `200`.
+6. **[6/7] Portal Empresarial ACME Corp (`:9000`) + Auto-Onboarding:** Crea `acme-corp/.env` si falta, inicializa las **7 tablas SQLite** (`acme_corp.db`), levanta `http://localhost:9000` y dispara el **auto-onboarding automático del CEO Lucas Duck** (`acme-corp/agent/onboarding.py`):
+   * Registra/autentica la organización `Acme Corp`, siembra los 5 roles RBAC, los 3 agentes base y las 4 herramientas base.
+   * Aprovisiona idempotentemente el **4.º agente** (`Consultante BI`), la **5.ª herramienta** (`BI & Ventas ACME` en `http://localhost:9000/bi`), las acciones `query_sales` (`LOW`) y `delete_sales` (`CRITICAL`), y la política **"Gobernanza Consultante BI (Solo Lectura)"** (`ALLOW query_sales` prio `150`, `DENY delete_sales` prio `250`).
+   * Emite una `ApiKey` activa (`Portal ACME Corporation`) y la guarda automáticamente en `acme-corp/.env` (`AGENTGUARD_API_KEY=ag_live_...`).
+7. **[7/7] Navegador listo para probar:** Abre automáticamente ambas pestañas:
+   * **Dashboard AgentGuard (Control Plane):** `http://localhost:5173/#auth` *(login con 1 clic como `admin@acmecorp.com` / `demo-password`, o cualquiera de los 5 roles RBAC)*.
+   * **Portal Empresarial ACME Corp & Consultante BI:** `http://localhost:9000` *(badge verde **"Vinculado con AgentGuard"** y 8 escenarios interactivos BI-1..BI-3 / SEC-1..SEC-5)*.
+   * **Swagger UI (API REST):** `http://localhost:8000/docs` (AgentGuard) y `http://localhost:9000/docs` (ACME Corp).
+
+---
+
+### Paso 5: Detener todo o reiniciar desde cero
+
+```powershell
+# Detener limpiamente AgentGuard (:8000 y :5173), ACME Corp (:9000) y Docker:
+npm run stop:all
+# (equivalentes: pnpm stop  |  .\stop_all.bat)
+
+# Opcional — Borrar también los volúmenes persistentes de Docker para empezar con la DB 100% vacía:
+docker compose down -v
+```
+
+---
+
+### Alternativas de Arranque por Separado y Cliente CLI
+
+Si preferís iniciar los servicios de forma independiente (por ejemplo, para demostrar el registro manual de una empresa nueva sin ACME):
+
+```powershell
+# 1. Levantar SOLO AgentGuard (arranque limpio sin semillas ni ACME Corp):
+npm start
+# (equivalentes: pnpm start  |  .\start_all.bat)
+# Con semillas base precargadas:
 powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1 -SeedAcme
-
-# Opción D (Reiniciando y recreando desde cero los datos semilla de Acme Corp):
+# Con reinicio de semillas demo:
 powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1 -Reset
-```
 
-**¿Qué ejecuta exactamente `scripts/start-all.ps1` en sus 6 etapas?**
-1. **[1/6] Docker Desktop:** Verifica el daemon de Docker y levanta `agentguard-postgres` (**PostgreSQL 16** en `localhost:5433`) y `agentguard-redis` (**Redis 7** en `localhost:6379`) esperando `pg_isready`.
-2. **[2/6] Entorno Python, Alembic y Semillas Opcionales:** Crea `backend/.env` desde `backend/.env.example` si no existe, verifica `backend/.venv`, ejecuta `alembic.exe upgrade head` sincronizando las **13 tablas** (revisión `006_add_must_change_password`), y **solo si se indicó `-SeedAcme` o `-Reset`** invoca `backend/scripts/seed_demo.py`.
-3. **[3/6] Dependencias Frontend:** Verifica `frontend/node_modules` (instalando con `pnpm install` si falta).
-4. **[4/6] Backend FastAPI (`:8000`):** Inicia `uvicorn app.main:app --reload --port 8000` en una ventana separada y aguarda respuesta saludable en `GET http://localhost:8000/health`.
-5. **[5/6] Frontend Vite (`:5173`):** Inicia `pnpm run dev` en una ventana separada y verifica respuesta HTTP `200` en `http://localhost:5173`.
-6. **[6/6] Navegador en Login:** Abre automáticamente `http://localhost:5173/#auth` en el navegador predeterminado.
-
-Para detener todos los servicios y contenedores de forma limpia:
-```powershell
-.\stop_all.bat
-# o bien:
-pnpm stop
-```
-
----
-
-### Paso 2: Iniciar el Portal Empresarial ACME Corporation (`http://localhost:9000`)
-
-En una terminal adicional (o mediante doble clic en Windows), inicia el ecosistema empresarial autónomo de **ACME Corporation (Looney Tunes)**:
-
-```powershell
-# Opción A (Lanzador automático en Windows):
+# 2. Levantar SOLO ACME Corp (:9000) en una terminal aparte (requiere :8000 activo para auto-onboarding):
 acme-corp\start_acme.bat
+# (o directo: backend\.venv\Scripts\python.exe acme-corp\run.py)
 
-# Opción B (Ejecución directa con el entorno virtual del proyecto):
-backend\.venv\Scripts\python.exe acme-corp\run.py
-```
-
-**¿Qué ocurre al iniciar `acme-corp`?**
-1. Copia `acme-corp/.env.example` a `acme-corp/.env` si no existe e inicializa `acme-corp/acme_corp.db` con las **7 tablas SQLite** y los datos semilla Looney Tunes (6 productos, 5 clientes VIP y 15 ventas históricas).
-2. Levanta el servidor FastAPI en **`http://localhost:9000`**.
-3. **Auto-Onboarding del CEO en `lifespan` (`acme-corp/agent/onboarding.py`):** Tras `0.8 s` de arranque, `ensure_acme_onboarded_if_needed()` verifica si `http://localhost:8000/health` está activo y valida la `AGENTGUARD_API_KEY` contra `GET /api/v1/gateway/context`. Si la clave no existe, fue revocada o falta el agente `Consultante BI`, ejecuta automáticamente `bootstrap_acme_in_agentguard()`:
-   * Autentica a `admin@acmecorp.com` (`demo-password`) o registra la organización `Acme Corp` vía `POST /api/v1/auth/register-org`.
-   * Ejecuta `POST /api/v1/demo/reset` si la organización recién se creó o no tenía herramientas base (sembrando los 5 usuarios RBAC, los 3 agentes base y las 4 herramientas base).
-   * Aprovisiona idempotentemente el **4.º agente** (`Consultante BI`), la **5.ª herramienta** (`BI & Ventas ACME` apuntando a `http://localhost:9000/bi`), sus acciones atómicas (`query_sales` con riesgo `LOW` y `delete_sales` con riesgo `CRITICAL`), la vinculación en `AgentTool` y la política **"Gobernanza Consultante BI (Solo Lectura)"** (`ALLOW` para `query_sales` con prioridad `150` y `DENY` para `delete_sales` con prioridad `250`).
-   * Genera una `ApiKey` activa (`Portal ACME Corporation`) y la persiste automáticamente en `acme-corp/.env` (`AGENTGUARD_API_KEY=ag_live_...`).
-
----
-
-### Paso 3: Ejecutar el Cliente Demostrador CLI (`agent-demo/`)
-
-```powershell
-# Ejecutar los 4 escenarios canónicos en secuencia automática:
+# 3. Ejecutar el Cliente Demostrador CLI (4 escenarios canónicos):
 backend\.venv\Scripts\python.exe agent-demo\run_demo.py --all
-
-# Ejecutar un escenario puntual (1, 2, 3 o 4):
+# Escenario puntual (1..4) o menú interactivo:
 backend\.venv\Scripts\python.exe agent-demo\run_demo.py --scenario 1
-
-# Abrir el menú interactivo en consola:
 backend\.venv\Scripts\python.exe agent-demo\run_demo.py
 ```
 
@@ -291,7 +318,9 @@ AgentGuard/
 │   ├── .env.example                          # Plantilla de variables de entorno del backend (POSTGRES_PORT=5433, ACME_CORP_API_URL)
 │   ├── alembic.ini                           # Configuración de Alembic
 │   └── requirements.txt                      # Dependencias congeladas del backend
+├── assets-presentacion/                      # Pack visual 4K (27 SVGs + 54 PNGs 4K oscuro/claro + manifest.json + catálogo)
 ├── diagramas/                                # Archivos vectoriales fuente en formato Draw.io (*.drawio)
+├── docs-portal/                              # Portal interactivo de documentación VitePress (Galería 4K, Proyector y QR) [:4173]
 ├── docs/archive/                             # Documentación histórica archivada, propuesta inicial PDF y reportes previos
 ├── documentación final/                      # Documentación maestra SSOT 100% sincronizada con el código real (esta carpeta)
 │   ├── INDICE_MAESTRO.md
@@ -316,12 +345,14 @@ AgentGuard/
 │   │                                         #   ApprovalsView, TracesView, PlaygroundView y SettingsView
 │   └── package.json                          # Dependencias y scripts frontend (dev, build, lint)
 ├── graphify-out/                             # Grafo de conocimiento AST del repositorio (graph.json y wiki/)
-├── scripts/                                  # Orquestadores PowerShell (start-all.ps1, stop-all.ps1, start-backend.ps1) y utilidades
+├── scripts/                                  # Orquestadores PowerShell (start-ecosystem.ps1, start-all.ps1, stop-all.ps1, start-backend.ps1)
 ├── AGENTS.md                                 # Reglas operativas del proyecto, metodología SDD y protocolo de testing
 ├── docker-compose.yml                        # Infraestructura local: PostgreSQL 16 (5433:5432) y Redis 7 (6379:6379)
-├── package.json                              # Scripts raíz coordinados con pnpm
-├── start_all.bat                             # Iniciador Full-Stack en Windows (abre en http://localhost:5173/#auth)
-└── stop_all.bat                              # Detención limpia de procesos y contenedores en Windows
+├── package.json                              # Scripts raíz (npm run start:all / pnpm start:all, start, stop:all, docs:*)
+├── start_all.bat                             # Iniciador solo AgentGuard en Windows (abre en http://localhost:5173/#auth)
+├── start_docs.bat                            # Lanzador local del Portal Documental VitePress (http://localhost:4173)
+├── start_ecosystem.bat                       # Iniciador unificado AgentGuard + ACME Corp en un clic (:5173, :8000, :9000)
+└── stop_all.bat                              # Detención limpia de AgentGuard, ACME Corp y contenedores Docker en Windows
 ```
 
 ---

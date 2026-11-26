@@ -58,15 +58,16 @@ La exposición oral está cronometrada en **15 minutos exactos** a lo largo de l
 
 ## 🚀 Comandos Rápidos y Credenciales para la Demo en Vivo
 
-### 1. Lanzadores Oficiales en Windows (ejecutar desde la raíz del repositorio)
+### 1. Lanzadores Oficiales en Windows (ejecutar desde la raíz del repositorio con Docker Desktop activo)
 
 ```powershell
-# 1. Levantar infraestructura Docker (PG 16 :5433 + Redis 7 :6379), Alembic (001-006),
-#    Backend FastAPI (:8000) y Dashboard SPA (:5173/#auth) en arranque limpio:
-.\start_all.bat
+# 1. Levantar TODO el ecosistema unificado en un solo comando
+#    (Docker PG 16/Redis 7 + Alembic + Backend :8000 + SPA :5173 + ACME Corp :9000 + Auto-Onboarding):
+npm run start:all
+# (equivalentes: pnpm start:all  |  .\start_ecosystem.bat)
 
-# 2. Levantar Portal Empresarial ACME Corp (:9000) + SQLite (7 tablas) +
-#    Auto-Onboarding automático del CEO Lucas Duck + Consultante BI (Gemini 3.8 Flash):
+# 2. (Alternativa por separado) Levantar solo AgentGuard y luego ACME Corp:
+.\start_all.bat
 acme-corp\start_acme.bat
 
 # 3. Levantar este Portal Documental VitePress en vista previa local (:4173):
@@ -76,8 +77,9 @@ acme-corp\start_acme.bat
 # 4. (Opcional) Ejecutar los 4 escenarios canónicos desde el demostrador CLI:
 backend\.venv\Scripts\python.exe agent-demo\run_demo.py --all
 
-# 5. Detener ordenadamente procesos y contenedores al finalizar:
-.\stop_all.bat
+# 5. Detener ordenadamente AgentGuard (:8000/:5173), ACME Corp (:9000) y Docker:
+npm run stop:all
+# (equivalentes: pnpm stop  |  .\stop_all.bat)
 ```
 
 ### 2. Puertos Locales Activos Durante la Demostración
@@ -86,6 +88,7 @@ backend\.venv\Scripts\python.exe agent-demo\run_demo.py --all
 | :--- | :--- | :--- |
 | **Dashboard Control Plane SPA** | `http://localhost:5173/#auth` | Login con un clic para los 5 roles RBAC o alta B2B |
 | **Backend API REST + Gateway PEP/PDP** | `http://localhost:8000/health` | Retorna `status: "healthy"`, estado PG/Redis y `boot_id` |
+| **Swagger UI (API AgentGuard / ACME)** | `http://localhost:8000/docs` | Esquema OpenAPI interactivo (`:9000/docs` para ACME Corp) |
 | **Portal Cliente ACME Corp + Consultante BI** | `http://localhost:9000` | Badge **"Vinculado con AgentGuard"** + 15 ventas SQLite |
 | **Portal Interactivo de Documentación** | `http://localhost:4173` | Inicio, [Galería 4K](/galeria-diagramas) y [Índice Maestro](/volumenes/INDICE_MAESTRO) |
 
