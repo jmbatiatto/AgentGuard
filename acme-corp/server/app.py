@@ -39,7 +39,7 @@ from agent.gemini_client import (
 )
 from agent.onboarding import bootstrap_acme_in_agentguard
 from agent.presets import list_presets
-from server.config import ROOT_DIR, normalize_loopback_url, settings
+from server.config import ROOT_DIR, httpx_client_kwargs, normalize_loopback_url, settings
 from server.database import AcmeDatabase, DatabaseWipedError, acme_db
 
 logger = logging.getLogger("acme.app")
@@ -152,7 +152,7 @@ async def ensure_acme_onboarded_if_needed(
     base_url = normalize_loopback_url((agentguard_url or settings.AGENTGUARD_URL).rstrip("/"))
     acme_url = (acme_public_url or settings.ACME_PUBLIC_URL).rstrip("/")
 
-    async with httpx.AsyncClient(timeout=4.0) as probe_client:
+    async with httpx.AsyncClient(**httpx_client_kwargs(base_url, timeout=4.0)) as probe_client:
         probe_resp = await probe_client.get(f"{base_url}/health")
         if probe_resp.status_code != 200:
             logger.debug("AgentGuard respondió HTTP %s en /health; se omite auto-onboarding.", probe_resp.status_code)

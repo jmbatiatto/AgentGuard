@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import httpx
 
-from server.config import ENV_FILE, ROOT_DIR, normalize_loopback_url, settings
+from server.config import ENV_FILE, ROOT_DIR, httpx_client_kwargs, normalize_loopback_url, settings
 
 logger = logging.getLogger("acme.onboarding")
 
@@ -65,7 +65,7 @@ async def bootstrap_acme_in_agentguard(
     admin_email = "admin@acmecorp.com"
     admin_password = "demo-password"
 
-    async with httpx.AsyncClient(timeout=25.0) as client:
+    async with httpx.AsyncClient(**httpx_client_kwargs(base_url, timeout=25.0)) as client:
         # -------------------------------------------------------------------
         # 1. Autenticación o Registro de la Organización y Usuario CEO
         # -------------------------------------------------------------------

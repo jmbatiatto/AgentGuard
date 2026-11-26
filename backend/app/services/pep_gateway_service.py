@@ -12,13 +12,14 @@ import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlsplit, urlunsplit
 from uuid import UUID
 
 import httpx
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from app.core.http_client import httpx_client_kwargs, normalize_loopback_url
 
 from app.models.agent import Agent, AgentTool
 from app.models.alert import Alert
@@ -54,18 +55,7 @@ class PEPGatewayService:
     @staticmethod
     def _normalize_loopback_url(url: str) -> str:
         """Resuelve 'localhost' a '127.0.0.1' para evitar el fallback IPv6 (::1 -> IPv4 ~2s) en Windows."""
-        parsed = urlsplit(url)
-        if parsed.scheme in ("http", "https") and (parsed.hostname or "").lower() == "localhost":
-            netloc = "127.0.0.1"
-            if parsed.port is not None:
-                netloc = f"{netloc}:{parsed.port}"
-            if parsed.username:
-                userinfo = parsed.username
-                if parsed.password:
-                    userinfo = f"{userinfo}:{parsed.password}"
-                netloc = f"{userinfo}@{netloc}"
-            return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
-        return url
+        return normalize_loopback_url(url)
 
     @staticmethod
     async def _dispatch_to_tool(
@@ -82,7 +72,7 @@ class PEPGatewayService:
             "test" in tool.endpoint_url or "api.corp" in tool.endpoint_url or ".internal" in tool.endpoint_url
         ):
             try:
-                async with httpx.AsyncClient(timeout=3.0) as client:
+                async with httpx.AsyncClient(**httpx_client_kwargs(request_url, timeout=3.0)) as client:
                     resp = await client.post(request_url, json=parameters)
                     if resp.status_code < 400:
                         try:

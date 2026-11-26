@@ -403,3 +403,17 @@ async def test_pep_dispatch_normalizes_localhost_to_ipv4_loopback():
         "http://127.0.0.1:9000/bi/query_sales",
         json={"min_amount": 1000},
     )
+
+    import ssl
+    from app.core.http_client import get_cached_ssl_context, httpx_client_kwargs
+
+    http_kw = httpx_client_kwargs("http://127.0.0.1:9000/bi/query_sales", timeout=3.0)
+    assert http_kw["verify"] is False
+    assert http_kw["trust_env"] is False
+
+    https_kw_1 = httpx_client_kwargs("https://api.stripe.com/v1/refunds", timeout=3.0)
+    https_kw_2 = httpx_client_kwargs("https://api.stripe.com/v1/charges", timeout=3.0)
+    assert isinstance(https_kw_1["verify"], ssl.SSLContext)
+    assert https_kw_1["verify"] is https_kw_2["verify"]
+    assert https_kw_1["verify"] is get_cached_ssl_context()
+    assert https_kw_1["trust_env"] is True

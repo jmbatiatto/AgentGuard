@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import httpx
 
 from agent.presets import PRESETS_BY_ID, get_preset_by_id
-from server.config import normalize_loopback_url, settings
+from server.config import httpx_client_kwargs, normalize_loopback_url, settings
 from server.database import AcmeDatabase, DatabaseWipedError, acme_db
 
 logger = logging.getLogger("acme.agent")
@@ -244,7 +244,7 @@ async def discover_agentguard_context(
     endpoint = f"{clean_url}/api/v1/gateway/context"
     headers = {"X-AgentGuard-Key": agentguard_api_key}
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(**httpx_client_kwargs(endpoint, timeout=timeout)) as client:
         resp = await client.get(endpoint, headers=headers)
         if resp.status_code != 200:
             raise RuntimeError(
@@ -506,7 +506,7 @@ class GeminiAgentClient:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with httpx.AsyncClient(**httpx_client_kwargs(execute_url, timeout=15.0)) as client:
                 resp = await client.post(execute_url, headers=headers, json=payload)
                 try:
                     body = resp.json()
@@ -661,7 +661,9 @@ class GeminiAgentClient:
             ]
 
             gemini_data_1: Dict[str, Any] = {}
-            async with httpx.AsyncClient(timeout=45.0) as client:
+            async with httpx.AsyncClient(
+                **httpx_client_kwargs("https://generativelanguage.googleapis.com", timeout=45.0)
+            ) as client:
                 for idx, candidate_model in enumerate(candidate_models):
                     gemini_url = (
                         f"https://generativelanguage.googleapis.com/v1beta/models/"
@@ -1066,7 +1068,7 @@ class GeminiAgentClient:
             }
 
             try:
-                async with httpx.AsyncClient(timeout=45.0) as client:
+                async with httpx.AsyncClient(**httpx_client_kwargs(gemini_url, timeout=45.0)) as client:
                     resp_2 = await client.post(gemini_url, json=payload_turn_2)
                     if resp_2.status_code == 200:
                         cand_2 = resp_2.json().get("candidates", [])

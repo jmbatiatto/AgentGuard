@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/pep_gateway_service.py": {
-    "mtime": 1795727666.1892018,
-    "seen": 1795727897.6568158,
-    "ast_hash": "79557c7b0a9ee5e79f38b7c0c06b139e",
+    "mtime": 1795732491.207455,
+    "seen": 1795732505.0844188,
+    "ast_hash": "669314f30d899c0c5883759fce64b82f",
     "semantic_hash": ""
   },
   "backend/app/services/policy_rule_service.py": {
@@ -330,9 +330,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_gateway_scenarios.py": {
-    "mtime": 1795727757.4903336,
-    "seen": 1795727897.6845925,
-    "ast_hash": "3174b753d81a422f4bf2c5f6886cb3e2",
+    "mtime": 1795732009.6769447,
+    "seen": 1795732505.1316247,
+    "ast_hash": "0c4338b6054364b4159854fb87fb8619",
     "semantic_hash": ""
   },
   "backend/tests/test_health.py": {
@@ -996,9 +996,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/webhook_service.py": {
-    "mtime": 1794945974.8653252,
-    "seen": 1794966901.200924,
-    "ast_hash": "0f0defe57089da1fa5673f8cb7d0b3e9",
+    "mtime": 1795732491.3928237,
+    "seen": 1795732505.0963922,
+    "ast_hash": "ed67d98b99ab898fc6bb8d1124ab522a",
     "semantic_hash": ""
   },
   "backend/tests/test_phase5_features.py": {
@@ -1176,9 +1176,9 @@
     "semantic_hash": ""
   },
   "acme-corp/agent/gemini_client.py": {
-    "mtime": 1795727705.87943,
-    "seen": 1795727897.5140393,
-    "ast_hash": "cb61b712585afb8a532dd395cee59ea5",
+    "mtime": 1795732488.1911685,
+    "seen": 1795732504.839779,
+    "ast_hash": "ea742cc3f10ece2799b31796f8880035",
     "semantic_hash": ""
   },
   "acme-corp/agent/presets.py": {
@@ -1200,15 +1200,15 @@
     "semantic_hash": ""
   },
   "acme-corp/server/app.py": {
-    "mtime": 1795727728.9722729,
-    "seen": 1795727897.5194445,
-    "ast_hash": "5554a509e835c3d41febc121a3a4e92c",
+    "mtime": 1795732489.3886502,
+    "seen": 1795732504.8489325,
+    "ast_hash": "f46aff17c04f5cd1c7fe8f91dbaa1a1f",
     "semantic_hash": ""
   },
   "acme-corp/server/config.py": {
-    "mtime": 1795727671.8988535,
-    "seen": 1795727897.5194445,
-    "ast_hash": "aa46e6496613cb7ea47e057f22156b39",
+    "mtime": 1795732489.7519042,
+    "seen": 1795732504.8489325,
+    "ast_hash": "0a7c39be74e5da0931a81358d11d3e70",
     "semantic_hash": ""
   },
   "acme-corp/server/database.py": {
@@ -1230,9 +1230,9 @@
     "semantic_hash": ""
   },
   "acme-corp/tests/test_gemini_agent.py": {
-    "mtime": 1795727762.7400918,
-    "seen": 1795727897.5264454,
-    "ast_hash": "97496021c2716a12e1036d78a3afc133",
+    "mtime": 1795732014.4500644,
+    "seen": 1795732504.8596437,
+    "ast_hash": "d0593dea3ef510990f0e07205afe7717",
     "semantic_hash": ""
   },
   "acme-corp/README.md": {
@@ -1260,9 +1260,9 @@
     "semantic_hash": ""
   },
   "acme-corp/agent/onboarding.py": {
-    "mtime": 1795727718.9380696,
-    "seen": 1795727897.5140393,
-    "ast_hash": "a35c7ce8f4be5182fbb1a63e8b4b2d74",
+    "mtime": 1795732488.6561325,
+    "seen": 1795732504.839779,
+    "ast_hash": "9bca5670f0f2a2e8590dd10d1674a2b4",
     "semantic_hash": ""
   },
   ".vscode/settings.json": {
@@ -2505,6 +2505,12 @@
     "mtime": 1795712658.7209935,
     "seen": 1795723869.65387,
     "ast_hash": "f45a289ad461119cd2f57b5c1d3d1c1f",
+    "semantic_hash": ""
+  },
+  "backend/app/core/http_client.py": {
+    "mtime": 1795731918.9378266,
+    "seen": 1795732504.977639,
+    "ast_hash": "5534f03de2b71c804eaa4490c4d70574",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {

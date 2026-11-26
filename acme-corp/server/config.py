@@ -1,9 +1,13 @@
 """Configuración central para ACME Corporation (Pydantic Settings)."""
 
+import ssl
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urlsplit, urlunsplit
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_CACHED_SSL_CONTEXT: Optional[ssl.SSLContext] = None
+_LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
 def normalize_loopback_url(url: str) -> str:
@@ -20,6 +24,34 @@ def normalize_loopback_url(url: str) -> str:
             netloc = f"{userinfo}@{netloc}"
         return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
     return url
+
+
+def get_cached_ssl_context() -> ssl.SSLContext:
+    """Construye y cachea un único SSLContext verificado por proceso para llamadas HTTPS."""
+    global _CACHED_SSL_CONTEXT
+    if _CACHED_SSL_CONTEXT is None:
+        ctx = ssl.create_default_context()
+        if ctx.cert_store_stats().get("x509_ca", 0) == 0:
+            try:
+                import certifi
+
+                ctx = ssl.create_default_context(cafile=certifi.where())
+            except Exception:
+                pass
+        _CACHED_SSL_CONTEXT = ctx
+    return _CACHED_SSL_CONTEXT
+
+
+def httpx_client_kwargs(url: str, timeout: float = 10.0) -> Dict[str, Any]:
+    """Construye kwargs rápidos y seguros para httpx.AsyncClient evitando re-parsear certifi en cada request."""
+    parsed = urlsplit(url)
+    is_https = parsed.scheme.lower() == "https"
+    is_loopback = (parsed.hostname or "").lower() in _LOOPBACK_HOSTS
+    return {
+        "timeout": timeout,
+        "verify": get_cached_ssl_context() if is_https else False,
+        "trust_env": not is_loopback,
+    }
 
 # Raíz del paquete acme-corp
 ROOT_DIR = Path(__file__).resolve().parent.parent

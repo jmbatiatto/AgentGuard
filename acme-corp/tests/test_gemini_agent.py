@@ -789,6 +789,20 @@ async def test_acme_client_normalizes_localhost_to_ipv4_loopback(temp_db: AcmeDa
         "http://127.0.0.1:8000/api/v1/gateway/execute",
     ]
 
+    import ssl
+    from server.config import get_cached_ssl_context, httpx_client_kwargs
+
+    http_kw = httpx_client_kwargs("http://127.0.0.1:8000/api/v1/gateway/execute", timeout=15.0)
+    assert http_kw["verify"] is False
+    assert http_kw["trust_env"] is False
+
+    https_kw_1 = httpx_client_kwargs("https://generativelanguage.googleapis.com/v1beta/models", timeout=45.0)
+    https_kw_2 = httpx_client_kwargs("https://generativelanguage.googleapis.com/v1beta/models", timeout=45.0)
+    assert isinstance(https_kw_1["verify"], ssl.SSLContext)
+    assert https_kw_1["verify"] is https_kw_2["verify"]
+    assert https_kw_1["verify"] is get_cached_ssl_context()
+    assert https_kw_1["trust_env"] is True
+
 
 @pytest.mark.asyncio
 async def test_run_scenario_gemini_timeout_fallback_and_nonempty_error(temp_db: AcmeDatabase):

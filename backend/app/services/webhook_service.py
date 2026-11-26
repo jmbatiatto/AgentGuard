@@ -15,6 +15,7 @@ from uuid import UUID
 import uuid
 import httpx
 
+from app.core.http_client import httpx_client_kwargs, normalize_loopback_url
 from app.schemas.organization import OrganizationSettings, SiemWebhookTestResponse
 
 logger = logging.getLogger("agentguard.webhook")
@@ -78,8 +79,9 @@ class WebhookService:
             return True, 200, "Webhook entregado exitosamente al simulador SIEM"
 
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
-                res = await client.post(url, content=payload_bytes, headers=headers)
+            target_url = normalize_loopback_url(url)
+            async with httpx.AsyncClient(**httpx_client_kwargs(target_url, timeout=3.0)) as client:
+                res = await client.post(target_url, content=payload_bytes, headers=headers)
                 if res.status_code < 400:
                     return True, res.status_code, "Evento entregado exitosamente al endpoint SIEM"
                 return False, res.status_code, f"Servidor remoto respondió con código {res.status_code}"
