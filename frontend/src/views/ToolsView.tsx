@@ -565,11 +565,11 @@ export const ToolsView: React.FC = () => {
                       value={newActionName}
                       onChange={(e) => setNewActionName(e.target.value)}
                       style={{
-                        backgroundColor: '#0F172A',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--bg-card)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '6px',
                         padding: '8px 10px',
-                        color: '#F8FAFC',
+                        color: 'var(--text-primary)',
                         fontSize: '12px',
                         outline: 'none',
                       }}
@@ -578,20 +578,20 @@ export const ToolsView: React.FC = () => {
                       value={newActionRisk}
                       onChange={(e) => setNewActionRisk(e.target.value as any)}
                       style={{
-                        backgroundColor: '#0F172A',
-                        border: '1px solid #334155',
+                        backgroundColor: 'var(--bg-card)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '6px',
                         padding: '8px 6px',
-                        color: '#F8FAFC',
+                        color: 'var(--text-primary)',
                         fontSize: '11px',
                         fontWeight: 700,
                         outline: 'none',
                       }}
                     >
-                      <option value="LOW">{RISK_LABELS.LOW}</option>
-                      <option value="MEDIUM">{RISK_LABELS.MEDIUM}</option>
-                      <option value="HIGH">{RISK_LABELS.HIGH}</option>
-                      <option value="CRITICAL">{RISK_LABELS.CRITICAL}</option>
+                      <option value="LOW" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>{RISK_LABELS.LOW}</option>
+                      <option value="MEDIUM" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>{RISK_LABELS.MEDIUM}</option>
+                      <option value="HIGH" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>{RISK_LABELS.HIGH}</option>
+                      <option value="CRITICAL" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>{RISK_LABELS.CRITICAL}</option>
                     </select>
                   </div>
 
@@ -601,11 +601,11 @@ export const ToolsView: React.FC = () => {
                     value={newActionDesc}
                     onChange={(e) => setNewActionDesc(e.target.value)}
                     style={{
-                      backgroundColor: '#0F172A',
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-card)',
+                      border: '1px solid var(--border-subtle)',
                       borderRadius: '6px',
                       padding: '8px 10px',
-                      color: '#CBD5E1',
+                      color: 'var(--text-primary)',
                       fontSize: '12px',
                       outline: 'none',
                     }}

@@ -375,9 +375,9 @@ export const AgentsView: React.FC = () => {
           padding: '20px',
         }}>
           <div style={{
-            backgroundColor: '#0F172A',
-            border: '1px solid #334155',
-            boxShadow: '0 20px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(56, 189, 248, 0.1)',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            boxShadow: 'var(--shadow-lg)',
             borderRadius: '14px',
             width: '100%',
             maxWidth: '540px',
@@ -386,7 +386,7 @@ export const AgentsView: React.FC = () => {
             {/* Modal Header */}
             <div style={{
               padding: '18px 22px',
-              borderBottom: '1px solid #1E293B',
+              borderBottom: '1px solid var(--border-subtle)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -396,22 +396,22 @@ export const AgentsView: React.FC = () => {
                   padding: '8px',
                   backgroundColor: 'rgba(56, 189, 248, 0.1)',
                   borderRadius: '8px',
-                  color: '#38BDF8',
+                  color: 'var(--brand-primary)',
                 }}>
                   <Bot size={20} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#F8FAFC' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     Registrar Nuevo Agente de IA
                   </h3>
-                  <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Identidad gobernada por AgentGuard con aislamiento multi-tenant.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', padding: '4px' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
               >
                 <X size={18} />
               </button>
@@ -420,7 +420,7 @@ export const AgentsView: React.FC = () => {
             {/* Modal Form */}
             <form onSubmit={handleRegisterAgent} style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                   Nombre del Agente *
                 </label>
                 <input
@@ -431,11 +431,11 @@ export const AgentsView: React.FC = () => {
                   onChange={(e) => setName(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#1E293B',
-                    border: '1px solid #334155',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#F8FAFC',
+                    color: 'var(--text-primary)',
                     fontSize: '13px',
                     outline: 'none',
                   }}
@@ -443,7 +443,7 @@ export const AgentsView: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                   Propósito de Negocio
                 </label>
                 <textarea
@@ -453,11 +453,11 @@ export const AgentsView: React.FC = () => {
                   onChange={(e) => setPurpose(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#1E293B',
-                    border: '1px solid #334155',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#F8FAFC',
+                    color: 'var(--text-primary)',
                     fontSize: '13px',
                     outline: 'none',
                     resize: 'none',
@@ -466,11 +466,11 @@ export const AgentsView: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                   Estado Inicial
                 </label>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#E2E8F0', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-primary)', cursor: 'pointer' }}>
                     <input 
                       type="radio" 
                       name="status" 
@@ -479,7 +479,7 @@ export const AgentsView: React.FC = () => {
                     />
                     <span>Activo</span>
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#E2E8F0', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-primary)', cursor: 'pointer' }}>
                     <input 
                       type="radio" 
                       name="status" 
@@ -492,7 +492,7 @@ export const AgentsView: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
                   Herramientas Autorizadas (AgentTool N:N)
                 </label>
                 <div style={{
@@ -501,8 +501,8 @@ export const AgentsView: React.FC = () => {
                   gap: '8px',
                   maxHeight: '140px',
                   overflowY: 'auto',
-                  backgroundColor: '#1E293B',
-                  border: '1px solid #334155',
+                  backgroundColor: 'var(--bg-app)',
+                  border: '1px solid var(--border-subtle)',
                   borderRadius: '8px',
                   padding: '10px 12px',
                 }}>
@@ -514,7 +514,7 @@ export const AgentsView: React.FC = () => {
                         alignItems: 'center', 
                         gap: '8px', 
                         fontSize: '12px', 
-                        color: '#E2E8F0', 
+                        color: 'var(--text-primary)', 
                         cursor: 'pointer' 
                       }}
                     >
@@ -524,7 +524,7 @@ export const AgentsView: React.FC = () => {
                         onChange={() => toggleTool(tool.id)}
                       />
                       <span style={{ fontWeight: 600 }}>{tool.name}</span>
-                      <span style={{ color: '#94A3B8', fontSize: '11px' }}>({tool.availableActions?.join(', ') || 'REST'})</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>({tool.availableActions?.join(', ') || 'REST'})</span>
                     </label>
                   ))}
                 </div>
@@ -538,7 +538,7 @@ export const AgentsView: React.FC = () => {
                 gap: '12px',
                 marginTop: '10px',
                 paddingTop: '16px',
-                borderTop: '1px solid #1E293B',
+                borderTop: '1px solid var(--border-subtle)',
               }}>
                 <button
                   type="button"
@@ -635,7 +635,7 @@ export const AgentsView: React.FC = () => {
               style={{ cursor: 'pointer', outline: 'none', padding: '7px 12px', fontSize: '12px' }}
             >
               {uniqueOwners.map(owner => (
-                <option key={owner} value={owner} style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>
+                <option key={owner} value={owner} style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
                   {owner === 'All' ? 'Todos los owners' : owner}
                 </option>
               ))}
@@ -648,10 +648,10 @@ export const AgentsView: React.FC = () => {
               className="btn btn-secondary"
               style={{ cursor: 'pointer', outline: 'none', padding: '7px 12px', fontSize: '12px' }}
             >
-              <option value="ALL" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>Todos los estados</option>
-              <option value="ACTIVE" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>{AGENT_STATUS_LABELS.ACTIVE}s</option>
-              <option value="SUSPENDED" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>{AGENT_STATUS_LABELS.SUSPENDED}s</option>
-              <option value="REVOKED" style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>{AGENT_STATUS_LABELS.REVOKED}s</option>
+              <option value="ALL" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Todos los estados</option>
+              <option value="ACTIVE" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>{AGENT_STATUS_LABELS.ACTIVE}s</option>
+              <option value="SUSPENDED" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>{AGENT_STATUS_LABELS.SUSPENDED}s</option>
+              <option value="REVOKED" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>{AGENT_STATUS_LABELS.REVOKED}s</option>
             </select>
 
             {/* Filter by Tool */}
@@ -662,7 +662,7 @@ export const AgentsView: React.FC = () => {
               style={{ cursor: 'pointer', outline: 'none', padding: '7px 12px', fontSize: '12px' }}
             >
               {uniqueTools.map(tool => (
-                <option key={tool} value={tool} style={{ backgroundColor: '#0F172A', color: '#F8FAFC' }}>
+                <option key={tool} value={tool} style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
                   {tool === 'All' ? 'Todas las herramientas' : tool}
                 </option>
               ))}
