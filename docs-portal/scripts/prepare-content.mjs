@@ -178,6 +178,17 @@ function main() {
       const destSubDir = path.join(diagramasHdDestDir, subDir);
       if (fs.existsSync(srcSubDir)) {
         fs.cpSync(srcSubDir, destSubDir, { recursive: true });
+        if (subDir === 'svg') {
+          for (const entry of fs.readdirSync(destSubDir, { withFileTypes: true })) {
+            if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.svg')) continue;
+            const svgPath = path.join(destSubDir, entry.name);
+            const rawSvg = fs.readFileSync(svgPath, 'utf8');
+            const fixedSvg = rawSvg.replace(/<(br|hr)(\s[^<>]*?)?(?<!\/)>/gi, '<$1$2/>');
+            if (fixedSvg !== rawSvg) {
+              fs.writeFileSync(svgPath, fixedSvg, 'utf8');
+            }
+          }
+        }
         hdSummary[subDir] = countFilesRecursive(destSubDir);
       }
     }

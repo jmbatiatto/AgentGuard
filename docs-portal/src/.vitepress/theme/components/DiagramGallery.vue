@@ -44,6 +44,7 @@ const renderedDarkSvgs = ref<Record<string, string>>({})
 const renderedLightSvgs = ref<Record<string, string>>({})
 const downloadingKey = ref<string | null>(null)
 const downloadError = ref<string | null>(null)
+const failedSvgIds = ref<Record<string, boolean>>({})
 let mermaidRenderChain: Promise<void> = Promise.resolve()
 let clientSvgCounter = 0
 
@@ -350,6 +351,16 @@ function getPngDarkUrl(item: DiagramManifestItem): string {
 function getPngLightUrl(item: DiagramManifestItem): string {
   const clean = stripFolderPrefix(item.pngLightFile, 'png-4k-light')
   return clean ? withBase(`/diagramas-hd/png-4k-light/${clean}`) : ''
+}
+
+function getCardPreviewUrl(item: DiagramManifestItem): string {
+  return failedSvgIds.value[item.id] ? getPngDarkUrl(item) : getSvgUrl(item)
+}
+
+function handleSvgImgError(itemId: string) {
+  if (!failedSvgIds.value[itemId]) {
+    failedSvgIds.value = { ...failedSvgIds.value, [itemId]: true }
+  }
 }
 
 function getDocUrl(item: DiagramManifestItem): string {
@@ -745,11 +756,12 @@ onBeforeUnmount(() => {
         >
           <img
             v-if="hasStaticAssets"
-            :src="getSvgUrl(item)"
+            :src="getCardPreviewUrl(item)"
             :alt="item.title"
             loading="lazy"
             decoding="async"
             class="ag-card-img"
+            @error="handleSvgImgError(item.id)"
           />
           <div
             v-else-if="renderedDarkSvgs[item.id]"
@@ -820,9 +832,9 @@ onBeforeUnmount(() => {
                 :href="getPngDarkUrl(item)"
                 :download="getDownloadFilename(item.pngDarkFile, 'png')"
                 class="ag-btn"
-                title="Descargar captura PNG 4K con tema oscuro oficial para diapositivas Canva"
+                title="Descargar captura PNG 4K con tema oscuro oficial para presentaciones ejecutivas"
               >
-                ⬇ PNG 4K Oscuro (Canva)
+                ⬇ PNG 4K Oscuro
               </a>
               <a
                 :href="getPngLightUrl(item)"
@@ -847,13 +859,13 @@ onBeforeUnmount(() => {
                 type="button"
                 class="ag-btn"
                 :disabled="!item.mermaidCode || downloadingKey === `${item.id}:png-dark`"
-                title="Generar y descargar PNG 4K (#0b1120) en el navegador para Canva"
+                title="Generar y descargar PNG 4K (#0b1120) en el navegador para presentaciones"
                 @click="downloadClientPng4k(item, 'dark')"
               >
                 {{
                   downloadingKey === `${item.id}:png-dark`
                     ? 'Generando 4K...'
-                    : '⬇ PNG 4K Oscuro (Canva)'
+                    : '⬇ PNG 4K Oscuro'
                 }}
               </button>
               <button
@@ -931,7 +943,7 @@ onBeforeUnmount(() => {
                 :download="getDownloadFilename(activeItem.pngDarkFile, 'png')"
                 class="ag-btn"
               >
-                ⬇ PNG 4K (Canva)
+                ⬇ PNG 4K Oscuro
               </a>
             </template>
             <template v-else>
@@ -954,7 +966,7 @@ onBeforeUnmount(() => {
                 {{
                   downloadingKey === `${activeItem.id}:png-dark`
                     ? 'Generando 4K...'
-                    : '⬇ PNG 4K (Canva)'
+                    : '⬇ PNG 4K Oscuro'
                 }}
               </button>
             </template>
@@ -984,10 +996,15 @@ onBeforeUnmount(() => {
           >
             <img
               v-if="hasStaticAssets"
-              :src="projectorBgMode === 'light' ? getPngLightUrl(activeItem) : getSvgUrl(activeItem)"
+              :src="
+                projectorBgMode === 'light'
+                  ? getPngLightUrl(activeItem)
+                  : getCardPreviewUrl(activeItem)
+              "
               :alt="activeItem.title"
               class="ag-projector-img"
               draggable="false"
+              @error="handleSvgImgError(activeItem.id)"
             />
             <div
               v-else

@@ -607,7 +607,8 @@ async function renderDiagramInPage(page, renderId, mermaidCode, mode) {
         bgRect.setAttribute('fill', bgColor);
         svgClone.insertBefore(bgRect, svgClone.firstChild);
 
-        standaloneSvg = `<?xml version="1.0" encoding="UTF-8"?>\n${svgClone.outerHTML}\n`;
+        const serializedSvg = new XMLSerializer().serializeToString(svgClone);
+        standaloneSvg = `<?xml version="1.0" encoding="UTF-8"?>\n${serializedSvg}\n`;
       }
 
       return {

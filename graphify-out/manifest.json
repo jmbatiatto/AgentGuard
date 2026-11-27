@@ -1350,15 +1350,15 @@
     "semantic_hash": ""
   },
   "docs-portal/scripts/export-diagrams.mjs": {
-    "mtime": 1795798467.331797,
-    "seen": 1795800349.030993,
-    "ast_hash": "00a1282623d7b48c1d6811dd074bd919",
+    "mtime": 1795805906.1192183,
+    "seen": 1795806320.424099,
+    "ast_hash": "48de0c3be26de80124f44080c26098d9",
     "semantic_hash": ""
   },
   "docs-portal/scripts/prepare-content.mjs": {
-    "mtime": 1795563191.7341294,
-    "seen": 1795566205.1885173,
-    "ast_hash": "ad96c8d9c8b93c7bc753b7b6230a1421",
+    "mtime": 1795805473.5482314,
+    "seen": 1795806320.424099,
+    "ast_hash": "9e7de33f6d3d130927bdbc8a05be3b0c",
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/config.mts": {
@@ -1368,9 +1368,9 @@
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/components/DiagramGallery.vue": {
-    "mtime": 1795570616.8106775,
-    "seen": 1795723869.4936545,
-    "ast_hash": "6e6a4017f9f5746b784ebeee8fb72a45",
+    "mtime": 1795805910.4148986,
+    "seen": 1795806320.424099,
+    "ast_hash": "6fef89a698df9722a76e2f1fd55b990e",
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/components/MermaidDiagram.vue": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "assets-presentacion/svg/03_arquitectura-de-doble-persistencia.svg": {
-    "mtime": 1795565302.6205087,
-    "seen": 1795566205.1885173,
-    "ast_hash": "85e31f43ef1c4ce8f888cf478d68260a",
+    "mtime": 1795805965.96401,
+    "seen": 1795806320.926378,
+    "ast_hash": "f8e2cb1038fe2d6f072f12c1980a2c6a",
     "semantic_hash": ""
   },
   "assets-presentacion/svg/04_diagrama-mer-fisico-completo-postgresql-13-tablas.svg": {
@@ -1770,9 +1770,9 @@
     "semantic_hash": ""
   },
   "assets-presentacion/svg/05_historial-completo-de-migraciones-alembic-001-006.svg": {
-    "mtime": 1795565331.6922052,
-    "seen": 1795566205.1885173,
-    "ast_hash": "7298e4d1c30337f0d3a6bdc543c5c8ce",
+    "mtime": 1795805965.9993277,
+    "seen": 1795806320.9280233,
+    "ast_hash": "b111b5054a85d73106ddf7f9a3e10829",
     "semantic_hash": ""
   },
   "assets-presentacion/svg/06_diagrama-mer-acme-corp-7-tablas.svg": {
@@ -1782,9 +1782,9 @@
     "semantic_hash": ""
   },
   "assets-presentacion/svg/07_diagrama-conceptual-completo-dominio-agentguard-13.svg": {
-    "mtime": 1795565339.8365726,
-    "seen": 1795566205.1885173,
-    "ast_hash": "1a33bec72d9e1093930b49bd77550277",
+    "mtime": 1795805966.0168386,
+    "seen": 1795806320.9280233,
+    "ast_hash": "f0eb710928b38d4b6b638b9b11e03cdf",
     "semantic_hash": ""
   },
   "assets-presentacion/svg/08_diagrama-de-atributos-de-entidades-nucleo-notacion.svg": {
@@ -1794,9 +1794,9 @@
     "semantic_hash": ""
   },
   "assets-presentacion/svg/09_vista-conceptual-resumida-dominio-erp-acme-corp-sqlite.svg": {
-    "mtime": 1795565353.4320786,
-    "seen": 1795566205.1885173,
-    "ast_hash": "83f33693664ba310d2ebf88876746e80",
+    "mtime": 1795805966.060225,
+    "seen": 1795806320.9280233,
+    "ast_hash": "29c688172e1ae7bb00dcae5e48991a96",
     "semantic_hash": ""
   },
   "assets-presentacion/svg/10_esquema-arquitectonico-en-capas-runtime-real.svg": {
@@ -1866,9 +1866,9 @@
     "semantic_hash": ""
   },
   "assets-presentacion/svg/21_comparativa-de-estado-semilla-base-vs-estado-ampliado.svg": {
-    "mtime": 1795565400.9783592,
-    "seen": 1795566205.1885173,
-    "ast_hash": "b15c5392a06041405343fff0dde44289",
+    "mtime": 1795805966.0915568,
+    "seen": 1795806320.9478161,
+    "ast_hash": "4604b50a7a0924d91d1771ea3b384411",
     "semantic_hash": ""
   },
   "assets-presentacion/svg/22_documentacion-integral-del-portal-empresarial-acme.svg": {
@@ -1896,15 +1896,15 @@
     "semantic_hash": ""
   },
   "assets-presentacion/svg/26_catalogo-completo-de-los-8-escenarios-demostrativos.svg": {
-    "mtime": 1795565415.9314735,
-    "seen": 1795566205.1885173,
-    "ast_hash": "c56c7ca54e8eeef89ef52175a28ca18b",
+    "mtime": 1795805966.1223924,
+    "seen": 1795806320.9650345,
+    "ast_hash": "280eec627418ef37b3d5517528d9286e",
     "semantic_hash": ""
   },
   "assets-presentacion/svg/27_comparativa-exhaustiva-modo-protegido-vs-modo-directo.svg": {
-    "mtime": 1795565417.1674776,
-    "seen": 1795566205.1885173,
-    "ast_hash": "35d917a73e722def3681d9c461a83d83",
+    "mtime": 1795805966.1281066,
+    "seen": 1795806320.9650345,
+    "ast_hash": "01f83be332dceb40d59e7aa722b35d6e",
     "semantic_hash": ""
   },
   "docs-portal/src/public/logo-agentguard.svg": {
