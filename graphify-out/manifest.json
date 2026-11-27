@@ -2544,9 +2544,9 @@
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/components/ProductReelPlayer.vue": {
-    "mtime": 1795798674.998165,
-    "seen": 1795800349.0387485,
-    "ast_hash": "34e03ab4e897e5590e8db47dc0b919c1",
+    "mtime": 1795802464.9922514,
+    "seen": 1795802921.7473414,
+    "ast_hash": "22acd4ce98f9b3888494f77d0ae945cb",
     "semantic_hash": ""
   },
   "docs-portal/src/instalacion.md": {
@@ -2565,6 +2565,12 @@
     "mtime": 1795798099.4591587,
     "seen": 1795800349.682645,
     "ast_hash": "0ac5ef7d16bc6f86c63e34fd40184032",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/public/video/agentguard-widescreen-4k.mp4": {
+    "mtime": 1795801814.101071,
+    "seen": 1795802922.2071195,
+    "ast_hash": "673f52313c00b7834d00e091aba33058",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {
