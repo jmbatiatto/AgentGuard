@@ -52,6 +52,7 @@ if "%FORCE_REBUILD%"=="1" (
 )
 
 echo [3/3] Iniciando servidor de vista previa en ventana externa (:4173^)...
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 4173 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 start "AgentGuard Docs Portal" cmd /k "pnpm --dir docs-portal run preview"
 timeout /t 2 /nobreak >nul
 start "" "http://localhost:4173"
@@ -59,9 +60,10 @@ start "" "http://localhost:4173"
 echo.
 echo --------------------------------------------------------------------
 echo   Portal activo en:
-echo     * Inicio           : http://localhost:4173
-echo     * Galeria 4K       : http://localhost:4173/galeria-diagramas
-echo     * Modo Defensa ^& QR: http://localhost:4173/modo-presentacion
+echo     * Inicio             : http://localhost:4173
+echo     * Instalacion Local  : http://localhost:4173/instalacion
+echo     * Galeria 4K         : http://localhost:4173/galeria-diagramas
+echo     * Presentacion ^& QR  : http://localhost:4173/modo-presentacion
 echo --------------------------------------------------------------------
 echo.
 
