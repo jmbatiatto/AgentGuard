@@ -10,6 +10,7 @@ import ProductReelPlayer from './components/ProductReelPlayer.vue'
 import LandingShowcase from './components/LandingShowcase.vue'
 import InteractivePdpDemo from './components/InteractivePdpDemo.vue'
 import LocalQuickstart from './components/LocalQuickstart.vue'
+import InteractiveExplorer from './components/InteractiveExplorer.vue'
 
 export default {
   extends: DefaultTheme,
@@ -21,5 +22,6 @@ export default {
     app.component('LandingShowcase', LandingShowcase)
     app.component('InteractivePdpDemo', InteractivePdpDemo)
     app.component('LocalQuickstart', LocalQuickstart)
+    app.component('InteractiveExplorer', InteractiveExplorer)
   }
 } satisfies Theme

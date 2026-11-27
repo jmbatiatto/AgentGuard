@@ -1344,9 +1344,9 @@
     "semantic_hash": ""
   },
   "docs-portal/package.json": {
-    "mtime": 1795563190.587092,
-    "seen": 1795566205.1885173,
-    "ast_hash": "6a472975b752f848fcb1c684fa788add",
+    "mtime": 1795809992.245178,
+    "seen": 1795812109.9202585,
+    "ast_hash": "fa8d64d525843b61029e86ccc0a86b91",
     "semantic_hash": ""
   },
   "docs-portal/scripts/export-diagrams.mjs": {
@@ -1362,15 +1362,15 @@
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/config.mts": {
-    "mtime": 1795798454.8018188,
-    "seen": 1795800349.030993,
-    "ast_hash": "a2ea789803631a4201884efe17590cd1",
+    "mtime": 1795810209.2918863,
+    "seen": 1795812109.92928,
+    "ast_hash": "dfdb7678b31e1bd7b762659c721956fa",
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/components/DiagramGallery.vue": {
-    "mtime": 1795805910.4148986,
-    "seen": 1795806320.424099,
-    "ast_hash": "6fef89a698df9722a76e2f1fd55b990e",
+    "mtime": 1795810216.2212317,
+    "seen": 1795812109.92928,
+    "ast_hash": "fbdc175029b5874b9a838c713245cf1b",
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/components/MermaidDiagram.vue": {
@@ -1386,9 +1386,9 @@
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/index.ts": {
-    "mtime": 1795798455.9649067,
-    "seen": 1795800349.0387485,
-    "ast_hash": "2d09098040bfc274dd31f263dc60bc3f",
+    "mtime": 1795810207.3106916,
+    "seen": 1795812110.0369756,
+    "ast_hash": "447da3ce27a788f4c3c0a2f21153fb7f",
     "semantic_hash": ""
   },
   "_DEEP_AUDIT_REPORT.md": {
@@ -1410,9 +1410,9 @@
     "semantic_hash": ""
   },
   "docs-portal/src/index.md": {
-    "mtime": 1795799517.860183,
-    "seen": 1795800349.348149,
-    "ast_hash": "3137c29822059c193debbd71be0bfd3e",
+    "mtime": 1795810210.7284691,
+    "seen": 1795812111.509949,
+    "ast_hash": "656f6496168538e4cc4f1a3a28fc646d",
     "semantic_hash": ""
   },
   "docs-portal/src/modo-presentacion.md": {
@@ -2573,10 +2573,40 @@
     "ast_hash": "673f52313c00b7834d00e091aba33058",
     "semantic_hash": ""
   },
+  "docs-portal/src/.vitepress/theme/components/InteractiveExplorer.vue": {
+    "mtime": 1795811509.7470832,
+    "seen": 1795812109.92928,
+    "ast_hash": "b42e0117322bbbbecf98dc0d75ff32d7",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/explorer/EntityTableNode.vue": {
+    "mtime": 1795811388.7020743,
+    "seen": 1795812110.0369756,
+    "ast_hash": "4baf2725152c3a840200df838e82e5d9",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/explorer/RelationEdge.vue": {
+    "mtime": 1795811395.023474,
+    "seen": 1795812110.0369756,
+    "ast_hash": "6466c715a9de639010275f1e72723661",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/data/explorerData.ts": {
+    "mtime": 1795810560.3042955,
+    "seen": 1795812110.0369756,
+    "ast_hash": "619ab5af9685dc69f82ba55ecf404603",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/explorador.md": {
+    "mtime": 1795810206.4171607,
+    "seen": 1795812111.5078707,
+    "ast_hash": "9bd046f0e1090fd41927820ae7a8040c",
+    "semantic_hash": ""
+  },
   "pnpm-lock.yaml": {
-    "mtime": 1795563629.3744733,
-    "seen": 1795566205.1885173,
-    "ast_hash": "4d68edb53230f55fa57b44d237e80135",
+    "mtime": 1795809991.8950598,
+    "seen": 1795812112.0532334,
+    "ast_hash": "5d685befe48f54e151d4027e8dc9ed8b",
     "semantic_hash": ""
   }
 }

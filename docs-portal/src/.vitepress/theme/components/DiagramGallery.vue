@@ -372,6 +372,38 @@ function getDocUrl(item: DiagramManifestItem): string {
   return withBase(`/volumenes/${rawSlug}`)
 }
 
+function getInteractiveExplorerHref(item: DiagramManifestItem): string | null {
+  const slug = (item.docSlug || item.docFile || '').trim().replace(/\.md$/i, '')
+  const titleLower = (item.title || '').toLowerCase()
+
+  if (
+    titleLower.includes('doble persistencia') ||
+    (titleLower.includes('acme') && (titleLower.includes('sqlite') || titleLower.includes('mer')))
+  ) {
+    return '/explorador?vista=mer-acme'
+  }
+
+  if (
+    (slug === '01_MER_RELACIONAL_Y_FISICO_DB' &&
+      !titleLower.includes('alembic') &&
+      !titleLower.includes('acme')) ||
+    slug === '02_MER_CONCEPTUAL_CHEN_Y_ATRIBUTOS'
+  ) {
+    return '/explorador?vista=mer-postgres'
+  }
+
+  if (
+    slug === '03_ARQUITECTURA_RUNTIME_PEP_PDP_Y_API_REST' ||
+    slug === '04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO' ||
+    (slug === 'README' &&
+      (titleLower.includes('arquitectura') || titleLower.includes('escenario')))
+  ) {
+    return '/explorador?vista=runtime-flow'
+  }
+
+  return null
+}
+
 function getDownloadFilename(fileValue: string | undefined, suffix: string): string {
   if (!fileValue) return `agentguard-diagrama.${suffix}`
   const parts = fileValue.split('/')
@@ -638,6 +670,63 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="ag-gallery-root" aria-label="Galería Interactiva de Diagramas 4K y SVG">
+    <!-- Banner directo al Explorador Interactivo de Nodos (Vue Flow) -->
+    <aside
+      class="ag-explorer-callout ag-surface-card"
+      aria-label="Acceso al Explorador Interactivo de Nodos"
+    >
+      <div class="ag-explorer-callout-main">
+        <span class="ag-explorer-callout-icon" aria-hidden="true">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="5" cy="6" r="2.5" />
+            <circle cx="19" cy="6" r="2.5" />
+            <circle cx="12" cy="18" r="2.5" />
+            <path d="M7.3 7.2 10.6 15.8" />
+            <path d="M16.7 7.2 13.4 15.8" />
+            <path d="M7.5 6h9" />
+          </svg>
+        </span>
+        <div class="ag-explorer-callout-copy">
+          <h2 class="ag-explorer-callout-title">Explorador Interactivo de Nodos y Relaciones</h2>
+          <p class="ag-explorer-callout-desc">
+            En esta galería descargás los 27 diagramas en SVG vectorial y PNG 4K. Para recorrer
+            entidad por entidad las 13 tablas PostgreSQL, las 7 tablas SQLite de ACME Corp y el
+            flujo runtime PEP/PDP con explicaciones en español, abrí el mapa interactivo.
+          </p>
+        </div>
+      </div>
+      <a :href="withBase('/explorador')" class="ag-btn ag-btn--primary ag-explorer-callout-cta">
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="5" cy="6" r="2.5" />
+          <circle cx="19" cy="6" r="2.5" />
+          <circle cx="12" cy="18" r="2.5" />
+          <path d="M7.3 7.2 10.6 15.8" />
+          <path d="M16.7 7.2 13.4 15.8" />
+          <path d="M7.5 6h9" />
+        </svg>
+        <span>Abrir Explorador Interactivo de Nodos</span>
+      </a>
+    </aside>
+
     <!-- Barra de búsqueda instantánea y filtros por categoría -->
     <div class="ag-gallery-controls ag-surface-card">
       <div class="ag-gallery-search-row">
@@ -793,7 +882,7 @@ onBeforeUnmount(() => {
           <h3 class="ag-card-title">{{ item.title }}</h3>
           <p class="ag-card-category">{{ item.category }}</p>
 
-          <!-- Acciones primarias: Proyector Interactivo + Volumen SSOT -->
+          <!-- Acciones primarias: Proyector Interactivo + Explorador de Nodos + Volumen SSOT -->
           <div class="ag-card-primary-actions">
             <button
               type="button"
@@ -802,6 +891,32 @@ onBeforeUnmount(() => {
             >
               ⛶ Proyector Interactivo
             </button>
+            <a
+              v-if="getInteractiveExplorerHref(item)"
+              :href="withBase(getInteractiveExplorerHref(item) || '/explorador')"
+              class="ag-btn ag-btn--explorer"
+              :title="`Abrir ${item.title} en el Explorador Interactivo`"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="5" cy="6" r="2.5" />
+                <circle cx="19" cy="6" r="2.5" />
+                <circle cx="12" cy="18" r="2.5" />
+                <path d="M7.3 7.2 10.6 15.8" />
+                <path d="M16.7 7.2 13.4 15.8" />
+                <path d="M7.5 6h9" />
+              </svg>
+              <span>Explorar Interactivo</span>
+            </a>
             <a :href="getDocUrl(item)" class="ag-btn">
               📖 Ir al Volumen
             </a>
@@ -1028,6 +1143,96 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 1.5rem;
   margin: 1rem 0 2.5rem;
+}
+
+.ag-explorer-callout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  border-left: 3px solid var(--vp-c-brand-2);
+}
+
+.ag-explorer-callout-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.ag-explorer-callout-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1px solid var(--ag-border-accent);
+  background: var(--ag-surface-subtle);
+  color: var(--vp-c-brand-1);
+  flex-shrink: 0;
+}
+
+.ag-explorer-callout-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ag-explorer-callout-title {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  font-size: 1.04rem !important;
+  line-height: 1.3 !important;
+  font-weight: 700 !important;
+  color: var(--vp-c-text-1);
+}
+
+.ag-explorer-callout-desc {
+  margin: 0 !important;
+  font-size: 0.89rem;
+  line-height: 1.52;
+  color: var(--vp-c-text-2);
+}
+
+.ag-explorer-callout-cta {
+  padding: 0.56rem 0.95rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ag-explorer-callout-cta:focus-visible,
+.ag-btn--explorer:focus-visible {
+  outline: 2px solid var(--ag-emerald);
+  outline-offset: 2px;
+}
+
+.ag-btn--explorer {
+  background: rgba(4, 120, 87, 0.1);
+  border-color: rgba(4, 120, 87, 0.42);
+  color: #065f46 !important;
+}
+
+.ag-btn--explorer:hover {
+  background: rgba(4, 120, 87, 0.18);
+  border-color: #047857;
+  color: #064e3b !important;
+}
+
+.dark .ag-btn--explorer {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.44);
+  color: #6ee7b7 !important;
+}
+
+.dark .ag-btn--explorer:hover {
+  background: rgba(16, 185, 129, 0.24);
+  border-color: #34d399;
+  color: #a7f3d0 !important;
 }
 
 .ag-gallery-controls {

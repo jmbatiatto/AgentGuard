@@ -26,6 +26,19 @@ import { withBase } from 'vitepress'
     </div>
     <div class="ag-bridge-layout">
       <div class="ag-bridge-directory" role="list" aria-label="Recursos de documentación técnica y demo">
+        <a :href="withBase('/explorador')" class="ag-bridge-row" role="listitem">
+          <span class="ag-bridge-row-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.3 7.2 10.6 15.8"/><path d="M16.7 7.2 13.4 15.8"/><path d="M7.5 6h9"/></svg>
+          </span>
+          <span class="ag-bridge-row-body">
+            <span class="ag-bridge-row-title">Explorador Interactivo MER y Arquitectura (Vue Flow)</span>
+            <span class="ag-bridge-row-desc">Mapa navegable en español con 3 lienzos interactivos: 13 tablas multi-tenant en PostgreSQL 16, 7 tablas ERP ACME Corp en SQLite y flujo runtime PEP/PDP 5D entidad por entidad.</span>
+          </span>
+          <span class="ag-bridge-row-action">
+            <span>Abrir mapa</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </span>
+        </a>
         <a :href="withBase('/galeria-diagramas')" class="ag-bridge-row" role="listitem">
           <span class="ag-bridge-row-icon" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>

@@ -71,6 +71,7 @@ export default defineConfig({
       { text: 'Video Demo', link: '/#video-demo' },
       { text: 'Simulador PDP', link: '/#simulador-pdp' },
       { text: 'Instalación Local', link: '/instalacion' },
+      { text: 'Explorador MER', link: '/explorador' },
       { text: 'Arquitectura 4K', link: '/galeria-diagramas' },
       {
         text: 'Documentación',
@@ -119,6 +120,7 @@ export default defineConfig({
         items: [
           { text: 'Inicio · AgentGuard', link: '/' },
           { text: 'Guía de Instalación Local', link: '/instalacion' },
+          { text: 'Explorador Interactivo MER', link: '/explorador' },
           { text: 'Galería Interactiva 4K', link: '/galeria-diagramas' },
           { text: 'Presentación, Video y Código QR', link: '/modo-presentacion' },
           { text: 'Índice Maestro (SSOT)', link: '/volumenes/INDICE_MAESTRO' },
