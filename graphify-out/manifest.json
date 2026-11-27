@@ -1350,9 +1350,9 @@
     "semantic_hash": ""
   },
   "docs-portal/scripts/export-diagrams.mjs": {
-    "mtime": 1795565177.7160952,
-    "seen": 1795566205.1885173,
-    "ast_hash": "876c4c37feb9be72f92d9bfb6123703c",
+    "mtime": 1795798467.331797,
+    "seen": 1795800349.030993,
+    "ast_hash": "00a1282623d7b48c1d6811dd074bd919",
     "semantic_hash": ""
   },
   "docs-portal/scripts/prepare-content.mjs": {
@@ -1362,9 +1362,9 @@
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/config.mts": {
-    "mtime": 1795563193.2645583,
-    "seen": 1795566205.1885173,
-    "ast_hash": "f212776e5a31584c55b324ed676abbc9",
+    "mtime": 1795798454.8018188,
+    "seen": 1795800349.030993,
+    "ast_hash": "a2ea789803631a4201884efe17590cd1",
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/components/DiagramGallery.vue": {
@@ -1380,15 +1380,15 @@
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/components/QrShareCard.vue": {
-    "mtime": 1795572886.3336923,
-    "seen": 1795723869.4956472,
-    "ast_hash": "265ff331620ac0a1feb48320478e8f65",
+    "mtime": 1795799525.91295,
+    "seen": 1795800349.0387485,
+    "ast_hash": "418d835a9ba8bc66848143857877dc73",
     "semantic_hash": ""
   },
   "docs-portal/src/.vitepress/theme/index.ts": {
-    "mtime": 1795564118.345601,
-    "seen": 1795566205.1885173,
-    "ast_hash": "eb76f0863d9f585c817e54841e181a5e",
+    "mtime": 1795798455.9649067,
+    "seen": 1795800349.0387485,
+    "ast_hash": "2d09098040bfc274dd31f263dc60bc3f",
     "semantic_hash": ""
   },
   "_DEEP_AUDIT_REPORT.md": {
@@ -1404,21 +1404,21 @@
     "semantic_hash": ""
   },
   "docs-portal/src/galeria-diagramas.md": {
-    "mtime": 1795564011.6619112,
-    "seen": 1795566205.1885173,
-    "ast_hash": "4c3a35a834ac521cb85ff792ca2bd6b0",
+    "mtime": 1795798463.9385674,
+    "seen": 1795800349.348149,
+    "ast_hash": "1803d7221cd78e1471213edc1318cdc1",
     "semantic_hash": ""
   },
   "docs-portal/src/index.md": {
-    "mtime": 1795564010.27588,
-    "seen": 1795566205.1885173,
-    "ast_hash": "e32fca49a2f08d2742cf120c5e5b60ac",
+    "mtime": 1795799517.860183,
+    "seen": 1795800349.348149,
+    "ast_hash": "3137c29822059c193debbd71be0bfd3e",
     "semantic_hash": ""
   },
   "docs-portal/src/modo-presentacion.md": {
-    "mtime": 1795719971.507762,
-    "seen": 1795723869.5977154,
-    "ast_hash": "c66ff4475ac356cdbb7989eda7f779e2",
+    "mtime": 1795798462.4995759,
+    "seen": 1795800349.348149,
+    "ast_hash": "076a57e56706138b2c24991c7cba025a",
     "semantic_hash": ""
   },
   "assets-presentacion/png-4k-dark/01_los-4-escenarios-canonicos-de-seguridad-agent-demo-y.png": {
@@ -2523,6 +2523,48 @@
     "mtime": 1795735124.0047612,
     "seen": 1795736643.8979154,
     "ast_hash": "a3fb4eb5b66a16cf56a3fa395e005634",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/InteractivePdpDemo.vue": {
+    "mtime": 1795798343.3167114,
+    "seen": 1795800349.0367348,
+    "ast_hash": "3d051ad11a134814dd0771fc00cafe73",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/LandingShowcase.vue": {
+    "mtime": 1795798432.5419471,
+    "seen": 1795800349.0367348,
+    "ast_hash": "8f2f1adbb4af761d5fdba22ff9116278",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/LocalQuickstart.vue": {
+    "mtime": 1795798497.7858987,
+    "seen": 1795800349.0367348,
+    "ast_hash": "73b2408b52d9b20a601ccf3c73858da4",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/.vitepress/theme/components/ProductReelPlayer.vue": {
+    "mtime": 1795798674.998165,
+    "seen": 1795800349.0387485,
+    "ast_hash": "34e03ab4e897e5590e8db47dc0b919c1",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/instalacion.md": {
+    "mtime": 1795799524.41737,
+    "seen": 1795800349.348149,
+    "ast_hash": "6e9736fe85531f356915a1756062f774",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/public/video/agentguard-reel-poster.jpg": {
+    "mtime": 1795798371.4118137,
+    "seen": 1795800349.678485,
+    "ast_hash": "2296dac47bea36340df0df65a1005b2b",
+    "semantic_hash": ""
+  },
+  "docs-portal/src/public/video/agentguard-reel.mp4": {
+    "mtime": 1795798099.4591587,
+    "seen": 1795800349.682645,
+    "ast_hash": "0ac5ef7d16bc6f86c63e34fd40184032",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {

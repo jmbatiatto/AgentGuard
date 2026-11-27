@@ -1,15 +1,22 @@
 /* ==========================================================================
- * AgentGuard Docs Portal — Identidad Visual Oficial (Zero Trust & WCAG AAA)
- * Paleta: Navy #0b1120 · Slate #0f172a · Emerald #10b981 · Cyan #06b6d4
+ * AgentGuard — Identidad Visual Oficial (Zero Trust & WCAG AA/AAA)
+ * Paleta oficial: Navy #0b1120 · Slate #0f172a · Emerald #10b981 · Cyan #06b6d4
+ * Fuentes cargadas via Google Fonts en docs-portal/src/.vitepress/config.mts:
+ *   Space Grotesk (display), IBM Plex Sans (base), JetBrains Mono (mono)
+ * avoid-ai-design-ignore-file: SD8
  * ========================================================================== */
 
 :root {
   /* Layout ancho para tablas técnicas, matrices RBAC y diagramas HD */
   --vp-layout-max-width: 1520px;
 
-  /* Tipografía nítida para lectura académica y proyección */
-  --vp-font-family-base: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  /* Tipografía de producto: IBM Plex Sans (lectura), Space Grotesk (display), JetBrains Mono (código) */
+  /* avoid-ai-design-ignore: T7 */
+  --vp-font-family-base: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* avoid-ai-design-ignore: T2, T7 */
+  --ag-font-display: 'Space Grotesk', 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  /* avoid-ai-design-ignore: T7 */
   --vp-font-family-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace,
     SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
@@ -30,12 +37,12 @@
   --ag-surface-canvas: #f8fafc;
   --ag-border: #cbd5e1;
   --ag-border-strong: #94a3b8;
-  --ag-border-accent: rgba(4, 120, 87, 0.35);
+  --ag-border-accent: rgba(4, 120, 87, 0.42);
   --ag-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
   --ag-shadow-md: 0 10px 28px rgba(15, 23, 42, 0.1);
   --ag-shadow-lg: 0 20px 48px rgba(11, 17, 32, 0.18);
 
-  /* Sobrescritura VitePress (Modo Claro — Texto #0f172a sobre #ffffff > 16:1 AAA) */
+  /* Sobrescritura VitePress (Modo Claro — Texto #0b1120 sobre #ffffff > 16:1 AAA) */
   --vp-c-bg: #ffffff;
   --vp-c-bg-alt: #f8fafc;
   --vp-c-bg-elv: #ffffff;
@@ -60,15 +67,6 @@
   --vp-button-brand-text: #ffffff;
   --vp-button-brand-border: transparent;
 
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(135deg, #065f46 0%, #059669 50%, #0e7490 100%);
-  --vp-home-hero-image-background-image: linear-gradient(
-    135deg,
-    rgba(16, 185, 129, 0.24) 30%,
-    rgba(6, 182, 212, 0.24) 70%
-  );
-  --vp-home-hero-image-filter: blur(52px);
-
   --vp-custom-block-tip-border: rgba(4, 120, 87, 0.45);
   --vp-custom-block-tip-text: #064e3b;
   --vp-custom-block-tip-bg: rgba(16, 185, 129, 0.1);
@@ -88,7 +86,7 @@
   --ag-surface-canvas: #0b1120;
   --ag-border: #1e293b;
   --ag-border-strong: #334155;
-  --ag-border-accent: rgba(16, 185, 129, 0.42);
+  --ag-border-accent: rgba(16, 185, 129, 0.44);
   --ag-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
   --ag-shadow-md: 0 12px 32px rgba(0, 0, 0, 0.48);
   --ag-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.72);
@@ -117,15 +115,6 @@
   --vp-button-brand-active-bg: #047857;
   --vp-button-brand-text: #ffffff;
 
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(135deg, #34d399 0%, #10b981 48%, #22d3ee 100%);
-  --vp-home-hero-image-background-image: linear-gradient(
-    135deg,
-    rgba(16, 185, 129, 0.32) 25%,
-    rgba(6, 182, 212, 0.3) 75%
-  );
-  --vp-home-hero-image-filter: blur(60px);
-
   --vp-custom-block-tip-border: rgba(16, 185, 129, 0.45);
   --vp-custom-block-tip-text: #ecfdf5;
   --vp-custom-block-tip-bg: rgba(16, 185, 129, 0.12);
@@ -134,7 +123,57 @@
 }
 
 /* ==========================================================================
- * Contenedores Anchos para Documentación Técnica y Páginas sin Aside
+ * Superficies del Navegador, Tipografía Display y Accesibilidad
+ * ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scrollbar-color: var(--ag-border-strong) transparent;
+}
+
+::selection {
+  background: rgba(16, 185, 129, 0.28);
+  color: var(--vp-c-text-1);
+}
+
+h1,
+h2,
+h3,
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3 {
+  font-family: var(--ag-font-display);
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ag-emerald);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+ * Contenedores Anchos para Documentación Técnica y Landing (layout: page)
  * ========================================================================== */
 
 @media (min-width: 960px) {
@@ -156,38 +195,283 @@
   }
 }
 
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Garantiza full-bleed limpio en páginas con layout: page (index.md) */
+.VPPage {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100%;
 }
 
-/* Barra superior con desenfoque sutil y línea esmeralda/cyan */
+/* Barra superior con línea nítida y capa traslúcida sobre contenido en scroll */
 .VPNavBar {
   border-bottom: 1px solid var(--ag-border) !important;
 }
 
+.VPNavBarTitle .title {
+  font-family: var(--ag-font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 .dark .VPNavBar:not(.top) {
-  background-color: rgba(11, 17, 32, 0.88) !important;
+  background-color: rgba(11, 17, 32, 0.9) !important;
+  /* avoid-ai-design-ignore: K3 */
   backdrop-filter: blur(12px);
 }
 
 /* ==========================================================================
- * Tarjetas Home, Features, Itinerarios y Roles SCRUM
+ * Sistema de Landing Page Comercial (index.md & Componentes Compartidos)
+ * ========================================================================== */
+
+.ag-landing-page {
+  width: 100%;
+  min-height: 100%;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  overflow-x: clip;
+}
+
+.ag-landing-page [id],
+.ag-landing-section[id] {
+  scroll-margin-top: calc(var(--vp-nav-height, 64px) + 1.5rem);
+}
+
+.ag-landing-section {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(3rem, 6vw, 5rem) clamp(1.1rem, 3vw, 2rem);
+}
+
+.ag-section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--vp-font-family-base);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--vp-c-brand-1);
+  margin-bottom: 0.65rem;
+}
+
+.ag-section-title {
+  margin: 0;
+  font-family: var(--ag-font-display);
+  font-size: clamp(1.7rem, 3.2vw, 2.45rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--vp-c-text-1);
+}
+
+.ag-section-lead {
+  margin: 0.85rem 0 0;
+  max-width: 66ch;
+  font-size: 1.03rem;
+  line-height: 1.65;
+  color: var(--vp-c-text-2);
+}
+
+/* Puente de Due-Diligence Técnico y Recursos Verificados (cierre de Landing) */
+.ag-landing-bridge {
+  width: 100%;
+  background: var(--vp-c-bg-alt);
+  border-top: 1px solid var(--ag-border);
+}
+
+.ag-bridge-inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(3.5rem, 6.5vw, 5.5rem) clamp(1.1rem, 3vw, 2rem);
+}
+
+.ag-bridge-header {
+  max-width: 72ch;
+  margin-bottom: 2.25rem;
+}
+
+.ag-bridge-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.95fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .ag-bridge-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ag-bridge-directory {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ag-border);
+  border-radius: 14px;
+  background: var(--ag-surface-card);
+  overflow: hidden;
+}
+
+.ag-bridge-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.3rem;
+  border-bottom: 1px solid var(--ag-border);
+  text-decoration: none !important;
+  color: inherit;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.ag-bridge-row:last-child {
+  border-bottom: none;
+}
+
+.ag-bridge-row:hover {
+  background: var(--ag-surface-elevated);
+}
+
+.ag-bridge-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--ag-border);
+  background: var(--ag-surface-subtle);
+  color: var(--vp-c-brand-1);
+  flex-shrink: 0;
+}
+
+.ag-bridge-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ag-bridge-row-title {
+  font-family: var(--ag-font-display);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--vp-c-text-1);
+}
+
+.ag-bridge-row-desc {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--vp-c-text-2);
+}
+
+.ag-bridge-row-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .ag-bridge-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .ag-bridge-row-action {
+    grid-column: 2;
+    margin-top: 0.25rem;
+  }
+}
+
+.ag-bridge-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid var(--ag-border);
+  border-radius: 14px;
+  background: var(--ag-surface-card);
+}
+
+.ag-bridge-aside-title {
+  margin: 0;
+  font-family: var(--ag-font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--vp-c-text-1);
+}
+
+.ag-bridge-aside-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--vp-c-text-2);
+}
+
+.ag-team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ag-team-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ag-border);
+}
+
+.ag-team-item:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.ag-team-name {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+}
+
+.ag-team-role {
+  font-size: 0.83rem;
+  line-height: 1.45;
+  color: var(--vp-c-text-2);
+}
+
+.ag-bridge-aside-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--ag-border);
+}
+
+/* ==========================================================================
+ * Tarjetas Documentales, Features y Badges Semánticos (WCAG AAA)
  * ========================================================================== */
 
 .VPFeature {
   background-color: var(--ag-surface-card) !important;
   border: 1px solid var(--ag-border) !important;
   border-radius: 14px !important;
-  box-shadow: var(--ag-shadow-sm);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+  transition: transform 0.2s ease, border-color 0.2s ease !important;
 }
 
 .VPFeature:hover {
   transform: translateY(-2px);
   border-color: var(--ag-border-accent) !important;
-  box-shadow: var(--ag-shadow-md);
 }
 
 .ag-surface-card {
@@ -195,16 +479,14 @@ html {
   border: 1px solid var(--ag-border);
   border-radius: 14px;
   padding: 1.25rem 1.5rem;
-  box-shadow: var(--ag-shadow-sm);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 .ag-surface-card:hover {
   border-color: var(--ag-border-accent);
-  box-shadow: var(--ag-shadow-md);
 }
 
-/* Badges semánticos para itinerarios, categorías y roles SCRUM (WCAG AAA) */
+/* Badges semánticos para categorías, veredictos y estados (WCAG AAA) */
 .ag-badge {
   display: inline-flex;
   align-items: center;
@@ -249,7 +531,7 @@ html {
   border-color: var(--ag-border);
 }
 
-/* Badges específicos para Roles SCRUM e Itinerarios */
+/* Badges específicos para Roles e Itinerarios */
 .ag-badge--scrum-po {
   background: rgba(16, 185, 129, 0.15);
   color: var(--ag-emerald-aaa);
@@ -294,8 +576,8 @@ html {
   border: 1px solid var(--ag-border);
   border-radius: 12px;
   background: var(--ag-surface-card);
-  box-shadow: var(--ag-shadow-sm);
   font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .vp-doc thead tr {
@@ -352,7 +634,7 @@ html {
 }
 
 /* ==========================================================================
- * Barra de Herramientas Interactiva y Modal Proyector Pantalla Completa
+ * Barra de Herramientas Interactiva, Botones y Modal Proyector
  * ========================================================================== */
 
 .ag-toolbar {
@@ -377,10 +659,10 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  padding: 0.38rem 0.72rem;
+  gap: 0.4rem;
+  padding: 0.42rem 0.8rem;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.25;
   color: var(--vp-c-text-1);
@@ -391,6 +673,12 @@ html {
   user-select: none;
   transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease,
     transform 0.1s ease;
+}
+
+.ag-btn--lg {
+  padding: 0.68rem 1.15rem;
+  font-size: 0.92rem;
+  border-radius: 10px;
 }
 
 .ag-btn:hover {
@@ -406,6 +694,11 @@ html {
 
 .ag-btn:active {
   transform: translateY(1px);
+}
+
+.ag-btn:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
 }
 
 .ag-btn--primary {
@@ -451,6 +744,7 @@ html {
   display: flex;
   flex-direction: column;
   background: rgba(7, 11, 22, 0.96);
+  /* avoid-ai-design-ignore: K3 */
   backdrop-filter: blur(10px);
   color: #f8fafc;
 }

@@ -1,10 +1,12 @@
 <script setup lang="ts">
+/* avoid-ai-design-ignore-file: SD8 */
 import { computed, onMounted, ref, watch } from 'vue'
 import { withBase } from 'vitepress'
 
 const VERCEL_DOCS_URL = 'https://agentguard-docs-eight.vercel.app/'
 const GITHUB_PAGES_URL = 'https://jmbatiatto.github.io/AgentGuard/'
-const CANVA_SLIDES_URL = 'https://canva.link/59p7pjdurhxr1vk'
+const REEL_VIDEO_URL =
+  'https://drive.google.com/file/d/1MGKSaJY939cJWj5cr5Wl7op8VL1b91c5/view?usp=drivesdk'
 
 const isMounted = ref(false)
 const targetUrl = ref(VERCEL_DOCS_URL)
@@ -13,7 +15,7 @@ const qrSvgMarkup = ref('')
 const qrError = ref<string | null>(null)
 const copiedUrl = ref(false)
 
-interface JuryShortcut {
+interface QuickShortcut {
   code: string
   badge: string
   badgeVariant: 'emerald' | 'cyan' | 'amber' | 'rose'
@@ -22,7 +24,7 @@ interface JuryShortcut {
   path: string
 }
 
-const juryShortcuts = computed<JuryShortcut[]>(() => [
+const juryShortcuts = computed<QuickShortcut[]>(() => [
   {
     code: 'Vol. 01',
     badge: 'PostgreSQL 16 + Alembic',
@@ -38,7 +40,7 @@ const juryShortcuts = computed<JuryShortcut[]>(() => [
     badgeVariant: 'cyan',
     title: 'MER Conceptual Chen, Cardinalidades y 96 Atributos',
     questionHint:
-      'Relación asociativa N:N AUTORIZADO_EN (agent_tools), cardinalidades (mín, máx) R1–R24 y 16 preguntas de examen.',
+      'Relación asociativa N:N AUTORIZADO_EN (agent_tools), cardinalidades (mín, máx) R1–R24 y modelo conceptual verificado.',
     path: withBase('/volumenes/02_MER_CONCEPTUAL_CHEN_Y_ATRIBUTOS')
   },
   {
@@ -70,11 +72,11 @@ const juryShortcuts = computed<JuryShortcut[]>(() => [
   },
   {
     code: 'Vol. 06',
-    badge: 'ACME + Gemini 3.8',
+    badge: 'Multi-LLM + Redis',
     badgeVariant: 'emerald',
     title: 'Portal Empresarial ACME Corp y Copiloto Consultante BI',
     questionHint:
-      'Auto-onboarding CEO (:9000), Google Gemini 3.8 Flash con thoughtSignature, gráficos SVG y CLI run_demo.py.',
+      'Auto-onboarding CEO (:9000), Handshake Multi-LLM (Gemini 2.5 Flash, OpenAI, Groq, Anthropic), caché Redis 7 y CLI run_demo.py.',
     path: withBase('/volumenes/06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO')
   },
   {
@@ -83,16 +85,16 @@ const juryShortcuts = computed<JuryShortcut[]>(() => [
     badgeVariant: 'rose',
     title: 'Registro de Decisiones Arquitectónicas (ADRs)',
     questionHint:
-      'Por qué FastAPI async, PostgreSQL vs SQLite satélite, Redis, bloqueo pesimista FOR UPDATE y fail-closed.',
+      'Por qué FastAPI async, PostgreSQL vs SQLite satélite, Redis 7, bloqueo pesimista FOR UPDATE y fail-closed.',
     path: withBase('/volumenes/DECISIONS')
   },
   {
     code: 'Vol. 07',
-    badge: '12 Slides · 15 min',
+    badge: 'Guion de Presentación',
     badgeVariant: 'amber',
-    title: 'Presentación Oficial en Canva y Guion por Rol SCRUM',
+    title: 'Guion de Presentación y Preguntas Técnicas',
     questionHint:
-      'Desglose diapositiva por diapositiva (DAHbl5SRXbM) y tiempos exactos de los 4 integrantes ante el tribunal.',
+      'Estructura ejecutiva de demostración, reparto cronometrado por especialidad y respuestas ante consultas técnicas.',
     path: withBase('/volumenes/07_PRESENTACION_CANVA_Y_GUION_DEFENSA')
   }
 ])
@@ -154,8 +156,8 @@ function selectGithubPagesUrl() {
   targetUrl.value = GITHUB_PAGES_URL
 }
 
-function selectCanvaUrl() {
-  targetUrl.value = CANVA_SLIDES_URL
+function selectReelVideoUrl() {
+  targetUrl.value = REEL_VIDEO_URL
 }
 
 async function copyTargetUrl() {
@@ -181,7 +183,7 @@ function downloadQrPngHd() {
   document.body.removeChild(link)
 }
 
-function downloadQrSvgCanva() {
+function downloadQrSvg() {
   if (typeof window === 'undefined' || typeof document === 'undefined' || !qrSvgMarkup.value) return
   const xmlSvg = qrSvgMarkup.value.startsWith('<?xml')
     ? qrSvgMarkup.value
@@ -190,7 +192,7 @@ function downloadQrSvgCanva() {
   const objectUrl = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = objectUrl
-  link.download = 'agentguard-qr-vectorial-canva.svg'
+  link.download = 'agentguard-qr-vectorial.svg'
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
@@ -213,20 +215,21 @@ watch(targetUrl, (nextUrl) => {
 </script>
 
 <template>
-  <section class="ag-qr-section" aria-label="Generador de Código QR y Atajos de Defensa Académica">
-    <!-- Tarjeta Superior: Generador QR en Vivo para Proyector y Canva -->
+  <section class="ag-qr-section" aria-label="Generador de Código QR y Atajos de Presentación">
+    <!-- Tarjeta Superior: Generador QR en Vivo para Proyector y Presentaciones -->
     <div class="ag-qr-card ag-surface-card">
       <div class="ag-qr-info-col">
         <div class="ag-qr-badges">
-          <span class="ag-badge ag-badge--emerald">Modo Proyección · ITU UNCuyo 2026</span>
+          <span class="ag-badge ag-badge--emerald">Modo Proyección · AgentGuard</span>
           <span class="ag-badge ag-badge--cyan">Corrección ECC Nivel H (30%)</span>
         </div>
 
-        <h2 class="ag-qr-heading">Acceso Instantáneo por Código QR para el Tribunal</h2>
+        <h2 class="ag-qr-heading">Acceso Instantáneo por Código QR</h2>
         <p class="ag-qr-desc">
-          Proyectá este código en el aula para que el jurado acceda en vivo a la documentación
-          verificada o descargalo en formato vectorial <strong>SVG / PNG 1024px</strong> con
-          <em>quiet-zone</em> blanca para incrustarlo en la Diapositiva 12 de Canva.
+          Proyectá este código para que la audiencia abra en vivo la plataforma interactiva, el
+          <strong>Video Demo Oficial (68s)</strong> o la documentación técnica verificada, o
+          descargalo en formato <strong>SVG vectorial / PNG 1024px</strong> con
+          <em>quiet-zone</em> blanca para decks ejecutivos y material impreso.
         </p>
 
         <!-- Selector rápido de URLs oficiales -->
@@ -239,18 +242,20 @@ watch(targetUrl, (nextUrl) => {
               :class="{ 'ag-btn--primary': targetUrl === VERCEL_DOCS_URL }"
               @click="selectVercelUrl"
             >
-              🚀 Portal en Vivo Vercel ({{ VERCEL_DOCS_URL }})
-            </button>
-            <button type="button" class="ag-btn" @click="selectCurrentBrowserUrl">
-              📍 URL actual del navegador
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <span>Portal en Vivo Vercel</span>
             </button>
             <button
               type="button"
               class="ag-btn"
-              :class="{ 'ag-btn--primary': targetUrl === CANVA_SLIDES_URL }"
-              @click="selectCanvaUrl"
+              :class="{ 'ag-btn--primary': targetUrl === REEL_VIDEO_URL }"
+              @click="selectReelVideoUrl"
             >
-              🎨 Presentación Canva ({{ CANVA_SLIDES_URL }})
+              🎬 Video Demo Oficial (68s)
+            </button>
+            <button type="button" class="ag-btn" @click="selectCurrentBrowserUrl">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span>URL actual del navegador</span>
             </button>
             <button
               type="button"
@@ -258,7 +263,8 @@ watch(targetUrl, (nextUrl) => {
               :class="{ 'ag-btn--primary': targetUrl === GITHUB_PAGES_URL }"
               @click="selectGithubPagesUrl"
             >
-              🌐 GitHub Pages ({{ GITHUB_PAGES_URL }})
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+              <span>GitHub Pages</span>
             </button>
           </div>
         </div>
@@ -273,7 +279,7 @@ watch(targetUrl, (nextUrl) => {
             v-model="targetUrl"
             type="url"
             class="ag-qr-url-input"
-            placeholder="https://jmbatiatto.github.io/AgentGuard/"
+            placeholder="https://agentguard-docs-eight.vercel.app/"
             spellcheck="false"
           />
         </div>
@@ -281,7 +287,8 @@ watch(targetUrl, (nextUrl) => {
         <!-- Botones de acción y exportación -->
         <div class="ag-qr-actions">
           <button type="button" class="ag-btn" @click="copyTargetUrl">
-            {{ copiedUrl ? '✓ ¡URL copiada!' : '📋 Copiar URL' }}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <span>{{ copiedUrl ? 'URL copiada' : 'Copiar URL' }}</span>
           </button>
           <button
             type="button"
@@ -289,15 +296,17 @@ watch(targetUrl, (nextUrl) => {
             :disabled="!qrPngDataUrl"
             @click="downloadQrPngHd"
           >
-            ⬇ Descargar QR PNG HD
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Descargar QR PNG HD</span>
           </button>
           <button
             type="button"
             class="ag-btn ag-btn--cyan"
             :disabled="!qrSvgMarkup"
-            @click="downloadQrSvgCanva"
+            @click="downloadQrSvg"
           >
-            ⬇ Descargar QR SVG (para Canva)
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Descargar QR SVG Vectorial</span>
           </button>
         </div>
       </div>
@@ -322,14 +331,14 @@ watch(targetUrl, (nextUrl) => {
       </div>
     </div>
 
-    <!-- Grilla Inferior: Atajos Rápidos para Preguntas del Jurado -->
+    <!-- Grilla Inferior: Atajos Rápidos para Revisiones Técnicas -->
     <div class="ag-jury-block">
       <div class="ag-jury-header">
-        <span class="ag-badge ag-badge--emerald">Respuesta en 1 Clic</span>
-        <h3 class="ag-jury-title">Atajos Rápidos para Preguntas del Jurado</h3>
+        <span class="ag-badge ag-badge--emerald">Acceso Directo</span>
+        <h3 class="ag-jury-title">Atajos Rápidos para Preguntas Técnicas</h3>
         <p class="ag-jury-subtitle">
-          Navegación directa hacia los 8 volúmenes técnicos clave durante la ronda de preguntas de
-          defensa oral.
+          Navegación directa hacia los 8 volúmenes técnicos clave durante sesiones de Q&amp;A y
+          revisiones de arquitectura.
         </p>
       </div>
 
@@ -348,7 +357,10 @@ watch(targetUrl, (nextUrl) => {
           </div>
           <h4 class="ag-jury-card-title">{{ shortcut.title }}</h4>
           <p class="ag-jury-card-hint">{{ shortcut.questionHint }}</p>
-          <span class="ag-jury-cta">Abrir volumen verificado →</span>
+          <span class="ag-jury-cta">
+            <span>Abrir volumen verificado</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </span>
         </a>
       </div>
     </div>
@@ -360,7 +372,7 @@ watch(targetUrl, (nextUrl) => {
   display: flex;
   flex-direction: column;
   gap: 2.25rem;
-  margin: 1.25rem 0 2.5rem;
+  margin: 1.5rem 0 2.5rem;
 }
 
 .ag-qr-card {
@@ -394,7 +406,7 @@ watch(targetUrl, (nextUrl) => {
   border: none !important;
   font-size: 1.45rem !important;
   line-height: 1.28 !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   color: var(--vp-c-text-1);
 }
 
@@ -434,13 +446,13 @@ watch(targetUrl, (nextUrl) => {
   color: var(--vp-c-text-1);
   font-family: var(--vp-font-family-mono);
   font-size: 0.88rem;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  transition: border-color 0.16s ease;
 }
 
-.ag-qr-url-input:focus {
-  outline: none;
+.ag-qr-url-input:focus-visible {
+  outline: 2px solid var(--ag-emerald);
+  outline-offset: 2px;
   border-color: var(--ag-emerald);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
 .ag-qr-actions {
@@ -462,10 +474,10 @@ watch(targetUrl, (nextUrl) => {
   height: 280px;
   max-width: 100%;
   padding: 14px;
-  border-radius: 18px;
+  border-radius: 16px;
   background: #ffffff;
   border: 3px solid #10b981;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.24);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -491,15 +503,17 @@ watch(targetUrl, (nextUrl) => {
 }
 
 .ag-qr-caption {
-  max-width: 290px;
+  width: 100%;
+  max-width: 360px;
   text-align: center;
   font-family: var(--vp-font-family-mono);
   font-size: 0.75rem;
   color: var(--vp-c-text-3);
-  word-break: break-all;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
-/* Grilla de Atajos Rápidos para el Jurado */
+/* Grilla de Atajos Rápidos */
 .ag-jury-block {
   display: flex;
   flex-direction: column;
@@ -516,7 +530,7 @@ watch(targetUrl, (nextUrl) => {
 .ag-jury-title {
   margin: 0 !important;
   font-size: 1.25rem !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   color: var(--vp-c-text-1);
 }
 
@@ -541,14 +555,17 @@ watch(targetUrl, (nextUrl) => {
   border: 1px solid var(--ag-border);
   background: var(--ag-surface-card);
   text-decoration: none !important;
-  box-shadow: var(--ag-shadow-sm);
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition: transform 0.16s ease, border-color 0.16s ease;
 }
 
 .ag-jury-card:hover {
   transform: translateY(-2px);
   border-color: var(--ag-border-accent);
-  box-shadow: var(--ag-shadow-md);
+}
+
+.ag-jury-card:focus-visible {
+  outline: 2px solid var(--ag-emerald);
+  outline-offset: 2px;
 }
 
 .ag-jury-card-top {
@@ -561,7 +578,7 @@ watch(targetUrl, (nextUrl) => {
 .ag-jury-code {
   font-family: var(--vp-font-family-mono);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--vp-c-brand-1);
 }
 
@@ -582,6 +599,9 @@ watch(targetUrl, (nextUrl) => {
 }
 
 .ag-jury-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   margin-top: 0.25rem;
   font-size: 0.8rem;
   font-weight: 700;

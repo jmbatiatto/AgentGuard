@@ -4,9 +4,9 @@ const rawBase = process.env.VITEPRESS_BASE || '/'
 const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`
 
 export default defineConfig({
-  title: 'AgentGuard Docs',
+  title: 'AgentGuard',
   description:
-    'Documentación Oficial Verificada, Arquitectura Zero Trust y Defensa Académica (ITU — UNCuyo 2026)',
+    'Firewall Zero Trust en Runtime para Agentes de IA — Autorización contextual PEP/PDP 5D, aprobaciones HITL en vivo, blindaje OWASP Agentic 2026 y trazabilidad forense.',
   lang: 'es-AR',
   base,
   cleanUrls: true,
@@ -15,22 +15,68 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}logo-agentguard.svg` }],
-    ['meta', { name: 'theme-color', content: '#10b981' }]
+    ['meta', { name: 'theme-color', content: '#10b981' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    [
+      'link',
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap'
+      }
+    ],
+    [
+      'meta',
+      {
+        property: 'og:title',
+        content: 'AgentGuard — Firewall Zero Trust en Runtime para Agentes de IA'
+      }
+    ],
+    [
+      'meta',
+      {
+        property: 'og:description',
+        content:
+          'Firewall Zero Trust en Runtime para Agentes de IA — Autorización contextual PEP/PDP 5D, aprobaciones HITL en vivo, blindaje OWASP Agentic 2026 y trazabilidad forense.'
+      }
+    ],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:url', content: 'https://agentguard-docs-eight.vercel.app/' }],
+    ['meta', { property: 'og:image', content: `${base}video/agentguard-reel-poster.jpg` }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    [
+      'meta',
+      {
+        name: 'twitter:title',
+        content: 'AgentGuard — Firewall Zero Trust en Runtime para Agentes de IA'
+      }
+    ],
+    [
+      'meta',
+      {
+        name: 'twitter:description',
+        content:
+          'Autorización contextual PEP/PDP 5D, aprobaciones HITL en vivo, blindaje OWASP Agentic 2026 y trazabilidad forense.'
+      }
+    ],
+    ['meta', { name: 'twitter:image', content: `${base}video/agentguard-reel-poster.jpg` }]
   ],
 
   themeConfig: {
     logo: '/logo-agentguard.svg',
-    siteTitle: 'AgentGuard Docs',
+    siteTitle: 'AgentGuard',
 
     nav: [
       { text: 'Inicio', link: '/' },
-      { text: 'Galería 4K', link: '/galeria-diagramas' },
-      { text: 'Modo Defensa & QR', link: '/modo-presentacion' },
+      { text: 'Video Demo', link: '/#video-demo' },
+      { text: 'Simulador PDP', link: '/#simulador-pdp' },
+      { text: 'Instalación Local', link: '/instalacion' },
+      { text: 'Arquitectura 4K', link: '/galeria-diagramas' },
       {
-        text: 'Volúmenes',
+        text: 'Documentación',
         items: [
           {
-            text: 'Índice Maestro',
+            text: 'Índice Maestro (SSOT)',
             link: '/volumenes/INDICE_MAESTRO'
           },
           {
@@ -38,8 +84,24 @@ export default defineConfig({
             link: '/volumenes/README'
           },
           {
-            text: 'Presentación Canva & Guion',
-            link: '/volumenes/07_PRESENTACION_CANVA_Y_GUION_DEFENSA'
+            text: 'Arquitectura Runtime PEP/PDP',
+            link: '/volumenes/03_ARQUITECTURA_RUNTIME_PEP_PDP_Y_API_REST'
+          },
+          {
+            text: 'Modelo de Datos (PostgreSQL 16)',
+            link: '/volumenes/01_MER_RELACIONAL_Y_FISICO_DB'
+          },
+          {
+            text: 'Manual Frontend SPA y RBAC',
+            link: '/volumenes/05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES'
+          },
+          {
+            text: 'Portal ACME & Multi-LLM',
+            link: '/volumenes/06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO'
+          },
+          {
+            text: 'Decisiones (ADRs)',
+            link: '/volumenes/DECISIONS'
           },
           {
             text: 'Auditoría Forense',
@@ -47,27 +109,21 @@ export default defineConfig({
           }
         ]
       },
-      {
-        text: 'Canva Slides',
-        link: 'https://canva.link/59p7pjdurhxr1vk'
-      },
-      {
-        text: 'Trello SCRUM',
-        link: 'https://trello.com/b/2Ay99TRz/agentguard-tablero-scrum-itu-2026'
-      }
+      { text: 'Presentación & QR', link: '/modo-presentacion' }
     ],
 
     sidebar: [
       {
-        text: 'Portal y Defensa',
+        text: 'Plataforma, Demo y Arranque',
         collapsed: false,
         items: [
-          { text: 'Inicio del Portal', link: '/' },
+          { text: 'Inicio · AgentGuard', link: '/' },
+          { text: 'Guía de Instalación Local', link: '/instalacion' },
           { text: 'Galería Interactiva 4K', link: '/galeria-diagramas' },
-          { text: 'Modo Defensa & Código QR', link: '/modo-presentacion' },
-          { text: 'Índice Maestro e Itinerarios', link: '/volumenes/INDICE_MAESTRO' },
+          { text: 'Presentación, Video y Código QR', link: '/modo-presentacion' },
+          { text: 'Índice Maestro (SSOT)', link: '/volumenes/INDICE_MAESTRO' },
           {
-            text: '07 · Presentación Canva y Guion',
+            text: '07 · Guion de Presentación',
             link: '/volumenes/07_PRESENTACION_CANVA_Y_GUION_DEFENSA'
           }
         ]
@@ -121,7 +177,7 @@ export default defineConfig({
             link: '/volumenes/05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES'
           },
           {
-            text: '06 · Portal ACME Corp y Consultante BI',
+            text: '06 · Portal ACME Corp y Multi-LLM',
             link: '/volumenes/06_PORTAL_ACME_CORP_CONSULTANTE_BI_Y_AGENT_DEMO'
           }
         ]
@@ -182,10 +238,9 @@ export default defineConfig({
     ],
 
     footer: {
-      message:
-        'Documentación Oficial Verificada (SSOT) · Cátedra Desarrollo Web — ITU, UNCuyo (2026)',
+      message: 'AgentGuard · Gobernanza Zero Trust en Runtime para Agentes de IA',
       copyright:
-        'Equipo AgentGuard · Agustín Belardinelli · Juan Martín Battiato · Mateo Ortega · Jonathan Araujo'
+        'Equipo de Ingeniería AgentGuard · Agustín Belardinelli · Juan Martín Battiato · Mateo Ortega · Jonathan Araujo'
     }
   },
 

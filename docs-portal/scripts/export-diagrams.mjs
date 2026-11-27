@@ -667,7 +667,7 @@ function buildCatalogMarkdown(manifestItems, generatedAt) {
     '> **Cátedra:** Desarrollo Web (ITU — UNCuyo, 2026)  ',
     `> **Total de diagramas exportados:** **${manifestItems.length}** diagramas oficiales (**${manifestItems.length * 3}** archivos gráficos: ${manifestItems.length} SVG vectoriales + ${manifestItems.length} PNG 4K Oscuro + ${manifestItems.length} PNG 4K Claro)  `,
     `> **Última generación:** \`${generatedAt}\`  `,
-    '> **Presentación Oficial en Canva:** [Abrir Diapositivas 16:9 (`DAHbl5SRXbM`)](https://canva.link/59p7pjdurhxr1vk)',
+    '> **Video Demo Oficial (68s):** [Ver AgentGuard Reel Oficial](https://drive.google.com/file/d/1MGKSaJY939cJWj5cr5Wl7op8VL1b91c5/view?usp=drivesdk)',
     '',
     '---',
     '',
