@@ -52,6 +52,7 @@ const isPlaying = ref(false)
 const isMuted = ref(true)
 const videoFailed = ref(false)
 const currentTime = ref(0)
+const duration = ref(68)
 
 const isWidescreenOpen = ref(false)
 const widescreenFailed = ref(false)
@@ -63,6 +64,9 @@ const closeBtnRef = ref<HTMLButtonElement | null>(null)
 
 const shouldAutoplay = computed(() => props.autoplay)
 
+const formattedCurrentTime = computed(() => formatSeconds(currentTime.value))
+const formattedDuration = computed(() => formatSeconds(duration.value || 68))
+
 const activeChapterIndex = computed(() => {
   let idx = 0
   for (let i = 0; i < REEL_CHAPTERS.length; i += 1) {
@@ -72,6 +76,13 @@ const activeChapterIndex = computed(() => {
   }
   return idx
 })
+
+function formatSeconds(sec: number): string {
+  const safe = Number.isFinite(sec) && sec > 0 ? Math.floor(sec) : 0
+  const mins = Math.floor(safe / 60)
+  const rem = safe % 60
+  return `${mins}:${rem.toString().padStart(2, '0')}`
+}
 
 function getFullscreenElement(): Element | null {
   if (typeof document === 'undefined') return null
@@ -162,6 +173,7 @@ async function toggleMute() {
   el.muted = nextMuted
   isMuted.value = nextMuted
   if (!nextMuted && el.paused) {
+    hasUserPaused.value = false
     hasStarted.value = true
     try {
       await el.play()
@@ -171,10 +183,22 @@ async function toggleMute() {
   }
 }
 
+function handleScrubInput(event: Event) {
+  const target = event.target as HTMLInputElement | null
+  const el = videoRef.value
+  if (!target || !el) return
+  const nextSec = Number(target.value)
+  if (Number.isFinite(nextSec)) {
+    el.currentTime = nextSec
+    currentTime.value = nextSec
+  }
+}
+
 async function seekToChapter(seconds: number) {
   if (videoFailed.value) return
   const el = videoRef.value
   if (!el) return
+  hasUserPaused.value = false
   hasStarted.value = true
   el.currentTime = seconds
   currentTime.value = seconds
@@ -192,7 +216,8 @@ async function openWidescreenFullscreen() {
   const verticalEl = videoRef.value
   let syncSeconds = 0
   if (verticalEl && Number.isFinite(verticalEl.currentTime)) {
-    syncSeconds = verticalEl.currentTime > 0 && verticalEl.currentTime < 65 ? verticalEl.currentTime : 0
+    syncSeconds =
+      verticalEl.currentTime > 0 && verticalEl.currentTime < 65 ? verticalEl.currentTime : 0
   }
 
   widescreenResumeTime.value = syncSeconds
@@ -204,23 +229,33 @@ async function openWidescreenFullscreen() {
   }
   document.body.style.overflow = 'hidden'
 
-  await nextTick()
-
+  // Solicitar pantalla completa SINCRÓNICAMENTE dentro del gesto del usuario
   const modalEl = widescreenModalRef.value as
     | (HTMLElement & {
         webkitRequestFullscreen?: () => Promise<void> | void
       })
     | null
 
+  let fsPromise: Promise<void> | void = undefined
   if (modalEl) {
+    modalEl.classList.add('is-open')
     try {
       if (modalEl.requestFullscreen) {
-        await modalEl.requestFullscreen()
-        widescreenEnteredNativeFs.value = true
+        fsPromise = modalEl.requestFullscreen()
       } else if (modalEl.webkitRequestFullscreen) {
-        await modalEl.webkitRequestFullscreen()
-        widescreenEnteredNativeFs.value = true
+        fsPromise = modalEl.webkitRequestFullscreen()
       }
+    } catch {
+      widescreenEnteredNativeFs.value = false
+    }
+  }
+
+  await nextTick()
+
+  if (fsPromise && typeof (fsPromise as Promise<void>).then === 'function') {
+    try {
+      await fsPromise
+      widescreenEnteredNativeFs.value = true
     } catch {
       widescreenEnteredNativeFs.value = false
     }
@@ -250,7 +285,10 @@ async function openWidescreenFullscreen() {
 function handleWidescreenLoadedMetadata() {
   const wsEl = widescreenVideoRef.value
   if (!wsEl) return
-  if (widescreenResumeTime.value > 0 && Math.abs(wsEl.currentTime - widescreenResumeTime.value) > 0.5) {
+  if (
+    widescreenResumeTime.value > 0 &&
+    Math.abs(wsEl.currentTime - widescreenResumeTime.value) > 0.5
+  ) {
     wsEl.currentTime = widescreenResumeTime.value
   }
 }
@@ -269,6 +307,7 @@ async function closeWidescreenFullscreen() {
 
   widescreenEnteredNativeFs.value = false
   isWidescreenOpen.value = false
+  widescreenModalRef.value?.classList.remove('is-open')
   if (typeof document !== 'undefined') {
     document.body.style.overflow = ''
   }
@@ -296,8 +335,21 @@ async function closeWidescreenFullscreen() {
 
 function handleFullscreenChange() {
   const fsEl = getFullscreenElement()
+
+  // Si algún atajo del navegador forzó pantalla completa sobre el <video> vertical, redirigir al 4K 16:9
+  if (fsEl && videoRef.value && fsEl === videoRef.value) {
+    void exitBrowserFullscreenIfActive().then(() => {
+      void openWidescreenFullscreen()
+    })
+    return
+  }
+
   if (isWidescreenOpen.value) {
-    if (fsEl && widescreenModalRef.value && (fsEl === widescreenModalRef.value || widescreenModalRef.value.contains(fsEl))) {
+    if (
+      fsEl &&
+      widescreenModalRef.value &&
+      (fsEl === widescreenModalRef.value || widescreenModalRef.value.contains(fsEl))
+    ) {
       widescreenEnteredNativeFs.value = true
       return
     }
@@ -329,6 +381,13 @@ function handlePause() {
 
 function handleCanPlay() {
   void attemptMutedAutoplay()
+}
+
+function handleLoadedMetadata() {
+  const el = videoRef.value
+  if (el && Number.isFinite(el.duration) && el.duration > 0) {
+    duration.value = el.duration
+  }
 }
 
 function handleVolumeChange() {
@@ -392,9 +451,10 @@ onBeforeUnmount(() => {
           loop
           playsinline
           preload="auto"
-          :controls="hasStarted"
-          controlsList="nofullscreen"
           disablePictureInPicture
+          @click="togglePlayPause"
+          @dblclick.prevent="openWidescreenFullscreen"
+          @loadedmetadata="handleLoadedMetadata"
           @canplay="handleCanPlay"
           @play="handlePlay"
           @pause="handlePause"
@@ -405,7 +465,7 @@ onBeforeUnmount(() => {
           Tu navegador no soporta la reproducción HTML5 de MP4.
         </video>
 
-        <!-- Barra flotante superior: estado de reproducción y control de sonido -->
+        <!-- Barra flotante superior: estado 9:16 y botón rápido de sonido -->
         <div v-if="hasStarted" class="ag-reel__stage-bar">
           <span class="ag-reel__live-chip">
             <span class="ag-reel__chip-dot" aria-hidden="true" />
@@ -416,7 +476,7 @@ onBeforeUnmount(() => {
             class="ag-reel__sound-pill"
             :aria-pressed="!isMuted"
             :aria-label="isMuted ? 'Activar sonido del video' : 'Silenciar video'"
-            @click="toggleMute"
+            @click.stop="toggleMute"
           >
             <svg
               v-if="isMuted"
@@ -452,7 +512,119 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
-        <!-- Overlay de respaldo si el navegador o reduced-motion impidió el autoplay -->
+        <!-- HUD inferior propio sobre el video: evita que el botón nativo abra el vertical en fullscreen -->
+        <div v-if="hasStarted" class="ag-reel__hud" @click.stop>
+          <div class="ag-reel__hud-row">
+            <button
+              type="button"
+              class="ag-reel__hud-icon-btn"
+              :aria-label="isPlaying ? 'Pausar video' : 'Reproducir video'"
+              @click="togglePlayPause"
+            >
+              <svg
+                v-if="!isPlaying"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M8 5.14v13.72a1 1 0 0 0 1.53.85l10.69-6.86a1 1 0 0 0 0-1.7L9.53 4.29A1 1 0 0 0 8 5.14Z" />
+              </svg>
+              <svg
+                v-else
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M7 5h3.5v14H7V5Zm6.5 0H17v14h-3.5V5Z" />
+              </svg>
+            </button>
+
+            <span class="ag-reel__hud-time">
+              {{ formattedCurrentTime }} / {{ formattedDuration }}
+            </span>
+
+            <div class="ag-reel__hud-right">
+              <button
+                type="button"
+                class="ag-reel__hud-icon-btn"
+                :aria-label="isMuted ? 'Activar audio' : 'Silenciar audio'"
+                @click="toggleMute"
+              >
+                <svg
+                  v-if="isMuted"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <line x1="22" y1="9" x2="16" y2="15" />
+                  <line x1="16" y1="9" x2="22" y2="15" />
+                </svg>
+                <svg
+                  v-else
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                class="ag-reel__hud-fs-btn"
+                aria-label="Ver en pantalla completa 4K 16:9"
+                title="Pantalla completa 4K (16:9)"
+                @click="openWidescreenFullscreen"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+                <span>4K</span>
+              </button>
+            </div>
+          </div>
+
+          <input
+            type="range"
+            class="ag-reel__scrubber"
+            min="0"
+            :max="duration || 68"
+            step="0.2"
+            :value="currentTime"
+            aria-label="Progreso de reproducción del video"
+            @input="handleScrubInput"
+          />
+        </div>
+
+        <!-- Overlay de respaldo si el navegador impidió el autoplay -->
         <button
           v-if="!hasStarted"
           type="button"
@@ -607,96 +779,99 @@ onBeforeUnmount(() => {
       </figcaption>
     </div>
 
-    <!-- Modal / Cinema Fullscreen 4K Panorámico (16:9) montado bajo demanda -->
-    <Teleport to="body">
+    <!-- Contenedor 4K montado en body (siempre listo para requestFullscreen sincrónico; video 4K lazy-mounted) -->
+    <Teleport v-if="isMounted" to="body">
       <div
-        v-if="isMounted && isWidescreenOpen"
         ref="widescreenModalRef"
         class="ag-cinema"
+        :class="{ 'is-open': isWidescreenOpen }"
+        :aria-hidden="!isWidescreenOpen"
         role="dialog"
         aria-modal="true"
         aria-label="Demo oficial de AgentGuard en formato panorámico 4K 16:9"
         @click.self="closeWidescreenFullscreen"
       >
-        <div class="ag-cinema__topbar">
-          <div class="ag-cinema__title-group">
-            <span class="ag-cinema__badge">4K 16:9</span>
-            <span class="ag-cinema__title">{{ displayTitle }}</span>
-          </div>
-          <div class="ag-cinema__actions">
-            <a
-              :href="WIDESCREEN_4K_DRIVE_VIEW_URL"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="ag-cinema__link"
-            >
-              <span>Abrir en Google Drive</span>
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+        <template v-if="isWidescreenOpen">
+          <div class="ag-cinema__topbar">
+            <div class="ag-cinema__title-group">
+              <span class="ag-cinema__badge">4K 16:9</span>
+              <span class="ag-cinema__title">{{ displayTitle }}</span>
+            </div>
+            <div class="ag-cinema__actions">
+              <a
+                :href="WIDESCREEN_4K_DRIVE_VIEW_URL"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="ag-cinema__link"
               >
-                <path d="M7 17 17 7" />
-                <path d="M7 7h10v10" />
-              </svg>
-            </a>
-            <button
-              ref="closeBtnRef"
-              type="button"
-              class="ag-cinema__close"
-              aria-label="Cerrar reproductor 4K pantalla completa"
-              @click="closeWidescreenFullscreen"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+                <span>Abrir en Google Drive</span>
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M7 17 17 7" />
+                  <path d="M7 7h10v10" />
+                </svg>
+              </a>
+              <button
+                ref="closeBtnRef"
+                type="button"
+                class="ag-cinema__close"
+                aria-label="Cerrar reproductor 4K pantalla completa"
+                @click="closeWidescreenFullscreen"
               >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-              <span>Cerrar</span>
-            </button>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+                <span>Cerrar</span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div class="ag-cinema__viewport">
-          <video
-            v-if="!widescreenFailed"
-            ref="widescreenVideoRef"
-            class="ag-cinema__video"
-            :src="widescreenVideoSrc"
-            controls
-            autoplay
-            playsinline
-            preload="auto"
-            @loadedmetadata="handleWidescreenLoadedMetadata"
-            @error="handleWidescreenError"
-          >
-            Tu navegador no soporta la reproducción HTML5 de MP4 4K.
-          </video>
+          <div class="ag-cinema__viewport">
+            <video
+              v-if="!widescreenFailed"
+              ref="widescreenVideoRef"
+              class="ag-cinema__video"
+              :src="widescreenVideoSrc"
+              controls
+              autoplay
+              playsinline
+              preload="auto"
+              @loadedmetadata="handleWidescreenLoadedMetadata"
+              @error="handleWidescreenError"
+            >
+              Tu navegador no soporta la reproducción HTML5 de MP4 4K.
+            </video>
 
-          <iframe
-            v-else
-            class="ag-cinema__iframe"
-            :src="WIDESCREEN_4K_DRIVE_PREVIEW_URL"
-            title="AgentGuard Demo Oficial 4K 16:9 en Google Drive"
-            allow="autoplay; fullscreen"
-            allowfullscreen
-          />
-        </div>
+            <iframe
+              v-else
+              class="ag-cinema__iframe"
+              :src="WIDESCREEN_4K_DRIVE_PREVIEW_URL"
+              title="AgentGuard Demo Oficial 4K 16:9 en Google Drive"
+              allow="autoplay; fullscreen"
+              allowfullscreen
+            />
+          </div>
+        </template>
       </div>
     </Teleport>
   </figure>
@@ -747,6 +922,7 @@ onBeforeUnmount(() => {
   display: block;
   object-fit: contain;
   background: #070d19;
+  cursor: pointer;
 }
 
 .ag-reel__fallback-iframe {
@@ -808,6 +984,100 @@ onBeforeUnmount(() => {
 }
 
 .ag-reel__sound-pill:focus-visible {
+  outline: 2px solid var(--ag-cyan);
+  outline-offset: 2px;
+}
+
+/* HUD inferior propio sobre el reel 9:16 */
+.ag-reel__hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+  padding: 1.4rem 0.7rem 0.55rem;
+  background: linear-gradient(to top, rgba(4, 8, 18, 0.92) 0%, rgba(4, 8, 18, 0.62) 58%, rgba(4, 8, 18, 0) 100%);
+}
+
+.ag-reel__hud-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.ag-reel__hud-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ag-reel__hud-time {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-right: auto;
+}
+
+.ag-reel__hud-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(7, 13, 25, 0.85);
+  color: #f8fafc;
+  cursor: pointer;
+  transition: background-color 0.14s ease, border-color 0.14s ease;
+}
+
+.ag-reel__hud-icon-btn:hover {
+  background: rgba(15, 23, 42, 0.96);
+  border-color: var(--ag-cyan);
+}
+
+.ag-reel__hud-icon-btn:focus-visible,
+.ag-reel__hud-fs-btn:focus-visible {
+  outline: 2px solid var(--ag-cyan);
+  outline-offset: 2px;
+}
+
+.ag-reel__hud-fs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  height: 28px;
+  padding: 0 0.5rem;
+  border-radius: 7px;
+  border: 1px solid var(--ag-border-accent);
+  background: var(--vp-button-brand-bg);
+  color: #ffffff;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.14s ease;
+}
+
+.ag-reel__hud-fs-btn:hover {
+  background: var(--vp-button-brand-hover-bg);
+}
+
+.ag-reel__scrubber {
+  width: 100%;
+  height: 4px;
+  margin: 0;
+  accent-color: var(--ag-emerald);
+  cursor: pointer;
+}
+
+.ag-reel__scrubber:focus-visible {
   outline: 2px solid var(--ag-cyan);
   outline-offset: 2px;
 }
@@ -1165,6 +1435,8 @@ onBeforeUnmount(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .ag-reel__sound-pill,
+  .ag-reel__hud-icon-btn,
+  .ag-reel__hud-fs-btn,
   .ag-reel__overlay,
   .ag-reel__play-cta,
   .ag-reel__btn,
@@ -1180,11 +1452,21 @@ onBeforeUnmount(() => {
 .ag-cinema {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: -1;
   display: flex;
   flex-direction: column;
   background: #040812;
   color: #f8fafc;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.ag-cinema.is-open {
+  z-index: 9999;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .ag-cinema__topbar {
