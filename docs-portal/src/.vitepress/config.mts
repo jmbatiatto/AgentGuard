@@ -240,9 +240,9 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'AgentGuard · Gobernanza Zero Trust en Runtime para Agentes de IA',
+      message: 'AgentGuard · Gobernanza Zero Trust en Runtime para Agentes de IA · ITU UNCuyo 2026',
       copyright:
-        'Equipo de Ingeniería AgentGuard · Agustín Belardinelli · Juan Martín Battiato · Mateo Ortega · Jonathan Araujo'
+        'Equipo de Ingeniería: Jonathan Araujo · Juan Martín Batiatto · Agustín Belardinelli · Mateo Ortega | Docente Evaluador: Ing. Gerardo Abrego'
     }
   },
 

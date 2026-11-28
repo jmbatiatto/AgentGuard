@@ -112,20 +112,24 @@ import { withBase } from 'vitepress'
         </p>
         <ul class="ag-team-list">
           <li class="ag-team-item">
-            <span class="ag-team-name">Agustín Belardinelli</span>
-            <span class="ag-team-role">Product Owner y Backend Core — Motor PDP 5D Fail-Closed y lógica de gobernanza.</span>
+            <span class="ag-team-name">Jonathan Araujo</span>
+            <span class="ag-team-role">Backend Architecture y Gateway — Interceptor PEP, PostgreSQL/Redis, ACME Corp y testing.</span>
           </li>
           <li class="ag-team-item">
-            <span class="ag-team-name">Juan Martín Battiato</span>
+            <span class="ag-team-name">Juan Martín Batiatto</span>
             <span class="ag-team-role">Scrum Master y Frontend Core — Bandeja HITL en vivo, WebSockets y matriz RBAC.</span>
+          </li>
+          <li class="ag-team-item">
+            <span class="ag-team-name">Agustín Belardinelli</span>
+            <span class="ag-team-role">Product Owner y Backend Core — Motor PDP 5D Fail-Closed y lógica de gobernanza.</span>
           </li>
           <li class="ag-team-item">
             <span class="ag-team-name">Mateo Ortega</span>
             <span class="ag-team-role">UI/UX y Frontend — Control Plane SPA en español, diseño visual y Consultante BI.</span>
           </li>
-          <li class="ag-team-item">
-            <span class="ag-team-name">Jonathan Araujo</span>
-            <span class="ag-team-role">Backend Architecture y Gateway — Interceptor PEP, PostgreSQL/Redis, ACME Corp y testing.</span>
+          <li class="ag-team-item" style="border-top: 1px solid var(--vp-c-divider); padding-top: 10px; margin-top: 10px;">
+            <span class="ag-team-name" style="color: var(--vp-c-brand-1);">Ing. Gerardo Abrego</span>
+            <span class="ag-team-role">Docente Evaluador — Cátedra Desarrollo Web (ITU — Universidad Nacional de Cuyo, 2026).</span>
           </li>
         </ul>
         <div class="ag-bridge-aside-actions">

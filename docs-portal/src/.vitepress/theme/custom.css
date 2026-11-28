@@ -150,12 +150,94 @@ h3,
 }
 
 a:focus-visible,
-button:focus-visible,
-input:focus-visible,
+button:not(.DocSearch-Button):not(.clear-button):not(.back-button):focus-visible,
+input:not(#localsearch-input):not(.search-input):not([type="search"]):focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid var(--ag-emerald);
   outline-offset: 2px;
+}
+
+/* ==========================================================================
+ * Eliminación Total de Recuadros de Foco en el Buscador
+ * (Sin recuadros verdes, halos ni bordes desalineados al seleccionar o escribir)
+ * ========================================================================== */
+
+/* 1. Botón del buscador en la barra superior */
+.DocSearch-Button,
+.DocSearch-Button:focus,
+.DocSearch-Button:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+
+/* 2. Modal de búsqueda local y barra completa: cero outline y cero halo de foco */
+.VPLocalSearchBox,
+.VPLocalSearchBox *,
+.search-bar,
+.search-bar *,
+#localsearch-input,
+#localsearch-input:focus,
+#localsearch-input:focus-visible,
+.search-input,
+.search-input:focus,
+.search-input:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+
+/* El input interno no dibuja ningún borde ni fondo propio */
+#localsearch-input,
+.search-input,
+.VPLocalSearchBox input {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Contenedor padre (.search-bar) limpio y redondeado, sin anillo/ring de foco verde */
+.search-bar,
+.VPLocalSearchBox .search-bar {
+  border: 1px solid var(--vp-c-divider) !important;
+  border-radius: 8px !important;
+}
+
+.search-bar:focus-within,
+.VPLocalSearchBox .search-bar:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--ag-emerald) !important;
+}
+
+/* Input de búsqueda en galería interactiva */
+.ag-search-input:focus,
+.ag-search-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--ag-emerald) !important;
+}
+
+/* ==========================================================================
+ * Delimitación de Apartados en Modo Claro (Bordes verdes finitos)
+ * ========================================================================== */
+
+html:not(.dark) .ag-section,
+html:not(.dark) .ag-pdp-section,
+html:not(.dark) .ag-qs-section:not(.ag-qs-section--embedded),
+html:not(.dark) .ag-landing-bridge {
+  border-top: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+html:not(.dark) .ag-proof-bar {
+  border-top: 1px solid rgba(16, 185, 129, 0.35);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+html:not(.dark) .vp-doc h2 {
+  border-top: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {

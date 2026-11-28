@@ -23,10 +23,13 @@ La demostración completa está estructurada en **15 minutos** cubriendo arquite
 
 | Integrante | Rol y Especialidad | Bloques | Tiempo Estimado | Ejes Técnicos de su Intervención |
 | :--- | :--- | :---: | :---: | :--- |
-| **Agustín Belardinelli** | **Product Owner & Backend Core (PDP)** | **Bloques 1, 2, 3 y 5** | `~4 min` | Tesis del producto, riesgos **OWASP Agentic Top 10 2026** (`ASI01`–`ASI05`) & `LLM06`, axioma Zero Trust fuera del LLM y pipeline determinista **PEP + PDP 5D Fail-Closed**. |
 | **Jonathan Araujo** | **Backend Architecture, Gateway PEP, DB & ACME** | **Bloques 4, 6, 10 y 12** | `~4 min 30 s` | Stack políglota (**ADR-001 a ADR-009**), persistencia dual (**PostgreSQL 16 con 13 tablas, 6 migraciones Alembic y Redis 7 + SQLite ACME con 7 tablas**), portal **ACME Corp (`:9000`)** y cierre con los **4 escenarios canónicos** (`Zero-Regression`). |
-| **Juan Martín Battiato** | **Scrum Master & Frontend Core / HITL** | **Bloques 7 y 8** | `~3 min` | Protocolo **HITL Asíncrono (`HTTP 202 Accepted`)**, **WebSockets Multi-Tenant** (`/api/v1/ws/{org_id}`), bloqueo pesimista `SELECT ... FOR UPDATE` con TTL de `900 s`, alta B2B (`register-org`), `SERVER_BOOT_ID` y matriz **RBAC de 5 roles**. |
+| **Juan Martín Batiatto** | **Scrum Master & Frontend Core / HITL** | **Bloques 7 y 8** | `~3 min` | Protocolo **HITL Asíncrono (`HTTP 202 Accepted`)**, **WebSockets Multi-Tenant** (`/api/v1/ws/{org_id}`), bloqueo pesimista `SELECT ... FOR UPDATE` con TTL de `900 s`, alta B2B (`register-org`), `SERVER_BOOT_ID` y matriz **RBAC de 5 roles**. |
+| **Agustín Belardinelli** | **Product Owner & Backend Core (PDP)** | **Bloques 1, 2, 3 y 5** | `~4 min` | Tesis del producto, riesgos **OWASP Agentic Top 10 2026** (`ASI01`–`ASI05`) & `LLM06`, axioma Zero Trust fuera del LLM y pipeline determinista **PEP + PDP 5D Fail-Closed**. |
 | **Mateo Ortega** | **UI/UX Designer & Frontend / Consultante BI** | **Bloques 9 y 11** | `~3 min 30 s` | Recorrido por las **9 vistas del Dashboard SPA** en React 19 (100% español en `labels.ts`, Modo Claro/Oscuro, `QuickSetupWizard`, `PlaygroundView` real) y demo en vivo del **Copiloto "Consultante BI"** con **Handshake Multi-LLM (Gemini 2.5 Flash, OpenAI, Groq, Anthropic)**, caché Redis 7 y telemetría real. |
+
+> **Cátedra:** Desarrollo Web — 5.° Semestre, Tecnicatura Universitaria en Desarrollo de Software (**ITU — Universidad Nacional de Cuyo, 2026**).  
+> **Docente Evaluador:** **Ing. Gerardo Abrego**.
 
 ### Agenda Cronometrada (15 Minutos)
 
@@ -38,8 +41,8 @@ La demostración completa está estructurada en **15 minutos** cubriendo arquite
 | **4** | `02:45 – 03:50` | **Jonathan Araujo** | Arquitectura Políglota Full-Stack (ADR-001 a ADR-009) | Capas React 19 / FastAPI / PG 16 / Redis 7 / ACME `:9000` |
 | **5** | `03:50 – 05:00` | **Agustín Belardinelli** | Flujo Runtime: Interceptor PEP y Motor Determinista PDP 5D | Pipeline `POST /api/v1/gateway/execute` ([Volumen 03](/volumenes/03_ARQUITECTURA_RUNTIME_PEP_PDP_Y_API_REST)) |
 | **6** | `05:00 – 06:15` | **Jonathan Araujo** | Modelo de Datos Dual: PostgreSQL 16 (13 Tablas) + SQLite ACME (7) | Diagrama MER en [Galería 4K](/galeria-diagramas) y [Volumen 01](/volumenes/01_MER_RELACIONAL_Y_FISICO_DB) |
-| **7** | `06:15 – 07:45` | **Juan Martín Battiato** | Protocolo HITL Asíncrono (`202`), WebSockets y Bloqueo Pesimista | Máquina de estados HITL ([Volumen 04](/volumenes/04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO)) + `ApprovalsView` |
-| **8** | `07:45 – 09:15` | **Juan Martín Battiato** | Onboarding SaaS B2B, Sesiones Efímeras y Matriz RBAC | Alta `register-org`, `SERVER_BOOT_ID` y 5 roles ([Volumen 05](/volumenes/05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES)) |
+| **7** | `06:15 – 07:45` | **Juan Martín Batiatto** | Protocolo HITL Asíncrono (`202`), WebSockets y Bloqueo Pesimista | Máquina de estados HITL ([Volumen 04](/volumenes/04_SECUENCIA_DEMO_ESTADOS_Y_CASOS_DE_USO)) + `ApprovalsView` |
+| **8** | `07:45 – 09:15` | **Juan Martín Batiatto** | Onboarding SaaS B2B, Sesiones Efímeras y Matriz RBAC | Alta `register-org`, `SERVER_BOOT_ID` y 5 roles ([Volumen 05](/volumenes/05_MANUAL_FRONTEND_SPA_RBAC_Y_CREDENCIALES)) |
 | **9** | `09:15 – 10:45` | **Mateo Ortega** | Dashboard Web SPA: 9 Vistas en Español y Modo Claro/Oscuro | Navegación rápida por `http://localhost:5173` |
 | **10** | `10:45 – 12:00` | **Jonathan Araujo** | Portal Empresarial ACME Corp (`:9000`) y Auto-Onboarding CEO | Badge verde AgentGuard + Inspector SQLite en `http://localhost:9000` |
 | **11** | `12:00 – 13:30` | **Mateo Ortega** | Caso Estrella: Copiloto Consultante BI con Multi-LLM + Redis | Handshake `gemini-2.5-flash` + pasos `BI-1` (`ALLOW`), `BI-2` (Torta SVG) y `BI-3` (`DENY delete_sales`) |
